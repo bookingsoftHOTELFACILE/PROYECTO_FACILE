@@ -14,10 +14,6 @@ router = APIRouter(prefix="/api/reservas", tags=["reservas"])
 @router.get("", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
 def obtener_reservas():
     """Retorna el listado completo de reservas registradas."""
-    # Si estamos en modo simulación (sin base de datos real)
-    if connection.es_modo_simulacion():
-        return connection.reservas_simulacion
-        
     # Si la base de datos PostgreSQL está activa
     try:
         conn = connection.obtener_conexion()
@@ -70,87 +66,7 @@ def crear_reserva(reserva: ReservaCreate):
             detail="Formato de fechas inválido. Debe ser AAAA-MM-DD."
         )
         
-    if salida_dt <= entrada_dt:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="La fecha de salida debe ser posterior a la fecha de entrada."
-        )
-        
-    # --- MODO SIMULACIÓN ---
-    if connection.es_modo_simulacion():
-        # A. Obtener datos de la habitación
-        habitacion = next((h for h in connection.habitaciones_simulacion if h["id_habitacion"] == reserva.id_habitacion), None)
-        if not habitacion:
-            raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
-            
-        # B. Comprobar si está en mantenimiento
-        if habitacion["estado"] == "Mantenimiento":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"La habitación {habitacion['numero']} se encuentra en Mantenimiento y no acepta nuevas reservas."
-            )
 
-        # RN-011.4: validar que el número de personas no supere la capacidad de la unidad.
-        capacidad_unidad = habitacion.get("capacidad", 0)
-        if reserva.numero_personas > capacidad_unidad:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    f"Capacidad excedida: la habitación {habitacion['numero']} admite máximo "
-                    f"{capacidad_unidad} persona(s), pero se solicitaron {reserva.numero_personas}."
-                )
-            )
-            
-        # C. Validar colisión de fechas (Double Booking)
-        for r in connection.reservas_simulacion:
-            if r["id_habitacion"] == reserva.id_habitacion and r["estado"] in ["Confirmada", "Check-In"]:
-                r_e = datetime.strptime(r["fecha_entrada"], "%Y-%m-%d").date() if isinstance(r["fecha_entrada"], str) else r["fecha_entrada"]
-                r_s = datetime.strptime(r["fecha_salida"], "%Y-%m-%d").date() if isinstance(r["fecha_salida"], str) else r["fecha_salida"]
-                
-                # Fórmula de solapamiento
-                if entrada_dt < r_s and salida_dt > r_e:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Double Booking Detectado: La habitación {habitacion['numero']} ya está reservada para el rango de fechas {r_e} a {r_s}."
-                    )
-                    
-        # D. Calcular liquidación (descuento del 15% para estancias largas de más de 15 noches)
-        noches = (salida_dt - entrada_dt).days
-        subtotal = noches * float(habitacion["precio_noche"])
-        descuento = subtotal * 0.15 if noches > 15 else 0.0
-        total = subtotal - descuento
-        
-        # Obtener nombre del huésped
-        huesped = next((g for g in connection.huespedes_simulacion if g["id_huesped"] == reserva.id_huesped), None)
-        if not huesped:
-            raise HTTPException(status_code=404, detail="El huésped especificado no existe.")
-            
-        # Crear reserva en memoria
-        nuevo_id = max(r["id_reserva"] for r in connection.reservas_simulacion) + 1 if connection.reservas_simulacion else 1
-        nueva_reserva = {
-            "id_reserva": nuevo_id,
-            "id_huesped": reserva.id_huesped,
-            "huesped_nombre": huesped["nombre"],
-            "huesped_documento": huesped["documento"],
-            "id_habitacion": reserva.id_habitacion,
-            "habitacion_numero": habitacion["numero"],
-            "habitacion_tipo": habitacion["tipo"],
-            "fecha_entrada": reserva.fecha_entrada,
-            "fecha_salida": reserva.fecha_salida,
-            "estado": "Confirmada"
-        }
-        connection.reservas_simulacion.append(nueva_reserva)
-        
-        return {
-            "message": "Reserva creada y bloqueada exitosamente.",
-            "reserva": nueva_reserva,
-            "cotizacion": {
-                "noches": noches,
-                "subtotal": subtotal,
-                "descuento": descuento,
-                "total": total
-            }
-        }
         
     # --- MODO BASE DE DATOS FÍSICA (PostgreSQL) ---
     try:
@@ -238,6 +154,8 @@ def crear_reserva(reserva: ReservaCreate):
         # Capturar las excepciones del trigger PL/pgSQL y traducirlas a 400 con mensaje claro.
         if "Double Booking" in err_msg or "Mantenimiento" in err_msg or "chk_fechas" in err_msg or "Capacidad" in err_msg:
             cleaned_msg = err_msg.split("CONTEXT:")[0].replace("error: ", "").replace("ERROR: ", "").strip()
+            if "chk_fechas" in err_msg:
+                cleaned_msg = "La fecha de salida debe ser posterior a la fecha de entrada."
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=cleaned_msg)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

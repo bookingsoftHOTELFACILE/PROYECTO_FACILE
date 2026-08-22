@@ -10,10 +10,6 @@ router = APIRouter(tags=["huespedes"])
 @router.get("/api/huespedes", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
 def obtener_huespedes():
     """Retorna la lista de todos los huéspedes."""
-    # Si estamos en modo simulación (sin base de datos real)
-    if connection.es_modo_simulacion():
-        return sorted(connection.huespedes_simulacion, key=lambda x: x["nombre"])
-        
     # Si la base de datos PostgreSQL está activa
     try:
         conn = connection.obtener_conexion()
@@ -48,30 +44,6 @@ def registrar_usuario(usuario: UserRegistro):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nombre, documento, teléfono y correo son campos obligatorios."
         )
-        
-    # --- MODO SIMULACIÓN ---
-    if connection.es_modo_simulacion():
-        # Validar si el documento ya está registrado en memoria
-        for h in connection.huespedes_simulacion:
-            if h["documento"] == usuario.documento:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Este número de documento ya está registrado."
-                )
-                
-        nuevo_id = max(h["id_huesped"] for h in connection.huespedes_simulacion) + 1 if connection.huespedes_simulacion else 1
-        nuevo_usuario = {
-            "id_huesped": nuevo_id,
-            "nombre": usuario.nombre,
-            "documento": usuario.documento,
-            "telefono": usuario.telefono,
-            "correo": usuario.correo,
-            "empresa": usuario.empresa if usuario.empresa else None,
-            "lealtad": "Silver",
-            "estado": "Activo"
-        }
-        connection.huespedes_simulacion.append(nuevo_usuario)
-        return {"message": "Usuario registrado exitosamente para realizar reservas.", "usuario": nuevo_usuario}
         
     # --- MODO BASE DE DATOS FÍSICA (PostgreSQL) ---
     try:

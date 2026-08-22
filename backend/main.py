@@ -39,13 +39,6 @@ app.include_router(empleados.router)
 # Ruta de diagnóstico de salud de la API
 @app.get("/health")
 def health_check():
-    if connection.es_modo_simulacion():
-        return {
-            "status": "OK",
-            "message": "Servidor de BookingSoft (FastAPI) funcionando en MODO SIMULACIÓN (DEMO_MODE=true).",
-            "modo": "Simulación"
-        }
-    
     try:
         conn = connection.obtener_conexion()
         conn.close()
