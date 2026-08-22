@@ -1,10 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 import psycopg2
 from database import connection
+from dependencies import requiere_rol
+
+# RF-009: todos los roles del sistema tienen acceso al catálogo de habitaciones.
+_TODOS_LOS_ROLES = ("Administrador", "Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento", "Conserje")
 
 router = APIRouter(prefix="/api/habitaciones", tags=["habitaciones"])
 
-@router.get("")
+@router.get("", dependencies=[Depends(requiere_rol(*_TODOS_LOS_ROLES))])
 def obtener_habitaciones():
     """Retorna el catálogo de habitaciones."""
     # Si estamos en modo simulación (sin base de datos real)

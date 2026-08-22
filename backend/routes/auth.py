@@ -194,25 +194,3 @@ def login(credenciales: LoginRequest):
     token = _crear_token(id_empleado, rol)
     return TokenResponse(access_token=token)
 
-
-# ── GET /api/auth/test-admin — ENDPOINT TEMPORAL DE PRUEBA (borrar en PR) ─────
-@router.get(
-    "/test-admin",
-    summary="[TEST TEMPORAL] Solo accesible para Administrador",
-    dependencies=[Depends(requiere_rol("Administrador"))],
-)
-def test_solo_admin(usuario: UsuarioActual = Depends(autenticar)):
-    """
-    Endpoint temporal para verificar que requiere_rol() funciona correctamente.
-    Pruebas:
-      - Sin token       → 401
-      - Token Recepcionista → 403
-      - Token Administrador → 200
-      - Token manipulado    → 401
-    Eliminar antes de hacer merge a develop.
-    """
-    return {
-        "message": "Acceso concedido al área de administración.",
-        "id_empleado": usuario.id_empleado,
-        "rol": usuario.rol,
-    }

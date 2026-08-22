@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Literal
 
 
@@ -16,6 +16,9 @@ class ReservaCreate(BaseModel):
     id_habitacion: int
     fecha_entrada: str
     fecha_salida: str
+    # RN-011.4: el número de personas no puede superar la capacidad de la unidad.
+    # RF-011: campo obligatorio, debe ser mayor a cero.
+    numero_personas: int = Field(..., ge=1, description="Número de personas (mín. 1, no puede superar la capacidad de la unidad)")
 
 
 # --- Schemas de Empleados / Autenticación (Sprint 1) ---
