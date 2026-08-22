@@ -1,1 +1,13 @@
-﻿node_modules/
+# Entorno y credenciales
+.env
+*.env
+
+# Dependencias y compilados
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.venv/
+
+# Sistema y archivos temporales
+.DS_Store

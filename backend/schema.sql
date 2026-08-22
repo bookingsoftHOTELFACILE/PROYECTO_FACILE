@@ -1,7 +1,7 @@
 -- Base de Datos para BookingSoft (Apartahotel Facile)
 -- Motor de Base de Datos: PostgreSQL
 
--- 1. Eliminación de tablas y funciones previas (para reinicialización limpia)
+-- 1. Eliminación y recreación limpia de funciones/triggers
 DROP TRIGGER IF EXISTS trg_validar_double_booking ON reserva_habitacion;
 DROP TRIGGER IF EXISTS trg_habitacion_estado_checkout ON check_out;
 DROP TRIGGER IF EXISTS trg_habitacion_estado_checkin ON check_in;
@@ -11,18 +11,10 @@ DROP FUNCTION IF EXISTS fn_actualizar_estado_checkout();
 DROP FUNCTION IF EXISTS fn_actualizar_estado_checkin();
 DROP FUNCTION IF EXISTS fn_calcular_noches_y_precio(DATE, DATE, DECIMAL);
 
-DROP TABLE IF EXISTS factura CASCADE;
-DROP TABLE IF EXISTS check_out CASCADE;
-DROP TABLE IF EXISTS check_in CASCADE;
-DROP TABLE IF EXISTS reserva_habitacion CASCADE;
-DROP TABLE IF EXISTS habitacion CASCADE;
-DROP TABLE IF EXISTS huesped CASCADE;
-DROP TABLE IF EXISTS empleado CASCADE;
-
--- 2. Creación de Tablas
+-- 2. Creación Idempotente de Tablas (CREATE TABLE IF NOT EXISTS)
 
 -- Tabla de Empleados (Personal de Apartamentos Facile)
-CREATE TABLE empleado (
+CREATE TABLE IF NOT EXISTS empleado (
     id_empleado SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     usuario VARCHAR(50) UNIQUE NOT NULL,
@@ -31,7 +23,7 @@ CREATE TABLE empleado (
 );
 
 -- Tabla de Huéspedes
-CREATE TABLE huesped (
+CREATE TABLE IF NOT EXISTS huesped (
     id_huesped SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     documento VARCHAR(20) UNIQUE NOT NULL,
@@ -43,7 +35,7 @@ CREATE TABLE huesped (
 );
 
 -- Tabla de Habitaciones / Apartamentos
-CREATE TABLE habitacion (
+CREATE TABLE IF NOT EXISTS habitacion (
     id_habitacion SERIAL PRIMARY KEY,
     numero VARCHAR(10) UNIQUE NOT NULL,
     tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('Dúplex', 'Familiar', 'Habitaciones')),
@@ -53,7 +45,7 @@ CREATE TABLE habitacion (
 );
 
 -- Tabla de Reservas de Habitación
-CREATE TABLE reserva_habitacion (
+CREATE TABLE IF NOT EXISTS reserva_habitacion (
     id_reserva SERIAL PRIMARY KEY,
     id_huesped INT NOT NULL REFERENCES huesped(id_huesped) ON DELETE RESTRICT,
     id_habitacion INT NOT NULL REFERENCES habitacion(id_habitacion) ON DELETE RESTRICT,
@@ -144,30 +136,37 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- 4. Sembrado de Datos Iniciales (Seed Data)
+-- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
 -- Insertar Empleados de Prueba
--- Contraseñas en texto plano para el script (el backend las cifrará con bcrypt, aquí sembramos para pruebas rápidas)
 INSERT INTO empleado (nombre, usuario, contrasena, rol) VALUES
 ('Sandra Milena', 'sandra_admin', '$2b$10$Ushj8m0k0s0A7pE9.309Lu9RzR8a.D3Gg7J1/fJv2nU9/hZ1f.oJy', 'Administrador'), -- pass: admin123
 ('Carlos Pérez', 'carlos_recep', '$2b$10$Ushj8m0k0s0A7pE9.309Lu9RzR8a.D3Gg7J1/fJv2nU9/hZ1f.oJy', 'Recepcionista 24h'), -- pass: admin123
-('Marta Ama', 'marta_limpieza', 'marta123', 'Ama de llaves');
+('Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves') -- pass: marta123
 
--- Insertar Habitaciones Reales de Apartamentos Facile (Dúplex, Familiar, Habitaciones)
+ON CONFLICT (usuario) DO NOTHING;
+
+-- Insertar Habitaciones Reales de Apartamentos Facile
 INSERT INTO habitacion (numero, tipo, capacidad, precio_noche, estado) VALUES
-('101A', 'Habitaciones', 2, 243000.00, 'Disponible'), -- 1 Habitación estándar
+('101A', 'Habitaciones', 2, 243000.00, 'Disponible'),
 ('102A', 'Habitaciones', 2, 243000.00, 'Disponible'),
-('201D', 'Dúplex', 3, 350000.00, 'Disponible'),       -- Apartamento Dúplex
-('202D', 'Dúplex', 3, 350000.00, 'Mantenimiento'),     -- En mantenimiento (ej. secadora fallando)
-('301F', 'Familiar', 5, 480000.00, 'Disponible');      -- Apartamento Familiar
+('201D', 'Dúplex', 3, 350000.00, 'Disponible'),
+('202D', 'Dúplex', 3, 350000.00, 'Mantenimiento'),
+('301F', 'Familiar', 5, 480000.00, 'Disponible')
+ON CONFLICT (numero) DO NOTHING;
 
 -- Insertar Huéspedes Iniciales
 INSERT INTO huesped (nombre, documento, telefono, correo, empresa, lealtad, estado) VALUES
 ('John Doe', '12345678', '3115551234', 'john.doe@example.com', NULL, 'Silver', 'Activo'),
 ('Sofía Restrepo', '98765432', '3126667890', 'sofia.restrepo@bancolombia.com.co', 'Bancolombia', 'Gold', 'Activo'),
-('Thomas Miller', 'PP998877', '+155589012', 'thomas.miller@siemens.com', 'Siemens', 'Platinum', 'Activo');
+('Thomas Miller', 'PP998877', '+155589012', 'thomas.miller@siemens.com', 'Siemens', 'Platinum', 'Activo')
+ON CONFLICT (documento) DO NOTHING;
 
 -- Insertar Reservas de Prueba sin conflictos de fechas
-INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado) VALUES
-(1, 1, CURRENT_DATE + INTERVAL '1 day', CURRENT_DATE + INTERVAL '4 days', 'Confirmada'),
-(2, 3, CURRENT_DATE + INTERVAL '5 days', CURRENT_DATE + INTERVAL '10 days', 'Confirmada');
+INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado)
+SELECT 1, 1, CURRENT_DATE + INTERVAL '1 day', CURRENT_DATE + INTERVAL '4 days', 'Confirmada'
+WHERE NOT EXISTS (SELECT 1 FROM reserva_habitacion WHERE id_huesped = 1 AND id_habitacion = 1);
+
+INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado)
+SELECT 2, 3, CURRENT_DATE + INTERVAL '5 days', CURRENT_DATE + INTERVAL '10 days', 'Confirmada'
+WHERE NOT EXISTS (SELECT 1 FROM reserva_habitacion WHERE id_huesped = 2 AND id_habitacion = 3);
