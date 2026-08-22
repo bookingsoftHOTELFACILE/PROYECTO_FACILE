@@ -151,11 +151,25 @@ $$ LANGUAGE plpgsql;
 
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
+-- =============================================================================
+-- CREDENCIALES DE PRUEBA — SOLO PARA DESARROLLO Y SUSTENTACIÓN ACADÉMICA
+-- NUNCA usar estas contraseñas en producción.
+--
+--   Usuario          Contraseña     Rol
+--   ─────────────────────────────────────────────────────
+--   sandra_admin     Admin2026!     Administrador
+--   carlos_recep     Recep2026!     Recepcionista 24h
+--   marta_limpieza   marta123       Ama de llaves
+--
+-- Hashes generados con bcrypt rounds=12 usando la librería bcrypt de Python.
+-- Cada hash es único (salt distinto por diseño de bcrypt).
+-- =============================================================================
+
 -- Insertar Empleados de Prueba
 INSERT INTO empleado (nombre, usuario, contrasena, rol) VALUES
-('Sandra Milena', 'sandra_admin', '$2b$10$Ushj8m0k0s0A7pE9.309Lu9RzR8a.D3Gg7J1/fJv2nU9/hZ1f.oJy', 'Administrador'), -- pass: admin123
-('Carlos Pérez', 'carlos_recep', '$2b$10$Ushj8m0k0s0A7pE9.309Lu9RzR8a.D3Gg7J1/fJv2nU9/hZ1f.oJy', 'Recepcionista 24h'), -- pass: admin123
-('Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves') -- pass: marta123
+('Sandra Milena', 'sandra_admin',  '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador'),    -- Admin2026!
+('Carlos Pérez',  'carlos_recep',  '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W',  'Recepcionista 24h'), -- Recep2026!
+('Marta Ama',     'marta_limpieza','$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves')       -- marta123  (sin cambios)
 
 ON CONFLICT (usuario) DO NOTHING;
 
