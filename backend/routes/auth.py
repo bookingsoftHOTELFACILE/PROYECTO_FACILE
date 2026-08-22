@@ -12,9 +12,10 @@ from datetime import datetime, timedelta, timezone
 
 import bcrypt
 import jwt
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from database import connection
+from dependencies import UsuarioActual, autenticar, requiere_rol
 from models.schemas import EmpleadoRegistro, LoginRequest, TokenResponse
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -23,6 +24,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 _JWT_SECRET = os.getenv("JWT_SECRET", "")
 _JWT_ALGORITHM = "HS256"
 _JWT_EXPIRY_HOURS = 8  # CA-002.2: acceso válido por 8 horas
+
 
 
 def _crear_token(id_empleado: int, rol: str) -> str:
@@ -191,3 +193,26 @@ def login(credenciales: LoginRequest):
 
     token = _crear_token(id_empleado, rol)
     return TokenResponse(access_token=token)
+
+
+# ── GET /api/auth/test-admin — ENDPOINT TEMPORAL DE PRUEBA (borrar en PR) ─────
+@router.get(
+    "/test-admin",
+    summary="[TEST TEMPORAL] Solo accesible para Administrador",
+    dependencies=[Depends(requiere_rol("Administrador"))],
+)
+def test_solo_admin(usuario: UsuarioActual = Depends(autenticar)):
+    """
+    Endpoint temporal para verificar que requiere_rol() funciona correctamente.
+    Pruebas:
+      - Sin token       → 401
+      - Token Recepcionista → 403
+      - Token Administrador → 200
+      - Token manipulado    → 401
+    Eliminar antes de hacer merge a develop.
+    """
+    return {
+        "message": "Acceso concedido al área de administración.",
+        "id_empleado": usuario.id_empleado,
+        "rol": usuario.rol,
+    }
