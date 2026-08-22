@@ -6,10 +6,11 @@ RF-006 / HU-004 CA-004.5: Modificación de rol de empleado (solo Administrador)
 RF-009 / RF-010 / HU-004 CA-004.4: Cambio de estado activo/inactivo (solo Administrador)
 
 Notas de implementación:
-- RF-006 / RN-006.2: el documento lista 4 roles asignables (excluye 'Administrador'),
-  pero el CHECK constraint de la BD define 5 roles válidos incluyendo 'Administrador'.
-  Se implementa contra los 5 roles del CHECK (fuente de verdad del sistema) para no
-  crear inconsistencia entre la API y la BD. La discrepancia fue reportada al desarrollador.
+- RF-006 / RN-006.2: solo se pueden asignar 4 roles a través de este endpoint
+  (Recepcionista 24h, Ama de llaves, Personal de mantenimiento, Conserje).
+  El rol 'Administrador' está excluido intencionalmente: el CHECK constraint de la BD
+  lo sigue permitiendo (necesario para el seed inicial), pero la API lo restringe
+  conforme a RN-006.2.
 - Caso límite no documentado en HUs: se impide que el único administrador activo del
   sistema se quite a sí mismo el rol de Administrador (salvaguarda básica implementada
   como medida preventiva, documentada explícitamente).
@@ -21,8 +22,10 @@ from dependencies import UsuarioActual, autenticar, requiere_rol
 
 router = APIRouter(prefix="/api/empleados", tags=["empleados"])
 
-# Roles válidos según el CHECK constraint de la tabla empleado (schema.sql línea 24)
-_ROLES_CHECK = ("Administrador", "Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento", "Conserje")
+# Roles asignables vía API — RN-006.2 excluye explícitamente 'Administrador'.
+# El CHECK constraint de schema.sql acepta los 5 roles (necesario para el seed),
+# pero este endpoint solo permite los 4 operativos.
+_ROLES_ASIGNABLES = ("Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento", "Conserje")
 
 
 # ── PATCH /api/empleados/{id}/rol ─────────────────────────────────────────────
@@ -36,18 +39,31 @@ def modificar_rol(
     RF-006 / HU-004 CA-004.5 — Cambia el rol de un empleado.
 
     RN-006.1: solo el Administrador puede modificar roles.
-    RN-006.2: el nuevo rol debe ser uno de los valores del CHECK constraint.
+    RN-006.2: los roles asignables son exclusivamente: Recepcionista 24h, Ama de llaves,
+              Personal de mantenimiento y Conserje. El rol 'Administrador' no puede
+              asignarse a través de este endpoint.
     Salvaguarda adicional: si el administrador intenta quitarse su propio rol
     y es el único administrador activo, la operación se rechaza (no documentado
     en HUs pero implementado como medida de seguridad básica).
     """
     nuevo_rol = body.get("rol", "").strip()
 
-    # Validar que el rol sea uno de los permitidos
-    if nuevo_rol not in _ROLES_CHECK:
+    # RN-006.2: 'Administrador' no es asignable a través de este endpoint.
+    if nuevo_rol == "Administrador":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Rol inválido. Los roles permitidos son: {', '.join(_ROLES_CHECK)}.",
+            detail=(
+                "No se puede asignar el rol 'Administrador' a través de este endpoint "
+                "(RN-006.2). Los roles asignables son: "
+                f"{', '.join(_ROLES_ASIGNABLES)}."
+            ),
+        )
+
+    # Validar que el rol sea uno de los 4 operativos permitidos
+    if nuevo_rol not in _ROLES_ASIGNABLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Rol inválido. Los roles asignables son: {', '.join(_ROLES_ASIGNABLES)}.",
         )
 
     try:
