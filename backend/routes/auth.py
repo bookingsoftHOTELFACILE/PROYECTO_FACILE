@@ -2,10 +2,12 @@
 backend/routes/auth.py
 Sprint 1 — Autenticación JWT + bcrypt
 
-RF-001 / HU-001: Registro de empleado
-RF-004 / HU-002: Login con JWT
-RF-007 / HU-002: Validación de credenciales (mismo mensaje para usuario inexistente y contraseña incorrecta)
-RF-008      : Cifrado de contraseña con bcrypt
+RF-001 / HU-001       : Registro de empleado
+RF-004 / HU-002       : Login con JWT
+RF-005 / HU-002 CA-002.5: Cierre de sesión (stateless — invalidación en cliente)
+RF-007 / HU-002 CA-002.3: Mismo mensaje para usuario inexistente y contraseña incorrecta
+RF-008                : Cifrado de contraseña con bcrypt
+RF-010 / HU-002 CA-002.4: Rechazo de login si usuario está Inactivo (mensaje diferenciado)
 """
 import os
 from datetime import datetime, timedelta, timezone
@@ -24,7 +26,6 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 _JWT_SECRET = os.getenv("JWT_SECRET", "")
 _JWT_ALGORITHM = "HS256"
 _JWT_EXPIRY_HOURS = 8  # CA-002.2: acceso válido por 8 horas
-
 
 
 def _crear_token(id_empleado: int, rol: str) -> str:
@@ -147,19 +148,17 @@ def registrar_empleado(datos: EmpleadoRegistro):
         )
 
 
-
-
 # ── POST /api/auth/login ──────────────────────────────────────────────────────
 @router.post("/login", response_model=TokenResponse)
 def login(credenciales: LoginRequest):
     """
     RF-004 / HU-002 — Login con contraseña y emisión de JWT.
 
-    CA-002.2: retorna token si las credenciales son correctas.
+    CA-002.2: retorna token si las credenciales son correctas y el usuario está Activo.
     CA-002.3: mensaje de error IDÉNTICO si el usuario no existe O la contraseña es incorrecta
               (no revelar cuál de los dos falló).
-    CA-002.4: rechaza acceso si el usuario está inactivo (sin campo estado en empleado
-              en este sprint; aplica para futura extensión).
+    CA-002.4 / RN-010.3: rechaza con mensaje diferenciado si el usuario existe, la contraseña
+              es correcta, pero su estado es 'Inactivo'. Aquí sí corresponde indicar el motivo.
     """
     _CRED_ERROR = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -170,8 +169,9 @@ def login(credenciales: LoginRequest):
     try:
         conn = connection.obtener_conexion()
         cur = conn.cursor()
+        # Incluimos 'estado' para aplicar CA-002.4 / RN-010.3
         cur.execute(
-            "SELECT id_empleado, contrasena, rol FROM empleado WHERE usuario = %s",
+            "SELECT id_empleado, contrasena, rol, estado FROM empleado WHERE usuario = %s",
             (credenciales.usuario,),
         )
         fila = cur.fetchone()
@@ -183,14 +183,37 @@ def login(credenciales: LoginRequest):
             detail=f"Error al autenticar: {e}",
         )
 
-    # CA-002.3: misma respuesta tanto si el usuario no existe como si la contraseña es incorrecta
+    # CA-002.3: misma respuesta si el usuario no existe o la contraseña es incorrecta
     if fila is None:
         raise _CRED_ERROR
 
-    id_empleado, hash_guardado, rol = fila
+    id_empleado, hash_guardado, rol, estado = fila
     if not bcrypt.checkpw(credenciales.contrasena.encode(), hash_guardado.encode()):
         raise _CRED_ERROR
+
+    # CA-002.4 / RN-010.3: credenciales correctas pero cuenta deshabilitada.
+    # Aquí sí corresponde revelar el motivo (no es un fallo de credenciales).
+    if estado != "Activo":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cuenta inactiva. Contacte al administrador del sistema.",
+        )
 
     token = _crear_token(id_empleado, rol)
     return TokenResponse(access_token=token)
 
+
+# ── POST /api/auth/logout ─────────────────────────────────────────────────────
+@router.post("/logout", dependencies=[Depends(autenticar)])
+def logout():
+    """
+    RF-005 / HU-002 CA-002.5 — Cierre de sesión.
+
+    Decisión de diseño — enfoque stateless:
+    - El servidor confirma el cierre y el cliente descarta el token.
+    - No se implementa blacklist server-side: ningún RF, RN ni HU lo exige
+      y el stack no incluye Redis ni infraestructura equivalente.
+    - RN-005.2 (no acceso post-logout) se cumple por la expiración del JWT
+      y la responsabilidad del cliente de no reenviar el token descartado.
+    """
+    return {"message": "Sesión cerrada exitosamente. Descarte el token en el cliente."}
