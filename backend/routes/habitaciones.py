@@ -11,10 +11,6 @@ router = APIRouter(prefix="/api/habitaciones", tags=["habitaciones"])
 @router.get("", dependencies=[Depends(requiere_rol(*_TODOS_LOS_ROLES))])
 def obtener_habitaciones():
     """Retorna el catálogo de habitaciones."""
-    # Si estamos en modo simulación (sin base de datos real)
-    if connection.es_modo_simulacion():
-        return connection.habitaciones_simulacion
-        
     # Si la base de datos PostgreSQL está activa
     try:
         conn = connection.obtener_conexion()
