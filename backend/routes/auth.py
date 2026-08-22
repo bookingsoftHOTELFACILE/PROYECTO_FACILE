@@ -1,0 +1,151 @@
+"""
+backend/routes/auth.py
+Sprint 1 — Autenticación JWT + bcrypt
+
+RF-001 / HU-001: Registro de empleado
+RF-004 / HU-002: Login con JWT
+RF-007 / HU-002: Validación de credenciales (mismo mensaje para usuario inexistente y contraseña incorrecta)
+RF-008      : Cifrado de contraseña con bcrypt
+"""
+import os
+from datetime import datetime, timedelta, timezone
+
+import bcrypt
+import jwt
+from fastapi import APIRouter, HTTPException, status
+
+from database import connection
+from models.schemas import EmpleadoRegistro, LoginRequest, TokenResponse
+
+router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+# ── Configuración JWT ──────────────────────────────────────────────────────────
+_JWT_SECRET = os.getenv("JWT_SECRET", "")
+_JWT_ALGORITHM = "HS256"
+_JWT_EXPIRY_HOURS = 8  # CA-002.2: acceso válido por 8 horas
+
+
+def _crear_token(id_empleado: int, rol: str) -> str:
+    """Genera un JWT firmado con id y rol del empleado."""
+    if not _JWT_SECRET:
+        raise RuntimeError("JWT_SECRET no está configurado.")
+    expira = datetime.now(tz=timezone.utc) + timedelta(hours=_JWT_EXPIRY_HOURS)
+    payload = {
+        "sub": str(id_empleado),
+        "rol": rol,
+        "exp": expira,
+    }
+    return jwt.encode(payload, _JWT_SECRET, algorithm=_JWT_ALGORITHM)
+
+
+# ── POST /api/auth/registro ───────────────────────────────────────────────────
+@router.post("/registro", status_code=status.HTTP_201_CREATED)
+def registrar_empleado(datos: EmpleadoRegistro):
+    """
+    RF-001 / HU-001 — Registra un nuevo empleado del sistema.
+
+    CA-001.2: crea el usuario, lo deja activo, asigna el rol indicado (o el por defecto).
+    CA-001.3: rechaza si el usuario (nombre de login) ya existe.
+    CA-001.6: la contraseña se almacena cifrada con bcrypt, nunca en texto plano.
+    CA-001.7: si no se provee rol, el sistema asigna 'Recepcionista 24h'.
+    CA-001.9: los campos nombre, usuario y contrasena son obligatorios (Pydantic los valida).
+    """
+    if not datos.nombre.strip() or not datos.usuario.strip() or not datos.contrasena.strip():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Los campos nombre, usuario y contrasena son obligatorios.",
+        )
+
+    # Hash bcrypt (CA-001.6 / RF-008)
+    hashed = bcrypt.hashpw(datos.contrasena.encode(), bcrypt.gensalt()).decode()
+
+    try:
+        conn = connection.obtener_conexion()
+        cur = conn.cursor()
+
+        # CA-001.3: usuario único
+        cur.execute("SELECT id_empleado FROM empleado WHERE usuario = %s", (datos.usuario,))
+        if cur.fetchone():
+            cur.close()
+            conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El nombre de usuario ya está en uso.",
+            )
+
+        cur.execute(
+            """
+            INSERT INTO empleado (nombre, usuario, contrasena, rol)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id_empleado, nombre, usuario, rol
+            """,
+            (datos.nombre.strip(), datos.usuario.strip(), hashed, datos.rol),
+        )
+        fila = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return {
+            "message": "Empleado registrado exitosamente.",
+            "empleado": {
+                "id_empleado": fila[0],
+                "nombre": fila[1],
+                "usuario": fila[2],
+                "rol": fila[3],
+            },
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al registrar empleado: {e}",
+        )
+
+
+# ── POST /api/auth/login ──────────────────────────────────────────────────────
+@router.post("/login", response_model=TokenResponse)
+def login(credenciales: LoginRequest):
+    """
+    RF-004 / HU-002 — Login con contraseña y emisión de JWT.
+
+    CA-002.2: retorna token si las credenciales son correctas.
+    CA-002.3: mensaje de error IDÉNTICO si el usuario no existe O la contraseña es incorrecta
+              (no revelar cuál de los dos falló).
+    CA-002.4: rechaza acceso si el usuario está inactivo (sin campo estado en empleado
+              en este sprint; aplica para futura extensión).
+    """
+    _CRED_ERROR = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Credenciales incorrectas.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        conn = connection.obtener_conexion()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id_empleado, contrasena, rol FROM empleado WHERE usuario = %s",
+            (credenciales.usuario,),
+        )
+        fila = cur.fetchone()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al autenticar: {e}",
+        )
+
+    # CA-002.3: misma respuesta tanto si el usuario no existe como si la contraseña es incorrecta
+    if fila is None:
+        raise _CRED_ERROR
+
+    id_empleado, hash_guardado, rol = fila
+    if not bcrypt.checkpw(credenciales.contrasena.encode(), hash_guardado.encode()):
+        raise _CRED_ERROR
+
+    token = _crear_token(id_empleado, rol)
+    return TokenResponse(access_token=token)
