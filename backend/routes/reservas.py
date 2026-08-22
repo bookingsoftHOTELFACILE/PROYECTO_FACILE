@@ -1,12 +1,17 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 import psycopg2
 from database import connection
+from dependencies import requiere_rol
 from models.schemas import ReservaCreate
+
+# RF-009: roles autorizados para el módulo de reservas.
+_ROLES_RESERVAS = ("Administrador", "Recepcionista 24h", "Conserje")
 
 router = APIRouter(prefix="/api/reservas", tags=["reservas"])
 
-@router.get("")
+# RF-009: consulta de reservas restringida a roles operativos.
+@router.get("", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
 def obtener_reservas():
     """Retorna el listado completo de reservas registradas."""
     # Si estamos en modo simulación (sin base de datos real)
@@ -50,9 +55,10 @@ def obtener_reservas():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener reservas: {e}")
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+# RF-009 / RF-011: solo roles operativos pueden crear reservas.
+@router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
 def crear_reserva(reserva: ReservaCreate):
-    """Crea una reserva de habitación calculando cotización e impidiendo colisiones de fechas."""
+    """Crea una reserva de habitación calculando cotización e impidiendo colisiones de fechas (RF-011)."""
     
     # 1. Validar formato y coherencia de fechas
     try:
@@ -82,6 +88,17 @@ def crear_reserva(reserva: ReservaCreate):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"La habitación {habitacion['numero']} se encuentra en Mantenimiento y no acepta nuevas reservas."
+            )
+
+        # RN-011.4: validar que el número de personas no supere la capacidad de la unidad.
+        capacidad_unidad = habitacion.get("capacidad", 0)
+        if reserva.numero_personas > capacidad_unidad:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"Capacidad excedida: la habitación {habitacion['numero']} admite máximo "
+                    f"{capacidad_unidad} persona(s), pero se solicitaron {reserva.numero_personas}."
+                )
             )
             
         # C. Validar colisión de fechas (Double Booking)
@@ -140,14 +157,14 @@ def crear_reserva(reserva: ReservaCreate):
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
         
-        # A. Obtener datos de la habitación
-        cursor.execute("SELECT precio_noche, numero, estado FROM habitacion WHERE id_habitacion = %s", (reserva.id_habitacion,))
+        # A. Obtener datos de la habitación (incluye capacidad para RN-011.4)
+        cursor.execute("SELECT precio_noche, numero, estado, capacidad FROM habitacion WHERE id_habitacion = %s", (reserva.id_habitacion,))
         hab_row = cursor.fetchone()
         if not hab_row:
             cursor.close()
             conn.close()
             raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
-        precio_noche, numero_hab, estado_hab = hab_row
+        precio_noche, numero_hab, estado_hab, capacidad_hab = hab_row
         
         # Validar si está en mantenimiento en base de datos
         if estado_hab == "Mantenimiento":
@@ -156,6 +173,18 @@ def crear_reserva(reserva: ReservaCreate):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"La habitación {numero_hab} se encuentra en Mantenimiento y no acepta nuevas reservas."
+            )
+
+        # RN-011.4: validar capacidad antes del INSERT (el trigger no cubre este caso).
+        if reserva.numero_personas > capacidad_hab:
+            cursor.close()
+            conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"Capacidad excedida: la habitación {numero_hab} admite máximo "
+                    f"{capacidad_hab} persona(s), pero se solicitaron {reserva.numero_personas}."
+                )
             )
             
         # B. Calcular noches y liquidación usando la función PL/pgSQL
@@ -206,8 +235,8 @@ def crear_reserva(reserva: ReservaCreate):
         }
     except psycopg2.Error as db_err:
         err_msg = str(db_err)
-        # Capturar la excepción del trigger PL/pgSQL
-        if "Double Booking" in err_msg or "Mantenimiento" in err_msg or "chk_fechas" in err_msg:
+        # Capturar las excepciones del trigger PL/pgSQL y traducirlas a 400 con mensaje claro.
+        if "Double Booking" in err_msg or "Mantenimiento" in err_msg or "chk_fechas" in err_msg or "Capacidad" in err_msg:
             cleaned_msg = err_msg.split("CONTEXT:")[0].replace("error: ", "").replace("ERROR: ", "").strip()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=cleaned_msg)
         raise HTTPException(

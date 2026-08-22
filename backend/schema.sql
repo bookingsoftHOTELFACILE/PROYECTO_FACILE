@@ -14,13 +14,26 @@ DROP FUNCTION IF EXISTS fn_calcular_noches_y_precio(DATE, DATE, DECIMAL);
 -- 2. Creación Idempotente de Tablas (CREATE TABLE IF NOT EXISTS)
 
 -- Tabla de Empleados (Personal de Apartamentos Facile)
+-- Incluye todos los campos requeridos por HU-001 desde la definición inicial.
 CREATE TABLE IF NOT EXISTS empleado (
-    id_empleado SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    usuario VARCHAR(50) UNIQUE NOT NULL,
-    contrasena VARCHAR(255) NOT NULL,
-    rol VARCHAR(30) NOT NULL CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento', 'Conserje'))
+    id_empleado       SERIAL PRIMARY KEY,
+    nombre            VARCHAR(100) NOT NULL,
+    usuario           VARCHAR(50)  UNIQUE NOT NULL,
+    contrasena        VARCHAR(255) NOT NULL,
+    rol               VARCHAR(30)  NOT NULL
+        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento', 'Conserje')),
+    -- CA-001.5: tipo de documento restringido a valores definidos
+    tipo_documento    VARCHAR(30)  NOT NULL DEFAULT 'Cédula de ciudadanía'
+        CHECK (tipo_documento IN ('Cédula de ciudadanía', 'Pasaporte', 'Cédula de extranjería', 'Otro')),
+    -- CA-001.3: número de documento único por empleado
+    numero_documento  VARCHAR(30)  UNIQUE,
+    -- CA-001.4: correo electrónico único por empleado
+    correo            VARCHAR(150) UNIQUE,
+    -- CA-001.8: estado activo por defecto al registrar
+    estado            VARCHAR(20)  NOT NULL DEFAULT 'Activo'
+        CHECK (estado IN ('Activo', 'Inactivo'))
 );
+
 
 -- Tabla de Huéspedes
 CREATE TABLE IF NOT EXISTS huesped (
@@ -138,11 +151,25 @@ $$ LANGUAGE plpgsql;
 
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
+-- =============================================================================
+-- CREDENCIALES DE PRUEBA — SOLO PARA DESARROLLO Y SUSTENTACIÓN ACADÉMICA
+-- NUNCA usar estas contraseñas en producción.
+--
+--   Usuario          Contraseña     Rol
+--   ─────────────────────────────────────────────────────
+--   sandra_admin     Admin2026!     Administrador
+--   carlos_recep     Recep2026!     Recepcionista 24h
+--   marta_limpieza   marta123       Ama de llaves
+--
+-- Hashes generados con bcrypt rounds=12 usando la librería bcrypt de Python.
+-- Cada hash es único (salt distinto por diseño de bcrypt).
+-- =============================================================================
+
 -- Insertar Empleados de Prueba
 INSERT INTO empleado (nombre, usuario, contrasena, rol) VALUES
-('Sandra Milena', 'sandra_admin', '$2b$10$Ushj8m0k0s0A7pE9.309Lu9RzR8a.D3Gg7J1/fJv2nU9/hZ1f.oJy', 'Administrador'), -- pass: admin123
-('Carlos Pérez', 'carlos_recep', '$2b$10$Ushj8m0k0s0A7pE9.309Lu9RzR8a.D3Gg7J1/fJv2nU9/hZ1f.oJy', 'Recepcionista 24h'), -- pass: admin123
-('Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves') -- pass: marta123
+('Sandra Milena', 'sandra_admin',  '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador'),    -- Admin2026!
+('Carlos Pérez',  'carlos_recep',  '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W',  'Recepcionista 24h'), -- Recep2026!
+('Marta Ama',     'marta_limpieza','$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves')       -- marta123  (sin cambios)
 
 ON CONFLICT (usuario) DO NOTHING;
 

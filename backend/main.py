@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import connection
-from routes import huespedes, habitaciones, reservas
+from routes import huespedes, habitaciones, reservas, auth, empleados
 
 app = FastAPI(
     title="BookingSoft API - FastAPI",
@@ -33,6 +33,8 @@ def startup_event():
 app.include_router(huespedes.router)
 app.include_router(habitaciones.router)
 app.include_router(reservas.router)
+app.include_router(auth.router)
+app.include_router(empleados.router)
 
 # Ruta de diagnóstico de salud de la API
 @app.get("/health")

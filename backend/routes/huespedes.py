@@ -1,11 +1,13 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 import psycopg2
 from database import connection
+from dependencies import requiere_rol
 from models.schemas import UserRegistro
 
 router = APIRouter(tags=["huespedes"])
 
-@router.get("/api/huespedes")
+# RF-009: solo Administrador o Recepcionista 24h pueden ver el listado de huéspedes.
+@router.get("/api/huespedes", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
 def obtener_huespedes():
     """Retorna la lista de todos los huéspedes."""
     # Si estamos en modo simulación (sin base de datos real)
