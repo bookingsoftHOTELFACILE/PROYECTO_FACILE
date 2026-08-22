@@ -24,7 +24,7 @@ const RESERVAS_INICIALES = [
 ];
 
 // URL del backend FastAPI (cuando esté corriendo)
-const API_URL = 'http://localhost:4000';
+const API_URL = '';
 
 function App() {
   // ---- ESTADO DEL MODO DE CONEXIÓN ----
