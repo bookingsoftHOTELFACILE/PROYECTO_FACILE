@@ -66,11 +66,7 @@ def crear_reserva(reserva: ReservaCreate):
             detail="Formato de fechas inválido. Debe ser AAAA-MM-DD."
         )
         
-    if salida_dt <= entrada_dt:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="La fecha de salida debe ser posterior a la fecha de entrada."
-        )
+
         
     # --- MODO BASE DE DATOS FÍSICA (PostgreSQL) ---
     try:
@@ -158,6 +154,8 @@ def crear_reserva(reserva: ReservaCreate):
         # Capturar las excepciones del trigger PL/pgSQL y traducirlas a 400 con mensaje claro.
         if "Double Booking" in err_msg or "Mantenimiento" in err_msg or "chk_fechas" in err_msg or "Capacidad" in err_msg:
             cleaned_msg = err_msg.split("CONTEXT:")[0].replace("error: ", "").replace("ERROR: ", "").strip()
+            if "chk_fechas" in err_msg:
+                cleaned_msg = "La fecha de salida debe ser posterior a la fecha de entrada."
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=cleaned_msg)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
