@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: bookingsoft-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-adso_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-adso_password}
+      POSTGRES_DB: ${POSTGRES_DB:-bookingsoft}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-adso_user} -d ${POSTGRES_DB:-bookingsoft}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bookingsoft-backend
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-adso_user}
+      DB_PASSWORD: ${DB_PASSWORD:-adso_password}
+      DB_NAME: ${DB_NAME:-bookingsoft}
+      PORT: ${PORT:-4000}
+      JWT_SECRET: ${JWT_SECRET:-super_secret_bookingsoft_token_key_adso_2026}
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bookingsoft-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
