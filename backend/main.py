@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+
 from database import connection
 from routes import huespedes, habitaciones, reservas
 
@@ -31,8 +32,24 @@ app.include_router(reservas.router)
 # Ruta de diagnóstico de salud de la API
 @app.get("/health")
 def health_check():
-    return {
-        "status": "OK",
-        "message": "Servidor de BookingSoft (FastAPI) funcionando correctamente.",
-        "modo": "Simulación" if connection.es_modo_simulacion() else "Físico (PostgreSQL)"
-    }
+    if connection.es_modo_simulacion():
+        return {
+            "status": "OK",
+            "message": "Servidor de BookingSoft (FastAPI) funcionando en MODO SIMULACIÓN (DEMO_MODE=true).",
+            "modo": "Simulación"
+        }
+    
+    try:
+        conn = connection.obtener_conexion()
+        conn.close()
+        return {
+            "status": "OK",
+            "message": "Servidor de BookingSoft (FastAPI) funcionando correctamente.",
+            "modo": "Físico (PostgreSQL)"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Fallo de conexión con la base de datos PostgreSQL: {e}"
+        )
+
