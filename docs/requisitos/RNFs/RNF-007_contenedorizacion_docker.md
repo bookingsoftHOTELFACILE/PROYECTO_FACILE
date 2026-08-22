@@ -1,4 +1,4 @@
-# RNF07 — Contenedorización
+# RNF-007 — Contenedorización
 
 <!--
   ¿Qué? Requisito no funcional que define el uso de contenedores Docker para ejecutar BookingSoft.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-007                          |
 | **Nombre**        | Contenedorización                |
 | **Categoría**     | Despliegue e Infraestructura     |
-| **Prioridad**     | Por definir                      |
-| **Estado**        | Por definir                      |
-| **Fecha**         | Por definir                      |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

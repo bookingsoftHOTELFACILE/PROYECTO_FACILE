@@ -1,4 +1,4 @@
-# RNF02 — Motor de Base de Datos
+# RNF-002 — Motor de Base de Datos
 
 <!--
   ¿Qué? Requisito no funcional que define el sistema gestor de base de datos de BookingSoft.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-002                    |
 | **Nombre**        | Motor de Base de Datos     |
 | **Categoría**     | Persistencia de Datos      |
-| **Prioridad**     | Por definir                |
-| **Estado**        | Por definir                |
-| **Fecha**         | Por definir                |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

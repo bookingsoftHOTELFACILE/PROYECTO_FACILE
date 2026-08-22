@@ -15,9 +15,9 @@
 | **ID**           | RF-011                 |
 | **Nombre**       | Creación de Reserva    |
 | **Módulo**       | Módulo de Reservas     |
-| **Prioridad**    | Por definir            |
-| **Estado**       | Por definir            |
-| **Fecha**        | Por definir            |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -63,7 +63,7 @@ El sistema deberá permitir al recepcionista o administrador crear una reserva p
 
 ## Endpoints asociados
 
-Pendiente de definición durante el diseño técnico.
+`POST /api/reservas`
 
 ---
 

@@ -15,9 +15,9 @@
 | **ID**           | RF-002                     |
 | **Nombre**       | Consulta de Usuarios       |
 | **Módulo**       | Módulo de Usuarios         |
-| **Prioridad**    | Por definir                |
-| **Estado**       | Por definir                |
-| **Fecha**        | Por definir                |
+| **Prioridad**    | Alta |
+| **Estado**       | Pendiente |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -59,7 +59,7 @@ El sistema deberá permitir al administrador visualizar el listado completo de u
 
 ## Endpoints asociados
 
-Pendiente de definición durante el diseño técnico.
+Ninguno
 
 ---
 

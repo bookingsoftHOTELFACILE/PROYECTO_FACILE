@@ -15,9 +15,9 @@
 | **ID**           | RF-007                       |
 | **Nombre**       | Validación de Credenciales   |
 | **Módulo**       | Módulo de Usuarios           |
-| **Prioridad**    | Por definir                  |
-| **Estado**       | Por definir                  |
-| **Fecha**        | Por definir                  |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -63,7 +63,7 @@ El sistema deberá validar las credenciales de acceso (correo electrónico y con
 
 ## Endpoints asociados
 
-Pendiente de definición durante el diseño técnico.
+`POST /api/auth/login`
 
 ---
 

@@ -1,4 +1,4 @@
-# RNF03 — Tecnología del Servidor
+# RNF-003 — Tecnología del Servidor
 
 <!--
   ¿Qué? Requisito no funcional que define las tecnologías del backend de BookingSoft.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-003                      |
 | **Nombre**        | Tecnología del Servidor      |
 | **Categoría**     | Tecnología del Servidor      |
-| **Prioridad**     | Por definir                  |
-| **Estado**        | Por definir                  |
-| **Fecha**         | Por definir                  |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
