@@ -142,7 +142,8 @@ $$ LANGUAGE plpgsql;
 INSERT INTO empleado (nombre, usuario, contrasena, rol) VALUES
 ('Sandra Milena', 'sandra_admin', '$2b$10$Ushj8m0k0s0A7pE9.309Lu9RzR8a.D3Gg7J1/fJv2nU9/hZ1f.oJy', 'Administrador'), -- pass: admin123
 ('Carlos Pérez', 'carlos_recep', '$2b$10$Ushj8m0k0s0A7pE9.309Lu9RzR8a.D3Gg7J1/fJv2nU9/hZ1f.oJy', 'Recepcionista 24h'), -- pass: admin123
-('Marta Ama', 'marta_limpieza', 'marta123', 'Ama de llaves')
+('Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves') -- pass: marta123
+
 ON CONFLICT (usuario) DO NOTHING;
 
 -- Insertar Habitaciones Reales de Apartamentos Facile
