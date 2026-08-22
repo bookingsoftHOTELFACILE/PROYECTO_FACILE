@@ -44,16 +44,29 @@ def registrar_empleado(datos: EmpleadoRegistro):
     """
     RF-001 / HU-001 — Registra un nuevo empleado del sistema.
 
-    CA-001.2: crea el usuario, lo deja activo, asigna el rol indicado (o el por defecto).
-    CA-001.3: rechaza si el usuario (nombre de login) ya existe.
-    CA-001.6: la contraseña se almacena cifrada con bcrypt, nunca en texto plano.
+    CA-001.1: acepta tipo_documento, numero_documento, nombre, correo, usuario, contrasena.
+    CA-001.2: crea el usuario, lo deja en estado 'Activo', asigna el rol indicado o por defecto.
+    CA-001.3: rechaza si el numero_documento ya existe.
+    CA-001.4: rechaza si el correo ya existe.
+    CA-001.5: tipo_documento restringido a enum (Pydantic + CHECK en DB).
+    CA-001.6: contraseña almacenada con bcrypt, nunca en texto plano.
     CA-001.7: si no se provee rol, el sistema asigna 'Recepcionista 24h'.
-    CA-001.9: los campos nombre, usuario y contrasena son obligatorios (Pydantic los valida).
+    CA-001.8: estado inicial siempre 'Activo'.
+    CA-001.9: campos obligatorios validados por Pydantic (422 si faltan).
     """
-    if not datos.nombre.strip() or not datos.usuario.strip() or not datos.contrasena.strip():
+    # CA-001.9: campos obligatorios no pueden ser vacíos
+    campos_requeridos = {
+        "nombre": datos.nombre,
+        "usuario": datos.usuario,
+        "contrasena": datos.contrasena,
+        "numero_documento": datos.numero_documento,
+        "correo": str(datos.correo),
+    }
+    vacios = [campo for campo, valor in campos_requeridos.items() if not str(valor).strip()]
+    if vacios:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Los campos nombre, usuario y contrasena son obligatorios.",
+            detail=f"Los siguientes campos son obligatorios y no pueden estar vacíos: {', '.join(vacios)}.",
         )
 
     # Hash bcrypt (CA-001.6 / RF-008)
@@ -63,23 +76,49 @@ def registrar_empleado(datos: EmpleadoRegistro):
         conn = connection.obtener_conexion()
         cur = conn.cursor()
 
-        # CA-001.3: usuario único
-        cur.execute("SELECT id_empleado FROM empleado WHERE usuario = %s", (datos.usuario,))
+        # CA-001.3: numero_documento único
+        cur.execute("SELECT id_empleado FROM empleado WHERE numero_documento = %s", (datos.numero_documento.strip(),))
         if cur.fetchone():
-            cur.close()
-            conn.close()
+            cur.close(); conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El número de documento ya está registrado.",
+            )
+
+        # CA-001.4: correo único
+        cur.execute("SELECT id_empleado FROM empleado WHERE correo = %s", (str(datos.correo).lower(),))
+        if cur.fetchone():
+            cur.close(); conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El correo electrónico ya está en uso.",
+            )
+
+        # CA-001.3b: usuario único (nombre de login)
+        cur.execute("SELECT id_empleado FROM empleado WHERE usuario = %s", (datos.usuario.strip(),))
+        if cur.fetchone():
+            cur.close(); conn.close()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="El nombre de usuario ya está en uso.",
             )
 
+        # CA-001.2 / CA-001.8: INSERT con estado 'Activo' fijo
         cur.execute(
             """
-            INSERT INTO empleado (nombre, usuario, contrasena, rol)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id_empleado, nombre, usuario, rol
+            INSERT INTO empleado (nombre, usuario, contrasena, rol, tipo_documento, numero_documento, correo, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'Activo')
+            RETURNING id_empleado, nombre, usuario, rol, estado
             """,
-            (datos.nombre.strip(), datos.usuario.strip(), hashed, datos.rol),
+            (
+                datos.nombre.strip(),
+                datos.usuario.strip(),
+                hashed,
+                datos.rol,
+                datos.tipo_documento,
+                datos.numero_documento.strip(),
+                str(datos.correo).lower(),
+            ),
         )
         fila = cur.fetchone()
         conn.commit()
@@ -93,6 +132,7 @@ def registrar_empleado(datos: EmpleadoRegistro):
                 "nombre": fila[1],
                 "usuario": fila[2],
                 "rol": fila[3],
+                "estado": fila[4],  # CA-001.8: confirma que es 'Activo'
             },
         }
 
@@ -103,6 +143,8 @@ def registrar_empleado(datos: EmpleadoRegistro):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al registrar empleado: {e}",
         )
+
+
 
 
 # ── POST /api/auth/login ──────────────────────────────────────────────────────

@@ -28,12 +28,30 @@ ROLES_VALIDOS = Literal[
     'Conserje'
 ]
 
+TIPOS_DOCUMENTO = Literal[
+    'Cédula de ciudadanía',
+    'Pasaporte',
+    'Cédula de extranjería',
+    'Otro'
+]
+
 class EmpleadoRegistro(BaseModel):
-    """Payload para registrar un nuevo empleado (CA-001.x)."""
+    """
+    Payload para registrar un nuevo empleado (CA-001.x).
+    Campos obligatorios según CA-001.1: tipo_documento, numero_documento, nombre, correo,
+    usuario, contrasena. El rol y tipo_documento tienen valores por defecto.
+    """
+    # CA-001.1: campos de identidad personal
+    tipo_documento: Optional[TIPOS_DOCUMENTO] = 'Cédula de ciudadanía'  # CA-001.5
+    numero_documento: str                                                  # CA-001.3
     nombre: str
+    correo: EmailStr                                                       # CA-001.4
+    # Credenciales de acceso al sistema
     usuario: str
     contrasena: str
-    rol: Optional[ROLES_VALIDOS] = 'Recepcionista 24h'  # CA-001.7: rol por defecto
+    # CA-001.7: rol por defecto si no se especifica
+    rol: Optional[ROLES_VALIDOS] = 'Recepcionista 24h'
+
 
 class LoginRequest(BaseModel):
     """Payload para inicio de sesión con usuario y contraseña (CA-002.x)."""

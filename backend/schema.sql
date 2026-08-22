@@ -22,6 +22,39 @@ CREATE TABLE IF NOT EXISTS empleado (
     rol VARCHAR(30) NOT NULL CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento', 'Conserje'))
 );
 
+-- Migración idempotente: campos requeridos por HU-001 (CA-001.1, CA-001.3, CA-001.4, CA-001.5, CA-001.8)
+DO $$ BEGIN
+    -- CA-001.5: tipo de documento restringido
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='empleado' AND column_name='tipo_documento') THEN
+        ALTER TABLE empleado ADD COLUMN tipo_documento VARCHAR(30) NOT NULL DEFAULT 'Cédula de ciudadanía'
+            CHECK (tipo_documento IN ('Cédula de ciudadanía', 'Pasaporte', 'Cédula de extranjería', 'Otro'));
+    END IF;
+    -- CA-001.3: número de documento único
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='empleado' AND column_name='numero_documento') THEN
+        ALTER TABLE empleado ADD COLUMN numero_documento VARCHAR(30);
+    END IF;
+    -- CA-001.4: correo único
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='empleado' AND column_name='correo') THEN
+        ALTER TABLE empleado ADD COLUMN correo VARCHAR(150);
+    END IF;
+    -- CA-001.8: estado activo por defecto
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='empleado' AND column_name='estado') THEN
+        ALTER TABLE empleado ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'Activo'
+            CHECK (estado IN ('Activo', 'Inactivo'));
+    END IF;
+END $$;
+
+-- Restricción UNIQUE idempotente para numero_documento y correo
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='empleado_numero_documento_key') THEN
+        ALTER TABLE empleado ADD CONSTRAINT empleado_numero_documento_key UNIQUE (numero_documento);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='empleado_correo_key') THEN
+        ALTER TABLE empleado ADD CONSTRAINT empleado_correo_key UNIQUE (correo);
+    END IF;
+END $$;
+
+
 -- Tabla de Huéspedes
 CREATE TABLE IF NOT EXISTS huesped (
     id_huesped SERIAL PRIMARY KEY,
