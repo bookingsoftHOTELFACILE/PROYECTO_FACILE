@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-adso_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-adso_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-bookingsoft}
     ports:
       - "5432:5432"
@@ -27,10 +27,11 @@ services:
       DB_HOST: db
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-adso_user}
-      DB_PASSWORD: ${DB_PASSWORD:-adso_password}
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME:-bookingsoft}
       PORT: ${PORT:-4000}
-      JWT_SECRET: ${JWT_SECRET:-super_secret_bookingsoft_token_key_adso_2026}
+      JWT_SECRET: ${JWT_SECRET}
+
     ports:
       - "4000:4000"
     depends_on:
