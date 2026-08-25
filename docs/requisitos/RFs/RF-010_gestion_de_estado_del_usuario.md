@@ -15,9 +15,9 @@
 | **ID**           | RF-010                          |
 | **Nombre**       | Gestión de Estado del Usuario   |
 | **Módulo**       | Módulo de Usuarios              |
-| **Prioridad**    | Por definir                     |
-| **Estado**       | Por definir                     |
-| **Fecha**        | Por definir                     |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado sin prueba automatizada |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -60,7 +60,7 @@ El sistema deberá permitir al administrador gestionar el estado de los usuarios
 
 ## Endpoints asociados
 
-Pendiente de definición durante el diseño técnico.
+`PATCH /api/empleados/{id}/estado`<br>`POST /api/auth/login`
 
 ---
 

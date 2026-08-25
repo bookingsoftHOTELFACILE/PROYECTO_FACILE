@@ -15,9 +15,9 @@
 | **ID**           | RF-003                         |
 | **Nombre**       | Consulta de Usuario Específico |
 | **Módulo**       | Módulo de Usuarios             |
-| **Prioridad**    | Por definir                    |
-| **Estado**       | Por definir                    |
-| **Fecha**        | Por definir                    |
+| **Prioridad**    | Alta |
+| **Estado**       | Pendiente |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -55,7 +55,7 @@ El sistema deberá permitir consultar la información completa y detallada de un
 
 ## Endpoints asociados
 
-Pendiente de definición durante el diseño técnico.
+Ninguno
 
 ---
 

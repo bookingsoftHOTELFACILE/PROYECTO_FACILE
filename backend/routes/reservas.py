@@ -152,10 +152,12 @@ def crear_reserva(reserva: ReservaCreate):
     except psycopg2.Error as db_err:
         err_msg = str(db_err)
         # Capturar las excepciones del trigger PL/pgSQL y traducirlas a 400 con mensaje claro.
-        if "Double Booking" in err_msg or "Mantenimiento" in err_msg or "chk_fechas" in err_msg or "Capacidad" in err_msg:
+        if "exclude_overlapping_reservations" in err_msg or "Mantenimiento" in err_msg or "chk_fechas" in err_msg or "Capacidad" in err_msg:
             cleaned_msg = err_msg.split("CONTEXT:")[0].replace("error: ", "").replace("ERROR: ", "").strip()
             if "chk_fechas" in err_msg:
                 cleaned_msg = "La fecha de salida debe ser posterior a la fecha de entrada."
+            elif "exclude_overlapping_reservations" in err_msg:
+                cleaned_msg = "Double Booking Detectado: La habitación ya está reservada para el rango de fechas solicitado."
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=cleaned_msg)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

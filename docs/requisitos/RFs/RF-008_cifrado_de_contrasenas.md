@@ -15,9 +15,9 @@
 | **ID**           | RF-008                     |
 | **Nombre**       | Cifrado de Contraseñas     |
 | **Módulo**       | Módulo de Usuarios         |
-| **Prioridad**    | Por definir                |
-| **Estado**       | Por definir                |
-| **Fecha**        | Por definir                |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -55,7 +55,7 @@ El sistema deberá almacenar todas las contraseñas de los usuarios de BookingSo
 
 ## Endpoints asociados
 
-No aplica directamente — este requisito es un proceso interno que ocurre durante RF-001 (registro) y en futuros procesos de modificación de contraseña.
+`POST /api/auth/registro`<br>`POST /api/auth/login`
 
 ---
 

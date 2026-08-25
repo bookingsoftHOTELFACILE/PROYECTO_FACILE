@@ -15,9 +15,9 @@
 | **ID**           | RF-009                     |
 | **Nombre**       | Validación de Permisos     |
 | **Módulo**       | Módulo de Usuarios         |
-| **Prioridad**    | Por definir                |
-| **Estado**       | Por definir                |
-| **Fecha**        | Por definir                |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -58,7 +58,7 @@ El sistema deberá controlar el acceso a los módulos y funcionalidades de Booki
 
 ## Endpoints asociados
 
-Pendiente de definición durante el diseño técnico.
+Varios (`Depends(requiere_rol)`)
 
 ---
 

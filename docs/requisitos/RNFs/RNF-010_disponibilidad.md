@@ -1,4 +1,4 @@
-# RNF10 — Disponibilidad
+# RNF-010 — Disponibilidad
 
 <!--
   ¿Qué? Requisito no funcional que define la disponibilidad continua del sistema BookingSoft.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-010            |
 | **Nombre**        | Disponibilidad     |
 | **Categoría**     | Disponibilidad     |
-| **Prioridad**     | Por definir        |
-| **Estado**        | Por definir        |
-| **Fecha**         | Por definir        |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

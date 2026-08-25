@@ -1,4 +1,4 @@
-# RNF06 — Documentación de la API
+# RNF-006 — Documentación de la API
 
 <!--
   ¿Qué? Requisito no funcional que define la obligación de documentar la API de BookingSoft.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-006                      |
 | **Nombre**        | Documentación de la API      |
 | **Categoría**     | Documentación Técnica        |
-| **Prioridad**     | Por definir                  |
-| **Estado**        | Por definir                  |
-| **Fecha**         | Por definir                  |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

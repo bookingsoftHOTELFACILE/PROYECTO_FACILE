@@ -15,9 +15,9 @@
 | **ID**           | RF-012                       |
 | **Nombre**       | Consulta de Disponibilidad   |
 | **Módulo**       | Módulo de Reservas           |
-| **Prioridad**    | Por definir                  |
-| **Estado**       | Por definir                  |
-| **Fecha**        | Por definir                  |
+| **Prioridad**    | Alta |
+| **Estado**       | Pendiente |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -58,7 +58,7 @@ El sistema deberá mostrar en tiempo real qué unidades habitacionales se encuen
 
 ## Endpoints asociados
 
-Pendiente de definición durante el diseño técnico.
+Ninguno
 
 ---
 

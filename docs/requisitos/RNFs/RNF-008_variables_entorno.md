@@ -1,4 +1,4 @@
-# RNF08 — Variables de Entorno
+# RNF-008 — Variables de Entorno
 
 <!--
   ¿Qué? Requisito no funcional que define el uso de variables de entorno para la configuración sensible.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-008                        |
 | **Nombre**        | Variables de Entorno           |
 | **Categoría**     | Configuración y Seguridad      |
-| **Prioridad**     | Por definir                    |
-| **Estado**        | Por definir                    |
-| **Fecha**         | Por definir                    |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

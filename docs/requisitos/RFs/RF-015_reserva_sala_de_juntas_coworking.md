@@ -15,9 +15,9 @@
 | **ID**           | RF-015                                     |
 | **Nombre**       | Reserva de Sala de Juntas / Coworking      |
 | **Módulo**       | Módulo de Reservas                         |
-| **Prioridad**    | Por definir                                |
-| **Estado**       | Por definir                                |
-| **Fecha**        | Por definir                                |
+| **Prioridad**    | Baja |
+| **Estado**       | Fase 2 - fuera del alcance comprometido |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
@@ -64,7 +64,7 @@ El sistema deberá permitir que cualquier persona, esté hospedada en el apartam
 
 ## Endpoints asociados
 
-Pendiente de definición durante el diseño técnico.
+Ninguno (Fase 2)
 
 ---
 

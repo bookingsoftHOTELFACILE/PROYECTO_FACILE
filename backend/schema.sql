@@ -13,6 +13,9 @@ DROP FUNCTION IF EXISTS fn_calcular_noches_y_precio(DATE, DATE, DECIMAL);
 
 -- 2. Creación Idempotente de Tablas (CREATE TABLE IF NOT EXISTS)
 
+-- Habilitar extensión btree_gist (Requerido para EXCLUDE USING gist en reservas)
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
 -- Tabla de Empleados (Personal de Apartamentos Facile)
 -- Incluye todos los campos requeridos por HU-001 desde la definición inicial.
 CREATE TABLE IF NOT EXISTS empleado (
@@ -65,35 +68,31 @@ CREATE TABLE IF NOT EXISTS reserva_habitacion (
     fecha_entrada DATE NOT NULL,
     fecha_salida DATE NOT NULL,
     estado VARCHAR(20) NOT NULL DEFAULT 'Confirmada' CHECK (estado IN ('Confirmada', 'Check-In', 'Completada', 'Cancelada')),
-    CONSTRAINT chk_fechas CHECK (fecha_salida > fecha_entrada)
+    CONSTRAINT chk_fechas CHECK (fecha_salida > fecha_entrada),
+    
+    -- ====================================================================================
+    -- FIX CONCURRENCIA (Sprint 2 - Pruebas y Cierre)
+    -- Problema anterior: El trigger fn_validar_double_booking fallaba bajo carga concurrente
+    -- porque el nivel de aislamiento por defecto (READ COMMITTED) impedía que dos transacciones
+    -- simultáneas vieran las inserciones no comiteadas de la otra, permitiendo Double Bookings.
+    -- Detección: La prueba de integración test_reserva_concurrencia_double_booking (usando
+    -- hilos paralelos) logró insertar dos reservas superpuestas exitosamente.
+    -- Solución elegida: EXCLUDE USING gist delega la verificación al motor de PostgreSQL 
+    -- a nivel de índice atómico, previniendo el traslape sin penalizar el rendimiento global 
+    -- del sistema (a diferencia de SERIALIZABLE) y sin requerir lógica de reintentos en Python.
+    -- ====================================================================================
+    CONSTRAINT exclude_overlapping_reservations EXCLUDE USING gist (
+        id_habitacion WITH =,
+        daterange(fecha_entrada, fecha_salida) WITH &&
+    ) WHERE (estado IN ('Confirmada', 'Check-In'))
 );
 
 -- 3. SQL Extendido: Funciones y Triggers en PL/pgSQL
 
--- A. Función para validar Double Booking en PostgreSQL
+-- A. Función para validar mantenimiento en PostgreSQL (El double booking ya lo maneja EXCLUDE USING gist)
 CREATE OR REPLACE FUNCTION fn_validar_double_booking()
 RETURNS TRIGGER AS $$
-DECLARE
-    habitacion_ocupada BOOLEAN;
 BEGIN
-    -- Comprobar si hay traslape con otra reserva activa
-    SELECT EXISTS (
-        SELECT 1 
-        FROM reserva_habitacion 
-        WHERE id_habitacion = NEW.id_habitacion
-          AND estado IN ('Confirmada', 'Check-In')
-          AND id_reserva != NEW.id_reserva -- Excluir la misma reserva si es actualización
-          AND NEW.fecha_entrada < fecha_salida 
-          AND NEW.fecha_salida > fecha_entrada
-    ) INTO habitacion_ocupada;
-
-    IF habitacion_ocupada THEN
-        RAISE EXCEPTION 'Double Booking Detectado: La habitación % ya está reservada para el rango de fechas % a %.', 
-            (SELECT numero FROM habitacion WHERE id_habitacion = NEW.id_habitacion), 
-            NEW.fecha_entrada, 
-            NEW.fecha_salida;
-    END IF;
-
     -- Comprobar si la habitación está en mantenimiento en la base de datos
     IF (SELECT estado FROM habitacion WHERE id_habitacion = NEW.id_habitacion) = 'Mantenimiento' THEN
         RAISE EXCEPTION 'La habitación % se encuentra en Mantenimiento y no acepta nuevas reservas.', 

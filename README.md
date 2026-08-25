@@ -4,169 +4,140 @@ Sistema web de gestión integral para el Apartahotel Facile. Proyecto formativo 
 
 ---
 
-## Descripción
+## 🚀 Descripción y Stack Tecnológico
 
-BookingSoft centraliza las operaciones del Apartahotel Facile: registro de huéspedes, gestión de reservas, check-in/check-out, control de inventarios, mantenimiento de unidades, facturación y generación de reportes. El sistema opera 24/7 con control de acceso basado en roles (RBAC).
+BookingSoft centraliza las operaciones del Apartahotel Facile: registro de usuarios, control de acceso basado en roles (RBAC), gestión de estado de habitaciones y sistema de reservas atómicas.
 
-### Roles del sistema
+El proyecto está diseñado bajo una arquitectura cliente-servidor desacoplada y se ejecuta íntegramente sobre contenedores Docker.
 
-- Administrador
-- Recepcionista
-- Ama de Llaves
-- Mantenimiento
-- Conserje
-
----
-
-## Stack tecnológico
-
-| Capa | Tecnología |
-|---|---|
-| Backend | Python + FastAPI |
-| Frontend | React + JavaScript |
-| Base de datos | PostgreSQL |
-| Contenedorización | Docker + Docker Compose |
-| Cifrado | bcrypt |
-| Documentación API | Swagger (OpenAPI) |
-| Entorno de desarrollo | Visual Studio Code + Antigravity |
+**Stack Real:**
+- **Backend:** Python 3.11 + FastAPI (REST API, validaciones Pydantic, enrutamiento modular).
+- **Frontend:** React + JavaScript (Vite, enrutamiento, consumo de API por proxy).
+- **Base de Datos:** PostgreSQL 15 (Reglas de integridad, Constraints, Procedimientos Almacenados).
+- **Infraestructura:** Docker + Docker Compose.
+- **Testing Automatizado:** pytest + httpx.
 
 ---
 
-## Arquitectura
+## ⚙️ Instrucciones de Arranque (Guía Rápida)
 
-Cliente-servidor desacoplado. Frontend y backend se comunican exclusivamente mediante HTTP/JSON.
-
-```
-Frontend (React) <──── HTTP/JSON ────> Backend (FastAPI) <──── SQL ────> PostgreSQL
-```
-
-Todo contenedorizado con Docker Compose.
-
----
-
-## Módulos
-
-| Módulo | Descripción | Prioridad |
-|---|---|---|
-| Gestión de Usuarios | Registro, autenticación, roles, estados | Alta |
-| Reservas y Ocupación | Check-in/out, disponibilidad, prevención de sobre-reserva | Alta |
-| Unidades Habitacionales | Registro de apartamentos, estados, capacidad | Alta |
-| Tarifas | Tarifas por tipo de unidad y temporada | Media |
-| Servicios y Consumos | Catálogo de servicios adicionales | Media |
-| Gestión Financiera | Facturación, pagos, cierres de caja | Media |
-| Inventario y Alertas | Control de stock, alertas de nivel mínimo | Media |
-| Mantenimiento | Solicitudes, estados, historial por unidad | Media |
-| Sala de Juntas / Coworking | Reserva por horas, disponible para externos | Baja |
-| Notificaciones | Alertas internas del sistema | Baja |
-| Reportes | Dashboard, estadísticas, ocupación histórica | Baja |
-
----
-
-## Estructura del repositorio
-
-```
-PROYECTO_FACILE/
-├── README.md
-├── Dockerfile
-├── docker-compose.yml
-├── .gitignore
-├── .env.example
-├── docs/
-│   └── requisitos/
-│       ├── HUs/              # 15 Historias de Usuario
-│       ├── RFs/              # 15 Requisitos Funcionales
-│       ├── RNFs/             # 11 Requisitos No Funcionales
-│       └── restricciones.md
-├── backend/
-│   └── app/
-│       ├── routers/
-│       ├── models/
-│       ├── schemas/
-│       ├── services/
-│       └── main.py
-├── frontend/
-│   └── src/
-│       ├── components/
-│       ├── pages/
-│       ├── services/
-│       └── App.jsx
-└── tests/
-```
-
----
-
-## Primeros pasos
+Para levantar el entorno completo desde cero de manera limpia, ejecuta los siguientes comandos en la raíz del repositorio:
 
 ```bash
-# 1. Clonar
+# 1. Clonar el repositorio
 git clone https://github.com/bookingsoftHOTELFACILE/PROYECTO_FACILE.git
 cd PROYECTO_FACILE
 
-# 2. Cambiar a develop
+# 2. Cambiar a la rama de integración
 git checkout develop
 
-# 3. Variables de entorno
+# 3. Configurar variables de entorno
 cp .env.example .env
 
-# 4. Levantar con Docker
-docker-compose up --build -d
+# 4. Destruir volúmenes anteriores (opcional, para una instalación limpia) y levantar contenedores
+docker compose down -v
+docker compose up --build -d
 
-# 5. Verificar
-curl http://localhost:8000/api/v1/health
+# 5. Verificar que el backend levantó correctamente (Health Check)
+curl http://localhost:4000/health
+```
+Una vez levantado, puedes acceder a:
+- **Frontend (Interfaz Gráfica):** `http://localhost:3000`
+- **Backend (Documentación Swagger):** `http://localhost:4000/docs`
+
+---
+
+## 👥 Cuentas de Prueba (Seed Data)
+
+El sistema inicializa automáticamente la base de datos con tres cuentas de prueba para facilitar la validación inmediata del control de acceso y las reservas:
+
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `sandra_admin` | `Admin2026!` | Administrador |
+| `carlos_recep` | `Recep2026!` | Recepcionista 24h |
+| `marta_limpieza` | `marta123` | Ama de llaves |
+
+---
+
+## 🧪 Pruebas Automatizadas (QA)
+
+El backend cuenta con una suite completa de pruebas de integración que validan escenarios críticos como autenticación, rechazo de roles no autorizados y bloqueos atómicos contra sobre-reservas (Double Booking) a nivel de la base de datos.
+
+Para correr la suite de pruebas automatizadas:
+```bash
+docker compose exec backend pytest -v
 ```
 
 ---
 
-## Estrategia de ramas
+## 📂 Estructura Real del Proyecto
 
-| Rama | Propósito | Origen | Destino |
-|---|---|---|---|
-| `main` | Producción estable | — | — |
-| `develop` | Integración | `main` | `main` |
-| `feature/*` | Nueva funcionalidad | `develop` | `develop` |
-| `docs/*` | Documentación | `develop` | `develop` |
-| `hotfix/*` | Corrección urgente | `main` | `main` + `develop` |
-
-Nomenclatura:
-```
-feature/modulo-descripcion      → feature/auth-registro-usuario
-docs/tipo-documento             → docs/requisitos-hus
-hotfix/descripcion-corta        → hotfix/fix-login-validation
+```text
+PROYECTO_FACILE/
+├── .env.example
+├── docker-compose.yml
+├── LICENSE
+├── README.md
+├── backend/
+│   ├── Dockerfile
+│   ├── main.py
+│   ├── requirements.txt
+│   ├── schema.sql           # Script de inicialización de PostgreSQL (Seed & Constraints)
+│   ├── database/            # Conexión a DB (psycopg2)
+│   ├── models/              # Esquemas Pydantic
+│   ├── routes/              # Endpoints (auth.py, empleados.py, habitaciones.py, etc.)
+│   └── tests/               # Suite de pruebas automatizadas (pytest)
+├── frontend/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── vite.config.js       # Proxy configurado al puerto 4000
+│   └── src/                 # Componentes React
+└── docs/
+    └── requisitos/          # RFs, RNFs, HUs y Matriz de Trazabilidad
 ```
 
 ---
 
-## Convenciones
+## 🛡️ Roles del Sistema
 
-### Commits
+BookingSoft implementa un estricto Control de Acceso Basado en Roles (RBAC):
+- **Administrador:** Acceso total (puede modificar roles, estados y gestionar reservas).
+- **Recepcionista 24h / Conserje:** Acceso operativo (creación y visualización de reservas).
+- **Ama de Llaves / Mantenimiento:** Acceso restringido (solo actualización de estados de habitaciones).
 
-Seguimos [Conventional Commits](https://www.conventionalcommits.org/):
+---
 
-```
+## 📊 Estado del Proyecto (Trazabilidad)
+
+Para conocer el estado exacto y detallado de cada Requisito Funcional (RF) frente a su respectivo endpoint y prueba, consulta nuestra **[Matriz de Trazabilidad](docs/requisitos/MATRIZ_TRAZABILIDAD.md)**.
+
+**Resumen de Avance (Sprint 0, 1, 2 y 3):**
+- **Implementado y Probado (Core):** Autenticación JWT, registro cifrado (bcrypt), autorización por roles, estado de empleados, reservas y prevención de concurrencia atómica (Exclusión GiST).
+- **Pendientes:** Endpoints específicos de consulta individual y listado de empleados (RF-002, RF-003), y consulta de disponibilidad de habitaciones como endpoint independiente (RF-012) -- pendientes de cierre.
+- **Fase 2 (Fuera del alcance estabilizado):** Módulos avanzados como cancelación o modificación de reservas y alquiler de espacios Coworking.
+
+---
+
+## 🛠️ Convenciones y Flujo de Trabajo
+
+### Commits (Conventional Commits)
+```text
 feat: agregar endpoint de registro de usuario
-fix: corregir validación de fechas en reservas
-docs: actualizar HU-005
+fix: corregir validación de concurrencia en reservas
+docs: actualizar Matriz de Trazabilidad
 test: agregar pruebas para servicio de reservas
 refactor: reorganizar rutas del backend
 ```
 
-### Idiomas
-
-| Elemento | Idioma |
-|---|---|
-| Código fuente, variables, endpoints, DB | Inglés |
-| Documentación, HUs, RFs, RNFs, comentarios | Español |
-
-### Seguridad
-
-- Contraseñas cifradas con bcrypt
-- Credenciales en variables de entorno (no versionadas)
-- Control de acceso basado en roles (RBAC)
-- Mensajes de error genéricos en autenticación
+### Estrategia de Ramas
+- `main`: Producción estable.
+- `develop`: Integración.
+- `feature/*`: Desarrollo de nuevas características.
+- `docs/*`: Documentación del proyecto.
 
 ---
 
-## Equipo
+## 👥 Equipo BookingSoft
 
 | Integrante |
 |---|
@@ -177,20 +148,4 @@ refactor: reorganizar rutas del backend
 | David López |
 
 Programa: Análisis y Desarrollo de Software — SENA, 2026.
-
----
-
-## Documentación
-
-| Tipo | Cantidad | Ruta |
-|---|---|---|
-| Historias de Usuario | 15 | `docs/requisitos/HUs/` |
-| Requisitos Funcionales | 15 | `docs/requisitos/RFs/` |
-| Requisitos No Funcionales | 11 | `docs/requisitos/RNFs/` |
-| Restricciones | 1 | `docs/requisitos/restricciones.md` |
-
----
-
-## Licencia
-
-ISC
+Licencia: ISC

@@ -1,4 +1,4 @@
-# RNF11 — Herramientas de Desarrollo
+# RNF-011 — Herramientas de Desarrollo
 
 <!--
   ¿Qué? Requisito no funcional que define las herramientas establecidas para el desarrollo de BookingSoft.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-011                        |
 | **Nombre**        | Herramientas de Desarrollo     |
 | **Categoría**     | Herramientas de Desarrollo     |
-| **Prioridad**     | Por definir                    |
-| **Estado**        | Por definir                    |
-| **Fecha**         | Por definir                    |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

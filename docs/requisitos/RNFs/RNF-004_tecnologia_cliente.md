@@ -1,4 +1,4 @@
-# RNF04 — Tecnología del Cliente
+# RNF-004 — Tecnología del Cliente
 
 <!--
   ¿Qué? Requisito no funcional que define las tecnologías del frontend de BookingSoft.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-004                      |
 | **Nombre**        | Tecnología del Cliente       |
 | **Categoría**     | Tecnología del Cliente       |
-| **Prioridad**     | Por definir                  |
-| **Estado**        | Por definir                  |
-| **Fecha**         | Por definir                  |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

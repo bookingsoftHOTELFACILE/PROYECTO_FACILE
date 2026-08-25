@@ -1,4 +1,4 @@
-# RNF09 — Concurrencia e Integridad
+# RNF-009 — Concurrencia e Integridad
 
 <!--
   ¿Qué? Requisito no funcional que define la obligación de evitar condiciones de carrera en el bloqueo de unidades.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-009                        |
 | **Nombre**        | Concurrencia e Integridad      |
 | **Categoría**     | Concurrencia e Integridad      |
-| **Prioridad**     | Por definir                    |
-| **Estado**        | Por definir                    |
-| **Fecha**         | Por definir                    |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

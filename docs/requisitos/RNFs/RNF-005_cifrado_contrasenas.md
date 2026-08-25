@@ -1,4 +1,4 @@
-# RNF05 — Cifrado de Contraseñas
+# RNF-005 — Cifrado de Contraseñas
 
 <!--
   ¿Qué? Requisito no funcional que define el mecanismo de almacenamiento seguro de contraseñas.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-005                    |
 | **Nombre**        | Cifrado de Contraseñas     |
 | **Categoría**     | Seguridad de Datos         |
-| **Prioridad**     | Por definir                |
-| **Estado**        | Por definir                |
-| **Fecha**         | Por definir                |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 

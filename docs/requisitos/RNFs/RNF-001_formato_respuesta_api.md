@@ -1,4 +1,4 @@
-# RNF01 — Formato de Respuesta de la API
+# RNF-001 — Formato de Respuesta de la API
 
 <!--
   ¿Qué? Requisito no funcional que define el formato de las respuestas de la API de BookingSoft.
@@ -16,9 +16,9 @@
 | **Referencia**    | RNF-001                        |
 | **Nombre**        | Formato de Respuesta de la API |
 | **Categoría**     | Interfaz e Integración         |
-| **Prioridad**     | Por definir                    |
-| **Estado**        | Por definir                    |
-| **Fecha**         | Por definir                    |
+| **Prioridad**    | Alta |
+| **Estado**       | Implementado y probado |
+| **Fecha**        | 2026-08-22 |
 
 ---
 
