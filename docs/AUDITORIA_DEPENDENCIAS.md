@@ -344,18 +344,16 @@ Severity: 2 low | 12 moderate | 2 high
 
 ---
 
-## 4. Estado de Corrección de Vulnerabilidades y Protocolo de Seguridad
+## 4. Decisión sobre las vulnerabilidades encontradas y Gestión de Riesgo
 
-De acuerdo con el protocolo del proyecto:
-1. **Verificación de comodines:** Se garantiza la ausencia total de comodines en `requirements.txt` y `package.json`.
-2. **Propuesta de actualización de versiones fijas (Pinadas):** Para corregir las vulnerabilidades encontradas manteniendo la regla estricta del profesor (100% versiones exactas), se proponen las siguientes actualizaciones específicas para la aprobación del equipo:
+### Backend (pip-audit)
+Las 30 vulnerabilidades detectadas afectan a 6 paquetes: `pip`, `pyjwt`, `pytest`, `python-dotenv`, `setuptools` y `starlette`. Se decide **NO actualizar ninguna versión** a 2 días de la entrega del proyecto (3 de septiembre 2026), por el riesgo de introducir regresiones sin tiempo suficiente para probarlas a fondo. Se documenta como **riesgo aceptado**.
 
-| Módulo | Paquete | Versión Actual | Versión Recomendada (Exacta) | Razón de Corrección |
-| :--- | :--- | :--- | :--- | :--- |
-| Backend | `pyjwt` | `2.8.0` | `2.13.0` | Corrección de PYSEC-2026-179/175/177/178 |
-| Backend | `starlette` | `0.37.2` | `1.3.1` | Corrección de PYSEC-2026-249/248/1943/1941 |
-| Backend | `pytest` | `8.2.2` | `9.0.3` | Corrección de PYSEC-2026-1845 |
-| Backend | `python-dotenv` | `1.0.1` | `1.2.2` | Corrección de PYSEC-2026-2270 |
-| Frontend | `vite` | `5.4.0` | `6.4.3` | Corrección de 16 avisos de seguridad en dev server |
+*Nota de evaluación de entorno:* `pyjwt` y `starlette` son dependencias que sí corren en producción (autenticación JWT y el servidor ASGI de FastAPI); `pip`, `pytest`, `python-dotenv` y `setuptools` son herramientas de desarrollo/empaquetado que no se ejecutan en el flujo de la aplicación en producción.
 
-*Nota:* No se ha realizado ninguna actualización en los archivos de dependencias de forma autónoma a la espera de la confirmación explícita del usuario.
+### Frontend (pnpm audit)
+Las 16 vulnerabilidades detectadas afectan exclusivamente a `vite` y su dependencia `esbuild`. Todas corresponden a bypasses del servidor de desarrollo de Vite (`server.fs.deny`) o al modo de desarrollo de `esbuild` -- ninguna afecta el build de producción que se sirve mediante Nginx dentro del contenedor Docker (el servidor de desarrollo de Vite nunca se expone en el entorno productivo). Se decide **NO actualizar** por la misma razón de proximidad a la entrega, documentado como **riesgo aceptado de bajo impacto real** dado que el vector de ataque requiere acceso a la máquina de desarrollo, no al sistema desplegado.
+
+### Recomendación para Fase 2
+Actualizar `vite` a `>=5.4.21` (o migrar a Vite 6/7 con versión fija), `pyjwt` a `2.13.0`, y `starlette` a la versión estable más reciente compatible con FastAPI 0.111.0, con su respectiva batería de pruebas de regresión antes de subir a producción real del Apartahotel Facile.
+
