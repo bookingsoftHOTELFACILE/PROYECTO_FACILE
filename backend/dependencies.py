@@ -40,6 +40,7 @@ class UsuarioActual:
     """Datos del empleado autenticado extraídos del JWT."""
     id_empleado: int
     rol: str
+    nombre: str = ""
 
 
 # ── Dependencia base: autenticar ──────────────────────────────────────────────
@@ -50,7 +51,7 @@ def autenticar(
     Dependencia de FastAPI que:
     1. Extrae el JWT del header Authorization: Bearer <token>.
     2. Valida firma y expiración con JWT_SECRET.
-    3. Devuelve UsuarioActual(id_empleado, rol) si es válido.
+    3. Devuelve UsuarioActual(id_empleado, rol, nombre) si es válido.
     4. Lanza HTTP 401 si el token falta, expiró o la firma es inválida.
 
     RF-009 / RN-009.3: control en toda solicitud al servidor.
@@ -86,6 +87,7 @@ def autenticar(
 
     sub = payload.get("sub")
     rol = payload.get("rol")
+    nombre = payload.get("nombre", "")
 
     if not sub or not rol:
         raise HTTPException(
@@ -94,7 +96,7 @@ def autenticar(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    return UsuarioActual(id_empleado=int(sub), rol=rol)
+    return UsuarioActual(id_empleado=int(sub), rol=rol, nombre=nombre)
 
 
 # ── Dependencia de autorización: requiere_rol ─────────────────────────────────

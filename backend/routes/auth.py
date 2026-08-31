@@ -28,14 +28,15 @@ _JWT_ALGORITHM = "HS256"
 _JWT_EXPIRY_HOURS = 8  # CA-002.2: acceso válido por 8 horas
 
 
-def _crear_token(id_empleado: int, rol: str) -> str:
-    """Genera un JWT firmado con id y rol del empleado."""
+def _crear_token(id_empleado: int, rol: str, nombre: str = "") -> str:
+    """Genera un JWT firmado con id, rol y nombre del empleado."""
     if not _JWT_SECRET:
         raise RuntimeError("JWT_SECRET no está configurado.")
     expira = datetime.now(tz=timezone.utc) + timedelta(hours=_JWT_EXPIRY_HOURS)
     payload = {
         "sub": str(id_empleado),
         "rol": rol,
+        "nombre": nombre,
         "exp": expira,
     }
     return jwt.encode(payload, _JWT_SECRET, algorithm=_JWT_ALGORITHM)
@@ -171,7 +172,7 @@ def login(credenciales: LoginRequest):
         cur = conn.cursor()
         # Incluimos 'estado' para aplicar CA-002.4 / RN-010.3
         cur.execute(
-            "SELECT id_empleado, contrasena, rol, estado FROM empleado WHERE usuario = %s",
+            "SELECT id_empleado, contrasena, rol, estado, nombre FROM empleado WHERE usuario = %s",
             (credenciales.usuario,),
         )
         fila = cur.fetchone()
@@ -187,7 +188,7 @@ def login(credenciales: LoginRequest):
     if fila is None:
         raise _CRED_ERROR
 
-    id_empleado, hash_guardado, rol, estado = fila
+    id_empleado, hash_guardado, rol, estado, nombre = fila
     if not bcrypt.checkpw(credenciales.contrasena.encode(), hash_guardado.encode()):
         raise _CRED_ERROR
 
@@ -199,7 +200,7 @@ def login(credenciales: LoginRequest):
             detail="Cuenta inactiva. Contacte al administrador del sistema.",
         )
 
-    token = _crear_token(id_empleado, rol)
+    token = _crear_token(id_empleado, rol, nombre)
     return TokenResponse(access_token=token)
 
 

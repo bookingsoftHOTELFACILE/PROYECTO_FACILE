@@ -26,7 +26,10 @@ def obtener_habitaciones():
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado FROM habitacion ORDER BY numero ASC")
+        cursor.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
+        cursor.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS detalle_mantenimiento VARCHAR(255)")
+        conn.commit()
+        cursor.execute("SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado, modificado_por, detalle_mantenimiento FROM habitacion ORDER BY numero ASC")
         filas = cursor.fetchall()
         
         habitaciones = []
@@ -37,7 +40,9 @@ def obtener_habitaciones():
                 "tipo": f[2],
                 "capacidad": f[3],
                 "precio_noche": float(f[4]),
-                "estado": f[5]
+                "estado": f[5],
+                "modificado_por": f[6] or "",
+                "detalle_mantenimiento": f[7] or ""
             })
             
         cursor.close()
@@ -156,3 +161,73 @@ def consultar_disponibilidad(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al consultar disponibilidad: {e}"
         )
+
+
+# ── PATCH /api/habitaciones/{id_habitacion}/estado ────────────────────────────
+from pydantic import BaseModel
+from dependencies import autenticar, UsuarioActual
+
+class HabitacionEstadoUpdate(BaseModel):
+    estado: str
+    detalle_mantenimiento: Optional[str] = None
+
+_ROLES_GESTION_HABITACION = ("Administrador", "Ama de llaves", "Personal de mantenimiento", "Recepcionista 24h", "Conserje")
+
+@router.patch("/{id_habitacion}/estado", dependencies=[Depends(requiere_rol(*_ROLES_GESTION_HABITACION))])
+def cambiar_estado_habitacion(
+    id_habitacion: int,
+    data: HabitacionEstadoUpdate,
+    usuario: UsuarioActual = Depends(autenticar)
+):
+    """
+    Gestión de Mantenimiento y Amas de Llaves (Estándar OPERA PMS).
+    Permite cambiar el estado de la habitación y registrar reportes de daño.
+    """
+    estados_validos = ("Disponible", "Ocupada", "En limpieza", "Mantenimiento")
+    if data.estado not in estados_validos:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Estado inválido. Debe ser uno de: {', '.join(estados_validos)}"
+        )
+        
+    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    detalle = data.detalle_mantenimiento or ""
+    
+    try:
+        conn = connection.obtener_conexion()
+        cur = conn.cursor()
+        cur.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
+        cur.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS detalle_mantenimiento VARCHAR(255)")
+        conn.commit()
+        
+        # Si se restablece a Disponible o En limpieza sin especificar detalle, se borra el reporte de daño anterior
+        if data.estado in ("Disponible", "En limpieza") and not data.detalle_mantenimiento:
+            detalle = ""
+
+        cur.execute(
+            "UPDATE habitacion SET estado = %s, modificado_por = %s, detalle_mantenimiento = %s WHERE id_habitacion = %s RETURNING numero",
+            (data.estado, audit_str, detalle, id_habitacion)
+        )
+        row = cur.fetchone()
+        if not row:
+            cur.close(); conn.close()
+            raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
+            
+        numero_hab = row[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        msg_extra = f" [Reporte: {detalle}]" if detalle else ""
+        return {
+            "message": f"Apartamento {numero_hab} actualizado a estado '{data.estado}' por {audit_str}.{msg_extra}",
+            "id_habitacion": id_habitacion,
+            "estado": data.estado,
+            "modificado_por": audit_str,
+            "detalle_mantenimiento": detalle
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al actualizar estado de la habitación: {e}")
+

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 import psycopg2
 from database import connection
-from dependencies import requiere_rol
+from dependencies import requiere_rol, autenticar, UsuarioActual
 from models.schemas import ReservaCreate
 
 # RF-009: roles autorizados para el módulo de reservas.
@@ -13,15 +13,17 @@ router = APIRouter(prefix="/api/reservas", tags=["reservas"])
 # RF-009: consulta de reservas restringida a roles operativos.
 @router.get("", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
 def obtener_reservas():
-    """Retorna el listado completo de reservas registradas."""
-    # Si la base de datos PostgreSQL está activa
+    """Retorna el listado completo de reservas registradas incluyendo auditoría de quien reservó."""
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
+        cursor.execute("ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS creado_por VARCHAR(100)")
+        conn.commit()
+        
         query_text = """
             SELECT r.id_reserva, r.id_huesped, h.nombre as huesped_nombre, h.documento as huesped_documento,
                    r.id_habitacion, hab.numero as habitacion_numero, hab.tipo as habitacion_tipo,
-                   r.fecha_entrada, r.fecha_salida, r.estado
+                   r.fecha_entrada, r.fecha_salida, r.estado, r.creado_por
             FROM reserva_habitacion r
             JOIN huesped h ON r.id_huesped = h.id_huesped
             JOIN habitacion hab ON r.id_habitacion = hab.id_habitacion
@@ -42,7 +44,8 @@ def obtener_reservas():
                 "habitacion_tipo": f[6],
                 "fecha_entrada": f[7].strftime("%Y-%m-%d") if hasattr(f[7], 'strftime') else str(f[7]),
                 "fecha_salida": f[8].strftime("%Y-%m-%d") if hasattr(f[8], 'strftime') else str(f[8]),
-                "estado": f[9]
+                "estado": f[9],
+                "creado_por": f[10] or ""
             })
             
         cursor.close()
@@ -52,9 +55,13 @@ def obtener_reservas():
         raise HTTPException(status_code=500, detail=f"Error al obtener reservas: {e}")
 
 # RF-009 / RF-011: solo roles operativos pueden crear reservas.
-@router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
-def crear_reserva(reserva: ReservaCreate):
-    """Crea una reserva de habitación calculando cotización e impidiendo colisiones de fechas (RF-011)."""
+@router.post("", status_code=status.HTTP_201_CREATED)
+def crear_reserva(
+    reserva: ReservaCreate,
+    usuario: UsuarioActual = Depends(autenticar)
+):
+    """Crea una reserva de habitación calculando cotización e impidiendo colisiones de fechas (RF-011) registrando la auditoría del empleado."""
+    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
     
     # 1. Validar formato y coherencia de fechas
     try:
@@ -65,31 +72,28 @@ def crear_reserva(reserva: ReservaCreate):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Formato de fechas inválido. Debe ser AAAA-MM-DD."
         )
-        
 
-        
-    # --- MODO BASE DE DATOS FÍSICA (PostgreSQL) ---
     conn = None
     cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
+        cursor.execute("ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS creado_por VARCHAR(100)")
+        conn.commit()
         
-        # A. Obtener datos de la habitación (incluye capacidad para RN-011.4)
+        # A. Obtener datos de la habitación
         cursor.execute("SELECT precio_noche, numero, estado, capacidad FROM habitacion WHERE id_habitacion = %s", (reserva.id_habitacion,))
         hab_row = cursor.fetchone()
         if not hab_row:
             raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
         precio_noche, numero_hab, estado_hab, capacidad_hab = hab_row
         
-        # Validar si está en mantenimiento en base de datos
         if estado_hab == "Mantenimiento":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"La habitación {numero_hab} se encuentra en Mantenimiento y no acepta nuevas reservas."
             )
 
-        # RN-011.4: validar capacidad antes del INSERT (el trigger no cubre este caso).
         if reserva.numero_personas > capacidad_hab:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -105,13 +109,13 @@ def crear_reserva(reserva: ReservaCreate):
         cot_row = cursor.fetchone()
         noches, subtotal, descuento, total = cot_row
         
-        # C. Insertar la reserva (se disparará el trigger trg_validar_double_booking / EXCLUDE constraint)
+        # C. Insertar la reserva registrando creado_por
         insertar_query = """
-            INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado)
-            VALUES (%s, %s, %s, %s, 'Confirmada')
-            RETURNING id_reserva, id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado
+            INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado, creado_por)
+            VALUES (%s, %s, %s, %s, 'Confirmada', %s)
+            RETURNING id_reserva, id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado, creado_por
         """
-        cursor.execute(insertar_query, (reserva.id_huesped, reserva.id_habitacion, reserva.fecha_entrada, reserva.fecha_salida))
+        cursor.execute(insertar_query, (reserva.id_huesped, reserva.id_habitacion, reserva.fecha_entrada, reserva.fecha_salida, audit_str))
         res_row = cursor.fetchone()
         
         # Obtener detalles del huésped
@@ -130,11 +134,12 @@ def crear_reserva(reserva: ReservaCreate):
             "habitacion_tipo": "",
             "fecha_entrada": res_row[3].strftime("%Y-%m-%d") if hasattr(res_row[3], 'strftime') else str(res_row[3]),
             "fecha_salida": res_row[4].strftime("%Y-%m-%d") if hasattr(res_row[4], 'strftime') else str(res_row[4]),
-            "estado": res_row[5]
+            "estado": res_row[5],
+            "creado_por": res_row[6]
         }
         
         return {
-            "message": "Reserva creada y bloqueada exitosamente.",
+            "message": f"Reserva confirmada exitosamente por {audit_str}.",
             "reserva": nueva_res,
             "cotizacion": {
                 "noches": noches,
@@ -150,28 +155,21 @@ def crear_reserva(reserva: ReservaCreate):
             except Exception:
                 pass
         pgcode = getattr(db_err, 'pgcode', '') or ''
-        constraint = ''
-        if hasattr(db_err, 'diag') and db_err.diag:
-            constraint = getattr(db_err.diag, 'constraint_name', '') or ''
         err_msg = str(db_err)
 
-        # 23P01: exclusion_violation, 40P01: deadlock_detected — colisión de concurrencia
         if pgcode in ('23P01', '40P01') or 'exclude_overlapping_reservations' in err_msg:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Double Booking Detectado: La habitación ya está reservada para el rango de fechas solicitado, o hubo una colisión de concurrencia. Intenta de nuevo."
+                detail="Double Booking Detectado: La habitación ya está reservada para el rango de fechas solicitado."
             )
-        # 23514: check_violation — chk_fechas (salida <= entrada) u otro CHECK
         if pgcode == '23514' or 'chk_fechas' in err_msg:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="La fecha de salida debe ser posterior a la fecha de entrada."
             )
-        # Trigger de mantenimiento o cualquier raise_exception del PL/pgSQL (P0001)
         if pgcode == 'P0001' or 'Mantenimiento' in err_msg:
             cleaned = err_msg.split('CONTEXT:')[0].replace('ERROR: ', '').strip()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=cleaned)
-        # Cualquier otro error de base de datos no clasificado
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error de base de datos relacional: {err_msg}"
@@ -194,3 +192,39 @@ def crear_reserva(reserva: ReservaCreate):
                 conn.close()
             except Exception:
                 pass
+
+@router.delete("/{id_reserva}")
+def eliminar_reserva(
+    id_reserva: int,
+    usuario: UsuarioActual = Depends(autenticar)
+):
+    """
+    Elimina o cancela una reserva auditando el usuario responsable.
+    - Si la reserva estaba en Check-In/Ocupada (estancia realizada) -> Cambia habitación a 'En limpieza'.
+    - Si la reserva estaba Confirmada/Pendiente (cancelada antes del ingreso) -> Queda 'Disponible'.
+    """
+    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    try:
+        conn = connection.obtener_conexion()
+        cursor = conn.cursor()
+        cursor.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
+        conn.commit()
+        
+        # Obtener datos de la reserva antes de eliminarla
+        cursor.execute("SELECT id_habitacion, estado FROM reserva_habitacion WHERE id_reserva = %s", (id_reserva,))
+        res_row = cursor.fetchone()
+        
+        if res_row:
+            id_hab, estado_res = res_row
+            if estado_res in ("Check-In", "Completada", "Ocupada"):
+                cursor.execute("UPDATE habitacion SET estado = 'En limpieza', modificado_por = %s WHERE id_habitacion = %s", (audit_str, id_hab))
+            else:
+                cursor.execute("UPDATE habitacion SET estado = 'Disponible', modificado_por = %s WHERE id_habitacion = %s", (audit_str, id_hab))
+        
+        cursor.execute("DELETE FROM reserva_habitacion WHERE id_reserva = %s", (id_reserva,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return {"message": f"Reserva #{id_reserva} eliminada/cancelada por {audit_str}."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar reserva: {e}")
