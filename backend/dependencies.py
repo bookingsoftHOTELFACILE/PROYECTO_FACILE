@@ -65,6 +65,12 @@ def autenticar(
     if credenciales is None:
         raise _no_autenticado
 
+    if not _JWT_SECRET or _JWT_SECRET in ("CHANGE_ME", "CHANGE_ME_FOR_SECURITY_OR_USE_GENERATE_KEYS"):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error de configuración en el servidor: JWT_SECRET no está configurado de forma segura.",
+        )
+
     try:
         payload = jwt.decode(
             credenciales.credentials,
@@ -97,6 +103,26 @@ def autenticar(
         )
 
     return UsuarioActual(id_empleado=int(sub), rol=rol, nombre=nombre)
+
+
+def autenticar_opcional(
+    credenciales: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+) -> UsuarioActual | None:
+    """Extrae datos de autenticación si se proporciona un JWT válido, sin bloquear si es público."""
+    if credenciales is None or not _JWT_SECRET or _JWT_SECRET in ("CHANGE_ME", "CHANGE_ME_FOR_SECURITY_OR_USE_GENERATE_KEYS"):
+        return None
+    try:
+        payload = jwt.decode(
+            credenciales.credentials,
+            _JWT_SECRET,
+            algorithms=[_JWT_ALGORITHM],
+        )
+        sub = payload.get("sub")
+        rol = payload.get("rol", "Huésped")
+        nombre = payload.get("nombre", "Huésped Web")
+        return UsuarioActual(id_empleado=int(sub) if sub else 0, rol=rol, nombre=nombre)
+    except Exception:
+        return None
 
 
 # ── Dependencia de autorización: requiere_rol ─────────────────────────────────

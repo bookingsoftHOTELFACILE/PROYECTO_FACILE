@@ -10,6 +10,18 @@ class UserRegistro(BaseModel):
     telefono: str
     correo: str
     empresa: Optional[str] = None
+    password: Optional[str] = None
+
+class GuestLoginRequest(BaseModel):
+    documento_o_correo: str
+    password: Optional[str] = None
+
+class GuestRecuperarRequest(BaseModel):
+    correo_o_documento: str
+
+class GuestRestablecerRequest(BaseModel):
+    correo_o_documento: str
+    nueva_password: str
 
 class ReservaCreate(BaseModel):
     id_huesped: int
@@ -22,6 +34,13 @@ class ReservaCreate(BaseModel):
 
 
 # --- Schemas de Empleados / Autenticación (Sprint 1) ---
+
+ROLES_ASIGNABLES = Literal[
+    'Recepcionista 24h',
+    'Ama de llaves',
+    'Personal de mantenimiento',
+    'Conserje'
+]
 
 ROLES_VALIDOS = Literal[
     'Administrador',
@@ -52,8 +71,8 @@ class EmpleadoRegistro(BaseModel):
     # Credenciales de acceso al sistema
     usuario: str
     contrasena: str
-    # CA-001.7: rol por defecto si no se especifica
-    rol: Optional[ROLES_VALIDOS] = 'Recepcionista 24h'
+    # CA-001.7: rol por defecto si no se especifica (roles asignables operativos)
+    rol: Optional[ROLES_ASIGNABLES] = 'Recepcionista 24h'
 
 
 class LoginRequest(BaseModel):

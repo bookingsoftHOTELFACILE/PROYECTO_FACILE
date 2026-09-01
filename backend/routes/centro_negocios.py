@@ -10,6 +10,8 @@ from datetime import date, time, datetime, timedelta
 from database import connection
 from routes.huespedes import autenticar, requiere_rol, UsuarioActual
 
+from dependencies import autenticar_opcional
+
 router = APIRouter(prefix="/api/centro-negocios", tags=["Centro de Negocios"])
 
 class CrearReservaNegocioRequest(BaseModel):
@@ -57,7 +59,7 @@ def listar_espacios():
 @router.get("/reservas")
 def listar_reservas_negocio():
     """
-    Lista todas las reservas registradas para el Centro de Negocios.
+    Lista todas las reservas activas registradas para el Centro de Negocios.
     """
     try:
         conn = connection.obtener_conexion()
@@ -81,7 +83,8 @@ def listar_reservas_negocio():
                 rn.creado_por
             FROM reserva_negocio rn
             JOIN espacio_negocio en ON rn.id_espacio = en.id_espacio
-            ORDER BY rn.fecha DESC, rn.hora_inicio DESC
+            WHERE rn.estado = 'Confirmada'
+            ORDER BY rn.id_reserva_negocio ASC
         """)
         filas = cursor.fetchall()
         cursor.close()
@@ -111,16 +114,16 @@ def listar_reservas_negocio():
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error interno del servidor al consultar reservas del Centro de Negocios.")
 
-@router.post("/reservas", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
+@router.post("/reservas")
 def crear_reserva_negocio(
     req: CrearReservaNegocioRequest,
-    usuario: UsuarioActual = Depends(autenticar)
+    usuario: Optional[UsuarioActual] = Depends(autenticar_opcional)
 ):
     """
     Registra una reserva por horas para Salas de Juntas o Coworking.
     Permite asociar a un Huésped Registrado o a un Cliente Externo.
     """
-    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    audit_str = f"{usuario.nombre if usuario else 'Cliente Web'} ({usuario.rol if usuario else 'Público'})"
 
     try:
         t_inicio = datetime.strptime(req.hora_inicio, "%H:%M").time()
@@ -196,7 +199,7 @@ def crear_reserva_negocio(
         connection.liberar_conexion(conn)
 
         return {
-            "message": f"Reserva #{nuevo_id} para {esp_nombre} creada exitosamente por {audit_str}.",
+            "message": f"Reserva #{nuevo_id} para {esp_nombre} creada exitosamente.",
             "id_reserva_negocio": nuevo_id,
             "precio_total": precio_total,
             "duracion_horas": duracion_horas
@@ -206,15 +209,15 @@ def crear_reserva_negocio(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error interno del servidor al crear la reserva del Centro de Negocios.")
 
-@router.delete("/reservas/{id_reserva_negocio}", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
+@router.delete("/reservas/{id_reserva_negocio}")
 def cancelar_reserva_negocio(
     id_reserva_negocio: int,
-    usuario: UsuarioActual = Depends(autenticar)
+    usuario: Optional[UsuarioActual] = Depends(autenticar_opcional)
 ):
     """
     Cancela una reserva del Centro de Negocios mediante baja lógica (UPDATE estado = 'Cancelada').
     """
-    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    audit_str = f"{usuario.nombre if usuario else 'Cliente Web'} ({usuario.rol if usuario else 'Público'})"
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
@@ -227,6 +230,6 @@ def cancelar_reserva_negocio(
         conn.commit()
         cursor.close()
         connection.liberar_conexion(conn)
-        return {"message": f"Reserva #{id_reserva_negocio} del Centro de Negocios cancelada exitosamente por {audit_str}."}
+        return {"message": f"Reserva #{id_reserva_negocio} del Centro de Negocios cancelada exitosamente."}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error interno del servidor al cancelar la reserva.")
