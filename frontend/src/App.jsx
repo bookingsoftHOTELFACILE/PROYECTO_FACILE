@@ -1155,9 +1155,15 @@ function App() {
             <form onSubmit={handleLoginSubmit}>
               <div className="form-field">
                 <label>Usuario</label>
-                <div className="field-input-wrap">
-                  <User className="field-icon" size={16}/>
-                  <input type="text" placeholder="Ej: sandra_admin" value={loginForm.usuario} onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })} required/>
+                <div className="input-wrapper">
+                  <User className="input-icon" size={18}/>
+                  <input
+                    type="text"
+                    placeholder="Ej: sandra_admin o carlos_recep"
+                    value={loginForm.usuario}
+                    onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })}
+                    required
+                  />
                 </div>
               </div>
 
@@ -1180,21 +1186,25 @@ function App() {
               </button>
             </form>
 
-            <div style={{ marginTop: '1.2rem', paddingTop: '0.8rem', borderTop: '1px solid #e2e8f0' }}>
-              <p style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '0.4rem' }}>
-                ⚡ Acceso rápido para sustentación académica:
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }} onClick={() => setLoginForm({ usuario: 'sandra_admin', contrasena: 'Admin2026!' })}>
-                  👑 <strong>Sandra Milena</strong> (Administrador) — <code>sandra_admin / Admin2026!</code>
-                </button>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }} onClick={() => setLoginForm({ usuario: 'carlos_recep', contrasena: 'Recep2026!' })}>
-                  👤 <strong>Carlos Pérez</strong> (Recepcionista 24h) — <code>carlos_recep / Recep2026!</code>
-                </button>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }} onClick={() => setLoginForm({ usuario: 'marta_limpieza', contrasena: 'marta123' })}>
-                  🧹 <strong>Marta Limpieza</strong> (Ama de llaves) — <code>marta_limpieza / marta123</code>
-                </button>
-              </div>
+            {/* BOTONES DE ACCESO RÁPIDO PARA DEMOSTRACIÓN ACADÉMICA */}
+            <div className="preset-users">
+              <p>⚡ Credenciales de Prueba (Presiona para autocompletar):</p>
+              <button
+                type="button"
+                className="preset-btn"
+                onClick={() => setLoginForm({ usuario: 'bookingsoft_admin', contrasena: 'Admin2026!' })}
+              >
+                <span>👑 <strong>Equipo BookingSoft</strong> (Administrador)</span>
+                <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>bookingsoft_admin / Admin2026!</span>
+              </button>
+              <button
+                type="button"
+                className="preset-btn"
+                onClick={() => setLoginForm({ usuario: 'carlos_recep', contrasena: 'Recep2026!' })}
+              >
+                <span>👤 <strong>Carlos Pérez</strong> (Recepcionista 24h)</span>
+                <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>carlos_recep / Recep2026!</span>
+              </button>
             </div>
           </div>
         </div>
