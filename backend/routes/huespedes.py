@@ -45,19 +45,16 @@ def obtener_huespedes():
         raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
         )
 
-@router.post("/api/user/registro", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
-def registrar_usuario(
-    usuario: UserRegistro,
-    usuario_actual: UsuarioActual = Depends(autenticar)
-):
-    """Registra un nuevo huésped validando que el documento sea único y auditando al empleado autenticado."""
+@router.post("/api/user/registro", status_code=status.HTTP_201_CREATED)
+def registrar_usuario(usuario: UserRegistro):
+    """Registra un nuevo huésped validando que el documento sea único."""
     if not usuario.nombre or not usuario.documento or not usuario.telefono or not usuario.correo:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nombre, documento, teléfono y correo son campos obligatorios."
         )
         
-    audit_str = f"Creado por: {usuario_actual.nombre or 'Empleado'} ({usuario_actual.rol})"
+    audit_str = "Auto-registro (Huésped)"
     
     try:
         conn = connection.obtener_conexion()
@@ -97,7 +94,7 @@ def registrar_usuario(
         
         cursor.close()
         connection.liberar_conexion(conn)
-        return {"message": f"Huésped '{usuario.nombre}' registrado exitosamente por {usuario_actual.nombre} ({usuario_actual.rol}).", "usuario": nuevo_usuario}
+        return {"message": "Usuario registrado exitosamente para realizar reservas.", "usuario": nuevo_usuario}
         
     except HTTPException as he:
         raise he

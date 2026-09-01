@@ -28,12 +28,12 @@ def test_registro_usuario_duplicado(client, admin_token):
     # Se intenta registrar el usuario que ya existe por el seed data
     payload = {
         "nombre": "Duplicado",
-        "usuario": "sandra_admin",  # Ya existe
+        "usuario": "bookingsoft_admin",  # Ya existe
         "contrasena": "Password123!",
         "tipo_documento": "Cédula de ciudadanía",
         "numero_documento": "11111111",
-        "correo": "duplicado@example.com",
-        "rol": "Recepcionista 24h"
+        "correo": "bookingsoft4@gmail.com",
+        "rol": "Recepcionista"
     }
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = client.post("/api/auth/registro", json=payload, headers=headers)
@@ -56,7 +56,7 @@ def test_login_valido(client):
 
 def test_login_credenciales_incorrectas(client):
     res_bad_pass = client.post("/api/auth/login", json={
-        "usuario": "sandra_admin",
+        "usuario": "bookingsoft_admin",
         "contrasena": "Mal12345"
     })
     res_bad_user = client.post("/api/auth/login", json={

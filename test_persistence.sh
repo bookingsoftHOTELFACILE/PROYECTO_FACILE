@@ -15,7 +15,7 @@ sleep 15
 echo "Obteniendo token JWT..."
 TOKEN=$(curl -s -X POST http://localhost:4000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"usuario":"sandra_admin","contrasena":"Admin2026!"}' | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
+  -d '{"usuario":"bookingsoft_admin","contrasena":"Admin2026!"}' | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
 
 if [ -z "$TOKEN" ]; then
     echo "Fallo al obtener token."

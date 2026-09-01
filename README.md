@@ -119,7 +119,7 @@ El `schema.sql` inicializa tres empleados de prueba con contraseñas cifradas (b
 
 | Usuario | Contraseña | Rol |
 | --- | --- | --- |
-| `sandra_admin` | `Admin2026!` | Administrador |
+| `bookingsoft_admin` | `Admin2026!` | Administrador |
 | `carlos_recep` | `Recep2026!` | Recepcionista 24h |
 | `marta_limpieza` | `marta123` | Ama de llaves |
 

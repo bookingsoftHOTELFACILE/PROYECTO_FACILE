@@ -134,7 +134,7 @@ $$ LANGUAGE plpgsql;
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
 INSERT INTO empleado (nombre, usuario, contrasena, rol) VALUES
-('Sandra Milena', 'sandra_admin',  '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador'),    -- Admin2026!
+('Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador'), -- Admin2026!
 ('Carlos Pérez',  'carlos_recep',  '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W',  'Recepcionista 24h'), -- Recep2026!
 ('Marta Ama',     'marta_limpieza','$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves')       -- marta123
 ON CONFLICT (usuario) DO NOTHING;
