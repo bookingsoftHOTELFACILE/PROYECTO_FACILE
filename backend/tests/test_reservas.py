@@ -13,18 +13,20 @@ import concurrent.futures
 
 def test_reserva_descuento(client, admin_token):
     """RF-011 / RN-011.2 — Descuento del 15% para estancias > 15 noches."""
-    # uuid4 garantiza unicidad absoluta (128 bits). Rango [3000, 3999] siempre
-    # válido para PostgreSQL DATE (máx. 9999). Diferente rango al de concurrencia
-    # para evitar cualquier solapamiento entre tests.
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    hab_res = client.get("/api/habitaciones", headers=headers)
+    assert hab_res.status_code == 200
+    habs = hab_res.json()
+    hab = next(h for h in habs if h["numero"] == "101A")
+
     year = 3000 + (uuid.uuid4().int % 1000)
     res_data = {
         "id_huesped": 1,
-        "id_habitacion": 1,
+        "id_habitacion": hab["id_habitacion"],
         "fecha_entrada": f"{year}-01-01",
         "fecha_salida": f"{year}-01-17",   # 16 noches → aplica descuento
         "numero_personas": 2
     }
-    headers = {"Authorization": f"Bearer {admin_token}"}
     response = client.post("/api/reservas", json=res_data, headers=headers)
     assert response.status_code == 201, response.text
 
@@ -34,20 +36,25 @@ def test_reserva_descuento(client, admin_token):
     descuento = data["cotizacion"]["descuento"]
 
     assert noches == 16
-    assert subtotal == 16 * 243000          # precio_noche=243 000 según seed
+    assert subtotal == 16 * hab["precio_noche"]
     assert descuento == subtotal * 0.15
 
 
 def test_reserva_supera_capacidad(client, admin_token):
     """RF-011 / RN-011.4 — Rechazo si numero_personas > capacidad de la habitación."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    hab_res = client.get("/api/habitaciones", headers=headers)
+    assert hab_res.status_code == 200
+    habs = hab_res.json()
+    hab = next(h for h in habs if h["numero"] == "101A")
+
     res_data = {
         "id_huesped": 1,
-        "id_habitacion": 1,
+        "id_habitacion": hab["id_habitacion"],
         "fecha_entrada": "2030-02-01",
         "fecha_salida": "2030-02-05",
-        "numero_personas": 5    # habitación 1 tiene capacidad para 2
+        "numero_personas": 5    # habitación 101A tiene capacidad para 2
     }
-    headers = {"Authorization": f"Bearer {admin_token}"}
     response = client.post("/api/reservas", json=res_data, headers=headers)
 
     assert response.status_code == 400
@@ -81,7 +88,7 @@ def test_reserva_concurrencia_double_booking():
     # ── Autenticación ─────────────────────────────────────────────────────────
     with httpx.Client(base_url=BASE_URL) as c:
         r = c.post("/api/auth/login", json={
-            "usuario": "sandra_admin",
+            "usuario": "bookingsoft_admin",
             "contrasena": "Admin2026!"
         })
         token = r.json()["access_token"]

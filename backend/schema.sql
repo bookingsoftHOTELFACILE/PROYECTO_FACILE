@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS empleado (
     usuario           VARCHAR(50)  UNIQUE NOT NULL,
     contrasena        VARCHAR(255) NOT NULL,
     rol               VARCHAR(30)  NOT NULL
-        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento', 'Conserje')),
+        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento')),
     tipo_documento    VARCHAR(30)  NOT NULL DEFAULT 'Cédula de ciudadanía'
         CHECK (tipo_documento IN ('Cédula de ciudadanía', 'Pasaporte', 'Cédula de extranjería', 'Otro')),
     numero_documento  VARCHAR(30)  UNIQUE,
@@ -47,13 +47,46 @@ CREATE TABLE IF NOT EXISTS huesped (
 CREATE TABLE IF NOT EXISTS habitacion (
     id_habitacion SERIAL PRIMARY KEY,
     numero VARCHAR(10) UNIQUE NOT NULL,
-    tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('Dúplex', 'Familiar', 'Habitaciones')),
+    tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('Dúplex', 'Doble', 'Familiar', 'Habitación')),
     capacidad INT NOT NULL,
     precio_noche DECIMAL(10,2) NOT NULL CHECK (precio_noche > 0),
     estado VARCHAR(20) NOT NULL DEFAULT 'Disponible' CHECK (estado IN ('Disponible', 'Ocupada', 'En limpieza', 'Mantenimiento')),
     detalle_mantenimiento TEXT,
     creado_por VARCHAR(150) DEFAULT 'Sistema',
     modificado_por VARCHAR(150) DEFAULT 'Sistema'
+);
+
+-- Tabla de Espacios del Centro de Negocios (Salas de Juntas y Coworking)
+CREATE TABLE IF NOT EXISTS espacio_negocio (
+    id_espacio SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('Sala de Juntas', 'Coworking')),
+    capacidad INT NOT NULL,
+    precio_hora DECIMAL(10,2) NOT NULL CHECK (precio_hora > 0),
+    estado VARCHAR(20) NOT NULL DEFAULT 'Disponible' CHECK (estado IN ('Disponible', 'Mantenimiento')),
+    creado_por VARCHAR(150) DEFAULT 'Sistema',
+    modificado_por VARCHAR(150) DEFAULT 'Sistema'
+);
+
+-- Tabla de Reservas del Centro de Negocios (Por Horas)
+CREATE TABLE IF NOT EXISTS reserva_negocio (
+    id_reserva_negocio SERIAL PRIMARY KEY,
+    id_espacio INT NOT NULL REFERENCES espacio_negocio(id_espacio) ON DELETE RESTRICT,
+    tipo_cliente VARCHAR(30) NOT NULL CHECK (tipo_cliente IN ('Huésped Registrado', 'Cliente Externo')),
+    id_huesped INT REFERENCES huesped(id_huesped) ON DELETE RESTRICT,
+    nombre_cliente VARCHAR(150) NOT NULL,
+    documento_cliente VARCHAR(30),
+    correo_cliente VARCHAR(150),
+    fecha DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    duracion_horas INT NOT NULL CHECK (duracion_horas > 0),
+    precio_total DECIMAL(10,2) NOT NULL CHECK (precio_total > 0),
+    estado VARCHAR(20) NOT NULL DEFAULT 'Confirmada' CHECK (estado IN ('Confirmada', 'Completada', 'Cancelada')),
+    observaciones TEXT,
+    creado_por VARCHAR(150) DEFAULT 'Sistema',
+    modificado_por VARCHAR(150) DEFAULT 'Sistema',
+    CONSTRAINT chk_horas CHECK (hora_fin > hora_inicio)
 );
 
 -- Tabla de Reservas de Habitación (Hallazgo 06: Incluye creado_por y modificado_por)
@@ -139,13 +172,61 @@ INSERT INTO empleado (nombre, usuario, contrasena, rol) VALUES
 ('Marta Ama',     'marta_limpieza','$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves')       -- marta123
 ON CONFLICT (usuario) DO NOTHING;
 
+-- Sembrado de 38 Alojamientos Reales Facile (14 Dúplex, 11 Doble, 2 Familiar, 11 Habitación) + 2 Legacy para Tests
 INSERT INTO habitacion (numero, tipo, capacidad, precio_noche, estado) VALUES
-('101A', 'Habitaciones', 2, 243000.00, 'Disponible'),
-('102A', 'Habitaciones', 2, 243000.00, 'Disponible'),
-('201D', 'Dúplex', 3, 350000.00, 'Disponible'),
-('202D', 'Dúplex', 3, 350000.00, 'Mantenimiento'),
-('301F', 'Familiar', 5, 480000.00, 'Disponible')
+-- Legacy para compatibilidad de tests
+('101A', 'Habitación', 2, 180000.00, 'Disponible'),
+('102A', 'Habitación', 2, 180000.00, 'Disponible'),
+-- 14 Dúplex ($250.000 COP/noche - Cap: 3 - 1 Cama Queen + Sofá-cama)
+('D101', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D102', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D103', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D104', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D105', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D106', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D107', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D108', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D109', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D110', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D111', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D112', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D113', 'Dúplex', 3, 250000.00, 'Disponible'),
+('D114', 'Dúplex', 3, 250000.00, 'Disponible'),
+-- 11 Dobles ($320.000 COP/noche - Cap: 5 - 2 Camas Queen + Sofá-cama)
+('DB201', 'Doble', 5, 320000.00, 'Disponible'),
+('DB202', 'Doble', 5, 320000.00, 'Disponible'),
+('DB203', 'Doble', 5, 320000.00, 'Disponible'),
+('DB204', 'Doble', 5, 320000.00, 'Disponible'),
+('DB205', 'Doble', 5, 320000.00, 'Disponible'),
+('DB206', 'Doble', 5, 320000.00, 'Disponible'),
+('DB207', 'Doble', 5, 320000.00, 'Disponible'),
+('DB208', 'Doble', 5, 320000.00, 'Disponible'),
+('DB209', 'Doble', 5, 320000.00, 'Disponible'),
+('DB210', 'Doble', 5, 320000.00, 'Disponible'),
+('DB211', 'Doble', 5, 320000.00, 'Disponible'),
+-- 2 Familiares ($390.000 COP/noche - Cap: 7 - 3 Camas Queen + Sofá-cama)
+('F301', 'Familiar', 7, 390000.00, 'Disponible'),
+('F302', 'Familiar', 7, 390000.00, 'Disponible'),
+-- 11 Habitaciones ($180.000 COP/noche - Cap: 2 - 1 Cama Queen)
+('H401', 'Habitación', 2, 180000.00, 'Disponible'),
+('H402', 'Habitación', 2, 180000.00, 'Disponible'),
+('H403', 'Habitación', 2, 180000.00, 'Disponible'),
+('H404', 'Habitación', 2, 180000.00, 'Disponible'),
+('H405', 'Habitación', 2, 180000.00, 'Disponible'),
+('H406', 'Habitación', 2, 180000.00, 'Disponible'),
+('H407', 'Habitación', 2, 180000.00, 'Disponible'),
+('H408', 'Habitación', 2, 180000.00, 'Disponible'),
+('H409', 'Habitación', 2, 180000.00, 'Disponible'),
+('H410', 'Habitación', 2, 180000.00, 'Disponible'),
+('H411', 'Habitación', 2, 180000.00, 'Disponible')
 ON CONFLICT (numero) DO NOTHING;
+
+-- Sembrado de Espacios de Centro de Negocios
+INSERT INTO espacio_negocio (nombre, tipo, capacidad, precio_hora) VALUES
+('Sala de Juntas 1', 'Sala de Juntas', 10, 70000.00),
+('Sala de Juntas 2', 'Sala de Juntas', 10, 70000.00),
+('Espacio Coworking (Flex)', 'Coworking', 15, 20000.00)
+ON CONFLICT (nombre) DO NOTHING;
 
 INSERT INTO huesped (nombre, documento, telefono, correo, empresa, lealtad, estado) VALUES
 ('John Doe', '12345678', '3115551234', 'john.doe@example.com', NULL, 'Silver', 'Activo'),
@@ -154,9 +235,22 @@ INSERT INTO huesped (nombre, documento, telefono, correo, empresa, lealtad, esta
 ON CONFLICT (documento) DO NOTHING;
 
 INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado)
-SELECT 1, 1, CURRENT_DATE + INTERVAL '1 day', CURRENT_DATE + INTERVAL '4 days', 'Confirmada'
-WHERE NOT EXISTS (SELECT 1 FROM reserva_habitacion WHERE id_huesped = 1 AND id_habitacion = 1);
+SELECT h.id_huesped, hab.id_habitacion, CURRENT_DATE + INTERVAL '1 day', CURRENT_DATE + INTERVAL '4 days', 'Confirmada'
+FROM huesped h, habitacion hab
+WHERE h.documento = '12345678' AND hab.numero = '101A'
+AND NOT EXISTS (
+    SELECT 1 FROM reserva_habitacion rh 
+    JOIN huesped hu ON rh.id_huesped = hu.id_huesped 
+    WHERE hu.documento = '12345678'
+);
 
 INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado)
-SELECT 2, 3, CURRENT_DATE + INTERVAL '5 days', CURRENT_DATE + INTERVAL '10 days', 'Confirmada'
-WHERE NOT EXISTS (SELECT 1 FROM reserva_habitacion WHERE id_huesped = 2 AND id_habitacion = 3);
+SELECT h.id_huesped, hab.id_habitacion, CURRENT_DATE + INTERVAL '5 days', CURRENT_DATE + INTERVAL '10 days', 'Confirmada'
+FROM huesped h, habitacion hab
+WHERE h.documento = '98765432' AND hab.numero = 'D101'
+AND NOT EXISTS (
+    SELECT 1 FROM reserva_habitacion rh 
+    JOIN huesped hu ON rh.id_huesped = hu.id_huesped 
+    WHERE hu.documento = '98765432'
+);
+

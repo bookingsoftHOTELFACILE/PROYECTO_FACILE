@@ -33,7 +33,7 @@ def test_registro_usuario_duplicado(client, admin_token):
         "tipo_documento": "Cédula de ciudadanía",
         "numero_documento": "11111111",
         "correo": "bookingsoft4@gmail.com",
-        "rol": "Recepcionista"
+        "rol": "Recepcionista 24h"
     }
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = client.post("/api/auth/registro", json=payload, headers=headers)

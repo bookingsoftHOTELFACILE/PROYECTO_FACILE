@@ -941,3 +941,46 @@ body {
   font-size: 0.8rem;
   color: #64748b;
 }
+
+/* Estilos de botones preset para el modal de Login */
+.preset-users {
+  margin-top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.preset-users p {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 0.2rem 0;
+}
+
+.preset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0.6rem 0.8rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #1e293b;
+  font-size: 0.82rem;
+  width: 100%;
+}
+
+.preset-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.preset-btn span {
+  display: block;
+}
+
