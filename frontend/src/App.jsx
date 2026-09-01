@@ -53,6 +53,7 @@ function App() {
   // ---- ESTADO DEL FORMULARIO DE RESERVA ----
   const [reservaData, setReservaData] = useState({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
   const [cotizacion, setCotizacion] = useState(null);
+  const [calDate, setCalDate] = useState(new Date(2026, 7, 1));
 
   // ---- ESTADOS UI ----
   const [loading, setLoading]           = useState(false);
@@ -789,6 +790,185 @@ function App() {
                   </select>
                 </div>
               </div>
+
+              {reservaData.id_habitacion && (() => {
+                const year = calDate.getFullYear();
+                const month = calDate.getMonth();
+                const monthNames = [
+                  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+
+                const habReservas = reservas.filter(r => 
+                  String(r.id_habitacion) === String(reservaData.id_habitacion) &&
+                  (r.estado === 'Confirmada' || r.estado === 'Check-In')
+                );
+
+                const firstDayOfMonth = new Date(year, month, 1);
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                let startDayOfWeek = firstDayOfMonth.getDay() - 1;
+                if (startDayOfWeek === -1) startDayOfWeek = 6;
+
+                const prevMonth = () => setCalDate(new Date(year, month - 1, 1));
+                const nextMonth = () => setCalDate(new Date(year, month + 1, 1));
+
+                const daysGrid = [];
+                for (let i = 0; i < startDayOfWeek; i++) daysGrid.push(null);
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                  const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                  const isOccupied = habReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
+                  const isSelectedCheckIn = reservaData.fecha_entrada === dayStr;
+                  const isSelectedCheckOut = reservaData.fecha_salida === dayStr;
+                  const isInRange = reservaData.fecha_entrada && reservaData.fecha_salida && dayStr >= reservaData.fecha_entrada && dayStr <= reservaData.fecha_salida;
+
+                  daysGrid.push({
+                    day: d,
+                    dayStr,
+                    isOccupied,
+                    isSelectedCheckIn,
+                    isSelectedCheckOut,
+                    isInRange
+                  });
+                }
+
+                const handleDayClick = (dayObj) => {
+                  if (!dayObj || dayObj.isOccupied) return;
+
+                  if (!reservaData.fecha_entrada || (reservaData.fecha_entrada && reservaData.fecha_salida)) {
+                    setReservaData(prev => ({ ...prev, fecha_entrada: dayObj.dayStr, fecha_salida: '' }));
+                    setCotizacion(null);
+                  } else if (reservaData.fecha_entrada && !reservaData.fecha_salida) {
+                    if (dayObj.dayStr <= reservaData.fecha_entrada) {
+                      setReservaData(prev => ({ ...prev, fecha_entrada: dayObj.dayStr, fecha_salida: '' }));
+                      setCotizacion(null);
+                    } else {
+                      const rangeHasOccupied = habReservas.some(r => 
+                        (r.fecha_entrada <= dayObj.dayStr && r.fecha_salida >= reservaData.fecha_entrada)
+                      );
+                      if (rangeHasOccupied) {
+                        setReservaAlert({ type: 'danger', message: 'El rango seleccionado incluye días ocupados en rojo. Elija un período continuo de días en verde.' });
+                        return;
+                      }
+
+                      const updated = { ...reservaData, fecha_salida: dayObj.dayStr };
+                      setReservaData(updated);
+                      const sub = calcularCotizacion(updated.id_habitacion, updated.fecha_entrada, updated.fecha_salida);
+                      setCotizacion(sub);
+                    }
+                  }
+                };
+
+                return (
+                  <div style={{
+                    margin: '1.25rem 0',
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    background: 'rgba(15, 23, 42, 0.75)',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                  }}>
+                    {/* Control de Mes y Año */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                      <button type="button" onClick={prevMonth} className="btn-secondary" style={{ padding: '0.3rem 0.65rem', fontSize: '0.8rem' }}>
+                        ◀ Mes Anterior
+                      </button>
+                      <div style={{ textAlign: 'center' }}>
+                        <h4 style={{ margin: 0, color: '#fbbf24', fontSize: '1.05rem', fontWeight: 'bold' }}>
+                          📅 {monthNames[month]} {year}
+                        </h4>
+                        <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
+                          Haz clic en los días <strong style={{ color: '#4ade80' }}>Verdes (Libres)</strong> para asignar Check-In y Check-Out
+                        </span>
+                      </div>
+                      <button type="button" onClick={nextMonth} className="btn-secondary" style={{ padding: '0.3rem 0.65rem', fontSize: '0.8rem' }}>
+                        Mes Siguiente ▶
+                      </button>
+                    </div>
+
+                    {/* Leyenda de Colores */}
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '0.75rem', fontSize: '0.78rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#ef4444', display: 'inline-block' }}></span>
+                        <span style={{ color: '#f87171', fontWeight: '600' }}>🔴 Ocupado (No disponible)</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#22c55e', display: 'inline-block' }}></span>
+                        <span style={{ color: '#4ade80', fontWeight: '600' }}>🟢 Disponible (Libre)</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#fbbf24', display: 'inline-block' }}></span>
+                        <span style={{ color: '#fbbf24', fontWeight: '600' }}>🟡 Seleccionado</span>
+                      </div>
+                    </div>
+
+                    {/* Encabezado Días de la Semana */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontWeight: 'bold', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '6px' }}>
+                      <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                    </div>
+
+                    {/* Cuadrícula de Días */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                      {daysGrid.map((item, idx) => {
+                        if (!item) return <div key={`empty-${idx}`} style={{ padding: '0.4rem' }} />;
+
+                        let bg = 'rgba(34, 197, 94, 0.25)';
+                        let border = '1px solid rgba(34, 197, 94, 0.4)';
+                        let color = '#4ade80';
+                        let cursor = 'pointer';
+                        let label = 'Libre';
+
+                        if (item.isOccupied) {
+                          bg = 'rgba(239, 68, 68, 0.5)';
+                          border = '1px solid #ef4444';
+                          color = '#ffffff';
+                          cursor = 'not-allowed';
+                          label = 'Ocupado';
+                        } else if (item.isSelectedCheckIn || item.isSelectedCheckOut) {
+                          bg = '#fbbf24';
+                          border = '2px solid #f59e0b';
+                          color = '#000000';
+                          label = item.isSelectedCheckIn ? 'Entrada' : 'Salida';
+                        } else if (item.isInRange) {
+                          bg = 'rgba(251, 191, 36, 0.35)';
+                          border = '1px dashed #fbbf24';
+                          color = '#ffffff';
+                          label = 'Estancia';
+                        }
+
+                        return (
+                          <button
+                            key={item.dayStr}
+                            type="button"
+                            onClick={() => handleDayClick(item)}
+                            disabled={item.isOccupied}
+                            title={item.isOccupied ? `Día ${item.dayStr} ocupado` : `Seleccionar ${item.dayStr}`}
+                            style={{
+                              background: bg,
+                              border: border,
+                              color: color,
+                              cursor: cursor,
+                              padding: '0.35rem 0.15rem',
+                              borderRadius: '6px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s ease',
+                              fontWeight: 'bold',
+                              fontSize: '0.8rem',
+                              minHeight: '42px'
+                            }}
+                          >
+                            <span>{item.day}</span>
+                            <span style={{ fontSize: '0.62rem', opacity: 0.9 }}>{label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="input-row">
                 <div className="input-group">
