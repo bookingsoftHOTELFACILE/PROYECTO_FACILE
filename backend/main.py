@@ -11,7 +11,7 @@ if not jwt_secret_val or jwt_secret_val == "CHANGE_ME" or jwt_secret_val == "CHA
     sys.exit(1)
 
 from database import connection
-from routes import huespedes, habitaciones, reservas, auth, empleados
+from routes import huespedes, habitaciones, reservas, auth, empleados, centro_negocios
 
 from contextlib import asynccontextmanager
 
@@ -23,7 +23,7 @@ async def lifespan(app_inst: FastAPI):
 
 app = FastAPI(
     title="BookingSoft API - FastAPI",
-    description="Servidor REST Backend modular en Python para Registro y Reservas",
+    description="Servidor REST Backend modular en Python para Registro, Reservas y Centro de Negocios",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -41,13 +41,12 @@ app.add_middleware(
 )
 
 # Registrar los módulos de rutas
-
-# Registrar los módulos de rutas
 app.include_router(huespedes.router)
 app.include_router(habitaciones.router)
 app.include_router(reservas.router)
 app.include_router(auth.router)
 app.include_router(empleados.router)
+app.include_router(centro_negocios.router)
 
 # Ruta de diagnóstico de salud de la API
 @app.get("/health")

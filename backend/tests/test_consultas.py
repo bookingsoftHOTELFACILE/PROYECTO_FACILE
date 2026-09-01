@@ -16,7 +16,7 @@ def test_rf002_consulta_listado_empleados(client):
     - Ama de llaves -> 403 Forbidden
     - El campo 'contrasena' NUNCA debe estar en la respuesta.
     """
-    t_admin = get_token(client, "sandra_admin", "Admin2026!")
+    t_admin = get_token(client, "bookingsoft_admin", "Admin2026!")
     t_recep = get_token(client, "carlos_recep", "Recep2026!")
     t_ama   = get_token(client, "marta_limpieza", "marta123")
 

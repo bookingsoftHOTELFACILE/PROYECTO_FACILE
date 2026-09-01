@@ -3,7 +3,7 @@ import {
   UserPlus, ShieldCheck, Mail, Phone, FileText, Briefcase, Users, 
   AlertCircle, Calendar, Home, ListOrdered, Wifi, WifiOff, LogIn, 
   LogOut, Lock, User, Trash2, CheckCircle2, Wrench, Sparkles, MapPin, 
-  Clock, ArrowRight, MessageCircle
+  Clock, ArrowRight, MessageCircle, Building2, Coffee
 } from 'lucide-react';
 
 // URL del backend FastAPI
@@ -17,27 +17,46 @@ function App() {
   const [huespedes, setHuespedes] = useState([]);
   const [habitaciones, setHabitaciones] = useState([]);
   const [reservas, setReservas] = useState([]);
+  const [espaciosNegocio, setEspaciosNegocio] = useState([]);
+  const [reservasNegocio, setReservasNegocio] = useState([]);
 
   // ---- NAVEGACIÓN Y VISTAS ----
-  const [activeTab, setActiveTab] = useState('inicio'); // 'inicio' | 'apartamentos' | 'servicios' | 'reservar' | 'pms'
+  // Vistas Públicas: 'inicio' | 'apartamentos' | 'centro_negocios_publico' | 'servicios' | 'reservar'
+  // Vista PMS Interno: 'pms'
+  const [activeTab, setActiveTab] = useState('inicio');
+  const [pmsSubTab, setPmsSubTab] = useState('planta'); // 'planta' | 'reservas_noche' | 'centro_negocios' | 'huespedes'
 
   // ---- ESTADO DEL FORMULARIO DE REGISTRO ----
   const [formData, setFormData] = useState({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
   const [habeasData, setHabeasData] = useState(false);
   const [selectedHuesped, setSelectedHuesped] = useState(null);
 
-  // ---- ESTADO DEL FORMULARIO DE RESERVA ----
+  // ---- ESTADO DEL FORMULARIO DE RESERVA DE ALOJAMIENTO ----
   const [reservaData, setReservaData] = useState({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
   const [cotizacion, setCotizacion] = useState(null);
-  const [calDate, setCalDate] = useState(new Date(2026, 7, 1));
+
+  // ---- ESTADO DEL FORMULARIO DE RESERVA DEL CENTRO DE NEGOCIOS ----
+  const [reservaNegocioForm, setReservaNegocioForm] = useState({
+    id_espacio: '',
+    tipo_cliente: 'Huésped Registrado',
+    id_huesped: '',
+    nombre_cliente: '',
+    documento_cliente: '',
+    correo_cliente: '',
+    fecha: new Date().toISOString().split('T')[0],
+    hora_inicio: '09:00',
+    hora_fin: '11:00',
+    observaciones: ''
+  });
 
   // ---- ESTADOS UI ----
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState(null);
   const [reservaAlert, setReservaAlert] = useState(null);
+  const [reservaNegocioAlert, setReservaNegocioAlert] = useState(null);
   const [filtroHabitaciones, setFiltroHabitaciones] = useState('todas'); // 'todas' | 'amas_llaves' | 'mantenimiento'
 
-  // ---- ESTADO DE AUTENTICACIÓN JWT Y SESIÓN ----
+  // ---- ESTADO DE AUTENTICACIÓN JWT Y SESIÓN EMPLEADOS ----
   const [authToken, setAuthToken] = useState(null);
   const [usuarioSesion, setUsuarioSesion] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -126,18 +145,22 @@ function App() {
     verificarBackend();
   }, []);
 
-  // Cargar datos
+  // Cargar datos del sistema
   const cargarDatosBackend = async (token = authToken) => {
     try {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const [gRes, hRes, rRes] = await Promise.all([
+      const [gRes, hRes, rRes, eRes, rnRes] = await Promise.all([
         fetch(`${API_URL}/api/huespedes`, { headers }),
         fetch(`${API_URL}/api/habitaciones`, { headers }),
         fetch(`${API_URL}/api/reservas`, { headers }),
+        fetch(`${API_URL}/api/centro-negocios/espacios`),
+        fetch(`${API_URL}/api/centro-negocios/reservas`)
       ]);
       if (gRes.ok) setHuespedes(await gRes.json());
       if (hRes.ok) setHabitaciones(await hRes.json());
       if (rRes.ok) setReservas(await rRes.json());
+      if (eRes.ok) setEspaciosNegocio(await eRes.json());
+      if (rnRes.ok) setReservasNegocio(await rnRes.json());
     } catch (e) {
       console.error('Error al cargar datos del backend:', e);
     }
@@ -149,1007 +172,1173 @@ function App() {
     }
   }, [backendActivo, authToken]);
 
-  // Cotización en tiempo real
-  useEffect(() => {
-    if (reservaData.id_habitacion && reservaData.fecha_entrada && reservaData.fecha_salida) {
-      const eDt = new Date(reservaData.fecha_entrada);
-      const sDt = new Date(reservaData.fecha_salida);
-      const hab = habitaciones.find(h => h.id_habitacion === parseInt(reservaData.id_habitacion));
-      if (sDt > eDt && hab) {
-        const noches = Math.ceil(Math.abs(sDt - eDt) / (1000 * 60 * 60 * 24));
-        const subtotal = noches * hab.precio_noche;
-        const descuento = noches > 15 ? subtotal * 0.15 : 0;
-        setCotizacion({ noches, subtotal, descuento, total: subtotal - descuento });
-      } else {
-        setCotizacion(null);
-      }
-    } else {
-      setCotizacion(null);
-    }
-  }, [reservaData, habitaciones]);
-
-  // Formulario Huésped
-  const handleUserChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'documento' || name === 'telefono') {
-      const soloNumeros = value.replace(/\D/g, '');
-      setFormData(prev => ({ ...prev, [name]: soloNumeros }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleReservaChange = (e) => setReservaData({ ...reservaData, [e.target.name]: e.target.value });
-
-  // Registrar Huésped (PÚBLICO)
-  const handleUserSubmit = async (e) => {
+  // Registro de Huésped
+  const handleRegisterHuesped = async (e) => {
     e.preventDefault();
     if (!habeasData) {
-      setAlert({ type: 'error', message: 'Debe autorizar el tratamiento de datos personales (Habeas Data).' });
+      setAlert({ type: 'error', message: 'Debe aceptar la política de tratamiento de datos personales.' });
       return;
     }
-    if (!formData.nombre.trim() || !formData.documento.trim() || !formData.telefono.trim() || !formData.correo.trim()) {
-      setAlert({ type: 'error', message: 'Nombre, documento, teléfono y correo son obligatorios.' });
-      return;
-    }
-
     setLoading(true);
-    setAlert(null);
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
-    if (backendActivo) {
-      try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-        const res = await fetch(`${API_URL}/api/user/registro`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(formData),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setAlert({ type: 'success', message: data.message, data: data.usuario });
-          setSelectedHuesped(data.usuario);
-          setFormData({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
-          setHabeasData(false);
-          cargarDatosBackend(authToken);
-        } else {
-          setAlert({ type: 'error', message: formatErrorMessage(data.detail) || 'Error al registrar huésped.' });
-        }
-      } catch {
-        setAlert({ type: 'error', message: 'Error de conexión con el servidor.' });
+      const res = await fetch(`${API_URL}/api/huespedes/registro`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlert({ type: 'success', message: data.message || 'Huésped registrado exitosamente.' });
+        setFormData({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
+        setHabeasData(false);
+        cargarDatosBackend();
+      } else {
+        setAlert({ type: 'error', message: formatErrorMessage(data.detail) });
       }
+    } catch {
+      setAlert({ type: 'error', message: 'Error de conexión al registrar huésped.' });
     }
     setLoading(false);
   };
 
-  // Crear Reserva
-  const handleReservaSubmit = async (e) => {
+  // Creación de Reserva de Alojamiento
+  const handleCrearReserva = async (e) => {
     e.preventDefault();
     if (!selectedHuesped) {
-      setReservaAlert({ type: 'error', message: 'Debe registrar o seleccionar un huésped primero.' });
+      setReservaAlert({ type: 'error', message: 'Debe seleccionar o registrar un huésped en el Paso 1.' });
       return;
     }
-
-    const eDt = new Date(reservaData.fecha_entrada);
-    const sDt = new Date(reservaData.fecha_salida);
-    if (sDt <= eDt) {
-      setReservaAlert({ type: 'error', message: 'La fecha de salida debe ser posterior a la de entrada.' });
+    if (!reservaData.id_habitacion || !reservaData.fecha_entrada || !reservaData.fecha_salida) {
+      setReservaAlert({ type: 'error', message: 'Por favor complete todos los campos de la reserva.' });
       return;
     }
 
     setLoading(true);
-    setReservaAlert(null);
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
-    if (backendActivo) {
-      try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-        const res = await fetch(`${API_URL}/api/reservas`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            id_huesped: selectedHuesped.id_huesped,
-            id_habitacion: parseInt(reservaData.id_habitacion),
-            fecha_entrada: reservaData.fecha_entrada,
-            fecha_salida: reservaData.fecha_salida,
-            numero_personas: parseInt(reservaData.numero_personas || 1),
-          }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setReservaAlert({ type: 'success', message: '¡Reserva confirmada exitosamente!', data });
-          setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
-          cargarDatosBackend(authToken);
-        } else {
-          setReservaAlert({ type: 'error', message: formatErrorMessage(data.detail) || 'Error al crear la reserva.' });
-        }
-      } catch {
-        setReservaAlert({ type: 'error', message: 'Error de conexión con el servidor.' });
+      const res = await fetch(`${API_URL}/api/reservas`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          id_huesped: selectedHuesped.id_huesped,
+          id_habitacion: parseInt(reservaData.id_habitacion),
+          fecha_entrada: reservaData.fecha_entrada,
+          fecha_salida: reservaData.fecha_salida
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setReservaAlert({ type: 'success', message: data.message || '¡Reserva confirmada exitosamente!' });
+        setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
+        setCotizacion(null);
+        cargarDatosBackend();
+      } else {
+        setReservaAlert({ type: 'error', message: formatErrorMessage(data.detail) });
       }
+    } catch {
+      setReservaAlert({ type: 'error', message: 'Error al conectar con el servidor para la reserva.' });
     }
     setLoading(false);
   };
 
-  // Seleccionar apartamento desde el catálogo
-  const handleSelectApartamentoCatalog = (hab) => {
-    setReservaData(prev => ({ ...prev, id_habitacion: String(hab.id_habitacion) }));
-    setActiveTab('reservar');
-    window.scrollTo({ top: 600, behavior: 'smooth' });
-  };
-
-  // Activar / Desactivar Huésped
-  const handleToggleEstadoHuesped = async (h) => {
-    const nuevoEstado = h.estado === 'Activo' ? 'Inactivo' : 'Activo';
-    const accionTexto = nuevoEstado === 'Activo' ? 'activar' : 'desactivar';
-    if (!window.confirm(`¿Está seguro de ${accionTexto} al huésped "${h.nombre}"?`)) return;
-
-    setLoading(true);
-    if (backendActivo) {
-      try {
-        const headers = {
-          'Content-Type': 'application/json',
-          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
-        };
-        const res = await fetch(`${API_URL}/api/huespedes/${h.id_huesped}/estado`, {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify({ estado: nuevoEstado }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setAlert({ type: 'success', message: data.message });
-          if (selectedHuesped?.id_huesped === h.id_huesped && nuevoEstado === 'Inactivo') {
-            setSelectedHuesped(null);
-          }
-          cargarDatosBackend(authToken);
-        } else {
-          setAlert({ type: 'error', message: formatErrorMessage(data.detail) });
-        }
-      } catch {
-        setAlert({ type: 'error', message: 'Error de conexión con el servidor.' });
-      }
-    }
-    setLoading(false);
-  };
-
-  const handleSelectHuesped = (h) => {
-    if (h.estado === 'Inactivo') {
-      setAlert({ type: 'error', message: `⚠️ El huésped "${h.nombre}" está Inactivo. Debe ser activado por un Administrador o Recepcionista antes de asignarle una reserva.` });
-      return;
-    }
-    setSelectedHuesped(h);
-    setActiveTab('reservar');
-    setAlert({ type: 'success', message: `Huésped "${h.nombre}" seleccionado para reserva.` });
-  };
-
-  // Eliminar Huésped
-  const handleDeleteHuesped = async (id_huesped) => {
-    if (!window.confirm('¿Está seguro de desactivar/eliminar este huésped del sistema?')) return;
-    setLoading(true);
-    if (backendActivo) {
-      try {
-        const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
-        const res = await fetch(`${API_URL}/api/huespedes/${id_huesped}`, { method: 'DELETE', headers });
-        const data = await res.json();
-        if (res.ok) {
-          setAlert({ type: 'success', message: data.message });
-          if (selectedHuesped?.id_huesped === id_huesped) setSelectedHuesped(null);
-          cargarDatosBackend(authToken);
-        } else {
-          setAlert({ type: 'error', message: formatErrorMessage(data.detail) });
-        }
-      } catch {
-        setAlert({ type: 'error', message: 'Error al comunicarse con el servidor.' });
-      }
-    }
-    setLoading(false);
-  };
-
-  // Cancelar Reserva
+  // Cancelar Reserva de Alojamiento
   const handleDeleteReserva = async (id_reserva) => {
-    if (!window.confirm('¿Está seguro de cancelar esta reserva?')) return;
-    setLoading(true);
-    if (backendActivo) {
-      try {
-        const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
-        const res = await fetch(`${API_URL}/api/reservas/${id_reserva}`, { method: 'DELETE', headers });
-        const data = await res.json();
-        if (res.ok) {
-          setReservaAlert({ type: 'success', message: data.message || 'Reserva cancelada exitosamente.' });
-          cargarDatosBackend(authToken);
-        } else {
-          setReservaAlert({ type: 'error', message: formatErrorMessage(data.detail) });
-        }
-      } catch {
-        setReservaAlert({ type: 'error', message: 'Error al comunicarse con el servidor.' });
-      }
+    if (!authToken) {
+      setShowLoginModal(true);
+      return;
     }
-    setLoading(false);
+    try {
+      const res = await fetch(`${API_URL}/api/reservas/${id_reserva}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlert({ type: 'success', message: data.message || 'Reserva cancelada exitosamente.' });
+        cargarDatosBackend();
+      } else {
+        setAlert({ type: 'error', message: formatErrorMessage(data.detail) });
+      }
+    } catch {
+      setAlert({ type: 'error', message: 'Error al cancelar la reserva.' });
+    }
   };
 
-  // Cambiar Estado Habitación
-  const handleCambiarEstadoHabitacion = async (id_habitacion, nuevoEstado, detalleMantenimiento = null) => {
-    setLoading(true);
-    if (backendActivo) {
-      try {
-        const headers = {
+  // Cambiar estado de habitación
+  const handleCambiarEstadoHabitacion = async (id_habitacion, nuevoEstado, detalle = '') => {
+    if (!authToken) {
+      setShowLoginModal(true);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/habitaciones/${id_habitacion}/estado`, {
+        method: 'PATCH',
+        headers: {
           'Content-Type': 'application/json',
-          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
-        };
-        const res = await fetch(`${API_URL}/api/habitaciones/${id_habitacion}/estado`, {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify({ estado: nuevoEstado, detalle_mantenimiento: detalleMantenimiento }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setAlert({ type: 'success', message: data.message });
-          cargarDatosBackend(authToken);
-        } else {
-          setAlert({ type: 'error', message: formatErrorMessage(data.detail) });
-        }
-      } catch {
-        setAlert({ type: 'error', message: 'Error de conexión con el servidor.' });
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ estado: nuevoEstado, detalle_mantenimiento: detalle })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlert({ type: 'success', message: data.message || `Habitación actualizada a ${nuevoEstado}.` });
+        cargarDatosBackend();
+      } else {
+        setAlert({ type: 'error', message: formatErrorMessage(data.detail) });
       }
+    } catch {
+      setAlert({ type: 'error', message: 'Error al actualizar estado de la habitación.' });
     }
-    setLoading(false);
   };
 
+  // Reportar daño en habitación
   const handleReportarDano = (h) => {
-    const detalle = window.prompt(`⚠️ Reportar daño técnico para el Apto ${h.numero}:`, h.detalle_mantenimiento || '');
+    const detalle = window.prompt(`Describa la falla o mantenimiento requerido para el Apto ${h.numero}:`, h.detalle_mantenimiento || '');
     if (detalle !== null && detalle.trim() !== '') {
       handleCambiarEstadoHabitacion(h.id_habitacion, 'Mantenimiento', detalle.trim());
     }
   };
 
+  // Cambiar estado de huésped (Baja Lógica Opera PMS)
+  const handleCambiarEstadoHuesped = async (id_huesped, nuevoEstado) => {
+    if (!authToken) {
+      setShowLoginModal(true);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/huespedes/${id_huesped}/estado`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ estado: nuevoEstado })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlert({ type: 'success', message: data.message || `Estado del huésped cambiado a ${nuevoEstado}.` });
+        cargarDatosBackend();
+      } else {
+        setAlert({ type: 'error', message: formatErrorMessage(data.detail) });
+      }
+    } catch {
+      setAlert({ type: 'error', message: 'Error al actualizar el estado del huésped.' });
+    }
+  };
+
+  // Crear Reserva del Centro de Negocios (por horas)
+  const handleCrearReservaNegocio = async (e) => {
+    e.preventDefault();
+    if (!authToken) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (!reservaNegocioForm.id_espacio) {
+      setReservaNegocioAlert({ type: 'error', message: 'Por favor seleccione una Sala de Juntas o espacio de Coworking.' });
+      return;
+    }
+
+    setLoading(true);
+    setReservaNegocioAlert(null);
+
+    let nombreCliente = reservaNegocioForm.nombre_cliente;
+    let docCliente = reservaNegocioForm.documento_cliente;
+    let mailCliente = reservaNegocioForm.correo_cliente;
+    let idHuespedVal = null;
+
+    if (reservaNegocioForm.tipo_cliente === 'Huésped Registrado') {
+      const hSel = huespedes.find(h => h.id_huesped === parseInt(reservaNegocioForm.id_huesped));
+      if (!hSel) {
+        setReservaNegocioAlert({ type: 'error', message: 'Debe seleccionar un huésped registrado de la lista.' });
+        setLoading(false);
+        return;
+      }
+      nombreCliente = hSel.nombre;
+      docCliente = hSel.documento;
+      mailCliente = hSel.correo;
+      idHuespedVal = hSel.id_huesped;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/centro-negocios/reservas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          id_espacio: parseInt(reservaNegocioForm.id_espacio),
+          tipo_cliente: reservaNegocioForm.tipo_cliente,
+          id_huesped: idHuespedVal,
+          nombre_cliente: nombreCliente,
+          documento_cliente: docCliente,
+          correo_cliente: mailCliente,
+          fecha: reservaNegocioForm.fecha,
+          hora_inicio: reservaNegocioForm.hora_inicio,
+          hora_fin: reservaNegocioForm.hora_fin,
+          observaciones: reservaNegocioForm.observaciones
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setReservaNegocioAlert({ type: 'success', message: data.message || '¡Reserva de espacio empresarial confirmada!' });
+        setReservaNegocioForm({
+          id_espacio: '',
+          tipo_cliente: 'Huésped Registrado',
+          id_huesped: '',
+          nombre_cliente: '',
+          documento_cliente: '',
+          correo_cliente: '',
+          fecha: new Date().toISOString().split('T')[0],
+          hora_inicio: '09:00',
+          hora_fin: '11:00',
+          observaciones: ''
+        });
+        cargarDatosBackend();
+      } else {
+        setReservaNegocioAlert({ type: 'error', message: formatErrorMessage(data.detail) });
+      }
+    } catch {
+      setReservaNegocioAlert({ type: 'error', message: 'Error de conexión al reservar el espacio del Centro de Negocios.' });
+    }
+    setLoading(false);
+  };
+
+  // Cancelar Reserva de Centro de Negocios
+  const handleCancelarReservaNegocio = async (id_reserva_negocio) => {
+    if (!authToken) {
+      setShowLoginModal(true);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/centro-negocios/reservas/${id_reserva_negocio}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlert({ type: 'success', message: data.message || 'Reserva cancelada.' });
+        cargarDatosBackend();
+      } else {
+        setAlert({ type: 'error', message: formatErrorMessage(data.detail) });
+      }
+    } catch {
+      setAlert({ type: 'error', message: 'Error al cancelar la reserva.' });
+    }
+  };
+
   return (
     <div className="app-container">
-      {/* 1. TOPBAR OFICIAL ROJA */}
-      <div className="facile-topbar">
-        <div className="facile-topbar-content">
-          <div className="topbar-left">
-            <MapPin size={14}/>
-            <span>Calle 97 #21-62</span>
-          </div>
-          <div className="topbar-right">
-            <a href="tel:3153512085" className="topbar-phone">
-              <Phone size={14}/>
-              <span>315 351 2085</span>
-            </a>
-            <div className="topbar-social">
-              <a href="https://www.facebook.com/apartamentosfacile/" target="_blank" rel="noreferrer">Facebook</a>
-              <a href="https://www.instagram.com/apartamentosfacile/" target="_blank" rel="noreferrer">Instagram</a>
-              <a href="https://www.youtube.com/" target="_blank" rel="noreferrer">YouTube</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. HEADER ROJO OFICIAL CON LOGO FACILE BLANCO EN CURSIVA */}
-      <header className="facile-header">
-        <div className="facile-header-content">
-          <div className="facile-logo" onClick={() => setActiveTab('inicio')}>
-            <span className="facile-logo-script">Facile</span>
-            <span className="facile-logo-sub">APARTAMENTOS</span>
-          </div>
-
-          <nav className="facile-nav">
-            <button className={`facile-nav-link ${activeTab === 'inicio' ? 'active' : ''}`} onClick={() => setActiveTab('inicio')}>
-              Inicio
-            </button>
-            <button className={`facile-nav-link ${activeTab === 'apartamentos' ? 'active' : ''}`} onClick={() => setActiveTab('apartamentos')}>
-              Apartamentos
-            </button>
-            <button className={`facile-nav-link ${activeTab === 'servicios' ? 'active' : ''}`} onClick={() => setActiveTab('servicios')}>
-              Servicios
-            </button>
-            <button className={`facile-nav-link ${activeTab === 'reservar' ? 'active' : ''}`} onClick={() => setActiveTab('reservar')}>
-              Reservar Online
-            </button>
-            
-            {usuarioSesion ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginLeft: '0.5rem' }}>
-                <button className={`facile-nav-link ${activeTab === 'pms' ? 'active' : ''}`} onClick={() => setActiveTab('pms')}>
-                  Panel PMS ({usuarioSesion.rol})
-                </button>
-                <button onClick={handleLogout} className="btn-staff-pill" style={{ background: '#0f172a', color: '#fff' }}>
-                  <LogOut size={12}/> Salir
-                </button>
-              </div>
-            ) : (
-              <button className="btn-staff-pill" onClick={() => setShowLoginModal(true)}>
-                <Lock size={12}/> Portal Empleados
-              </button>
-            )}
-          </nav>
-        </div>
-      </header>
-
       {/* =========================================================================
-          VISTA 1: HERO OFICIAL (FOTO NOCTURNA + TARJETA AZUL TRANSLÚCIDA)
+          SISTEMA PMS INDEPENDIENTE (PORTAL EMPLEADOS Y GESTIÓN HOTELERA)
           ========================================================================= */}
-      {activeTab === 'inicio' && (
+      {activeTab === 'pms' && usuarioSesion ? (
+        <div className="pms-standalone-wrapper" style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc' }}>
+          {/* HEADER EXCLUSIVO PMS */}
+          <header style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '0.8rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <div style={{ background: 'var(--color-primary-red)', color: '#fff', padding: '0.4rem 0.8rem', borderRadius: '6px', fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                BookingSoft PMS
+              </div>
+              <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Sistema Integral de Gestión Hotelera & Centro de Negocios</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ background: '#334155', padding: '0.35rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <User size={14} color="#38bdf8"/>
+                <span>{usuarioSesion.nombre}</span>
+                <span style={{ background: 'var(--color-primary-red)', color: '#fff', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                  {usuarioSesion.rol}
+                </span>
+              </div>
+              
+              <button 
+                onClick={() => setActiveTab('inicio')}
+                style={{ background: '#475569', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                🌐 Web Pública
+              </button>
+
+              <button 
+                onClick={handleLogout}
+                style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold' }}
+              >
+                <LogOut size={14}/> Salir
+              </button>
+            </div>
+          </header>
+
+          {/* NAVBAR SUBTABS DEL PMS */}
+          <nav style={{ background: '#0f172a', borderBottom: '1px solid #1e293b', padding: '0.5rem 1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
+            <button 
+              className={`pms-nav-tab ${pmsSubTab === 'planta' ? 'active' : ''}`}
+              onClick={() => setPmsSubTab('planta')}
+              style={{ background: pmsSubTab === 'planta' ? 'var(--color-primary-red)' : '#1e293b', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+            >
+              🏨 Operaciones de Planta ({habitaciones.length} Unidades)
+            </button>
+            <button 
+              className={`pms-nav-tab ${pmsSubTab === 'reservas_noche' ? 'active' : ''}`}
+              onClick={() => setPmsSubTab('reservas_noche')}
+              style={{ background: pmsSubTab === 'reservas_noche' ? 'var(--color-primary-red)' : '#1e293b', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+            >
+              📅 Reservas de Hospedaje ({reservas.length})
+            </button>
+            <button 
+              className={`pms-nav-tab ${pmsSubTab === 'centro_negocios' ? 'active' : ''}`}
+              onClick={() => setPmsSubTab('centro_negocios')}
+              style={{ background: pmsSubTab === 'centro_negocios' ? 'var(--color-primary-red)' : '#1e293b', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+            >
+              🏢 Centro de Negocios / Horas ({reservasNegocio.length})
+            </button>
+            <button 
+              className={`pms-nav-tab ${pmsSubTab === 'huespedes' ? 'active' : ''}`}
+              onClick={() => setPmsSubTab('huespedes')}
+              style={{ background: pmsSubTab === 'huespedes' ? 'var(--color-primary-red)' : '#1e293b', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+            >
+              👥 Directorio de Huéspedes ({huespedes.length})
+            </button>
+          </nav>
+
+          {/* CONTENIDO DEL PANEL PMS */}
+          <main style={{ padding: '1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+            {alert && (
+              <div style={{ padding: '0.8rem 1rem', borderRadius: '6px', marginBottom: '1.2rem', background: alert.type === 'success' ? '#166534' : '#991b1b', color: '#fff', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{alert.type === 'success' ? '✅' : '⚠️'} {alert.message}</span>
+                <button onClick={() => setAlert(null)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+              </div>
+            )}
+
+            {/* SUBTAB 1: OPERACIONES DE PLANTA */}
+            {pmsSubTab === 'planta' && (
+              <div style={{ background: '#1e293b', borderRadius: '8px', padding: '1.5rem', border: '1px solid #334155' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.8rem' }}>
+                  <h2 style={{ fontSize: '1.2rem', margin: 0, color: '#f8fafc' }}>
+                    🏨 Operaciones de Planta: Control en Tiempo Real de Alojamientos
+                  </h2>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button className="btn-mini" onClick={() => setFiltroHabitaciones('amas_llaves')} style={{ background: filtroHabitaciones === 'amas_llaves' ? '#f59e0b' : '#334155', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.78rem' }}>
+                      🧹 Aseo Pendiente ({habitaciones.filter(h => h.estado === 'En limpieza').length})
+                    </button>
+                    <button className="btn-mini" onClick={() => setFiltroHabitaciones('mantenimiento')} style={{ background: filtroHabitaciones === 'mantenimiento' ? '#ef4444' : '#334155', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.78rem' }}>
+                      🔧 Mantenimiento ({habitaciones.filter(h => h.estado === 'Mantenimiento').length})
+                    </button>
+                    <button className="btn-mini" onClick={() => setFiltroHabitaciones('todas')} style={{ background: filtroHabitaciones === 'todas' ? 'var(--color-primary-red)' : '#334155', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.78rem' }}>
+                      Ver Todas ({habitaciones.length})
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#cbd5e1' }}>
+                    <thead>
+                      <tr style={{ background: '#0f172a', textAlign: 'left', borderBottom: '2px solid #334155' }}>
+                        <th style={{ padding: '0.75rem 1rem' }}>Apto / Unidad</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Categoría</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Capacidad</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Precio / Noche</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Estado</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Detalle</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Acciones de Turno</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {habitaciones
+                        .filter(h => {
+                          if (filtroHabitaciones === 'amas_llaves') return h.estado === 'En limpieza';
+                          if (filtroHabitaciones === 'mantenimiento') return h.estado === 'Mantenimiento';
+                          return true;
+                        })
+                        .map(h => (
+                          <tr key={h.id_habitacion} style={{ borderBottom: '1px solid #334155' }}>
+                            <td style={{ padding: '0.75rem 1rem', fontWeight: 'bold', color: '#f8fafc' }}>Apto {h.numero}</td>
+                            <td style={{ padding: '0.75rem 1rem' }}>{h.tipo}</td>
+                            <td style={{ padding: '0.75rem 1rem' }}>{h.capacidad} personas (Cama Queen)</td>
+                            <td style={{ padding: '0.75rem 1rem' }}>${Number(h.precio_noche).toLocaleString('es-CO')} COP</td>
+                            <td style={{ padding: '0.75rem 1rem' }}>
+                              <span style={{
+                                padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold',
+                                background: h.estado === 'Disponible' ? '#166534' : h.estado === 'Ocupada' ? '#1e40af' : h.estado === 'En limpieza' ? '#b45309' : '#991b1b',
+                                color: '#fff'
+                              }}>
+                                {h.estado}
+                              </span>
+                            </td>
+                            <td style={{ padding: '0.75rem 1rem', color: '#fca5a5', fontSize: '0.8rem' }}>{h.detalle_mantenimiento || '-'}</td>
+                            <td style={{ padding: '0.75rem 1rem' }}>
+                              <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                <button onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'Disponible')} style={{ background: '#15803d', color: '#fff', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.72rem' }}>
+                                  ✓ Disponible
+                                </button>
+                                <button onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'En limpieza')} style={{ background: '#b45309', color: '#fff', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.72rem' }}>
+                                  🧹 Aseo
+                                </button>
+                                <button onClick={() => handleReportarDano(h)} style={{ background: '#b91c1c', color: '#fff', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.72rem' }}>
+                                  ⚠️ Daño
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* SUBTAB 2: RESERVAS DE HOSPEDAJE */}
+            {pmsSubTab === 'reservas_noche' && (
+              <div style={{ background: '#1e293b', borderRadius: '8px', padding: '1.5rem', border: '1px solid #334155' }}>
+                <h2 style={{ fontSize: '1.2rem', marginBottom: '1.2rem', color: '#f8fafc' }}>
+                  📅 Gestión de Reservas de Hospedaje (Noches Continuas)
+                </h2>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#cbd5e1' }}>
+                    <thead>
+                      <tr style={{ background: '#0f172a', textAlign: 'left', borderBottom: '2px solid #334155' }}>
+                        <th style={{ padding: '0.75rem 1rem' }}>Huésped</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Apartamento</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Check-In / Check-Out</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Estado</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reservas.map(r => (
+                        <tr key={r.id_reserva} style={{ borderBottom: '1px solid #334155' }}>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <strong style={{ color: '#f8fafc', display: 'block' }}>{r.huesped_nombre}</strong>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Doc: {r.huesped_documento}</span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 'bold', color: '#38bdf8' }}>Apto {r.habitacion_numero}</td>
+                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.8rem' }}>
+                            In: {r.fecha_entrada} | Out: {r.fecha_salida}
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <span style={{ padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', background: r.estado === 'Confirmada' ? '#166534' : '#991b1b', color: '#fff' }}>
+                              {r.estado}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <button onClick={() => handleDeleteReserva(r.id_reserva)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}>
+                              Cancelar Reserva
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* SUBTAB 3: CENTRO DE NEGOCIOS (POR HORAS) */}
+            {pmsSubTab === 'centro_negocios' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                {/* FORMULARIO DE RESERVA DE SALAS / COWORKING */}
+                <div style={{ background: '#1e293b', borderRadius: '8px', padding: '1.5rem', border: '1px solid #334155' }}>
+                  <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Briefcase size={18}/> Reservar Espacio Empresarial (Por Horas)
+                  </h3>
+
+                  {reservaNegocioAlert && (
+                    <div style={{ padding: '0.6rem 0.8rem', borderRadius: '4px', marginBottom: '1rem', background: reservaNegocioAlert.type === 'success' ? '#166534' : '#991b1b', color: '#fff', fontSize: '0.8rem' }}>
+                      {reservaNegocioAlert.message}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleCrearReservaNegocio}>
+                    <div style={{ marginBottom: '0.8rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Espacio Empresarial</label>
+                      <select 
+                        style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                        value={reservaNegocioForm.id_espacio}
+                        onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, id_espacio: e.target.value })}
+                        required
+                      >
+                        <option value="">-- Seleccionar Sala de Juntas o Coworking --</option>
+                        {espaciosNegocio.map(e => (
+                          <option key={e.id_espacio} value={e.id_espacio}>
+                            {e.nombre} ({e.tipo}) - ${Number(e.precio_hora).toLocaleString('es-CO')} COP/hora
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ marginBottom: '0.8rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Tipo de Cliente</label>
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <label style={{ fontSize: '0.85rem', color: '#e2e8f0', cursor: 'pointer' }}>
+                          <input 
+                            type="radio" 
+                            name="tipo_cliente" 
+                            value="Huésped Registrado"
+                            checked={reservaNegocioForm.tipo_cliente === 'Huésped Registrado'}
+                            onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, tipo_cliente: e.target.value })}
+                          /> 🏨 Huésped de Facile
+                        </label>
+                        <label style={{ fontSize: '0.85rem', color: '#e2e8f0', cursor: 'pointer' }}>
+                          <input 
+                            type="radio" 
+                            name="tipo_cliente" 
+                            value="Cliente Externo"
+                            checked={reservaNegocioForm.tipo_cliente === 'Cliente Externo'}
+                            onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, tipo_cliente: e.target.value })}
+                          /> 🏢 Cliente / Empresa Externa
+                        </label>
+                      </div>
+                    </div>
+
+                    {reservaNegocioForm.tipo_cliente === 'Huésped Registrado' ? (
+                      <div style={{ marginBottom: '0.8rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Seleccionar Huésped Hospedado</label>
+                        <select
+                          style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                          value={reservaNegocioForm.id_huesped}
+                          onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, id_huesped: e.target.value })}
+                          required
+                        >
+                          <option value="">-- Seleccionar Huésped --</option>
+                          {huespedes.map(h => (
+                            <option key={h.id_huesped} value={h.id_huesped}>
+                              {h.nombre} (Doc: {h.documento}) {h.empresa ? `- ${h.empresa}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ marginBottom: '0.8rem' }}>
+                          <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Nombre Completo / Empresa Externa</label>
+                          <input 
+                            type="text" 
+                            placeholder="Ej: Empresa XYZ / Dr. Roberto Gómez"
+                            style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                            value={reservaNegocioForm.nombre_cliente}
+                            onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, nombre_cliente: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '0.8rem' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>NIT / Documento</label>
+                            <input 
+                              type="text" 
+                              placeholder="900.123.456-7"
+                              style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                              value={reservaNegocioForm.documento_cliente}
+                              onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, documento_cliente: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Correo Contacto</label>
+                            <input 
+                              type="email" 
+                              placeholder="contacto@empresa.com"
+                              style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                              value={reservaNegocioForm.correo_cliente}
+                              onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, correo_cliente: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.8rem', marginBottom: '0.8rem' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Fecha</label>
+                        <input 
+                          type="date"
+                          style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                          value={reservaNegocioForm.fecha}
+                          onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, fecha: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Hora Inicio</label>
+                        <input 
+                          type="time"
+                          style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                          value={reservaNegocioForm.hora_inicio}
+                          onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, hora_inicio: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Hora Fin</label>
+                        <input 
+                          type="time"
+                          style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                          value={reservaNegocioForm.hora_fin}
+                          onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, hora_fin: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Observaciones / Requerimientos Especiales</label>
+                      <input 
+                        type="text"
+                        placeholder="Ej: Video Beam HDMI y servicio de café"
+                        style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', color: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}
+                        value={reservaNegocioForm.observaciones}
+                        onChange={(e) => setReservaNegocioForm({ ...reservaNegocioForm, observaciones: e.target.value })}
+                      />
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      style={{ width: '100%', padding: '0.7rem', background: 'var(--color-primary-red)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}
+                      disabled={loading}
+                    >
+                      {loading ? 'Procesando...' : 'Confirmar Reserva de Espacio'}
+                    </button>
+                  </form>
+                </div>
+
+                {/* TABLA DE RESERVAS DEL CENTRO DE NEGOCIOS */}
+                <div style={{ background: '#1e293b', borderRadius: '8px', padding: '1.5rem', border: '1px solid #334155' }}>
+                  <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#f8fafc' }}>
+                    📋 Reservas Activas del Centro de Negocios ({reservasNegocio.length})
+                  </h3>
+
+                  <div style={{ overflowX: 'auto', maxHeight: '420px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', color: '#cbd5e1' }}>
+                      <thead>
+                        <tr style={{ background: '#0f172a', textAlign: 'left', borderBottom: '2px solid #334155' }}>
+                          <th style={{ padding: '0.6rem' }}>Espacio</th>
+                          <th style={{ padding: '0.6rem' }}>Cliente</th>
+                          <th style={{ padding: '0.6rem' }}>Fecha & Horario</th>
+                          <th style={{ padding: '0.6rem' }}>Total</th>
+                          <th style={{ padding: '0.6rem' }}>Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reservasNegocio.map(rn => (
+                          <tr key={rn.id_reserva_negocio} style={{ borderBottom: '1px solid #334155' }}>
+                            <td style={{ padding: '0.6rem', fontWeight: 'bold', color: '#38bdf8' }}>{rn.espacio}</td>
+                            <td style={{ padding: '0.6rem' }}>
+                              <strong style={{ color: '#f8fafc', display: 'block' }}>{rn.nombre_cliente}</strong>
+                              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{rn.tipo_cliente}</span>
+                            </td>
+                            <td style={{ padding: '0.6rem' }}>
+                              {rn.fecha}<br/>
+                              <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>{rn.hora_inicio} - {rn.hora_fin}</span> ({rn.duracion_horas}h)
+                            </td>
+                            <td style={{ padding: '0.6rem', fontWeight: 'bold', color: '#4ade80' }}>
+                              ${Number(rn.precio_total).toLocaleString('es-CO')}
+                            </td>
+                            <td style={{ padding: '0.6rem' }}>
+                              <button onClick={() => handleCancelarReservaNegocio(rn.id_reserva_negocio)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '0.2rem 0.4rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
+                                Cancelar
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SUBTAB 4: DIRECTORIO DE HUÉSPEDES (BAJA LÓGICA OPERA PMS) */}
+            {pmsSubTab === 'huespedes' && (
+              <div style={{ background: '#1e293b', borderRadius: '8px', padding: '1.5rem', border: '1px solid #334155' }}>
+                <h2 style={{ fontSize: '1.2rem', marginBottom: '1.2rem', color: '#f8fafc' }}>
+                  👥 Directorio de Huéspedes & Control de Estado (Estándar Opera PMS)
+                </h2>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#cbd5e1' }}>
+                    <thead>
+                      <tr style={{ background: '#0f172a', textAlign: 'left', borderBottom: '2px solid #334155' }}>
+                        <th style={{ padding: '0.75rem 1rem' }}>Huésped</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Documento</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Contacto</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Empresa</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Estado</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Acciones (Baja Lógica)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {huespedes.map(h => (
+                        <tr key={h.id_huesped} style={{ borderBottom: '1px solid #334155' }}>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 'bold', color: '#f8fafc' }}>{h.nombre}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}>{h.documento}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}>{h.telefono} | {h.correo}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}>{h.empresa || 'Particular'}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <span style={{ padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', background: h.estado === 'Activo' ? '#166534' : '#991b1b', color: '#fff' }}>
+                              {h.estado}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            {h.estado === 'Activo' ? (
+                              <button onClick={() => handleCambiarEstadoHuesped(h.id_huesped, 'Inactivo')} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}>
+                                🚫 Desactivar
+                              </button>
+                            ) : (
+                              <button onClick={() => handleCambiarEstadoHuesped(h.id_huesped, 'Activo')} style={{ background: '#166534', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}>
+                                 Activar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      ) : (
+        /* =========================================================================
+           PÁGINA PÚBLICA COMERCIAL (APARTAMENTOS FACILE - WEB DE HUÉSPEDES)
+           ========================================================================= */
         <>
-          <section className="facile-hero">
-            <div className="facile-hero-container">
-              <div className="facile-hero-card">
-                <h1>Hola Bienvenidos!</h1>
-                <p>
-                  Apartamentos amoblados para largas estadías con los servicios completos de un hotel 5 estrellas! Estamos ubicados en la mejor zona del norte de Bogotá el Chicó.
-                </p>
-                <button className="btn-whatsapp-blue" onClick={() => setActiveTab('reservar')}>
-                  AQUI INFORMACION POR WHATSAPP
-                </button>
+          {/* 1. TOPBAR OFICIAL ROJA */}
+          <div className="facile-topbar">
+            <div className="facile-topbar-content">
+              <div className="topbar-left">
+                <MapPin size={14}/>
+                <span>Calle 97 #21-62, Chicó, Bogotá</span>
               </div>
-            </div>
-          </section>
-
-          {/* Destacados rápidos */}
-          <div className="facile-section">
-            <div className="section-title-wrap">
-              <h2>Apartamentos Facile Bogotá</h2>
-              <p>Confort, elegancia y centro de negocios en la mejor ubicación de la capital</p>
-            </div>
-
-            <div className="services-card-grid">
-              <div className="service-card">
-                <div className="service-card-icon">🏢</div>
-                <h3>Apartamentos Amoblados</h3>
-                <p>Unidades dúplex y suites ejecutivas totalmente equipadas para estadías cortas y largas.</p>
-              </div>
-              <div className="service-card">
-                <div className="service-card-icon">💼</div>
-                <h3>Centro de Negocios</h3>
-                <p>Salas de reuniones y conectividad por fibra óptica para profesionales y empresas.</p>
-              </div>
-              <div className="service-card">
-                <div className="service-card-icon">🛡️</div>
-                <h3>Recepción & Seguridad 24/7</h3>
-                <p>Personal operativo en portería y circuito de cámaras de vigilancia permanente.</p>
-              </div>
-              <div className="service-card">
-                <div className="service-card-icon">✨</div>
-                <h3>15% Descuento Larga Estadía</h3>
-                <p>Descuento automático para todas las reservas superiores a 15 noches continuas.</p>
+              <div className="topbar-right">
+                <a href="tel:3153512085" className="topbar-phone">
+                  <Phone size={14}/>
+                  <span>315 351 2085</span>
+                </a>
+                <div className="topbar-social">
+                  <a href="https://www.facebook.com/apartamentosfacile/" target="_blank" rel="noreferrer">Facebook</a>
+                  <a href="https://www.instagram.com/apartamentosfacile/" target="_blank" rel="noreferrer">Instagram</a>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* 2. HEADER ROJO OFICIAL PÚBLICO (SIN BOTÓN DE EMPLEADOS) */}
+          <header className="facile-header">
+            <div className="facile-header-content">
+              <div className="facile-logo" onClick={() => setActiveTab('inicio')}>
+                <span className="facile-logo-script">Facile</span>
+                <span className="facile-logo-sub">APARTAMENTOS</span>
+              </div>
+
+              <nav className="facile-nav">
+                <button className={`facile-nav-link ${activeTab === 'inicio' ? 'active' : ''}`} onClick={() => setActiveTab('inicio')}>
+                  Inicio
+                </button>
+                <button className={`facile-nav-link ${activeTab === 'apartamentos' ? 'active' : ''}`} onClick={() => setActiveTab('apartamentos')}>
+                  Alojamientos (38 Unidades)
+                </button>
+                <button className={`facile-nav-link ${activeTab === 'centro_negocios_publico' ? 'active' : ''}`} onClick={() => setActiveTab('centro_negocios_publico')}>
+                  Centro de Negocios
+                </button>
+                <button className={`facile-nav-link ${activeTab === 'servicios' ? 'active' : ''}`} onClick={() => setActiveTab('servicios')}>
+                  Servicios
+                </button>
+                <button className={`facile-nav-link ${activeTab === 'reservar' ? 'active' : ''}`} onClick={() => setActiveTab('reservar')}>
+                  Reservar Online
+                </button>
+              </nav>
+            </div>
+          </header>
+
+          {/* HERO PRINCIPAL */}
+          {activeTab === 'inicio' && (
+            <>
+              <section className="facile-hero">
+                <div className="facile-hero-container">
+                  <div className="facile-hero-card">
+                    <h1>Hola Bienvenidos!</h1>
+                    <p>
+                      Apartamentos amoblados para largas estadías con los servicios completos de un hotel 5 estrellas y centro de negocios. Estamos ubicados en la mejor zona del norte de Bogotá, Barrio Chicó.
+                    </p>
+                    <button className="btn-whatsapp-blue" onClick={() => setActiveTab('reservar')}>
+                      AQUÍ INFORMACIÓN POR WHATSAPP
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              {/* SECCIÓN DESTACADOS */}
+              <div className="facile-section">
+                <div className="section-title-wrap">
+                  <h2>Apartamentos Facile Bogotá</h2>
+                  <p>Confort, elegancia y centro de negocios en la mejor ubicación de la capital</p>
+                </div>
+
+                <div className="services-card-grid">
+                  <div className="service-card">
+                    <div className="service-card-icon">🏢</div>
+                    <h3>38 Unidades Amobladas</h3>
+                    <p>Dúplex, Dobles, Familiares y Habitaciones con camas Queen y máximo confort.</p>
+                  </div>
+                  <div className="service-card">
+                    <div className="service-card-icon">💼</div>
+                    <h3>Centro de Negocios</h3>
+                    <p>Salas de Juntas y espacios Coworking por horas para huéspedes y clientes externos.</p>
+                  </div>
+                  <div className="service-card">
+                    <div className="service-card-icon">🛡️</div>
+                    <h3>Recepción & Seguridad 24/7</h3>
+                    <p>Personal operativo en portería y circuito de vigilancia permanente.</p>
+                  </div>
+                  <div className="service-card">
+                    <div className="service-card-icon">✨</div>
+                    <h3>15% Descuento Larga Estadía</h3>
+                    <p>Descuento automático para todas las reservas superiores a 15 noches continuas.</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* VISTA: CATÁLOGO REAL DE ALOJAMIENTOS (38 UNIDADES) */}
+          {(activeTab === 'apartamentos' || activeTab === 'inicio') && (
+            <section className="facile-section" style={{ borderTop: activeTab === 'inicio' ? '1px solid #e2e8f0' : 'none' }}>
+              <div className="section-title-wrap">
+                <h2>Inventario de Alojamientos (38 Unidades)</h2>
+                <p>Todas nuestras habitaciones cuentan con <strong>Cama QUEEN</strong> y acabados de lujo</p>
+              </div>
+
+              <div className="apto-grid">
+                {/* DÚPLEX */}
+                <div className="apto-item">
+                  <div className="apto-header">
+                    <h3>Dúplex (14 Unidades)</h3>
+                    <span className="badge-red-num">56 m²</span>
+                  </div>
+                  <div className="apto-body">
+                    <p className="apto-text">
+                      1 Habitación con Cama Queen + Sofá-cama. Capacidad 3 personas. 2 Baños, sala, cocina equipada, TV, Wi-Fi 5G y lavadora.
+                    </p>
+                    <div className="apto-specs">
+                      <span className="spec-pill"><Users size={12}/> Capacidad: 3 personas</span>
+                      <span className="spec-pill"><Home size={12}/> 1 Hab + 2 Baños</span>
+                      <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
+                    </div>
+                    <div className="apto-footer">
+                      <div className="price-text">
+                        $250.000 <span>COP/noche (ref)</span>
+                      </div>
+                      <button className="btn-book-red" onClick={() => setActiveTab('reservar')}>
+                        Reservar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* DOBLE */}
+                <div className="apto-item">
+                  <div className="apto-header">
+                    <h3>Doble (11 Unidades)</h3>
+                    <span className="badge-red-num">2 Habitaciones</span>
+                  </div>
+                  <div className="apto-body">
+                    <p className="apto-text">
+                      2 Habitaciones con Cama Queen en cada una + opción de Sofá-cama. Capacidad 5 personas. Sala de estar, cocina equipada, TV y Wi-Fi.
+                    </p>
+                    <div className="apto-specs">
+                      <span className="spec-pill"><Users size={12}/> Capacidad: 5 personas</span>
+                      <span className="spec-pill"><Home size={12}/> 2 Hab (Camas Queen)</span>
+                      <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
+                    </div>
+                    <div className="apto-footer">
+                      <div className="price-text">
+                        $320.000 <span>COP/noche (ref)</span>
+                      </div>
+                      <button className="btn-book-red" onClick={() => setActiveTab('reservar')}>
+                        Reservar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* FAMILIAR */}
+                <div className="apto-item">
+                  <div className="apto-header">
+                    <h3>Familiar (2 Unidades)</h3>
+                    <span className="badge-red-num">3 Habitaciones</span>
+                  </div>
+                  <div className="apto-body">
+                    <p className="apto-text">
+                      3 Habitaciones con 3 Camas Queen + opción de Sofá-cama. Capacidad hasta 7 personas. Sala, comedor independiente, cocina y zona de ropas.
+                    </p>
+                    <div className="apto-specs">
+                      <span className="spec-pill"><Users size={12}/> Capacidad: 7 personas</span>
+                      <span className="spec-pill"><Home size={12}/> 3 Hab (3 Camas Queen)</span>
+                      <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
+                    </div>
+                    <div className="apto-footer">
+                      <div className="price-text">
+                        $390.000 <span>COP/noche (ref)</span>
+                      </div>
+                      <button className="btn-book-red" onClick={() => setActiveTab('reservar')}>
+                        Reservar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* HABITACIÓN */}
+                <div className="apto-item">
+                  <div className="apto-header">
+                    <h3>Habitación (11 Unidades)</h3>
+                    <span className="badge-red-num">Suite 17 m²</span>
+                  </div>
+                  <div className="apto-body">
+                    <p className="apto-text">
+                      1 Habitación con Cama Queen. Capacidad 2 personas. Baño privado, TV, Wi-Fi 5G y secador de pelo. Ideal para viajes ejecutivos.
+                    </p>
+                    <div className="apto-specs">
+                      <span className="spec-pill"><Users size={12}/> Capacidad: 2 personas</span>
+                      <span className="spec-pill"><Home size={12}/> Baño Privado</span>
+                      <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
+                    </div>
+                    <div className="apto-footer">
+                      <div className="price-text">
+                        $180.000 <span>COP/noche (ref)</span>
+                      </div>
+                      <button className="btn-book-red" onClick={() => setActiveTab('reservar')}>
+                        Reservar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* VISTA PÚBLICA: CENTRO DE NEGOCIOS */}
+          {activeTab === 'centro_negocios_publico' && (
+            <section className="facile-section">
+              <div className="section-title-wrap">
+                <h2>Centro de Negocios Apartamentos Facile</h2>
+                <p>Espacios corporativos modernos por horas para huéspedes y empresas externas</p>
+              </div>
+
+              <div className="apto-grid">
+                <div className="apto-item">
+                  <div className="apto-header">
+                    <h3>Salas de Juntas (2 Salas)</h3>
+                    <span className="badge-red-num">Empresarial</span>
+                  </div>
+                  <div className="apto-body">
+                    <p className="apto-text">
+                      Salas de reuniones equipadas con tecnología de proyección, fibra óptica y capacidad para 10 personas. Reservas por horas o día completo.
+                    </p>
+                    <div className="price-text" style={{ marginBottom: '1rem' }}>
+                      $70.000 <span>COP/hora (ref)</span>
+                    </div>
+                    <ul style={{ fontSize: '0.85rem', color: '#475569', paddingLeft: '1.2rem', lineHeight: '1.6' }}>
+                      <li>1 Hora: $70.000 COP</li>
+                      <li>2 Horas: $140.000 COP</li>
+                      <li>4 Horas (Bloque): $250.000 COP</li>
+                      <li>Día Completo: $450.000 COP</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="apto-item">
+                  <div className="apto-header">
+                    <h3>Espacios Coworking / Flex</h3>
+                    <span className="badge-red-num">Conectividad 5G</span>
+                  </div>
+                  <div className="apto-body">
+                    <p className="apto-text">
+                      Puestos de trabajo flexibles con conectividad por fibra óptica, ambiente tranquilo y estación de café.
+                    </p>
+                    <div className="price-text" style={{ marginBottom: '1rem' }}>
+                      $20.000 <span>COP/hora (ref)</span>
+                    </div>
+                    <ul style={{ fontSize: '0.85rem', color: '#475569', paddingLeft: '1.2rem', lineHeight: '1.6' }}>
+                      <li>1 Hora: $20.000 COP</li>
+                      <li>4 Horas: $70.000 COP</li>
+                      <li>Día Completo: $100.000 COP</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* VISTA: REGISTRO Y RESERVAS ONLINE */}
+          {activeTab === 'reservar' && (
+            <section className="facile-section">
+              <div className="section-title-wrap">
+                <h2>Portal de Registro y Reservas</h2>
+                <p>Complete sus datos de huésped para solicitar su reserva en Facile</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                {/* FORMULARIO HUÉSPED */}
+                <div className="clean-card">
+                  <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--color-primary-red)' }}>
+                    1. Datos del Huésped
+                  </h3>
+                  <form onSubmit={handleRegisterHuesped}>
+                    <div className="form-field">
+                      <label>Nombre Completo</label>
+                      <input type="text" placeholder="Ej: Juan Pérez" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})} required/>
+                    </div>
+                    <div className="form-field">
+                      <label>Documento de Identidad</label>
+                      <input type="text" placeholder="Cédula o Pasaporte" value={formData.documento} onChange={(e) => setFormData({...formData, documento: e.target.value})} required/>
+                    </div>
+                    <div className="form-field">
+                      <label>Teléfono Movil</label>
+                      <input type="tel" placeholder="310 000 0000" value={formData.telefono} onChange={(e) => setFormData({...formData, telefono: e.target.value})} required/>
+                    </div>
+                    <div className="form-field">
+                      <label>Correo Electrónico</label>
+                      <input type="email" placeholder="correo@ejemplo.com" value={formData.correo} onChange={(e) => setFormData({...formData, correo: e.target.value})} required/>
+                    </div>
+                    <div className="form-field">
+                      <label>Empresa (Opcional)</label>
+                      <input type="text" placeholder="Nombre de la empresa" value={formData.empresa} onChange={(e) => setFormData({...formData, empresa: e.target.value})}/>
+                    </div>
+
+                    <div style={{ margin: '1rem 0' }}>
+                      <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={habeasData} onChange={(e) => setHabeasData(e.target.checked)}/>
+                        Autorizo el tratamiento de datos personales conforme a la Ley 1581.
+                      </label>
+                    </div>
+
+                    <button type="submit" className="btn-submit-red" disabled={loading}>
+                      {loading ? 'Guardando...' : 'Registrar Huésped'}
+                    </button>
+                  </form>
+                </div>
+
+                {/* FORMULARIO RESERVA */}
+                <div className="clean-card">
+                  <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--color-primary-red)' }}>
+                    2. Seleccionar Alojamiento & Fechas
+                  </h3>
+
+                  {reservaAlert && (
+                    <div style={{ padding: '0.5rem', background: reservaAlert.type === 'success' ? '#dcfce7' : '#fee2e2', color: reservaAlert.type === 'success' ? '#166534' : '#991b1b', borderRadius: '4px', fontSize: '0.8rem', marginBottom: '1rem' }}>
+                      {reservaAlert.message}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleCrearReserva}>
+                    <div className="form-field">
+                      <label>Huésped Titular</label>
+                      <select onChange={(e) => {
+                        const h = huespedes.find(x => x.id_huesped === parseInt(e.target.value));
+                        setSelectedHuesped(h || null);
+                      }} required>
+                        <option value="">-- Seleccionar Huésped --</option>
+                        {huespedes.map(h => (
+                          <option key={h.id_huesped} value={h.id_huesped}>{h.nombre} ({h.documento})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-field">
+                      <label>Unidad de Alojamiento</label>
+                      <select value={reservaData.id_habitacion} onChange={(e) => setReservaData({...reservaData, id_habitacion: e.target.value})} required>
+                        <option value="">-- Seleccionar Apartamento --</option>
+                        {habitaciones.map(h => (
+                          <option key={h.id_habitacion} value={h.id_habitacion}>
+                            Apto {h.numero} - {h.tipo} (${Number(h.precio_noche).toLocaleString('es-CO')} COP/noche)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div className="form-field">
+                        <label>Fecha Entrada (Check-In)</label>
+                        <input type="date" value={reservaData.fecha_entrada} onChange={(e) => setReservaData({...reservaData, fecha_entrada: e.target.value})} required/>
+                      </div>
+                      <div className="form-field">
+                        <label>Fecha Salida (Check-Out)</label>
+                        <input type="date" value={reservaData.fecha_salida} onChange={(e) => setReservaData({...reservaData, fecha_salida: e.target.value})} required/>
+                      </div>
+                    </div>
+
+                    <button type="submit" className="btn-submit-red" disabled={loading} style={{ marginTop: '1rem' }}>
+                      {loading ? 'Confirmando...' : 'Confirmar Reserva de Hospedaje'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* WHATSAPP WIDGET FLOATING */}
+          <div className="whatsapp-float-wrap">
+            <span className="whatsapp-bubble">¿En qué podemos servirle?</span>
+            <a href="https://wa.me/573153512085" target="_blank" rel="noreferrer" className="whatsapp-circle-btn" title="Contactar por WhatsApp">
+              <MessageCircle size={28}/>
+            </a>
+          </div>
+
+          {/* FOOTER PÚBLICO CON ENLACE DISCRETO AL PORTAL PMS DE EMPLEADOS */}
+          <footer className="facile-footer">
+            <div className="facile-footer-grid">
+              <div className="footer-section">
+                <h4>Apartamentos Facile</h4>
+                <p>Apartamentos amoblados para largas estadías en Bogotá con servicios de hotel y centro de negocios.</p>
+                <p><strong>PBX:</strong> +57 315 351 2085</p>
+              </div>
+              <div className="footer-section">
+                <h4>Ubicación & Contacto</h4>
+                <p>Calle 97 #21-62, Barrio Chicó</p>
+                <p>Bogotá D.C., Colombia</p>
+                <p>Recepción 24 Horas</p>
+              </div>
+              <div className="footer-section">
+                <h4>BookingSoft System</h4>
+                <p>Sistema de Administración Hotelera Integral ADSO 2026.</p>
+                <button 
+                  onClick={() => {
+                    if (usuarioSesion) {
+                      setActiveTab('pms');
+                    } else {
+                      setShowLoginModal(true);
+                    }
+                  }}
+                  style={{ background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.78rem', marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Lock size={12}/> Acceso Personal Autorizado (PMS BookingSoft)
+                </button>
+              </div>
+            </div>
+            <div className="footer-copy">
+              <p>© 2026 Apartamentos Facile — Todos los derechos reservados.</p>
+            </div>
+          </footer>
         </>
       )}
 
-      {/* =========================================================================
-          VISTA 2: CATÁLOGO DE APARTAMENTOS (Tarjetas Blancas con Acentos Rojos)
-          ========================================================================= */}
-      {(activeTab === 'apartamentos' || activeTab === 'inicio') && (
-        <section className="facile-section" style={{ borderTop: activeTab === 'inicio' ? '1px solid #e2e8f0' : 'none' }}>
-          <div className="section-title-wrap">
-            <h2>Apartamentos a su Disposición</h2>
-            <p>Conozca nuestras opciones de hospedaje y reserve directamente</p>
-          </div>
-
-          <div className="apto-grid">
-            {/* Apartamento 1 Habitación */}
-            <div className="apto-item">
-              <div className="apto-header">
-                <h3>Apartamento 1 Habitación</h3>
-                <span className="badge-red-num">Apto 101</span>
-              </div>
-              <div className="apto-body">
-                <p className="apto-text">
-                  Apartamento dúplex con capacidad hasta (3) personas. Cama Queen, cocina integral totalmente equipada y sala de estar.
-                </p>
-                <div className="apto-specs">
-                  <span className="spec-pill"><Users size={12}/> Hasta 3 personas</span>
-                  <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
-                  <span className="spec-pill"><Home size={12}/> Dúplex</span>
-                </div>
-                <div className="apto-footer">
-                  <div className="price-text">
-                    $190.000 <span>COP/noche</span>
-                  </div>
-                  <button className="btn-book-red" onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 1 })}>
-                    Reservar
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Apartamento 2 Habitaciones */}
-            <div className="apto-item">
-              <div className="apto-header">
-                <h3>Apartamento 2 Habitaciones</h3>
-                <span className="badge-red-num">Apto 201</span>
-              </div>
-              <div className="apto-body">
-                <p className="apto-text">
-                  Capacidad (5) personas. Una excelente opción para grupos familiares y empresas con dos habitaciones y baño privado.
-                </p>
-                <div className="apto-specs">
-                  <span className="spec-pill"><Users size={12}/> Hasta 5 personas</span>
-                  <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
-                  <span className="spec-pill"><Home size={12}/> 2 Baños</span>
-                </div>
-                <div className="apto-footer">
-                  <div className="price-text">
-                    $243.000 <span>COP/noche</span>
-                  </div>
-                  <button className="btn-book-red" onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 2 })}>
-                    Reservar
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Apartamento 3 Habitaciones */}
-            <div className="apto-item">
-              <div className="apto-header">
-                <h3>Apartamento 3 Habitaciones</h3>
-                <span className="badge-red-num">Apto 301</span>
-              </div>
-              <div className="apto-body">
-                <p className="apto-text">
-                  Capacidad (7) personas. Amplios espacios, sala comedor, zona de trabajo y máximo confort para grupos y directivos.
-                </p>
-                <div className="apto-specs">
-                  <span className="spec-pill"><Users size={12}/> Hasta 7 personas</span>
-                  <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
-                  <span className="spec-pill"><Home size={12}/> Balcón</span>
-                </div>
-                <div className="apto-footer">
-                  <div className="price-text">
-                    $320.000 <span>COP/noche</span>
-                  </div>
-                  <button className="btn-book-red" onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 3 })}>
-                    Reservar
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Salas de Juntas & Coworking */}
-            <div className="apto-item">
-              <div className="apto-header">
-                <h3>Oficina / Sala de Juntas</h3>
-                <span className="badge-red-num">Sala A</span>
-              </div>
-              <div className="apto-body">
-                <p className="apto-text">
-                  Espacio coworking equipado con pantalla para presentaciones, internet dedicado y café de cortesía para reuniones.
-                </p>
-                <div className="apto-specs">
-                  <span className="spec-pill"><Users size={12}/> Hasta 10 personas</span>
-                  <span className="spec-pill"><Briefcase size={12}/> Pantalla 65"</span>
-                  <span className="spec-pill"><Wifi size={12}/> Fibra</span>
-                </div>
-                <div className="apto-footer">
-                  <div className="price-text">
-                    $120.000 <span>COP/sesión</span>
-                  </div>
-                  <button className="btn-book-red" onClick={() => setActiveTab('reservar')}>
-                    Consultar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* =========================================================================
-          VISTA 3: SERVICIOS
-          ========================================================================= */}
-      {activeTab === 'servicios' && (
-        <section className="facile-section">
-          <div className="section-title-wrap">
-            <h2>Nuestros Servicios</h2>
-            <p>Todo lo que necesita para una estadía placentera y productiva</p>
-          </div>
-
-          <div className="services-card-grid">
-            <div className="service-card">
-              <div className="service-card-icon">🧹</div>
-              <h3>Servicio de Amas de Llaves</h3>
-              <p>Aseo profesional, cambio de lencería y toallas de alta calidad con protocolos de desinfección.</p>
-            </div>
-            <div className="service-card">
-              <div className="service-card-icon">🚗</div>
-              <h3>Parqueadero Privado</h3>
-              <p>Estacionamiento vigilado dentro del edificio las 24 horas para huéspedes y visitantes.</p>
-            </div>
-            <div className="service-card">
-              <div className="service-card-icon">📶</div>
-              <h3>Wi-Fi de Alta Velocidad</h3>
-              <p>Conexión por fibra óptica en todos los apartamentos y zonas de coworking.</p>
-            </div>
-            <div className="service-card">
-              <div className="service-card-icon">🍳</div>
-              <h3>Cocina Totalmente Equipada</h3>
-              <p>Nevera, microondas, estufa, vajilla completa y electrodomésticos en cada apartamento.</p>
-            </div>
-            <div className="service-card">
-              <div className="service-card-icon">👔</div>
-              <h3>Zona de Lavandería</h3>
-              <p>Área de lavado y planchado para mayor comodidad durante largas estadías.</p>
-            </div>
-            <div className="service-card">
-              <div className="service-card-icon">🛡️</div>
-              <h3>Vigilancia & Control 24 Horas</h3>
-              <p>Monitoreo constante por CCTV y personal de recepción disponible permanentemente.</p>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* =========================================================================
-          VISTA 4: MOTOR DE RESERVAS (PÚBLICO - HUÉSPEDES)
-          ========================================================================= */}
-      {activeTab === 'reservar' && (
-        <section className="facile-section">
-          <div className="section-title-wrap">
-            <h2>Reservar en Línea</h2>
-            <p>Auto-registro de huésped y reserva con cálculo automático de cotización</p>
-          </div>
-
-          <div className="booking-grid">
-            {/* PASO 1: REGISTRO DE HUÉSPED */}
-            <div className="clean-card">
-              <div className="card-step-badge">Paso 1</div>
-              <div className="clean-card-header">
-                <UserPlus size={20} color="var(--color-primary-red)"/>
-                <h3>Registro de Huésped</h3>
-              </div>
-              <p className="clean-card-desc">
-                Cree su perfil público para habilitar la reserva de su apartamento.
-              </p>
-
-              <form onSubmit={handleUserSubmit}>
-                <div className="form-field">
-                  <label>Nombre Completo</label>
-                  <div className="field-input-wrap">
-                    <FileText className="field-icon" size={16}/>
-                    <input type="text" name="nombre" value={formData.nombre} onChange={handleUserChange} placeholder="Ej: Liliana Restrepo" required/>
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-field">
-                    <label>Documento (Solo números)</label>
-                    <div className="field-input-wrap">
-                      <ShieldCheck className="field-icon" size={16}/>
-                      <input type="text" name="documento" value={formData.documento} onChange={handleUserChange} placeholder="Ej: 1017283944" maxLength={15} required/>
-                    </div>
-                  </div>
-                  <div className="form-field">
-                    <label>Teléfono de Contacto</label>
-                    <div className="field-input-wrap">
-                      <Phone className="field-icon" size={16}/>
-                      <input type="text" name="telefono" value={formData.telefono} onChange={handleUserChange} placeholder="Ej: 3154449876" maxLength={15} required/>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-field">
-                    <label>Correo Electrónico</label>
-                    <div className="field-input-wrap">
-                      <Mail className="field-icon" size={16}/>
-                      <input type="email" name="correo" value={formData.correo} onChange={handleUserChange} placeholder="Ej: correo@ejemplo.com" required/>
-                    </div>
-                  </div>
-                  <div className="form-field">
-                    <label>Empresa (Opcional)</label>
-                    <div className="field-input-wrap">
-                      <Briefcase className="field-icon" size={16}/>
-                      <input type="text" name="empresa" value={formData.empresa} onChange={handleUserChange} placeholder="Ej: Bancolombia"/>
-                    </div>
-                  </div>
-                </div>
-
-                <label className="checkbox-legal">
-                  <input type="checkbox" checked={habeasData} onChange={(e) => setHabeasData(e.target.checked)}/>
-                  <span>Autorizo el tratamiento de mis datos personales según la <strong>Ley de Habeas Data (Ley 1581 de 2012)</strong>.</span>
-                </label>
-
-                <button type="submit" className="btn-submit-red" disabled={loading}>
-                  <UserPlus size={16}/> {loading ? 'Registrando...' : 'Registrarme como Huésped'}
-                </button>
-              </form>
-
-              {alert && (
-                <div className={`msg-alert msg-${alert.type}`}>
-                  <AlertCircle size={18}/>
-                  <span>{alert.message}</span>
-                </div>
-              )}
-            </div>
-
-            {/* PASO 2: CREACIÓN DE RESERVA */}
-            <div className="clean-card">
-              <div className="card-step-badge">Paso 2</div>
-              <div className="clean-card-header">
-                <Calendar size={20} color="var(--color-primary-red)"/>
-                <h3>Crear Reserva</h3>
-              </div>
-
-              {selectedHuesped ? (
-                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.6rem 0.8rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '0.85rem' }}>Huésped: <strong>{selectedHuesped.nombre}</strong> (Doc: {selectedHuesped.documento})</span>
-                  <button className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar</button>
-                </div>
-              ) : (
-                <p className="clean-card-desc" style={{ color: '#b45309' }}>
-                  ⚠️ Regístrese en el <strong>Paso 1</strong> o seleccione un huésped existente para continuar.
-                </p>
-              )}
-
-              <form onSubmit={handleReservaSubmit}>
-                <div className="form-field">
-                  <label>Seleccionar Apartamento / Unidad</label>
-                  <div className="field-input-wrap">
-                    <Home className="field-icon" size={16}/>
-                    <select name="id_habitacion" value={reservaData.id_habitacion} onChange={handleReservaChange} required disabled={!selectedHuesped}>
-                      <option value="">-- Elija un apartamento --</option>
-                      {habitaciones.map(h => (
-                        <option key={h.id_habitacion} value={h.id_habitacion} disabled={h.estado === 'Mantenimiento'}>
-                          Apto {h.numero} - {h.tipo} ({h.estado}) - ${h.precio_noche.toLocaleString('es-CO')} COP/noche
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* CALENDARIO DE OCUPACIÓN */}
-                {reservaData.id_habitacion && (() => {
-                  const year = calDate.getFullYear();
-                  const month = calDate.getMonth();
-                  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                  const habReservas = reservas.filter(r => String(r.id_habitacion) === String(reservaData.id_habitacion) && (r.estado === 'Confirmada' || r.estado === 'Check-In'));
-
-                  const firstDay = new Date(year, month, 1);
-                  const daysInMonth = new Date(year, month + 1, 0).getDate();
-                  let startDay = firstDay.getDay() - 1;
-                  if (startDay === -1) startDay = 6;
-
-                  const daysGrid = [];
-                  for (let i = 0; i < startDay; i++) daysGrid.push(null);
-                  for (let d = 1; d <= daysInMonth; d++) {
-                    const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    const isOccupied = habReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
-                    const isSelectedIn = reservaData.fecha_entrada === dayStr;
-                    const isSelectedOut = reservaData.fecha_salida === dayStr;
-                    const inRange = reservaData.fecha_entrada && reservaData.fecha_salida && dayStr >= reservaData.fecha_entrada && dayStr <= reservaData.fecha_salida;
-                    daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
-                  }
-
-                  const handleDayClick = (item) => {
-                    if (!item || item.isOccupied) return;
-                    if (!reservaData.fecha_entrada || (reservaData.fecha_entrada && reservaData.fecha_salida)) {
-                      setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
-                    } else if (reservaData.fecha_entrada && !reservaData.fecha_salida) {
-                      if (item.dayStr <= reservaData.fecha_entrada) {
-                        setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
-                      } else {
-                        const hasBlock = habReservas.some(r => r.fecha_entrada <= item.dayStr && r.fecha_salida >= reservaData.fecha_entrada);
-                        if (hasBlock) {
-                          setReservaAlert({ type: 'error', message: 'El rango incluye fechas ya reservadas en rojo.' });
-                          return;
-                        }
-                        setReservaData(prev => ({ ...prev, fecha_salida: item.dayStr }));
-                      }
-                    }
-                  };
-
-                  return (
-                    <div style={{ background: '#f8fafc', padding: '0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '0.9rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <button type="button" className="btn-mini" onClick={() => setCalDate(new Date(year, month - 1, 1))}>◀</button>
-                        <strong style={{ color: '#0f172a', fontSize: '0.85rem' }}>{monthNames[month]} {year}</strong>
-                        <button className="btn-mini" type="button" onClick={() => setCalDate(new Date(year, month + 1, 1))}>▶</button>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', textAlign: 'center', fontSize: '0.7rem', color: '#64748b', marginBottom: '4px' }}>
-                        <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
-                        {daysGrid.map((item, idx) => {
-                          if (!item) return <div key={`empty-${idx}`}/>;
-                          let bg = '#dcfce7';
-                          let color = '#166534';
-                          if (item.isOccupied) { bg = '#fee2e2'; color = '#991b1b'; }
-                          else if (item.isSelectedIn || item.isSelectedOut) { bg = '#cc0000'; color = '#fff'; }
-                          else if (item.inRange) { bg = '#fef08a'; color = '#854d0e'; }
-
-                          return (
-                            <button
-                              key={item.dayStr}
-                              type="button"
-                              onClick={() => handleDayClick(item)}
-                              disabled={item.isOccupied}
-                              style={{
-                                background: bg,
-                                color: color,
-                                border: '1px solid rgba(0,0,0,0.05)',
-                                borderRadius: '4px',
-                                padding: '0.25rem',
-                                fontSize: '0.75rem',
-                                cursor: item.isOccupied ? 'not-allowed' : 'pointer',
-                                fontWeight: 'bold'
-                              }}
-                            >
-                              {item.d}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                <div className="form-row-3">
-                  <div className="form-field">
-                    <label>Check-In</label>
-                    <div className="field-input-wrap">
-                      <input type="date" name="fecha_entrada" value={reservaData.fecha_entrada} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
-                    </div>
-                  </div>
-                  <div className="form-field">
-                    <label>Check-Out</label>
-                    <div className="field-input-wrap">
-                      <input type="date" name="fecha_salida" value={reservaData.fecha_salida} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
-                    </div>
-                  </div>
-                  <div className="form-field">
-                    <label>Personas</label>
-                    <div className="field-input-wrap">
-                      <Users className="field-icon" size={16}/>
-                      <input type="number" name="numero_personas" min="1" max="10" value={reservaData.numero_personas} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
-                    </div>
-                  </div>
-                </div>
-
-                {cotizacion && (
-                  <div className="live-quote-box">
-                    <h4>Resumen de Cotización</h4>
-                    <div className="quote-row"><span>Noches de estadía:</span><span>{cotizacion.noches} noches</span></div>
-                    <div className="quote-row"><span>Subtotal:</span><span>${cotizacion.subtotal.toLocaleString('es-CO')} COP</span></div>
-                    {cotizacion.descuento > 0 && (
-                      <div className="quote-row discount">
-                        <span>Descuento Larga Estadía (15%):</span>
-                        <span>-${cotizacion.descuento.toLocaleString('es-CO')} COP</span>
-                      </div>
-                    )}
-                    <div className="quote-row final-total">
-                      <span>Total a Pagar:</span>
-                      <span>${cotizacion.total.toLocaleString('es-CO')} COP</span>
-                    </div>
-                  </div>
-                )}
-
-                <button type="submit" className="btn-submit-red" disabled={loading || !selectedHuesped}>
-                  <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : 'Confirmar Reserva'}
-                </button>
-              </form>
-
-              {reservaAlert && (
-                <div className={`msg-alert msg-${reservaAlert.type}`}>
-                  <AlertCircle size={18}/>
-                  <span>{reservaAlert.message}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* =========================================================================
-          VISTA 5: PORTAL EMPLEADOS / PMS (SISTEMA DE GESTIÓN HOTELERA)
-          ========================================================================= */}
-      {activeTab === 'pms' && (
-        <section className="facile-section">
-          <div className="pms-header">
-            <div>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Panel de Control Hotelero (PMS)</h2>
-              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Módulo interno para Administración, Recepción, Amas de Llaves y Mantenimiento</p>
-            </div>
-            {usuarioSesion && (
-              <span className="pms-badge">
-                👤 {usuarioSesion.nombre} — <strong>{usuarioSesion.rol}</strong>
-              </span>
-            )}
-          </div>
-
-          <div className="booking-grid" style={{ marginBottom: '1.5rem' }}>
-            {/* BASE DE DATOS DE HUÉSPEDES */}
-            <div className="clean-card">
-              <div className="clean-card-header">
-                <Users size={18} color="var(--color-primary-red)"/>
-                <h3 style={{ fontSize: '1.1rem' }}>Huéspedes Registrados ({huespedes.length})</h3>
-              </div>
-              <div className="pms-table-wrap">
-                <table className="pms-table">
-                  <thead>
-                    <tr><th>Nombre</th><th>Documento</th><th>Acción</th></tr>
-                  </thead>
-                  <tbody>
-                    {huespedes.map(h => (
-                      <tr key={h.id_huesped}>
-                        <td>
-                          <strong>{h.nombre}</strong>
-                          <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>{h.empresa || 'Particular'}</span>
-                          {h.modificado_por && <span style={{ fontSize: '0.68rem', color: '#0284c7' }}>Auditoría: {h.modificado_por}</span>}
-                        </td>
-                        <td><code>{h.documento}</code></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '0.25rem' }}>
-                            <button className="btn-mini" onClick={() => handleSelectHuesped(h)}>Elegir</button>
-                            <button className="btn-mini" onClick={() => handleToggleEstadoHuesped(h)}>
-                              {h.estado === 'Activo' ? 'Desactivar' : 'Activar'}
-                            </button>
-                            <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteHuesped(h.id_huesped)}>
-                              <Trash2 size={11}/>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* BASE DE DATOS DE RESERVAS */}
-            <div className="clean-card">
-              <div className="clean-card-header">
-                <ListOrdered size={18} color="var(--color-primary-red)"/>
-                <h3 style={{ fontSize: '1.1rem' }}>Reservas Activas ({reservas.length})</h3>
-              </div>
-              <div className="pms-table-wrap">
-                <table className="pms-table">
-                  <thead>
-                    <tr><th>Huésped</th><th>Apto</th><th>Fechas</th><th>Acción</th></tr>
-                  </thead>
-                  <tbody>
-                    {reservas.map(r => (
-                      <tr key={r.id_reserva}>
-                        <td>
-                          <strong>{r.huesped_nombre}</strong>
-                          <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>Doc: {r.huesped_documento}</span>
-                        </td>
-                        <td><span className="badge-tag badge-occup">Apto {r.habitacion_numero}</span></td>
-                        <td style={{ fontSize: '0.72rem' }}>
-                          In: {r.fecha_entrada}<br/>Out: {r.fecha_salida}
-                        </td>
-                        <td>
-                          <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteReserva(r.id_reserva)}>
-                            Cancelar
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* GESTIÓN DE PLANTAS (AMAS DE LLAVES & MANTENIMIENTO) */}
-          <div className="clean-card">
-            <div className="clean-card-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Wrench size={18} color="var(--color-primary-red)"/>
-                <h3 style={{ fontSize: '1.1rem' }}>Operaciones de Planta: Amas de Llaves & Mantenimiento</h3>
-              </div>
-              <div style={{ display: 'flex', gap: '0.3rem' }}>
-                <button className="btn-mini" onClick={() => setFiltroHabitaciones('amas_llaves')} style={{ background: filtroHabitaciones === 'amas_llaves' ? '#fef3c7' : '#fff' }}>
-                  🧹 Aseo Pendiente
-                </button>
-                <button className="btn-mini" onClick={() => setFiltroHabitaciones('mantenimiento')} style={{ background: filtroHabitaciones === 'mantenimiento' ? '#fee2e2' : '#fff' }}>
-                  🔧 Daños / Falla
-                </button>
-                <button className="btn-mini" onClick={() => setFiltroHabitaciones('todas')} style={{ background: filtroHabitaciones === 'todas' ? '#e0e7ff' : '#fff' }}>
-                  Ver Todas ({habitaciones.length})
-                </button>
-              </div>
-            </div>
-
-            <div className="pms-table-wrap" style={{ maxHeight: '320px' }}>
-              <table className="pms-table">
-                <thead>
-                  <tr><th>Apartamento</th><th>Tipo</th><th>Estado</th><th>Detalle</th><th>Acciones de Turno</th></tr>
-                </thead>
-                <tbody>
-                  {habitaciones
-                    .filter(h => {
-                      if (filtroHabitaciones === 'amas_llaves') return h.estado === 'En limpieza';
-                      if (filtroHabitaciones === 'mantenimiento') return h.estado === 'Mantenimiento';
-                      return true;
-                    })
-                    .map(h => (
-                      <tr key={h.id_habitacion}>
-                        <td><strong>Apto {h.numero}</strong></td>
-                        <td>{h.tipo}</td>
-                        <td>
-                          <span className={`badge-tag ${
-                            h.estado === 'Disponible' ? 'badge-avail' :
-                            h.estado === 'Ocupada' ? 'badge-occup' :
-                            h.estado === 'En limpieza' ? 'badge-clean' : 'badge-maint'
-                          }`}>
-                            {h.estado}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: '0.75rem', color: '#b91c1c' }}>
-                          {h.detalle_mantenimiento || '-'}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '0.25rem' }}>
-                            <button className="btn-mini" style={{ color: '#15803d' }} onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'Disponible')}>
-                              ✓ Disponible
-                            </button>
-                            <button className="btn-mini" style={{ color: '#b45309' }} onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'En limpieza')}>
-                              🧹 Aseo
-                            </button>
-                            <button className="btn-mini" style={{ color: '#b91c1c' }} onClick={() => handleReportarDano(h)}>
-                              ⚠️ Daño
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* WHATSAPP FLOATING WIDGET (COMO EN APARTAMENTOSFACILE.COM) */}
-      <div className="whatsapp-float-wrap">
-        <span className="whatsapp-bubble">¿En qué podemos servirle?</span>
-        <a href="https://wa.me/573153512085" target="_blank" rel="noreferrer" className="whatsapp-circle-btn" title="Contactar por WhatsApp">
-          <MessageCircle size={28}/>
-        </a>
-      </div>
-
-      {/* FOOTER CORPORATIVO OFICIAL */}
-      <footer className="facile-footer">
-        <div className="facile-footer-grid">
-          <div className="footer-section">
-            <h4>Apartamentos Facile</h4>
-            <p>Apartamentos amoblados para largas estadías en Bogotá con los servicios completos de un hotel y centro de negocios.</p>
-            <p><strong>PBX:</strong> +57 315 351 2085</p>
-          </div>
-          <div className="footer-section">
-            <h4>Ubicación & Contacto</h4>
-            <p>Calle 97 #21-62, Barrio Chicó</p>
-            <p>Bogotá D.C., Colombia</p>
-            <p>Recepción 24 Horas</p>
-          </div>
-          <div className="footer-section">
-            <h4>Proyecto Formativo</h4>
-            <p><strong>BookingSoft</strong> — Sistema de Gestión Integral Hotelera.</p>
-            <p>SENA Centro de Formación — ADSO 2026.</p>
-            <p>José Chico, Maicol Mayor, Ashly Echeverri, Sebastián Parada, David López.</p>
-          </div>
-        </div>
-        <div className="footer-copy">
-          <p>© 2026 Apartamentos Facile — Todos los derechos reservados.</p>
-        </div>
-      </footer>
-
-      {/* MODAL DE LOGIN PARA EMPLEADOS */}
+      {/* MODAL DE LOGIN DE EMPLEADOS */}
       {showLoginModal && (
         <div className="modal-backdrop" onClick={() => setShowLoginModal(false)}>
           <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
               <h3>
-                <Lock size={18}/> Iniciar Sesión Empleado
+                <Lock size={18}/> Iniciar Sesión en BookingSoft PMS
               </h3>
               <button className="btn-x" onClick={() => setShowLoginModal(false)}>✕</button>
             </div>
 
             <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1.2rem' }}>
-              Ingrese con sus credenciales de empleado para acceder al sistema de gestión PMS.
+              Ingrese con sus credenciales de empleado para acceder al sistema interno de gestión hotelera.
             </p>
 
             <form onSubmit={handleLoginSubmit}>
@@ -1159,7 +1348,7 @@ function App() {
                   <User className="input-icon" size={18}/>
                   <input
                     type="text"
-                    placeholder="Ej: sandra_admin o carlos_recep"
+                    placeholder="bookingsoft_admin o carlos_recep"
                     value={loginForm.usuario}
                     onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })}
                     required
@@ -1182,11 +1371,10 @@ function App() {
               )}
 
               <button type="submit" className="btn-submit-red" disabled={loading}>
-                <LogIn size={16}/> {loading ? 'Validando...' : 'Entrar al Sistema'}
+                <LogIn size={16}/> {loading ? 'Validando...' : 'Acceder al Sistema PMS'}
               </button>
             </form>
 
-            {/* BOTONES DE ACCESO RÁPIDO PARA DEMOSTRACIÓN ACADÉMICA */}
             <div className="preset-users">
               <p>⚡ Credenciales de Prueba (Presiona para autocompletar):</p>
               <button
