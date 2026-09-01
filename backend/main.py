@@ -54,7 +54,7 @@ app.include_router(empleados.router)
 def health_check():
     try:
         conn = connection.obtener_conexion()
-        conn.close()
+        connection.liberar_conexion(conn)
         return {
             "status": "OK",
             "message": "Servidor de BookingSoft (FastAPI) funcionando correctamente.",
