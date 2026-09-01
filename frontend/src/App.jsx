@@ -3,7 +3,7 @@ import {
   UserPlus, ShieldCheck, Mail, Phone, FileText, Briefcase, Users, 
   AlertCircle, Calendar, Home, ListOrdered, Wifi, WifiOff, LogIn, 
   LogOut, Lock, User, Trash2, CheckCircle2, Wrench, Sparkles, MapPin, 
-  Clock, ArrowRight
+  Clock, ArrowRight, MessageCircle
 } from 'lucide-react';
 
 // URL del backend FastAPI
@@ -143,7 +143,6 @@ function App() {
     }
   };
 
-  // Cargar habitaciones públicas inicialmente
   useEffect(() => {
     if (backendActivo) {
       cargarDatosBackend(authToken);
@@ -405,64 +404,61 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="bg-overlay"></div>
-
-      {/* TOPBAR (Datos de Contacto Oficiales) */}
-      <div className="top-bar">
-        <div className="top-bar-content">
-          <div className="top-contact">
-            <a href="tel:3153512085"><Phone size={13}/> +57 315 351 2085</a>
-            <span><MapPin size={13}/> Calle 97 #21-62, Chicó, Bogotá D.C.</span>
-            <span><Clock size={13}/> Atención 24 Horas</span>
+      {/* 1. TOPBAR OFICIAL ROJA */}
+      <div className="facile-topbar">
+        <div className="facile-topbar-content">
+          <div className="topbar-left">
+            <MapPin size={14}/>
+            <span>Calle 97 #21-62</span>
           </div>
-          <div className="top-social">
-            <span>SENA ADSO 2026</span>
-            <span>•</span>
-            <span style={{ color: backendActivo ? '#4ade80' : '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              {backendActivo ? <Wifi size={12}/> : <WifiOff size={12}/>}
-              {backendActivo ? 'FastAPI Conectado' : 'Sin Conexión'}
-            </span>
+          <div className="topbar-right">
+            <a href="tel:3153512085" className="topbar-phone">
+              <Phone size={14}/>
+              <span>315 351 2085</span>
+            </a>
+            <div className="topbar-social">
+              <a href="https://www.facebook.com/apartamentosfacile/" target="_blank" rel="noreferrer">Facebook</a>
+              <a href="https://www.instagram.com/apartamentosfacile/" target="_blank" rel="noreferrer">Instagram</a>
+              <a href="https://www.youtube.com/" target="_blank" rel="noreferrer">YouTube</a>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* NAVBAR PRINCIPAL */}
-      <header className="main-navbar">
-        <div className="nav-content">
-          <div className="brand-logo" onClick={() => setActiveTab('inicio')}>
-            <span className="brand-logo-icon">🏨</span>
-            <div className="brand-title">
-              APARTAMENTOS FACILE
-              <span>Apartamentos Amoblados & Hotel</span>
-            </div>
+      {/* 2. HEADER ROJO OFICIAL CON LOGO FACILE BLANCO EN CURSIVA */}
+      <header className="facile-header">
+        <div className="facile-header-content">
+          <div className="facile-logo" onClick={() => setActiveTab('inicio')}>
+            <span className="facile-logo-script">Facile</span>
+            <span className="facile-logo-sub">APARTAMENTOS</span>
           </div>
 
-          <nav className="nav-links">
-            <button className={`nav-btn ${activeTab === 'inicio' ? 'active' : ''}`} onClick={() => setActiveTab('inicio')}>
-              <Home size={15}/> Inicio
+          <nav className="facile-nav">
+            <button className={`facile-nav-link ${activeTab === 'inicio' ? 'active' : ''}`} onClick={() => setActiveTab('inicio')}>
+              Inicio
             </button>
-            <button className={`nav-btn ${activeTab === 'apartamentos' ? 'active' : ''}`} onClick={() => setActiveTab('apartamentos')}>
-              <Home size={15}/> Apartamentos
+            <button className={`facile-nav-link ${activeTab === 'apartamentos' ? 'active' : ''}`} onClick={() => setActiveTab('apartamentos')}>
+              Apartamentos
             </button>
-            <button className={`nav-btn ${activeTab === 'servicios' ? 'active' : ''}`} onClick={() => setActiveTab('servicios')}>
-              <Sparkles size={15}/> Servicios
+            <button className={`facile-nav-link ${activeTab === 'servicios' ? 'active' : ''}`} onClick={() => setActiveTab('servicios')}>
+              Servicios
             </button>
-            <button className={`nav-btn ${activeTab === 'reservar' ? 'active' : ''}`} onClick={() => setActiveTab('reservar')}>
-              <Calendar size={15}/> Reservar Online
+            <button className={`facile-nav-link ${activeTab === 'reservar' ? 'active' : ''}`} onClick={() => setActiveTab('reservar')}>
+              Reservar Online
             </button>
             
             {usuarioSesion ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <button className={`nav-btn ${activeTab === 'pms' ? 'active' : ''}`} onClick={() => setActiveTab('pms')}>
-                  <ListOrdered size={15}/> Panel PMS ({usuarioSesion.rol})
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginLeft: '0.5rem' }}>
+                <button className={`facile-nav-link ${activeTab === 'pms' ? 'active' : ''}`} onClick={() => setActiveTab('pms')}>
+                  Panel PMS ({usuarioSesion.rol})
                 </button>
-                <button onClick={handleLogout} className="btn-mini-clear" style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171' }}>
+                <button onClick={handleLogout} className="btn-staff-pill" style={{ background: '#0f172a', color: '#fff' }}>
                   <LogOut size={12}/> Salir
                 </button>
               </div>
             ) : (
-              <button className="nav-btn-staff" onClick={() => setShowLoginModal(true)}>
-                <Lock size={13}/> Portal Empleados
+              <button className="btn-staff-pill" onClick={() => setShowLoginModal(true)}>
+                <Lock size={12}/> Portal Empleados
               </button>
             )}
           </nav>
@@ -470,58 +466,51 @@ function App() {
       </header>
 
       {/* =========================================================================
-          VISTA 1: INICIO & HERO
+          VISTA 1: HERO OFICIAL (FOTO NOCTURNA + TARJETA AZUL TRANSLÚCIDA)
           ========================================================================= */}
       {activeTab === 'inicio' && (
         <>
-          <section className="hero-section">
-            <div className="hero-content">
-              <span className="hero-tag">Exclusividad & Confort en Bogotá</span>
-              <h1 className="hero-title">
-                Bienvenidos a <span>Apartamentos Facile</span>
-              </h1>
-              <p className="hero-desc">
-                Apartamentos amoblados para largas estadías que le ofrecen en Bogotá lo mejor de un hotel y centro de negocios.
-                Ubicados en el exclusivo sector del Chicó con la más alta seguridad y comodidades de lujo.
-              </p>
-              <div className="hero-actions">
-                <button className="btn-gold" onClick={() => setActiveTab('reservar')}>
-                  <Calendar size={16}/> Reservar en Línea <ArrowRight size={15}/>
-                </button>
-                <button className="btn-outline" onClick={() => setActiveTab('apartamentos')}>
-                  <Home size={16}/> Ver Tipos de Apartamento
+          <section className="facile-hero">
+            <div className="facile-hero-container">
+              <div className="facile-hero-card">
+                <h1>Hola Bienvenidos!</h1>
+                <p>
+                  Apartamentos amoblados para largas estadías con los servicios completos de un hotel 5 estrellas! Estamos ubicados en la mejor zona del norte de Bogotá el Chicó.
+                </p>
+                <button className="btn-whatsapp-blue" onClick={() => setActiveTab('reservar')}>
+                  AQUI INFORMACION POR WHATSAPP
                 </button>
               </div>
             </div>
           </section>
 
           {/* Destacados rápidos */}
-          <div className="section-container">
-            <div className="section-header">
-              <h2>¿Por qué elegir Apartamentos Facile?</h2>
-              <p>Diseñados para familias, turistas y estadías corporativas de negocios en la capital</p>
+          <div className="facile-section">
+            <div className="section-title-wrap">
+              <h2>Apartamentos Facile Bogotá</h2>
+              <p>Confort, elegancia y centro de negocios en la mejor ubicación de la capital</p>
             </div>
 
-            <div className="services-grid">
-              <div className="service-box">
-                <div className="service-icon">🏢</div>
-                <h3 className="service-title">Apartamentos de Lujo</h3>
-                <p className="service-text">Dúplex y suites totalmente amobladas con acabados modernos y cocina integral.</p>
+            <div className="services-card-grid">
+              <div className="service-card">
+                <div className="service-card-icon">🏢</div>
+                <h3>Apartamentos Amoblados</h3>
+                <p>Unidades dúplex y suites ejecutivas totalmente equipadas para estadías cortas y largas.</p>
               </div>
-              <div className="service-box">
-                <div className="service-icon">💼</div>
-                <h3 className="service-title">Centro de Negocios</h3>
-                <p className="service-text">Salas de juntas y espacios coworking con conexión Wi-Fi de alta velocidad.</p>
+              <div className="service-card">
+                <div className="service-card-icon">💼</div>
+                <h3>Centro de Negocios</h3>
+                <p>Salas de reuniones y conectividad por fibra óptica para profesionales y empresas.</p>
               </div>
-              <div className="service-box">
-                <div className="service-icon">🛡️</div>
-                <h3 className="service-title">Recepción 24/7</h3>
-                <p className="service-text">Atención permanente con control de acceso y seguridad las 24 horas.</p>
+              <div className="service-card">
+                <div className="service-card-icon">🛡️</div>
+                <h3>Recepción & Seguridad 24/7</h3>
+                <p>Personal operativo en portería y circuito de cámaras de vigilancia permanente.</p>
               </div>
-              <div className="service-box">
-                <div className="service-icon">✨</div>
-                <h3 className="service-title">Descuento 15%</h3>
-                <p className="service-text">Aplica automáticamente en reservas de larga estadía (más de 15 noches).</p>
+              <div className="service-card">
+                <div className="service-card-icon">✨</div>
+                <h3>15% Descuento Larga Estadía</h3>
+                <p>Descuento automático para todas las reservas superiores a 15 noches continuas.</p>
               </div>
             </div>
           </div>
@@ -529,39 +518,36 @@ function App() {
       )}
 
       {/* =========================================================================
-          VISTA 2: CATÁLOGO DE APARTAMENTOS
+          VISTA 2: CATÁLOGO DE APARTAMENTOS (Tarjetas Blancas con Acentos Rojos)
           ========================================================================= */}
       {(activeTab === 'apartamentos' || activeTab === 'inicio') && (
-        <section className="section-container" style={{ borderTop: activeTab === 'inicio' ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-          <div className="section-header">
+        <section className="facile-section" style={{ borderTop: activeTab === 'inicio' ? '1px solid #e2e8f0' : 'none' }}>
+          <div className="section-title-wrap">
             <h2>Apartamentos a su Disposición</h2>
-            <p>Seleccione la unidad que mejor se adapte a su estadía en Bogotá</p>
+            <p>Conozca nuestras opciones de hospedaje y reserve directamente</p>
           </div>
 
-          <div className="apartamentos-grid">
+          <div className="apto-grid">
             {/* Apartamento 1 Habitación */}
-            <div className="apto-card">
-              <div className="apto-card-header">
-                <div>
-                  <h3 className="apto-title">Apartamento 1 Habitación</h3>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--color-gold-light)' }}>Tipo Dúplex</span>
-                </div>
-                <span className="apto-badge-num">Apto 101</span>
+            <div className="apto-item">
+              <div className="apto-header">
+                <h3>Apartamento 1 Habitación</h3>
+                <span className="badge-red-num">Apto 101</span>
               </div>
-              <div className="apto-card-body">
-                <p className="apto-desc">
-                  Apartamento dúplex con capacidad hasta 3 personas. Incluye cama Queen, sala de estar, cocina equipada y baño privado.
+              <div className="apto-body">
+                <p className="apto-text">
+                  Apartamento dúplex con capacidad hasta (3) personas. Cama Queen, cocina integral totalmente equipada y sala de estar.
                 </p>
-                <div className="apto-features">
-                  <span className="feature-tag"><Users size={12}/> Hasta 3 personas</span>
-                  <span className="feature-tag"><Wifi size={12}/> Wi-Fi 5G</span>
-                  <span className="feature-tag"><Home size={12}/> Cocina Integral</span>
+                <div className="apto-specs">
+                  <span className="spec-pill"><Users size={12}/> Hasta 3 personas</span>
+                  <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
+                  <span className="spec-pill"><Home size={12}/> Dúplex</span>
                 </div>
-                <div className="apto-price-row">
-                  <div className="apto-price">
-                    $190.000 <span>COP / noche</span>
+                <div className="apto-footer">
+                  <div className="price-text">
+                    $190.000 <span>COP/noche</span>
                   </div>
-                  <button className="btn-gold" style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 1 })}>
+                  <button className="btn-book-red" onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 1 })}>
                     Reservar
                   </button>
                 </div>
@@ -569,28 +555,25 @@ function App() {
             </div>
 
             {/* Apartamento 2 Habitaciones */}
-            <div className="apto-card">
-              <div className="apto-card-header">
-                <div>
-                  <h3 className="apto-title">Apartamento 2 Habitaciones</h3>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--color-gold-light)' }}>Familiar / Corporativo</span>
-                </div>
-                <span className="apto-badge-num">Apto 201</span>
+            <div className="apto-item">
+              <div className="apto-header">
+                <h3>Apartamento 2 Habitaciones</h3>
+                <span className="badge-red-num">Apto 201</span>
               </div>
-              <div className="apto-card-body">
-                <p className="apto-desc">
-                  Capacidad para 5 personas. Una excelente opción para grupos familiares y empresas con 2 habitaciones independientes.
+              <div className="apto-body">
+                <p className="apto-text">
+                  Capacidad (5) personas. Una excelente opción para grupos familiares y empresas con dos habitaciones y baño privado.
                 </p>
-                <div className="apto-features">
-                  <span className="feature-tag"><Users size={12}/> Hasta 5 personas</span>
-                  <span className="feature-tag"><Wifi size={12}/> Wi-Fi 5G</span>
-                  <span className="feature-tag"><Home size={12}/> 2 Baños</span>
+                <div className="apto-specs">
+                  <span className="spec-pill"><Users size={12}/> Hasta 5 personas</span>
+                  <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
+                  <span className="spec-pill"><Home size={12}/> 2 Baños</span>
                 </div>
-                <div className="apto-price-row">
-                  <div className="apto-price">
-                    $243.000 <span>COP / noche</span>
+                <div className="apto-footer">
+                  <div className="price-text">
+                    $243.000 <span>COP/noche</span>
                   </div>
-                  <button className="btn-gold" style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 2 })}>
+                  <button className="btn-book-red" onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 2 })}>
                     Reservar
                   </button>
                 </div>
@@ -598,57 +581,51 @@ function App() {
             </div>
 
             {/* Apartamento 3 Habitaciones */}
-            <div className="apto-card">
-              <div className="apto-card-header">
-                <div>
-                  <h3 className="apto-title">Apartamento 3 Habitaciones</h3>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--color-gold-light)' }}>Suite Ejecutiva</span>
-                </div>
-                <span className="apto-badge-num">Apto 301</span>
+            <div className="apto-item">
+              <div className="apto-header">
+                <h3>Apartamento 3 Habitaciones</h3>
+                <span className="badge-red-num">Apto 301</span>
               </div>
-              <div className="apto-card-body">
-                <p className="apto-desc">
-                  Capacidad para 7 personas. Amplios espacios, sala comedor, zona de trabajo y máxima comodidad para largas estadías.
+              <div className="apto-body">
+                <p className="apto-text">
+                  Capacidad (7) personas. Amplios espacios, sala comedor, zona de trabajo y máximo confort para grupos y directivos.
                 </p>
-                <div className="apto-features">
-                  <span className="feature-tag"><Users size={12}/> Hasta 7 personas</span>
-                  <span className="feature-tag"><Wifi size={12}/> Wi-Fi 5G</span>
-                  <span className="feature-tag"><Home size={12}/> Balcón / Terraza</span>
+                <div className="apto-specs">
+                  <span className="spec-pill"><Users size={12}/> Hasta 7 personas</span>
+                  <span className="spec-pill"><Wifi size={12}/> Wi-Fi 5G</span>
+                  <span className="spec-pill"><Home size={12}/> Balcón</span>
                 </div>
-                <div className="apto-price-row">
-                  <div className="apto-price">
-                    $320.000 <span>COP / noche</span>
+                <div className="apto-footer">
+                  <div className="price-text">
+                    $320.000 <span>COP/noche</span>
                   </div>
-                  <button className="btn-gold" style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 3 })}>
+                  <button className="btn-book-red" onClick={() => handleSelectApartamentoCatalog({ id_habitacion: 3 })}>
                     Reservar
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Salas de Juntas & Oficinas */}
-            <div className="apto-card">
-              <div className="apto-card-header">
-                <div>
-                  <h3 className="apto-title">Sala de Juntas / Coworking</h3>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--color-gold-light)' }}>Centro de Negocios</span>
-                </div>
-                <span className="apto-badge-num">Sala A</span>
+            {/* Salas de Juntas & Coworking */}
+            <div className="apto-item">
+              <div className="apto-header">
+                <h3>Oficina / Sala de Juntas</h3>
+                <span className="badge-red-num">Sala A</span>
               </div>
-              <div className="apto-card-body">
-                <p className="apto-desc">
-                  Equipada con pantalla para presentaciones, internet de alta velocidad y café de cortesía para sus reuniones de negocios.
+              <div className="apto-body">
+                <p className="apto-text">
+                  Espacio coworking equipado con pantalla para presentaciones, internet dedicado y café de cortesía para reuniones.
                 </p>
-                <div className="apto-features">
-                  <span className="feature-tag"><Users size={12}/> Hasta 10 personas</span>
-                  <span className="feature-tag"><Briefcase size={12}/> Pantalla 65"</span>
-                  <span className="feature-tag"><Wifi size={12}/> Fibra Óptica</span>
+                <div className="apto-specs">
+                  <span className="spec-pill"><Users size={12}/> Hasta 10 personas</span>
+                  <span className="spec-pill"><Briefcase size={12}/> Pantalla 65"</span>
+                  <span className="spec-pill"><Wifi size={12}/> Fibra</span>
                 </div>
-                <div className="apto-price-row">
-                  <div className="apto-price">
-                    $120.000 <span>COP / sesión</span>
+                <div className="apto-footer">
+                  <div className="price-text">
+                    $120.000 <span>COP/sesión</span>
                   </div>
-                  <button className="btn-gold" style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem' }} onClick={() => setActiveTab('reservar')}>
+                  <button className="btn-book-red" onClick={() => setActiveTab('reservar')}>
                     Consultar
                   </button>
                 </div>
@@ -662,124 +639,124 @@ function App() {
           VISTA 3: SERVICIOS
           ========================================================================= */}
       {activeTab === 'servicios' && (
-        <section className="section-container">
-          <div className="section-header">
+        <section className="facile-section">
+          <div className="section-title-wrap">
             <h2>Nuestros Servicios</h2>
-            <p>Todo lo que necesita para una estadía productiva y placentera</p>
+            <p>Todo lo que necesita para una estadía placentera y productiva</p>
           </div>
 
-          <div className="services-grid">
-            <div className="service-box">
-              <div className="service-icon">🧹</div>
-              <h3 className="service-title">Servicio de Amas de Llaves</h3>
-              <p className="service-text">Limpieza programada y desinfección integral con cambio de sábanas y toallas de alta calidad.</p>
+          <div className="services-card-grid">
+            <div className="service-card">
+              <div className="service-card-icon">🧹</div>
+              <h3>Servicio de Amas de Llaves</h3>
+              <p>Aseo profesional, cambio de lencería y toallas de alta calidad con protocolos de desinfección.</p>
             </div>
-            <div className="service-box">
-              <div className="service-icon">🚗</div>
-              <h3 className="service-title">Parqueadero Privado</h3>
-              <p className="service-text">Estacionamiento cubierto y vigilado dentro del edificio para huéspedes y visitantes.</p>
+            <div className="service-card">
+              <div className="service-card-icon">🚗</div>
+              <h3>Parqueadero Privado</h3>
+              <p>Estacionamiento vigilado dentro del edificio las 24 horas para huéspedes y visitantes.</p>
             </div>
-            <div className="service-box">
-              <div className="service-icon">📶</div>
-              <h3 className="service-title">Wi-Fi de Alta Velocidad</h3>
-              <p className="service-text">Internet por fibra óptica en todos los apartamentos y zonas comunes para trabajo remoto.</p>
+            <div className="service-card">
+              <div className="service-card-icon">📶</div>
+              <h3>Wi-Fi de Alta Velocidad</h3>
+              <p>Conexión por fibra óptica en todos los apartamentos y zonas de coworking.</p>
             </div>
-            <div className="service-box">
-              <div className="service-icon">☕</div>
-              <h3 className="service-title">Cocina Totalmente Equipada</h3>
-              <p className="service-text">Refrigerador, microondas, estufa, licuadora, cafetera y menaje completo en cada unidad.</p>
+            <div className="service-card">
+              <div className="service-card-icon">🍳</div>
+              <h3>Cocina Totalmente Equipada</h3>
+              <p>Nevera, microondas, estufa, vajilla completa y electrodomésticos en cada apartamento.</p>
             </div>
-            <div className="service-box">
-              <div className="service-icon">👔</div>
-              <h3 className="service-title">Lavandería & Planchado</h3>
-              <p className="service-text">Zona de lavado dentro del apartamento y servicio de lavandería externa bajo solicitud.</p>
+            <div className="service-card">
+              <div className="service-card-icon">👔</div>
+              <h3>Zona de Lavandería</h3>
+              <p>Área de lavado y planchado para mayor comodidad durante largas estadías.</p>
             </div>
-            <div className="service-box">
-              <div className="service-icon">🛡️</div>
-              <h3 className="service-title">Vigilancia & Control 24 Horas</h3>
-              <p className="service-text">Circuito cerrado de televisión (CCTV) y personal de conserjería disponible las 24 horas.</p>
+            <div className="service-card">
+              <div className="service-card-icon">🛡️</div>
+              <h3>Vigilancia & Control 24 Horas</h3>
+              <p>Monitoreo constante por CCTV y personal de recepción disponible permanentemente.</p>
             </div>
           </div>
         </section>
       )}
 
       {/* =========================================================================
-          VISTA 4: MOTOR DE RESERVAS (PÚBLICO)
+          VISTA 4: MOTOR DE RESERVAS (PÚBLICO - HUÉSPEDES)
           ========================================================================= */}
       {activeTab === 'reservar' && (
-        <section className="section-container">
-          <div className="section-header">
-            <h2>Motor de Reservas en Línea</h2>
-            <p>Regístrese como huésped y seleccione las fechas para su reserva con cotización automática</p>
+        <section className="facile-section">
+          <div className="section-title-wrap">
+            <h2>Reservar en Línea</h2>
+            <p>Auto-registro de huésped y reserva con cálculo automático de cotización</p>
           </div>
 
-          <div className="main-grid">
-            {/* PASO 1: REGISTRO DE HUÉSPED (PÚBLICO) */}
-            <div className="card">
-              <div className="step-badge">Paso 1</div>
-              <div className="card-header">
-                <UserPlus className="icon-gold" size={20}/>
+          <div className="booking-grid">
+            {/* PASO 1: REGISTRO DE HUÉSPED */}
+            <div className="clean-card">
+              <div className="card-step-badge">Paso 1</div>
+              <div className="clean-card-header">
+                <UserPlus size={20} color="var(--color-primary-red)"/>
                 <h3>Registro de Huésped</h3>
               </div>
-              <p className="card-desc">
+              <p className="clean-card-desc">
                 Cree su perfil público para habilitar la reserva de su apartamento.
               </p>
 
               <form onSubmit={handleUserSubmit}>
-                <div className="form-group">
+                <div className="form-field">
                   <label>Nombre Completo</label>
-                  <div className="input-wrap">
-                    <FileText className="input-icon" size={16}/>
-                    <input type="text" name="nombre" value={formData.nombre} onChange={handleUserChange} placeholder="Ej: Laura Gómez" required/>
+                  <div className="field-input-wrap">
+                    <FileText className="field-icon" size={16}/>
+                    <input type="text" name="nombre" value={formData.nombre} onChange={handleUserChange} placeholder="Ej: Liliana Restrepo" required/>
                   </div>
                 </div>
 
-                <div className="input-row-2">
-                  <div className="form-group">
-                    <label>Documento de Identidad (Solo números)</label>
-                    <div className="input-wrap">
-                      <ShieldCheck className="input-icon" size={16}/>
-                      <input type="text" name="documento" value={formData.documento} onChange={handleUserChange} placeholder="Ej: 1020304050" maxLength={15} required/>
+                <div className="form-row-2">
+                  <div className="form-field">
+                    <label>Documento (Solo números)</label>
+                    <div className="field-input-wrap">
+                      <ShieldCheck className="field-icon" size={16}/>
+                      <input type="text" name="documento" value={formData.documento} onChange={handleUserChange} placeholder="Ej: 1017283944" maxLength={15} required/>
                     </div>
                   </div>
-                  <div className="form-group">
+                  <div className="form-field">
                     <label>Teléfono de Contacto</label>
-                    <div className="input-wrap">
-                      <Phone className="input-icon" size={16}/>
-                      <input type="text" name="telefono" value={formData.telefono} onChange={handleUserChange} placeholder="Ej: 3105559988" maxLength={15} required/>
+                    <div className="field-input-wrap">
+                      <Phone className="field-icon" size={16}/>
+                      <input type="text" name="telefono" value={formData.telefono} onChange={handleUserChange} placeholder="Ej: 3154449876" maxLength={15} required/>
                     </div>
                   </div>
                 </div>
 
-                <div className="input-row-2">
-                  <div className="form-group">
+                <div className="form-row-2">
+                  <div className="form-field">
                     <label>Correo Electrónico</label>
-                    <div className="input-wrap">
-                      <Mail className="input-icon" size={16}/>
-                      <input type="email" name="correo" value={formData.correo} onChange={handleUserChange} placeholder="Ej: cliente@correo.com" required/>
+                    <div className="field-input-wrap">
+                      <Mail className="field-icon" size={16}/>
+                      <input type="email" name="correo" value={formData.correo} onChange={handleUserChange} placeholder="Ej: correo@ejemplo.com" required/>
                     </div>
                   </div>
-                  <div className="form-group">
+                  <div className="form-field">
                     <label>Empresa (Opcional)</label>
-                    <div className="input-wrap">
-                      <Briefcase className="input-icon" size={16}/>
-                      <input type="text" name="empresa" value={formData.empresa} onChange={handleUserChange} placeholder="Ej: Ecopetrol"/>
+                    <div className="field-input-wrap">
+                      <Briefcase className="field-icon" size={16}/>
+                      <input type="text" name="empresa" value={formData.empresa} onChange={handleUserChange} placeholder="Ej: Bancolombia"/>
                     </div>
                   </div>
                 </div>
 
-                <label className="checkbox-wrap">
+                <label className="checkbox-legal">
                   <input type="checkbox" checked={habeasData} onChange={(e) => setHabeasData(e.target.checked)}/>
                   <span>Autorizo el tratamiento de mis datos personales según la <strong>Ley de Habeas Data (Ley 1581 de 2012)</strong>.</span>
                 </label>
 
-                <button type="submit" className="btn-submit" disabled={loading}>
+                <button type="submit" className="btn-submit-red" disabled={loading}>
                   <UserPlus size={16}/> {loading ? 'Registrando...' : 'Registrarme como Huésped'}
                 </button>
               </form>
 
               {alert && (
-                <div className={`alert-box alert-${alert.type}`}>
+                <div className={`msg-alert msg-${alert.type}`}>
                   <AlertCircle size={18}/>
                   <span>{alert.message}</span>
                 </div>
@@ -787,29 +764,29 @@ function App() {
             </div>
 
             {/* PASO 2: CREACIÓN DE RESERVA */}
-            <div className="card">
-              <div className="step-badge">Paso 2</div>
-              <div className="card-header">
-                <Calendar className="icon-gold" size={20}/>
-                <h3>Crear Reserva de Habitación</h3>
+            <div className="clean-card">
+              <div className="card-step-badge">Paso 2</div>
+              <div className="clean-card-header">
+                <Calendar size={20} color="var(--color-primary-red)"/>
+                <h3>Crear Reserva</h3>
               </div>
 
               {selectedHuesped ? (
-                <div className="guest-selected-tag">
-                  <span>Huésped Seleccionado: <strong>{selectedHuesped.nombre}</strong> (Doc: {selectedHuesped.documento})</span>
-                  <button className="btn-mini-clear" onClick={() => setSelectedHuesped(null)}>Cambiar</button>
+                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.6rem 0.8rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <span style={{ fontSize: '0.85rem' }}>Huésped: <strong>{selectedHuesped.nombre}</strong> (Doc: {selectedHuesped.documento})</span>
+                  <button className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar</button>
                 </div>
               ) : (
-                <p className="card-desc" style={{ color: '#fbbf24' }}>
+                <p className="clean-card-desc" style={{ color: '#b45309' }}>
                   ⚠️ Regístrese en el <strong>Paso 1</strong> o seleccione un huésped existente para continuar.
                 </p>
               )}
 
               <form onSubmit={handleReservaSubmit}>
-                <div className="form-group">
+                <div className="form-field">
                   <label>Seleccionar Apartamento / Unidad</label>
-                  <div className="input-wrap">
-                    <Home className="input-icon" size={16}/>
+                  <div className="field-input-wrap">
+                    <Home className="field-icon" size={16}/>
                     <select name="id_habitacion" value={reservaData.id_habitacion} onChange={handleReservaChange} required disabled={!selectedHuesped}>
                       <option value="">-- Elija un apartamento --</option>
                       {habitaciones.map(h => (
@@ -821,7 +798,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* CALENDARIO MENSUAL INTERACTIVO */}
+                {/* CALENDARIO DE OCUPACIÓN */}
                 {reservaData.id_habitacion && (() => {
                   const year = calDate.getFullYear();
                   const month = calDate.getMonth();
@@ -863,25 +840,25 @@ function App() {
                   };
 
                   return (
-                    <div style={{ background: '#090d16', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '0.9rem' }}>
+                    <div style={{ background: '#f8fafc', padding: '0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '0.9rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <button type="button" className="btn-mini-clear" onClick={() => setCalDate(new Date(year, month - 1, 1))}>◀</button>
-                        <strong style={{ color: 'var(--color-gold-light)', fontSize: '0.85rem' }}>{monthNames[month]} {year}</strong>
-                        <button className="btn-mini-clear" type="button" onClick={() => setCalDate(new Date(year, month + 1, 1))}>▶</button>
+                        <button type="button" className="btn-mini" onClick={() => setCalDate(new Date(year, month - 1, 1))}>◀</button>
+                        <strong style={{ color: '#0f172a', fontSize: '0.85rem' }}>{monthNames[month]} {year}</strong>
+                        <button className="btn-mini" type="button" onClick={() => setCalDate(new Date(year, month + 1, 1))}>▶</button>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', textAlign: 'center', fontSize: '0.7rem', color: '#94a3b8', marginBottom: '4px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', textAlign: 'center', fontSize: '0.7rem', color: '#64748b', marginBottom: '4px' }}>
                         <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
                         {daysGrid.map((item, idx) => {
                           if (!item) return <div key={`empty-${idx}`}/>;
-                          let bg = 'rgba(34, 197, 94, 0.2)';
-                          let color = '#4ade80';
-                          if (item.isOccupied) { bg = 'rgba(239, 68, 68, 0.5)'; color = '#fff'; }
-                          else if (item.isSelectedIn || item.isSelectedOut) { bg = '#c59b27'; color = '#000'; }
-                          else if (item.inRange) { bg = 'rgba(197, 155, 39, 0.35)'; color = '#fff'; }
+                          let bg = '#dcfce7';
+                          let color = '#166534';
+                          if (item.isOccupied) { bg = '#fee2e2'; color = '#991b1b'; }
+                          else if (item.isSelectedIn || item.isSelectedOut) { bg = '#cc0000'; color = '#fff'; }
+                          else if (item.inRange) { bg = '#fef08a'; color = '#854d0e'; }
 
                           return (
                             <button
@@ -892,7 +869,7 @@ function App() {
                               style={{
                                 background: bg,
                                 color: color,
-                                border: 'none',
+                                border: '1px solid rgba(0,0,0,0.05)',
                                 borderRadius: '4px',
                                 padding: '0.25rem',
                                 fontSize: '0.75rem',
@@ -909,53 +886,53 @@ function App() {
                   );
                 })()}
 
-                <div className="input-row-3">
-                  <div className="form-group">
+                <div className="form-row-3">
+                  <div className="form-field">
                     <label>Check-In</label>
-                    <div className="input-wrap">
+                    <div className="field-input-wrap">
                       <input type="date" name="fecha_entrada" value={reservaData.fecha_entrada} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
                     </div>
                   </div>
-                  <div className="form-group">
+                  <div className="form-field">
                     <label>Check-Out</label>
-                    <div className="input-wrap">
+                    <div className="field-input-wrap">
                       <input type="date" name="fecha_salida" value={reservaData.fecha_salida} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
                     </div>
                   </div>
-                  <div className="form-group">
+                  <div className="form-field">
                     <label>Personas</label>
-                    <div className="input-wrap">
-                      <Users className="input-icon" size={16}/>
+                    <div className="field-input-wrap">
+                      <Users className="field-icon" size={16}/>
                       <input type="number" name="numero_personas" min="1" max="10" value={reservaData.numero_personas} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
                     </div>
                   </div>
                 </div>
 
                 {cotizacion && (
-                  <div className="cotizacion-card">
-                    <h4>Cotización Automática</h4>
-                    <div className="cot-item"><span>Estancia:</span><span>{cotizacion.noches} noches</span></div>
-                    <div className="cot-item"><span>Subtotal:</span><span>${cotizacion.subtotal.toLocaleString('es-CO')} COP</span></div>
+                  <div className="live-quote-box">
+                    <h4>Resumen de Cotización</h4>
+                    <div className="quote-row"><span>Noches de estadía:</span><span>{cotizacion.noches} noches</span></div>
+                    <div className="quote-row"><span>Subtotal:</span><span>${cotizacion.subtotal.toLocaleString('es-CO')} COP</span></div>
                     {cotizacion.descuento > 0 && (
-                      <div className="cot-item descuento">
+                      <div className="quote-row discount">
                         <span>Descuento Larga Estadía (15%):</span>
                         <span>-${cotizacion.descuento.toLocaleString('es-CO')} COP</span>
                       </div>
                     )}
-                    <div className="cot-item total">
+                    <div className="quote-row final-total">
                       <span>Total a Pagar:</span>
                       <span>${cotizacion.total.toLocaleString('es-CO')} COP</span>
                     </div>
                   </div>
                 )}
 
-                <button type="submit" className="btn-submit" disabled={loading || !selectedHuesped}>
+                <button type="submit" className="btn-submit-red" disabled={loading || !selectedHuesped}>
                   <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : 'Confirmar Reserva'}
                 </button>
               </form>
 
               {reservaAlert && (
-                <div className={`alert-box alert-${reservaAlert.type}`}>
+                <div className={`msg-alert msg-${reservaAlert.type}`}>
                   <AlertCircle size={18}/>
                   <span>{reservaAlert.message}</span>
                 </div>
@@ -969,28 +946,28 @@ function App() {
           VISTA 5: PORTAL EMPLEADOS / PMS (SISTEMA DE GESTIÓN HOTELERA)
           ========================================================================= */}
       {activeTab === 'pms' && (
-        <section className="section-container">
-          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <section className="facile-section">
+          <div className="pms-header">
             <div>
-              <h2>Panel de Control Hotelero (PMS)</h2>
-              <p>Módulo interno para Administración, Recepción, Amas de Llaves y Mantenimiento</p>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Panel de Control Hotelero (PMS)</h2>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Módulo interno para Administración, Recepción, Amas de Llaves y Mantenimiento</p>
             </div>
             {usuarioSesion && (
-              <span className="badge-status badge-blue" style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}>
+              <span className="pms-badge">
                 👤 {usuarioSesion.nombre} — <strong>{usuarioSesion.rol}</strong>
               </span>
             )}
           </div>
 
-          <div className="main-grid" style={{ marginBottom: '1.5rem' }}>
+          <div className="booking-grid" style={{ marginBottom: '1.5rem' }}>
             {/* BASE DE DATOS DE HUÉSPEDES */}
-            <div className="card">
-              <div className="card-header">
-                <Users className="icon-gold" size={20}/>
-                <h3>Huéspedes Registrados ({huespedes.length})</h3>
+            <div className="clean-card">
+              <div className="clean-card-header">
+                <Users size={18} color="var(--color-primary-red)"/>
+                <h3 style={{ fontSize: '1.1rem' }}>Huéspedes Registrados ({huespedes.length})</h3>
               </div>
-              <div className="table-responsive">
-                <table className="custom-table">
+              <div className="pms-table-wrap">
+                <table className="pms-table">
                   <thead>
                     <tr><th>Nombre</th><th>Documento</th><th>Acción</th></tr>
                   </thead>
@@ -999,17 +976,17 @@ function App() {
                       <tr key={h.id_huesped}>
                         <td>
                           <strong>{h.nombre}</strong>
-                          <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block' }}>{h.empresa || 'Particular'}</span>
-                          {h.modificado_por && <span style={{ fontSize: '0.68rem', color: '#60a5fa' }}>Auditoría: {h.modificado_por}</span>}
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>{h.empresa || 'Particular'}</span>
+                          {h.modificado_por && <span style={{ fontSize: '0.68rem', color: '#0284c7' }}>Auditoría: {h.modificado_por}</span>}
                         </td>
                         <td><code>{h.documento}</code></td>
                         <td>
-                          <div style={{ display: 'flex', gap: '0.3rem' }}>
-                            <button className="btn-mini-clear" onClick={() => handleSelectHuesped(h)}>Elegir</button>
-                            <button className="btn-mini-clear" style={{ background: h.estado === 'Activo' ? 'rgba(245,158,11,0.2)' : 'rgba(34,197,94,0.2)', color: h.estado === 'Activo' ? '#fbbf24' : '#4ade80' }} onClick={() => handleToggleEstadoHuesped(h)}>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button className="btn-mini" onClick={() => handleSelectHuesped(h)}>Elegir</button>
+                            <button className="btn-mini" onClick={() => handleToggleEstadoHuesped(h)}>
                               {h.estado === 'Activo' ? 'Desactivar' : 'Activar'}
                             </button>
-                            <button className="btn-mini-clear" style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171' }} onClick={() => handleDeleteHuesped(h.id_huesped)}>
+                            <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteHuesped(h.id_huesped)}>
                               <Trash2 size={11}/>
                             </button>
                           </div>
@@ -1022,13 +999,13 @@ function App() {
             </div>
 
             {/* BASE DE DATOS DE RESERVAS */}
-            <div className="card">
-              <div className="card-header">
-                <ListOrdered className="icon-gold" size={20}/>
-                <h3>Reservas Activas ({reservas.length})</h3>
+            <div className="clean-card">
+              <div className="clean-card-header">
+                <ListOrdered size={18} color="var(--color-primary-red)"/>
+                <h3 style={{ fontSize: '1.1rem' }}>Reservas Activas ({reservas.length})</h3>
               </div>
-              <div className="table-responsive">
-                <table className="custom-table">
+              <div className="pms-table-wrap">
+                <table className="pms-table">
                   <thead>
                     <tr><th>Huésped</th><th>Apto</th><th>Fechas</th><th>Acción</th></tr>
                   </thead>
@@ -1037,14 +1014,14 @@ function App() {
                       <tr key={r.id_reserva}>
                         <td>
                           <strong>{r.huesped_nombre}</strong>
-                          <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block' }}>Doc: {r.huesped_documento}</span>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>Doc: {r.huesped_documento}</span>
                         </td>
-                        <td><span className="badge-status badge-gold">Apto {r.habitacion_numero}</span></td>
+                        <td><span className="badge-tag badge-occup">Apto {r.habitacion_numero}</span></td>
                         <td style={{ fontSize: '0.72rem' }}>
                           In: {r.fecha_entrada}<br/>Out: {r.fecha_salida}
                         </td>
                         <td>
-                          <button className="btn-mini-clear" style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171' }} onClick={() => handleDeleteReserva(r.id_reserva)}>
+                          <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteReserva(r.id_reserva)}>
                             Cancelar
                           </button>
                         </td>
@@ -1057,27 +1034,27 @@ function App() {
           </div>
 
           {/* GESTIÓN DE PLANTAS (AMAS DE LLAVES & MANTENIMIENTO) */}
-          <div className="card">
-            <div className="card-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div className="clean-card">
+            <div className="clean-card-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Wrench className="icon-gold" size={20}/>
-                <h3>Operaciones: Amas de Llaves & Mantenimiento</h3>
+                <Wrench size={18} color="var(--color-primary-red)"/>
+                <h3 style={{ fontSize: '1.1rem' }}>Operaciones de Planta: Amas de Llaves & Mantenimiento</h3>
               </div>
               <div style={{ display: 'flex', gap: '0.3rem' }}>
-                <button className="btn-mini-clear" onClick={() => setFiltroHabitaciones('amas_llaves')} style={{ background: filtroHabitaciones === 'amas_llaves' ? 'rgba(197,155,39,0.3)' : 'transparent' }}>
+                <button className="btn-mini" onClick={() => setFiltroHabitaciones('amas_llaves')} style={{ background: filtroHabitaciones === 'amas_llaves' ? '#fef3c7' : '#fff' }}>
                   🧹 Aseo Pendiente
                 </button>
-                <button className="btn-mini-clear" onClick={() => setFiltroHabitaciones('mantenimiento')} style={{ background: filtroHabitaciones === 'mantenimiento' ? 'rgba(239,68,68,0.3)' : 'transparent' }}>
+                <button className="btn-mini" onClick={() => setFiltroHabitaciones('mantenimiento')} style={{ background: filtroHabitaciones === 'mantenimiento' ? '#fee2e2' : '#fff' }}>
                   🔧 Daños / Falla
                 </button>
-                <button className="btn-mini-clear" onClick={() => setFiltroHabitaciones('todas')} style={{ background: filtroHabitaciones === 'todas' ? 'rgba(99,102,241,0.3)' : 'transparent' }}>
+                <button className="btn-mini" onClick={() => setFiltroHabitaciones('todas')} style={{ background: filtroHabitaciones === 'todas' ? '#e0e7ff' : '#fff' }}>
                   Ver Todas ({habitaciones.length})
                 </button>
               </div>
             </div>
 
-            <div className="table-responsive" style={{ maxHeight: '320px' }}>
-              <table className="custom-table">
+            <div className="pms-table-wrap" style={{ maxHeight: '320px' }}>
+              <table className="pms-table">
                 <thead>
                   <tr><th>Apartamento</th><th>Tipo</th><th>Estado</th><th>Detalle</th><th>Acciones de Turno</th></tr>
                 </thead>
@@ -1093,26 +1070,26 @@ function App() {
                         <td><strong>Apto {h.numero}</strong></td>
                         <td>{h.tipo}</td>
                         <td>
-                          <span className={`badge-status ${
-                            h.estado === 'Disponible' ? 'badge-green' :
-                            h.estado === 'Ocupada' ? 'badge-blue' :
-                            h.estado === 'En limpieza' ? 'badge-yellow' : 'badge-red'
+                          <span className={`badge-tag ${
+                            h.estado === 'Disponible' ? 'badge-avail' :
+                            h.estado === 'Ocupada' ? 'badge-occup' :
+                            h.estado === 'En limpieza' ? 'badge-clean' : 'badge-maint'
                           }`}>
                             {h.estado}
                           </span>
                         </td>
-                        <td style={{ fontSize: '0.75rem', color: '#fca5a5' }}>
+                        <td style={{ fontSize: '0.75rem', color: '#b91c1c' }}>
                           {h.detalle_mantenimiento || '-'}
                         </td>
                         <td>
-                          <div style={{ display: 'flex', gap: '0.3rem' }}>
-                            <button className="btn-mini-clear" style={{ background: 'rgba(34,197,94,0.2)', color: '#4ade80' }} onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'Disponible')}>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button className="btn-mini" style={{ color: '#15803d' }} onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'Disponible')}>
                               ✓ Disponible
                             </button>
-                            <button className="btn-mini-clear" style={{ background: 'rgba(245,158,11,0.2)', color: '#fbbf24' }} onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'En limpieza')}>
+                            <button className="btn-mini" style={{ color: '#b45309' }} onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'En limpieza')}>
                               🧹 Aseo
                             </button>
-                            <button className="btn-mini-clear" style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171' }} onClick={() => handleReportarDano(h)}>
+                            <button className="btn-mini" style={{ color: '#b91c1c' }} onClick={() => handleReportarDano(h)}>
                               ⚠️ Daño
                             </button>
                           </div>
@@ -1126,91 +1103,98 @@ function App() {
         </section>
       )}
 
-      {/* FOOTER CORPORATIVO */}
-      <footer className="main-footer">
-        <div className="footer-content">
-          <div className="footer-col">
+      {/* WHATSAPP FLOATING WIDGET (COMO EN APARTAMENTOSFACILE.COM) */}
+      <div className="whatsapp-float-wrap">
+        <span className="whatsapp-bubble">¿En qué podemos servirle?</span>
+        <a href="https://wa.me/573153512085" target="_blank" rel="noreferrer" className="whatsapp-circle-btn" title="Contactar por WhatsApp">
+          <MessageCircle size={28}/>
+        </a>
+      </div>
+
+      {/* FOOTER CORPORATIVO OFICIAL */}
+      <footer className="facile-footer">
+        <div className="facile-footer-grid">
+          <div className="footer-section">
             <h4>Apartamentos Facile</h4>
-            <p>Apartamentos amoblados para largas estadías en Bogotá que combinan los servicios de un hotel y un moderno centro de negocios.</p>
+            <p>Apartamentos amoblados para largas estadías en Bogotá con los servicios completos de un hotel y centro de negocios.</p>
             <p><strong>PBX:</strong> +57 315 351 2085</p>
           </div>
-          <div className="footer-col">
-            <h4>Ubicación</h4>
+          <div className="footer-section">
+            <h4>Ubicación & Contacto</h4>
             <p>Calle 97 #21-62, Barrio Chicó</p>
             <p>Bogotá D.C., Colombia</p>
-            <p>Recepción y Seguridad: 24/7</p>
+            <p>Recepción 24 Horas</p>
           </div>
-          <div className="footer-col">
+          <div className="footer-section">
             <h4>Proyecto Formativo</h4>
             <p><strong>BookingSoft</strong> — Sistema de Gestión Integral Hotelera.</p>
             <p>SENA Centro de Formación — ADSO 2026.</p>
-            <p>Equipo: José Chico, Maicol Mayor, Ashly Echeverri, Sebastián Parada, David López.</p>
+            <p>José Chico, Maicol Mayor, Ashly Echeverri, Sebastián Parada, David López.</p>
           </div>
         </div>
-        <div className="footer-bottom">
-          <p>© 2026 Apartamentos Facile & BookingSoft. Todos los derechos reservados.</p>
+        <div className="footer-copy">
+          <p>© 2026 Apartamentos Facile — Todos los derechos reservados.</p>
         </div>
       </footer>
 
       {/* MODAL DE LOGIN PARA EMPLEADOS */}
       {showLoginModal && (
-        <div className="modal-overlay" onClick={() => setShowLoginModal(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#fff', fontSize: '1.15rem' }}>
-                <Lock className="icon-gold" size={18}/> Iniciar Sesión Empleado
+        <div className="modal-backdrop" onClick={() => setShowLoginModal(false)}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>
+                <Lock size={18}/> Iniciar Sesión Empleado
               </h3>
-              <button className="btn-close" onClick={() => setShowLoginModal(false)}>✕</button>
+              <button className="btn-x" onClick={() => setShowLoginModal(false)}>✕</button>
             </div>
 
-            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1.2rem' }}>
               Ingrese con sus credenciales de empleado para acceder al sistema de gestión PMS.
             </p>
 
             <form onSubmit={handleLoginSubmit}>
-              <div className="form-group">
+              <div className="form-field">
                 <label>Usuario</label>
-                <div className="input-wrap">
-                  <User className="input-icon" size={16}/>
+                <div className="field-input-wrap">
+                  <User className="field-icon" size={16}/>
                   <input type="text" placeholder="Ej: sandra_admin" value={loginForm.usuario} onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })} required/>
                 </div>
               </div>
 
-              <div className="form-group">
+              <div className="form-field">
                 <label>Contraseña</label>
-                <div className="input-wrap">
-                  <Lock className="input-icon" size={16}/>
+                <div className="field-input-wrap">
+                  <Lock className="field-icon" size={16}/>
                   <input type="password" placeholder="••••••••" value={loginForm.contrasena} onChange={(e) => setLoginForm({ ...loginForm, contrasena: e.target.value })} required/>
                 </div>
               </div>
 
               {loginError && (
-                <div style={{ color: '#f87171', background: 'rgba(239,68,68,0.15)', padding: '0.5rem', borderRadius: '4px', fontSize: '0.78rem', marginBottom: '0.8rem' }}>
+                <div style={{ color: '#b91c1c', background: '#fee2e2', padding: '0.5rem', borderRadius: '4px', fontSize: '0.78rem', marginBottom: '0.8rem' }}>
                   ⚠️ {loginError}
                 </div>
               )}
 
-              <button type="submit" className="btn-submit" disabled={loading}>
+              <button type="submit" className="btn-submit-red" disabled={loading}>
                 <LogIn size={16}/> {loading ? 'Validando...' : 'Entrar al Sistema'}
               </button>
             </form>
 
-            <div className="preset-users-box">
-              <p style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+            <div style={{ marginTop: '1.2rem', paddingTop: '0.8rem', borderTop: '1px solid #e2e8f0' }}>
+              <p style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '0.4rem' }}>
                 ⚡ Acceso rápido para sustentación académica:
               </p>
-              <button type="button" className="preset-btn" onClick={() => setLoginForm({ usuario: 'sandra_admin', contrasena: 'Admin2026!' })}>
-                <span>👑 <strong>Sandra Milena</strong> (Administrador)</span>
-                <span style={{ color: 'var(--color-gold)' }}>Admin2026!</span>
-              </button>
-              <button type="button" className="preset-btn" onClick={() => setLoginForm({ usuario: 'carlos_recep', contrasena: 'Recep2026!' })}>
-                <span>👤 <strong>Carlos Pérez</strong> (Recepcionista 24h)</span>
-                <span style={{ color: 'var(--color-gold)' }}>Recep2026!</span>
-              </button>
-              <button type="button" className="preset-btn" onClick={() => setLoginForm({ usuario: 'marta_limpieza', contrasena: 'marta123' })}>
-                <span>🧹 <strong>Marta Limpieza</strong> (Ama de llaves)</span>
-                <span style={{ color: 'var(--color-gold)' }}>marta123</span>
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }} onClick={() => setLoginForm({ usuario: 'sandra_admin', contrasena: 'Admin2026!' })}>
+                  👑 <strong>Sandra Milena</strong> (Administrador) — <code>sandra_admin / Admin2026!</code>
+                </button>
+                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }} onClick={() => setLoginForm({ usuario: 'carlos_recep', contrasena: 'Recep2026!' })}>
+                  👤 <strong>Carlos Pérez</strong> (Recepcionista 24h) — <code>carlos_recep / Recep2026!</code>
+                </button>
+                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }} onClick={() => setLoginForm({ usuario: 'marta_limpieza', contrasena: 'marta123' })}>
+                  🧹 <strong>Marta Limpieza</strong> (Ama de llaves) — <code>marta_limpieza / marta123</code>
+                </button>
+              </div>
             </div>
           </div>
         </div>
