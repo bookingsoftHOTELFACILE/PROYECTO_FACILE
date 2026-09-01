@@ -11,3 +11,5 @@ __pycache__/
 
 # Sistema y archivos temporales
 .DS_Store
+*.zip
+exposicion/
