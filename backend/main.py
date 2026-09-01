@@ -1,14 +1,31 @@
 import os
+import sys
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+
+# Hallazgo 02 - Fail Fast: Verificar que JWT_SECRET esté adecuadamente configurado y no sea vacío ni por defecto
+jwt_secret_val = os.getenv("JWT_SECRET", "").strip()
+if not jwt_secret_val or jwt_secret_val == "CHANGE_ME" or jwt_secret_val == "CHANGE_ME_FOR_SECURITY_OR_USE_GENERATE_KEYS":
+    print("❌ ERROR CRÍTICO DE SEGURIDAD: JWT_SECRET no está configurado o contiene el valor inseguro por defecto ('CHANGE_ME').", file=sys.stderr)
+    print("Abortando el inicio del servidor para prevenir firma de tokens vulnerables (Hallazgo 02).", file=sys.stderr)
+    sys.exit(1)
 
 from database import connection
 from routes import huespedes, habitaciones, reservas, auth, empleados
 
+from contextlib import asynccontextmanager
+
+# Hallazgo 15: Manejador lifespan de FastAPI (reemplaza a @app.on_event("startup") obsoleto)
+@asynccontextmanager
+async def lifespan(app_inst: FastAPI):
+    connection.inicializar_base_de_datos()
+    yield
+
 app = FastAPI(
     title="BookingSoft API - FastAPI",
     description="Servidor REST Backend modular en Python para Registro y Reservas",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Configurar CORS para permitir peticiones del cliente React
@@ -23,11 +40,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Evento de inicio del servidor: ejecuta la detección de base de datos
-@app.on_event("startup")
-def startup_event():
-    connection.inicializar_base_de_datos()
+# Registrar los módulos de rutas
 
 # Registrar los módulos de rutas
 app.include_router(huespedes.router)

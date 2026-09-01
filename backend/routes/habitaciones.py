@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger("bookingsoft.habitaciones")
 """
 backend/routes/habitaciones.py
 Sprint 1 & Sprint 3 — Catálogo y Consulta de Disponibilidad de Habitaciones
@@ -26,9 +28,7 @@ def obtener_habitaciones():
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
-        cursor.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS detalle_mantenimiento VARCHAR(255)")
-        conn.commit()
+        # Hallazgo 06: Columnas modificado_por y detalle_mantenimiento declaradas directamente en schema.sql
         cursor.execute("SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado, modificado_por, detalle_mantenimiento FROM habitacion ORDER BY numero ASC")
         filas = cursor.fetchall()
         
@@ -46,10 +46,11 @@ def obtener_habitaciones():
             })
             
         cursor.close()
-        conn.close()
+        connection.liberar_conexion(conn)
         return habitaciones
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener habitaciones de la base de datos: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
+        )
 
 
 # ── GET /api/habitaciones/disponibilidad (RF-012) ──────────────────────────────
@@ -94,7 +95,7 @@ def consultar_disponibilidad(
         if id_habitacion is not None:
             cur.execute("SELECT id_habitacion FROM habitacion WHERE id_habitacion = %s", (id_habitacion,))
             if not cur.fetchone():
-                cur.close(); conn.close()
+                cur.close(); connection.liberar_conexion(conn)
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"La habitación especificada con id {id_habitacion} no existe."
@@ -150,7 +151,7 @@ def consultar_disponibilidad(
             })
 
         cur.close()
-        conn.close()
+        connection.liberar_conexion(conn)
 
         return resultado
 
@@ -159,7 +160,7 @@ def consultar_disponibilidad(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al consultar disponibilidad: {e}"
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP
         )
 
 
@@ -196,9 +197,7 @@ def cambiar_estado_habitacion(
     try:
         conn = connection.obtener_conexion()
         cur = conn.cursor()
-        cur.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
-        cur.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS detalle_mantenimiento VARCHAR(255)")
-        conn.commit()
+        # Hallazgo 06: Columnas modificado_por y detalle_mantenimiento declaradas directamente en schema.sql
         
         # Si se restablece a Disponible o En limpieza sin especificar detalle, se borra el reporte de daño anterior
         if data.estado in ("Disponible", "En limpieza") and not data.detalle_mantenimiento:
@@ -210,13 +209,13 @@ def cambiar_estado_habitacion(
         )
         row = cur.fetchone()
         if not row:
-            cur.close(); conn.close()
+            cur.close(); connection.liberar_conexion(conn)
             raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
             
         numero_hab = row[0]
         conn.commit()
         cur.close()
-        conn.close()
+        connection.liberar_conexion(conn)
         
         msg_extra = f" [Reporte: {detalle}]" if detalle else ""
         return {
@@ -229,5 +228,6 @@ def cambiar_estado_habitacion(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al actualizar estado de la habitación: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
+        )
 

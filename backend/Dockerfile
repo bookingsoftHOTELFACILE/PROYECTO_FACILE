@@ -5,9 +5,12 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copiar dependencias e instalar
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar Pipenv
+RUN pip install --no-cache-dir pipenv
+
+# Copiar archivos de dependencias Pipfile e instalar en el sistema
+COPY Pipfile ./
+RUN pipenv install --system --skip-lock --dev
 
 # Copiar código del backend
 COPY . .

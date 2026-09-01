@@ -1,9 +1,11 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 import psycopg2
 from database import connection
 from dependencies import requiere_rol, autenticar, UsuarioActual
 from models.schemas import UserRegistro
+logger = logging.getLogger("bookingsoft.huespedes")
 
 router = APIRouter(tags=["huespedes"])
 
@@ -37,10 +39,11 @@ def obtener_huespedes():
             })
             
         cursor.close()
-        conn.close()
+        connection.liberar_conexion(conn)
         return huespedes
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener huéspedes: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
+        )
 
 @router.post("/api/user/registro", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
 def registrar_usuario(
@@ -65,7 +68,7 @@ def registrar_usuario(
         cursor.execute("SELECT id_huesped FROM huesped WHERE documento = %s", (usuario.documento,))
         if cursor.fetchone():
             cursor.close()
-            conn.close()
+            connection.liberar_conexion(conn)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Este número de documento ya está registrado."
@@ -93,7 +96,7 @@ def registrar_usuario(
         }
         
         cursor.close()
-        conn.close()
+        connection.liberar_conexion(conn)
         return {"message": f"Huésped '{usuario.nombre}' registrado exitosamente por {usuario_actual.nombre} ({usuario_actual.rol}).", "usuario": nuevo_usuario}
         
     except HTTPException as he:
@@ -101,10 +104,11 @@ def registrar_usuario(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error en base de datos al registrar usuario: {e}"
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP
         )
 
-@router.patch("/api/huespedes/{id_huesped}/estado")
+# Hallazgo 03: Se requiere rol Recepcionista o Administrador para modificar estado de huésped
+@router.patch("/api/huespedes/{id_huesped}/estado", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h", "Recepcionista Noche"))])
 def cambiar_estado_huesped(
     id_huesped: int,
     datos: CambiarEstadoHuespedRequest,
@@ -121,7 +125,7 @@ def cambiar_estado_huesped(
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE huesped ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
+        # Hallazgo 06: modificado_por en schema.sql
         cursor.execute(
             "UPDATE huesped SET estado = %s, modificado_por = %s WHERE id_huesped = %s RETURNING id_huesped, nombre, estado, modificado_por",
             (datos.estado, audit_str, id_huesped)
@@ -129,12 +133,12 @@ def cambiar_estado_huesped(
         res = cursor.fetchone()
         if not res:
             cursor.close()
-            conn.close()
+            connection.liberar_conexion(conn)
             raise HTTPException(status_code=404, detail="Huésped no encontrado.")
             
         conn.commit()
         cursor.close()
-        conn.close()
+        connection.liberar_conexion(conn)
         
         accion = "activado" if datos.estado == "Activo" else "desactivado"
         return {
@@ -147,27 +151,37 @@ def cambiar_estado_huesped(
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al cambiar estado de huésped: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
+        )
 
-@router.delete("/api/huespedes/{id_huesped}")
+# Hallazgo 03: Solo Administrador puede dar de baja a un huésped.
+@router.delete("/api/huespedes/{id_huesped}", dependencies=[Depends(requiere_rol("Administrador"))])
 def eliminar_huesped(
     id_huesped: int,
     usuario: UsuarioActual = Depends(autenticar)
 ):
-    """Elimina un huésped y sus reservas auditando quién realizó la acción."""
+    """
+    Hallazgo 04: Realiza baja lógica (UPDATE estado = 'Inactivo') para preservar el historial
+    contable de reservas y respetar la integridad referencial (ON DELETE RESTRICT).
+    """
     audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
         cursor.execute("SELECT nombre FROM huesped WHERE id_huesped = %s", (id_huesped,))
         row = cursor.fetchone()
-        nombre = row[0] if row else f"#{id_huesped}"
+        if not row:
+            cursor.close()
+            connection.liberar_conexion(conn)
+            raise HTTPException(status_code=404, detail="Huésped no encontrado.")
+        nombre = row[0]
         
-        cursor.execute("DELETE FROM reserva_habitacion WHERE id_huesped = %s", (id_huesped,))
-        cursor.execute("DELETE FROM huesped WHERE id_huesped = %s", (id_huesped,))
+        # Hallazgo 04: Baja lógica del huésped marcándolo como Inactivo (preserva reservas)
+        cursor.execute("UPDATE huesped SET estado = 'Inactivo', modificado_por = %s WHERE id_huesped = %s", (audit_str, id_huesped))
         conn.commit()
         cursor.close()
-        conn.close()
-        return {"message": f"Huésped '{nombre}' eliminado exitosamente por {audit_str}."}
+        connection.liberar_conexion(conn)
+        return {"message": f"Huésped '{nombre}' desactivado (baja lógica) exitosamente por {audit_str}."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al eliminar huésped: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
+        )

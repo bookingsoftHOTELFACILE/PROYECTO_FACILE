@@ -27,7 +27,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # ── Configuración (misma fuente que auth.py) ──────────────────────────────────
-_JWT_SECRET = os.getenv("JWT_SECRET", "")
+_JWT_SECRET = os.getenv("JWT_SECRET", "").strip()
 _JWT_ALGORITHM = "HS256"
 
 # HTTPBearer extrae automáticamente el token de "Authorization: Bearer <token>"
