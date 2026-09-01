@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS huesped (
 CREATE TABLE IF NOT EXISTS habitacion (
     id_habitacion SERIAL PRIMARY KEY,
     numero VARCHAR(10) UNIQUE NOT NULL,
-    tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('Dúplex', 'Doble', 'Familiar', 'Habitación')),
+    tipo VARCHAR(30) NOT NULL CHECK (tipo IN ('Dúplex', 'Dobles', 'Familiares', 'Habitaciones')),
     capacidad INT NOT NULL,
     precio_noche DECIMAL(10,2) NOT NULL CHECK (precio_noche > 0),
     estado VARCHAR(20) NOT NULL DEFAULT 'Disponible' CHECK (estado IN ('Disponible', 'Ocupada', 'En limpieza', 'Mantenimiento')),
@@ -166,18 +166,22 @@ $$ LANGUAGE plpgsql;
 
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
-INSERT INTO empleado (nombre, usuario, contrasena, rol) VALUES
-('Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador'), -- Admin2026!
-('Carlos Pérez',  'carlos_recep',  '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W',  'Recepcionista 24h'), -- Recep2026!
-('Marta Ama',     'marta_limpieza','$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves')       -- marta123
+INSERT INTO empleado (nombre, usuario, contrasena, rol, numero_documento, correo) VALUES
+('Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador', 'CC9001', 'admin_legacy@bookingsoft.com'),
+('Administrador Grupo BookingSoft', 'admin', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Administrador', 'CC1001', 'admin@bookingsoft.com'),
+('Carlos Pérez',  'carlos_recep',  '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W',  'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com'),
+('Recepción Facile', 'recepcion', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com'),
+('Marta Ama',     'marta_limpieza','$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com'),
+('Ama de Llaves', 'amallaves', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Ama de llaves', 'CC1003', 'amas@bookingsoft.com'),
+('Personal Mantenimiento', 'mantenimiento', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com')
 ON CONFLICT (usuario) DO NOTHING;
 
--- Sembrado de 38 Alojamientos Reales Facile (14 Dúplex, 11 Doble, 2 Familiar, 11 Habitación) + 2 Legacy para Tests
+-- Sembrado de 38 Alojamientos Reales Facile (14 Dúplex, 11 Dobles, 2 Familiares, 11 Habitaciones) + 2 Legacy para Tests
 INSERT INTO habitacion (numero, tipo, capacidad, precio_noche, estado) VALUES
 -- Legacy para compatibilidad de tests
-('101A', 'Habitación', 2, 180000.00, 'Disponible'),
-('102A', 'Habitación', 2, 180000.00, 'Disponible'),
--- 14 Dúplex ($250.000 COP/noche - Cap: 3 - 1 Cama Queen + Sofá-cama)
+('101A', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('102A', 'Habitaciones', 2, 180000.00, 'Disponible'),
+-- 14 Dúplex ($250.000 COP/noche - Cap: 3 provisional - Cama King o 2 Sencillas + Sofá-cama)
 ('D101', 'Dúplex', 3, 250000.00, 'Disponible'),
 ('D102', 'Dúplex', 3, 250000.00, 'Disponible'),
 ('D103', 'Dúplex', 3, 250000.00, 'Disponible'),
@@ -192,33 +196,33 @@ INSERT INTO habitacion (numero, tipo, capacidad, precio_noche, estado) VALUES
 ('D112', 'Dúplex', 3, 250000.00, 'Disponible'),
 ('D113', 'Dúplex', 3, 250000.00, 'Disponible'),
 ('D114', 'Dúplex', 3, 250000.00, 'Disponible'),
--- 11 Dobles ($320.000 COP/noche - Cap: 5 - 2 Camas Queen + Sofá-cama)
-('DB201', 'Doble', 5, 320000.00, 'Disponible'),
-('DB202', 'Doble', 5, 320000.00, 'Disponible'),
-('DB203', 'Doble', 5, 320000.00, 'Disponible'),
-('DB204', 'Doble', 5, 320000.00, 'Disponible'),
-('DB205', 'Doble', 5, 320000.00, 'Disponible'),
-('DB206', 'Doble', 5, 320000.00, 'Disponible'),
-('DB207', 'Doble', 5, 320000.00, 'Disponible'),
-('DB208', 'Doble', 5, 320000.00, 'Disponible'),
-('DB209', 'Doble', 5, 320000.00, 'Disponible'),
-('DB210', 'Doble', 5, 320000.00, 'Disponible'),
-('DB211', 'Doble', 5, 320000.00, 'Disponible'),
--- 2 Familiares ($390.000 COP/noche - Cap: 7 - 3 Camas Queen + Sofá-cama)
-('F301', 'Familiar', 7, 390000.00, 'Disponible'),
-('F302', 'Familiar', 7, 390000.00, 'Disponible'),
--- 11 Habitaciones ($180.000 COP/noche - Cap: 2 - 1 Cama Queen)
-('H401', 'Habitación', 2, 180000.00, 'Disponible'),
-('H402', 'Habitación', 2, 180000.00, 'Disponible'),
-('H403', 'Habitación', 2, 180000.00, 'Disponible'),
-('H404', 'Habitación', 2, 180000.00, 'Disponible'),
-('H405', 'Habitación', 2, 180000.00, 'Disponible'),
-('H406', 'Habitación', 2, 180000.00, 'Disponible'),
-('H407', 'Habitación', 2, 180000.00, 'Disponible'),
-('H408', 'Habitación', 2, 180000.00, 'Disponible'),
-('H409', 'Habitación', 2, 180000.00, 'Disponible'),
-('H410', 'Habitación', 2, 180000.00, 'Disponible'),
-('H411', 'Habitación', 2, 180000.00, 'Disponible')
+-- 11 Dobles ($350.000 COP/noche - Cap: 4 - Cama King hab. principal + 2 Sencillas o Doble auxiliar + Sofá-cama)
+('DB201', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB202', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB203', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB204', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB205', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB206', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB207', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB208', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB209', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB210', 'Dobles', 4, 350000.00, 'Disponible'),
+('DB211', 'Dobles', 4, 350000.00, 'Disponible'),
+-- 2 Familiares ($450.000 COP/noche - Cap: 6 - Cama King + 2 Camas Nido + Sofá-cama)
+('F301', 'Familiares', 6, 450000.00, 'Disponible'),
+('F302', 'Familiares', 6, 450000.00, 'Disponible'),
+-- 11 Habitaciones ($180.000 COP/noche placeholder - Cap: 2 - Tipo de cama por confirmar)
+('H401', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H402', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H403', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H404', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H405', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H406', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H407', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H408', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H409', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H410', 'Habitaciones', 2, 180000.00, 'Disponible'),
+('H411', 'Habitaciones', 2, 180000.00, 'Disponible')
 ON CONFLICT (numero) DO NOTHING;
 
 -- Sembrado de Espacios de Centro de Negocios

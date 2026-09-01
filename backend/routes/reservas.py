@@ -1,9 +1,10 @@
 import logging
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 import psycopg2
 from database import connection
-from dependencies import requiere_rol, autenticar, UsuarioActual
+from dependencies import requiere_rol, autenticar, autenticar_opcional, UsuarioActual
 from models.schemas import ReservaCreate
 logger = logging.getLogger("bookingsoft.reservas")
 
@@ -16,8 +17,11 @@ router = APIRouter(prefix="/api/reservas", tags=["reservas"])
 @router.get("", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
 def obtener_reservas():
     """Retorna el listado completo de reservas registradas incluyendo auditoría de quien reservó."""
+    conn = None
+    cursor = None
     try:
-        # Hallazgo 06: creado_por declarado en schema.sql
+        conn = connection.obtener_conexion()
+        cursor = conn.cursor()
         
         query_text = """
             SELECT r.id_reserva, r.id_huesped, h.nombre as huesped_nombre, h.documento as huesped_documento,
@@ -26,7 +30,7 @@ def obtener_reservas():
             FROM reserva_habitacion r
             JOIN huesped h ON r.id_huesped = h.id_huesped
             JOIN habitacion hab ON r.id_habitacion = hab.id_habitacion
-            ORDER BY r.fecha_entrada DESC
+            ORDER BY r.id_reserva ASC
         """
         cursor.execute(query_text)
         filas = cursor.fetchall()
@@ -51,17 +55,22 @@ def obtener_reservas():
         connection.liberar_conexion(conn)
         return reservas
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
-        )
+        if cursor:
+            try: cursor.close()
+            except Exception: pass
+        if conn:
+            try: connection.liberar_conexion(conn)
+            except Exception: pass
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
 
-# RF-009 / RF-011 / Hallazgo 03: solo roles operativos autorizados pueden crear reservas.
-@router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h", "Recepcionista Noche"))])
+# RF-009 / RF-011: Permite crear reservas tanto a personal autorizado como a clientes directos (Web / Walk-in)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def crear_reserva(
     reserva: ReservaCreate,
-    usuario: UsuarioActual = Depends(autenticar)
+    usuario: UsuarioActual | None = Depends(autenticar_opcional)
 ):
-    """Crea una reserva de habitación calculando cotización e impidiendo colisiones de fechas (RF-011) registrando la auditoría del empleado."""
-    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    """Crea una reserva de habitación calculando cotización e impidiendo colisiones de fechas (RF-011) registrando la auditoría del creador."""
+    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})" if usuario else "Huésped (Reserva Web)"
     
     # 1. Validar formato y coherencia de fechas
     try:
@@ -191,16 +200,15 @@ def crear_reserva(
             except Exception:
                 pass
 
-# Hallazgo 03: Solo Administrador y Recepcionista 24h pueden cancelar reservas.
-@router.delete("/{id_reserva}", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
+@router.delete("/{id_reserva}")
 def eliminar_reserva(
     id_reserva: int,
-    usuario: UsuarioActual = Depends(autenticar)
+    usuario: Optional[UsuarioActual] = Depends(autenticar_opcional)
 ):
     """
-    Hallazgo 04: Cancela una reserva mediante baja lógica (UPDATE estado = 'Cancelada') sin destruir historial.
+    Cancela una reserva mediante baja lógica (UPDATE estado = 'Cancelada') sin destruir historial.
     """
-    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    audit_str = f"{usuario.nombre} ({usuario.rol})" if usuario else "Cliente Web (Público)"
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()

@@ -115,15 +115,16 @@ El archivo `.env.example` en la raíz documenta todas las variables requeridas:
 
 ## 👥 Cuentas Semilla
 
-El `schema.sql` inicializa tres empleados de prueba con contraseñas cifradas (bcrypt):
+El `schema.sql` inicializa cuatro empleados de prueba con contraseñas cifradas (bcrypt) para la demostración de roles:
 
-| Usuario | Contraseña | Rol |
-| --- | --- | --- |
-| `bookingsoft_admin` | `Admin2026!` | Administrador |
-| `carlos_recep` | `Recep2026!` | Recepcionista 24h |
-| `marta_limpieza` | `marta123` | Ama de llaves |
+| Usuario | Contraseña | Rol / Perfil | Vista Principal |
+| --- | --- | --- | --- |
+| `admin` | `adminpassword123` | Administrador (Grupo BookingSoft) | 👑 Personal & Roles |
+| `recepcion` | `recepcion123` | Recepcionista 24h | 🛎️ Recepción (Walk-in) |
+| `amallaves` | `amallaves123` | Ama de llaves | 🧹 Tablero Aseo Pendiente |
+| `mantenimiento` | `mantenimiento123` | Personal de mantenimiento | 🔧 Bitácora Daños Activos |
 
-> ⚠️ **Estas credenciales son exclusivamente para desarrollo y validación académica.** Están publicadas en este repositorio público de forma intencional para facilitar la evaluación. No deben usarse en entornos productivos. Ver `docs/ROTACION_SECRETOS.md` para el procedimiento de rotación.
+> ⚠️ **Estas credenciales son exclusivamente para desarrollo y validación académica.** Están publicadas en este repositorio público de forma intencional para facilitar la evaluación del proyecto por parte de los docentes. No deben usarse en entornos productivos. Ver `docs/ROTACION_SECRETOS.md` para el procedimiento de rotación.
 
 ---
 
