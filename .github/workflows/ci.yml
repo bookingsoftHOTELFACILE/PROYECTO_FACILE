@@ -1,0 +1,68 @@
+name: CI – BookingSoft Backend
+
+on:
+  push:
+    branches: ["main", "develop", "feature/*", "fix/*"]
+  pull_request:
+    branches: ["main", "develop"]
+
+jobs:
+  test-backend:
+    name: 🐍 Pytest + Auditoría de Dependencias
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: bookingsoft_test
+          POSTGRES_USER: adso_user
+          POSTGRES_PASSWORD: adso_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: bookingsoft_test
+      DB_USER: adso_user
+      DB_PASSWORD: adso_password
+      JWT_SECRET: ci_secret_seguro_bookingsoft_2026_test
+      RESET_DB: "true"
+
+    steps:
+      - name: 📥 Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: 🐍 Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Instalar Pipenv y dependencias
+        working-directory: backend
+        run: |
+          pip install --upgrade pip pipenv
+          pipenv install --system --skip-lock --dev
+
+      - name: 🧪 Ejecutar suite de pruebas (pytest)
+        working-directory: backend
+        run: pytest --tb=short -v
+
+      - name: 🔍 Auditoría de seguridad (pip-audit)
+        working-directory: backend
+        run: |
+          pip install pip-audit
+          pip-audit --requirement <(pipenv requirements) --desc on || true
+
+      - name: 📦 Auditoría de dependencias frontend (pnpm audit)
+        working-directory: frontend
+        run: |
+          npm install -g pnpm@9
+          pnpm install --no-frozen-lockfile
+          pnpm audit --audit-level moderate || true

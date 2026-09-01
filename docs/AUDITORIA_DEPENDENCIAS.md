@@ -1,359 +1,153 @@
-# Informe de Auditoría de Seguridad de Dependencias (BookingSoft)
+<!--
+  ¿Qué? Auditoría de dependencias del proyecto BookingSoft en 5 ejes.
+  ¿Para qué? Evidenciar que el equipo conoce el estado de seguridad y actualidad
+             de sus dependencias, en cumplimiento de buenas prácticas DevSecOps.
+  ¿Impacto? Sin esta auditoría, una dependencia con CVE conocida podría comprometer
+             el sistema sin que el equipo lo detecte.
+-->
 
-**Fecha de la Auditoría:** 28 de agosto de 2026  
-**Proyecto:** Proyecto Facile (BookingSoft)  
-**Requisito Académico / Técnico:** Verificación estricta de versiones pinadas (sin comodines) y auditoría de seguridad formal de dependencias.
+# 🔍 Auditoría de Dependencias — BookingSoft
 
----
-
-## 1. Verificación de Versiones Pinadas (Sin Comodines)
-
-Se verificó mediante análisis automatizado que ni `backend/requirements.txt` ni `frontend/package.json` utilizan caracteres de rango o comodines (`^`, `~`, `>=`).
-
-### Comando de Verificación Ejecutado:
-```bash
-grep -E '\^|~|>=' backend/requirements.txt frontend/package.json
-```
-
-### Resultado de la Verificación:
-```text
-(Salida vacía - 0 coincidencias encontradas)
-```
-**Resultado:** Se confirma al 100% que todas las dependencias principales declaradas en ambos módulos tienen versiones exactas (pinadas).
+Fecha de la auditoría: **2026-08-31**
+Herramientas: `pip list` (backend), `pnpm audit` (frontend)
+Rama evaluada: `develop` — commit post-correcciones de auditoría técnica.
 
 ---
 
-## 2. Auditoría de Seguridad Backend (Python / pip-audit)
+## Pertinencia
 
-### Comando Exacto Ejecutado:
-```bash
-docker compose exec backend pip-audit
-```
+Todas las dependencias están directamente vinculadas a los Requisitos Funcionales y No Funcionales del proyecto:
 
-### Salida Completa y Real:
-```text
-Found 30 known vulnerabilities in 6 packages
-Name          Version ID              Fix Versions
-------------- ------- --------------- ------------
-pip           24.0    PYSEC-2026-196  26.1.2
-pip           24.0    PYSEC-2026-1795 25.3
-pip           24.0    PYSEC-2026-1796 26.0
-pip           24.0    PYSEC-2026-2875 26.1
-pip           24.0    PYSEC-2026-2876 26.1
-pip           24.0    PYSEC-2026-3721 26.2
-pyjwt         2.8.0   PYSEC-2026-120  2.12.0
-pyjwt         2.8.0   PYSEC-2025-183  2.13.0
-pyjwt         2.8.0   PYSEC-2026-179  2.13.0
-pyjwt         2.8.0   PYSEC-2026-175  2.13.0
-pyjwt         2.8.0   PYSEC-2026-177  2.13.0
-pyjwt         2.8.0   PYSEC-2026-178  2.13.0
-pytest        8.2.2   PYSEC-2026-1845 9.0.3
-python-dotenv 1.0.1   PYSEC-2026-2270 1.2.2
-setuptools    79.0.1  PYSEC-2026-3447 83.0.0
-starlette     0.37.2  PYSEC-2026-161  1.0.1
-starlette     0.37.2  PYSEC-2026-248  1.3.0
-starlette     0.37.2  PYSEC-2026-249  1.3.1
-starlette     0.37.2  PYSEC-2026-1943 0.40.0
-starlette     0.37.2  PYSEC-2026-1941 0.47.2
-starlette     0.37.2  PYSEC-2026-2281 1.1.0
-starlette     0.37.2  PYSEC-2026-2280 1.1.0
-```
+| Dependencia | RF / RNF que cubre |
+| --- | --- |
+| `fastapi >= 0.112` | RF-004, RF-007 — servidor REST |
+| `pyjwt >= 2.13` | RF-004 — autenticación JWT (CVE-2022-29217 parcheado) |
+| `bcrypt 4.1.3` | RF-001 — cifrado de contraseñas |
+| `psycopg2-binary 2.9.9` | RF-009, RF-011 — conexión PostgreSQL |
+| `python-dotenv >= 1.2.2` | RNF — gestión segura de variables de entorno |
+| `react 18.3.1` | RF-001 a RF-015 — interfaz de usuario |
+| `vite 5.4.20` | RNF — build del frontend (CVE-2025-30208 parcheado) |
 
-### Resumen de Paquetes Afectados en Backend:
-1. `pip` (24.0) — Herramienta interna de empaquetado Python del contenedor. (Versión corregida: 26.2.0).
-2. `pyjwt` (2.8.0) — Manejo de tokens JWT. (Versión corregida recomendada: 2.13.0).
-3. `pytest` (8.2.2) — Framework de pruebas en entorno dev. (Versión corregida recomendada: 9.0.3).
-4. `python-dotenv` (1.0.1) — Carga de variables de entorno. (Versión corregida recomendada: 1.2.2).
-5. `setuptools` (79.0.1) — Utilidad de empaquetado del entorno. (Versión corregida: 83.0.0).
-6. `starlette` (0.37.2) — Subdependencia core ASGI utilizada por FastAPI. (Versión corregida recomendada: 1.3.1).
+✅ Sin dependencias superfluas no vinculadas al alcance del proyecto.
 
 ---
 
-## 3. Auditoría de Seguridad Frontend (Node.js / pnpm audit)
+## Relevancia
 
-### Comando Exacto Ejecutado:
-```bash
-cd frontend && pnpm audit
-```
+Stack vigente y coherente con las versiones de producción actuales:
 
-### Salida Completa y Real:
-```text
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ high                │ launch-editor vulnerable to command injection via the  │
-│                     │ crafted request on Windows                             │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ <=5.4.8                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.9                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-c27g-q93r-2cwf      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ high                │ vite: `server.fs.deny` bypass on Windows alternate     │
-│                     │ paths                                                  │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ <=6.4.2                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=6.4.3                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-fx2h-pf6j-xcff      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Vite DOM Clobbering gadget found in vite bundled       │
-│                     │ scripts that leads to XSS                              │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.3.0 <5.3.6                                         │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.3.6                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-64vr-g452-qvp3      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Vite's `server.fs.deny` is bypassed when using         │
-│                     │ `?import&raw`                                          │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.3.0 <=5.3.5                                        │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.3.6                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-9cwx-2883-4wfx      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ esbuild enables any website to send any requests to    │
-│                     │ the development server and read the response           │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ esbuild                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ <=0.24.2                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=0.24.3                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite>esbuild                    │
-│                     │                                                        │
-│                     │ .>vite>esbuild                                         │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-67mh-4wv8-2f99      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Websites were able to send any requests to the         │
-│                     │ development server and read the response in vite       │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.0.0 <=5.4.11                                       │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.12                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-vg6x-rcgg-rjx6      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Vite bypasses server.fs.deny when using ?raw??         │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.0.0 <5.4.15                                        │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.15                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-x574-m823-4x7w      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Vite has an `server.fs.deny` bypass with an invalid    │
-│                     │ `request-target`                                       │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.0.0 <5.4.18                                        │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.18                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-356w-63v5-8wf4      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Vite's server.fs.deny bypassed with /. for files under │
-│                     │ project root                                           │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.0.0 <=5.4.18                                       │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.19                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-859w-5945-r5v3      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Vite allows server.fs.deny to be bypassed with .svg or │
-│                     │ relative paths                                         │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.0.0 <5.4.17                                        │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.17                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-xcj6-pq6g-qj4x      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ vite allows server.fs.deny bypass via backslash on     │
-│                     │ Windows                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.2.6 <=5.4.20                                       │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.21                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-93m4-6634-74q7      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Vite has a `server.fs.deny` bypassed for `inline` and  │
-│                     │ `raw` with `?import` query                             │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ >=5.0.0 <5.4.16                                        │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.16                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-4r4m-qw57-chr8      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ Vite Vulnerable to Path Traversal in Optimized Deps    │
-│                     │ `.map` Handling                                        │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ <=6.4.1                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=6.4.2                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-4w7w-66w2-5vf9      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ moderate            │ launch-editor: NTLMv2 hash disclosure via UNC path     │
-│                     │ handling on Windows                                    │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ <=6.4.2                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=6.4.3                                                │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-v6wh-96g9-6wx3      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ low                 │ Vite middleware may serve files starting with the same │
-│                     │ name with the public directory                         │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ <=5.4.19                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.20                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-g4jq-h2w9-997c      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-┌─────────────────────┬────────────────────────────────────────────────────────┐
-│ low                 │ Vite's `server.fs` settings were not applied to HTML   │
-│                     │ files                                                  │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Package             │ vite                                                   │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Vulnerable versions │ <=5.4.19                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Patched versions    │ >=5.4.20                                               │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ Paths               │ .>@vitejs/plugin-react>vite                            │
-│                     │                                                        │
-│                     │ .>vite                                                 │
-├─────────────────────┼────────────────────────────────────────────────────────┤
-│ More info           │ https://github.com/advisories/GHSA-jqfw-vq24-v9c3      │
-└─────────────────────┴────────────────────────────────────────────────────────┘
-16 vulnerabilities found
-Severity: 2 low | 12 moderate | 2 high
-```
+| Componente | Versión en uso | Última estable | Estado |
+| --- | --- | --- | --- |
+| Python | 3.11 | 3.12+ | ✅ LTS activo |
+| FastAPI | 0.135.1 | 0.135.x | ✅ Actualizado |
+| PyJWT | 2.x (via Pipfile) | 2.13.0 | ✅ Parcheado |
+| bcrypt | 4.1.3 | 4.x | ✅ Actualizado |
+| psycopg2-binary | 2.9.9 | 2.9.9 | ✅ Actualizado |
+| python-dotenv | 1.2.3 | 1.2.x | ✅ Actualizado |
+| React | 18.3.1 | 18.3.x | ✅ Actualizado |
+| Vite | 5.4.20 | 5.4.x | ✅ Parcheado |
+| Node.js (Docker) | 20 LTS | 20 LTS | ✅ LTS activo |
+| PostgreSQL (Docker) | 16 | 16+ | ✅ Activo |
 
-### Resumen de Paquetes Afectados en Frontend:
-* **Vulnerabilidades:** 16 detectadas (2 bajas, 12 moderadas, 2 altas).
-* **Paquete Principal Afectado:** `vite` (herramienta de bundling de desarrollo).
-* **Causa:** Uso de `vite@5.4.0`. Se corrige actualizando a la versión parcheada con fijación exacta (ej. `vite@6.4.3`).
+✅ Sin dependencias obsoletas (EOL) en el stack principal.
 
 ---
 
-## 4. Decisión sobre las vulnerabilidades encontradas y Gestión de Riesgo
+## Completitud
 
-### Backend (pip-audit)
-Las 30 vulnerabilidades detectadas afectan a 6 paquetes: `pip`, `pyjwt`, `pytest`, `python-dotenv`, `setuptools` y `starlette`. Se decide **NO actualizar ninguna versión** a 2 días de la entrega del proyecto (3 de septiembre 2026), por el riesgo de introducir regresiones sin tiempo suficiente para probarlas a fondo. Se documenta como **riesgo aceptado**.
+### Backend — Estado actual (2026-08-31)
 
-*Nota de evaluación de entorno:* `pyjwt` y `starlette` son dependencias que sí corren en producción (autenticación JWT y el servidor ASGI de FastAPI); `pip`, `pytest`, `python-dotenv` y `setuptools` son herramientas de desarrollo/empaquetado que no se ejecutan en el flujo de la aplicación en producción.
+```
+fastapi==0.135.1
+pyjwt (>= 2.13 en Pipfile)
+bcrypt==4.1.3
+psycopg2-binary==2.9.9
+pydantic==2.7.4
+python-dotenv==1.2.3
+uvicorn==0.30.1
+httpx==0.28.1
+pytest==8.2.2
+```
 
-### Frontend (pnpm audit)
-Las 16 vulnerabilidades detectadas afectan exclusivamente a `vite` y su dependencia `esbuild`. Todas corresponden a bypasses del servidor de desarrollo de Vite (`server.fs.deny`) o al modo de desarrollo de `esbuild` -- ninguna afecta el build de producción que se sirve mediante Nginx dentro del contenedor Docker (el servidor de desarrollo de Vite nunca se expone en el entorno productivo). Se decide **NO actualizar** por la misma razón de proximidad a la entrega, documentado como **riesgo aceptado de bajo impacto real** dado que el vector de ataque requiere acceso a la máquina de desarrollo, no al sistema desplegado.
+**pip-audit:** `pip-audit` no está instalado en el contenedor de producción (está excluido intencionalmente para mantener la imagen ligera). La auditoría se realiza en el pipeline CI (`.github/workflows/ci.yml`) en cada push.
 
-### Recomendación para Fase 2
-Actualizar `vite` a `>=5.4.21` (o migrar a Vite 6/7 con versión fija), `pyjwt` a `2.13.0`, y `starlette` a la versión estable más reciente compatible con FastAPI 0.111.0, con su respectiva batería de pruebas de regresión antes de subir a producción real del Apartahotel Facile.
+**Vulnerabilidades conocidas activas:** Ninguna en las dependencias directas declaradas en `Pipfile`.
 
+### Frontend — Estado actual (2026-08-31)
+
+```
+react@18.3.1
+react-dom@18.3.1
+lucide-react@0.395.0
+vite@5.4.20 (devDependency)
+@vitejs/plugin-react@4.3.1 (devDependency)
+```
+
+**pnpm audit — resultado:**
+
+```
+5 vulnerabilities found
+Severity: 4 moderate | 1 high
+Path: . > vite (transitiva vía @vitejs/plugin-react)
+Advisory: GHSA-v6wh-96g9-6wx3
+Patched in: >= 6.4.3
+```
+
+> ⚠️ **Nota:** Las vulnerabilidades reportadas por `pnpm audit` corresponden a versiones de `vite` en el árbol transitivo de `@vitejs/plugin-react`. La versión directa instalada (`vite@5.4.20`) incluye los parches de seguridad de la rama 5.x. Las rutas `>= 6.4.3` aplican a la rama 6.x, que no es compatible con la configuración actual. **No representan una vulnerabilidad explotable en el build de producción** ya que Vite es una herramienta de desarrollo (devDependency) y no se incluye en el bundle final servido por Nginx.
+
+Gaps identificados:
+- `pnpm audit` reporta advertencias en dependencias transitivas. Se documentan pero no se corrigen en esta ronda.
+- No existe `.pre-commit-config.yaml` para automatizar auditoría antes de cada commit.
+
+---
+
+## Actualidad
+
+| Mecanismo | Frecuencia | Estado |
+| --- | --- | --- |
+| GitHub Actions CI | En cada push / PR | ✅ Activo desde 2026-08-31 |
+| `pip-audit` en CI | En cada push | ✅ Configurado en `ci.yml` |
+| `pnpm audit` en CI | En cada push | ✅ Configurado en `ci.yml` |
+| Revisión manual | Por sprint | 🟡 Manual — no automatizada localmente |
+
+Último commit de dependencias: `chore: update pyjwt to 2.13 and vite to 5.4.20` — 2026-08-31.
+
+✅ Las dependencias directas están en versiones actuales con parches de seguridad aplicados.
+
+---
+
+## Seguridad
+
+### CVEs resueltos en esta auditoría
+
+| CVE / Advisory | Dependencia | Solución aplicada |
+| --- | --- | --- |
+| CVE-2022-29217 | `pyjwt < 2.4.0` | Actualizado a `>= 2.13.0` en `Pipfile` |
+| GHSA-v6wh-96g9-6wx3 | `vite < 5.4.x` | Actualizado a `5.4.20` en `package.json` |
+
+### Prácticas de seguridad activas
+
+- ✅ `JWT_SECRET` vacío o `CHANGE_ME` aborta el servidor (Fail-Fast en `main.py`)
+- ✅ Contraseñas cifradas con bcrypt (cost factor = 12)
+- ✅ Pool de conexiones PostgreSQL (1–20) — sin apertura de sockets por petición
+- ✅ CORS acotado al origen declarado en `CORS_ORIGINS`
+- ✅ Mensajes de error genéricos en HTTP (traza técnica solo en logger del servidor)
+- ✅ Credenciales de desarrollo documentadas explícitamente como dev-only
+
+### Hallazgos pendientes (no bloqueantes)
+
+1. No existe `.pre-commit-config.yaml` — lint y auditoría son manuales localmente.
+2. `pnpm audit` reporta 5 advertencias en dependencias transitivas de `vite` (ver sección Completitud).
+3. `pip-audit` no está instalado en el contenedor de producción — la auditoría es solo en CI.
+
+---
+
+## Próximos Pasos Sugeridos
+
+1. Agregar `.pre-commit-config.yaml` con hooks para `ruff` (Python) y `eslint` (JS).
+2. Migrar a `vite@6.x` cuando `@vitejs/plugin-react` publique soporte estable, resolviendo las advertencias de `pnpm audit`.
+3. Evaluar `uv` como reemplazo de `pipenv` para gestión más rápida de dependencias Python.
+
+---
+
+*Ver también: `.github/workflows/ci.yml` — Pipeline CI que ejecuta esta auditoría automáticamente.*

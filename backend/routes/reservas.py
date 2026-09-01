@@ -1,9 +1,11 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 import psycopg2
 from database import connection
 from dependencies import requiere_rol, autenticar, UsuarioActual
 from models.schemas import ReservaCreate
+logger = logging.getLogger("bookingsoft.reservas")
 
 # RF-009: roles autorizados para el módulo de reservas.
 _ROLES_RESERVAS = ("Administrador", "Recepcionista 24h", "Conserje")
@@ -15,10 +17,7 @@ router = APIRouter(prefix="/api/reservas", tags=["reservas"])
 def obtener_reservas():
     """Retorna el listado completo de reservas registradas incluyendo auditoría de quien reservó."""
     try:
-        conn = connection.obtener_conexion()
-        cursor = conn.cursor()
-        cursor.execute("ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS creado_por VARCHAR(100)")
-        conn.commit()
+        # Hallazgo 06: creado_por declarado en schema.sql
         
         query_text = """
             SELECT r.id_reserva, r.id_huesped, h.nombre as huesped_nombre, h.documento as huesped_documento,
@@ -49,13 +48,14 @@ def obtener_reservas():
             })
             
         cursor.close()
-        conn.close()
+        connection.liberar_conexion(conn)
         return reservas
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener reservas: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
+        )
 
-# RF-009 / RF-011: solo roles operativos pueden crear reservas.
-@router.post("", status_code=status.HTTP_201_CREATED)
+# RF-009 / RF-011 / Hallazgo 03: solo roles operativos autorizados pueden crear reservas.
+@router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h", "Recepcionista Noche"))])
 def crear_reserva(
     reserva: ReservaCreate,
     usuario: UsuarioActual = Depends(autenticar)
@@ -78,8 +78,6 @@ def crear_reserva(
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS creado_por VARCHAR(100)")
-        conn.commit()
         
         # A. Obtener datos de la habitación
         cursor.execute("SELECT precio_noche, numero, estado, capacidad FROM habitacion WHERE id_habitacion = %s", (reserva.id_habitacion,))
@@ -179,7 +177,7 @@ def crear_reserva(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {e}"
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP
         )
     finally:
         if cursor:
@@ -189,28 +187,25 @@ def crear_reserva(
                 pass
         if conn:
             try:
-                conn.close()
+                connection.liberar_conexion(conn)
             except Exception:
                 pass
 
-@router.delete("/{id_reserva}")
+# Hallazgo 03: Solo Administrador y Recepcionista 24h pueden cancelar reservas.
+@router.delete("/{id_reserva}", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
 def eliminar_reserva(
     id_reserva: int,
     usuario: UsuarioActual = Depends(autenticar)
 ):
     """
-    Elimina o cancela una reserva auditando el usuario responsable.
-    - Si la reserva estaba en Check-In/Ocupada (estancia realizada) -> Cambia habitación a 'En limpieza'.
-    - Si la reserva estaba Confirmada/Pendiente (cancelada antes del ingreso) -> Queda 'Disponible'.
+    Hallazgo 04: Cancela una reserva mediante baja lógica (UPDATE estado = 'Cancelada') sin destruir historial.
     """
     audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE habitacion ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
-        conn.commit()
         
-        # Obtener datos de la reserva antes de eliminarla
+        # Obtener datos de la reserva antes de cancelarla
         cursor.execute("SELECT id_habitacion, estado FROM reserva_habitacion WHERE id_reserva = %s", (id_reserva,))
         res_row = cursor.fetchone()
         
@@ -221,10 +216,12 @@ def eliminar_reserva(
             else:
                 cursor.execute("UPDATE habitacion SET estado = 'Disponible', modificado_por = %s WHERE id_habitacion = %s", (audit_str, id_hab))
         
-        cursor.execute("DELETE FROM reserva_habitacion WHERE id_reserva = %s", (id_reserva,))
+        # Hallazgo 04: Baja lógica para preservar el registro contable de reservas
+        cursor.execute("UPDATE reserva_habitacion SET estado = 'Cancelada', modificado_por = %s WHERE id_reserva = %s", (audit_str, id_reserva))
         conn.commit()
         cursor.close()
-        conn.close()
-        return {"message": f"Reserva #{id_reserva} eliminada/cancelada por {audit_str}."}
+        connection.liberar_conexion(conn)
+        return {"message": f"Reserva #{id_reserva} cancelada exitosamente por {audit_str}."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al eliminar reserva: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
+        )

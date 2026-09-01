@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger("bookingsoft.auth")
 """
 backend/routes/auth.py
 Sprint 1 — Autenticación JWT + bcrypt
@@ -43,8 +45,8 @@ def _crear_token(id_empleado: int, rol: str, nombre: str = "") -> str:
 
 
 # ── POST /api/auth/registro ───────────────────────────────────────────────────
-@router.post("/registro", status_code=status.HTTP_201_CREATED)
-def registrar_empleado(datos: EmpleadoRegistro):
+@router.post("/registro", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol("Administrador"))])
+def registrar_empleado(datos: EmpleadoRegistro, admin_actual: UsuarioActual = Depends(autenticar)):
     """
     RF-001 / HU-001 — Registra un nuevo empleado del sistema.
 
@@ -83,7 +85,7 @@ def registrar_empleado(datos: EmpleadoRegistro):
         # CA-001.3: numero_documento único
         cur.execute("SELECT id_empleado FROM empleado WHERE numero_documento = %s", (datos.numero_documento.strip(),))
         if cur.fetchone():
-            cur.close(); conn.close()
+            cur.close(); connection.liberar_conexion(conn)
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="El número de documento ya está registrado.",
@@ -92,7 +94,7 @@ def registrar_empleado(datos: EmpleadoRegistro):
         # CA-001.4: correo único
         cur.execute("SELECT id_empleado FROM empleado WHERE correo = %s", (str(datos.correo).lower(),))
         if cur.fetchone():
-            cur.close(); conn.close()
+            cur.close(); connection.liberar_conexion(conn)
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="El correo electrónico ya está en uso.",
@@ -101,7 +103,7 @@ def registrar_empleado(datos: EmpleadoRegistro):
         # CA-001.3b: usuario único (nombre de login)
         cur.execute("SELECT id_empleado FROM empleado WHERE usuario = %s", (datos.usuario.strip(),))
         if cur.fetchone():
-            cur.close(); conn.close()
+            cur.close(); connection.liberar_conexion(conn)
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="El nombre de usuario ya está en uso.",
@@ -127,7 +129,7 @@ def registrar_empleado(datos: EmpleadoRegistro):
         fila = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
+        connection.liberar_conexion(conn)
 
         return {
             "message": "Empleado registrado exitosamente.",
@@ -145,7 +147,7 @@ def registrar_empleado(datos: EmpleadoRegistro):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al registrar empleado: {e}",
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
         )
 
 
@@ -177,11 +179,11 @@ def login(credenciales: LoginRequest):
         )
         fila = cur.fetchone()
         cur.close()
-        conn.close()
+        connection.liberar_conexion(conn)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al autenticar: {e}",
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
         )
 
     # CA-002.3: misma respuesta si el usuario no existe o la contraseña es incorrecta

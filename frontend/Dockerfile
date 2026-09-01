@@ -1,16 +1,14 @@
-# Etapa 1: Build de la aplicación React con Vite usando pnpm
+# Etapa 1: Build de la aplicación React con Vite usando npm
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Instalar pnpm v9 compatible con Node 20
-RUN npm install -g pnpm@9
-
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+# Copiar manifesto e instalar dependencias con npm (sin lockfile de pnpm)
+COPY package.json ./
+RUN npm install --legacy-peer-deps
 
 COPY . .
-RUN pnpm run build
+RUN npm run build
 
 # Etapa 2: Servir los archivos estáticos con Nginx
 FROM nginx:alpine

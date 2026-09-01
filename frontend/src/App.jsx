@@ -1,39 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus, ShieldCheck, Mail, Phone, FileText, Briefcase, Users, AlertCircle, Calendar, Home, ListOrdered, Wifi, WifiOff, LogIn, LogOut, Lock, User, Trash2 } from 'lucide-react';
 
-// ============================================================
-// DATOS INICIALES (Modo Simulación - sin necesidad de backend)
-// ============================================================
-const HUESPEDES_INICIALES = [
-  { id_huesped: 1, nombre: "John Doe",        documento: "12345678",  telefono: "3115551234", correo: "john.doe@example.com",          empresa: null,          lealtad: "Silver",   estado: "Activo" },
-  { id_huesped: 2, nombre: "Sofía Restrepo",  documento: "98765432",  telefono: "3126667890", correo: "sofia.restrepo@bancolombia.com", empresa: "Bancolombia",  lealtad: "Gold",     estado: "Activo" },
-  { id_huesped: 3, nombre: "Thomas Miller",   documento: "PP998877",  telefono: "+155589012", correo: "thomas.miller@siemens.com",      empresa: "Siemens",      lealtad: "Platinum", estado: "Activo" },
-];
-
-const HABITACIONES_INICIALES = [
-  { id_habitacion: 1, numero: "101A", tipo: "Habitaciones", capacidad: 2, precio_noche: 243000, estado: "Disponible"   },
-  { id_habitacion: 2, numero: "102A", tipo: "Habitaciones", capacidad: 2, precio_noche: 243000, estado: "Disponible"   },
-  { id_habitacion: 3, numero: "201D", tipo: "Dúplex",       capacidad: 3, precio_noche: 350000, estado: "Disponible"   },
-  { id_habitacion: 4, numero: "202D", tipo: "Dúplex",       capacidad: 3, precio_noche: 350000, estado: "Mantenimiento"},
-  { id_habitacion: 5, numero: "301F", tipo: "Familiar",     capacidad: 5, precio_noche: 480000, estado: "Disponible"   },
-];
-
-const RESERVAS_INICIALES = [
-  { id_reserva: 1, id_huesped: 1, huesped_nombre: "John Doe",       huesped_documento: "12345678", id_habitacion: 1, habitacion_numero: "101A", habitacion_tipo: "Habitaciones", fecha_entrada: "2026-06-15", fecha_salida: "2026-06-18", estado: "Confirmada" },
-  { id_reserva: 2, id_huesped: 2, huesped_nombre: "Sofía Restrepo", huesped_documento: "98765432", id_habitacion: 3, habitacion_numero: "201D", habitacion_tipo: "Dúplex",       fecha_entrada: "2026-06-20", fecha_salida: "2026-06-25", estado: "Confirmada" },
-];
-
-// URL del backend FastAPI (cuando esté corriendo)
+// URL del backend FastAPI
 const API_URL = '';
+
 
 function App() {
   // ---- ESTADO DEL MODO DE CONEXIÓN ----
   const [backendActivo, setBackendActivo] = useState(false);
 
-  // ---- ESTADO DE DATOS (simulación local) ----
-  const [huespedes,    setHuespedes]    = useState(HUESPEDES_INICIALES);
-  const [habitaciones, setHabitaciones] = useState(HABITACIONES_INICIALES);
-  const [reservas,     setReservas]     = useState(RESERVAS_INICIALES);
+  // ---- ESTADO DE DATOS (solo desde el backend, sin fallback local) ----
+  const [huespedes,    setHuespedes]    = useState([]);
+  const [habitaciones, setHabitaciones] = useState([]);
+  const [reservas,     setReservas]     = useState([]);
 
   // ---- ESTADO DEL FORMULARIO DE REGISTRO ----
   const [formData, setFormData] = useState({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
@@ -89,22 +68,16 @@ function App() {
       if (res.ok) {
         const token = data.access_token;
         setAuthToken(token);
-        // Decodificar el payload del token JWT para conocer el rol
+        // Hallazgo 11: Usar nombre y rol directamente desde el payload JWT, sin nombreMap estático
         let rol = 'Empleado';
+        let nombre = loginForm.usuario.trim();
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           rol = payload.rol || 'Empleado';
+          nombre = payload.nombre || payload.sub || loginForm.usuario.trim();
         } catch {
           // fallback si no se pudo decodificar
         }
-
-        // Mapear nombre visual del usuario
-        const nombreMap = {
-          sandra_admin: 'Sandra Milena',
-          carlos_recep: 'Carlos Pérez',
-          marta_limpieza: 'Marta Ama',
-        };
-        const nombre = nombreMap[loginForm.usuario.trim()] || loginForm.usuario.trim();
 
         setUsuarioSesion({ usuario: loginForm.usuario.trim(), nombre, rol });
         setShowLoginModal(false);
@@ -130,36 +103,21 @@ function App() {
     setAlert({ type: 'success', message: 'Sesión de empleado cerrada correctamente.' });
   };
 
-  // Autenticación inicial automática de respaldo (Recepcionista por defecto)
-  const iniciarSesionSemilla = async (usr, pwd, nombre, rol) => {
-    try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: usr, contrasena: pwd }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAuthToken(data.access_token);
-        setUsuarioSesion({ usuario: usr, nombre, rol });
-        cargarDatosBackend(data.access_token);
-      }
-    } catch (e) {
-      console.error('Error en auto-login semilla:', e);
-    }
-  };
 
   // ---- VERIFICAR SI EL BACKEND ESTÁ ACTIVO Y OBTENER TOKEN INICIAL ----
   useEffect(() => {
     const verificarBackend = async () => {
       try {
-        const res = await fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(2000) });
+        const res = await fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(3000) });
         if (res.ok) {
           setBackendActivo(true);
-          await iniciarSesionSemilla('carlos_recep', 'Recep2026!', 'Carlos Pérez', 'Recepcionista 24h');
+          // Hallazgo 10: No hay auto-login con credenciales semilla hardcodeadas
+          // El empleado debe autenticarse manualmente mediante el modal de login
         }
       } catch {
-        setBackendActivo(false); // Sin backend → usa simulación
+        // Hallazgo 10: Sin backend → pantalla en blanco con banner de desconexión,
+        // sin simular datos falsos ni duplicar reglas de negocio del PL/pgSQL
+        setBackendActivo(false);
       }
     };
     verificarBackend();
@@ -264,41 +222,7 @@ function App() {
       } catch {
         setAlert({ type: 'error', message: 'Error de conexión con el servidor.' });
       }
-      setLoading(false);
-      return;
-    }
-
-    // ---- SIN BACKEND (Modo Simulación en React) ----
-    // Validar documento duplicado
-    const existe = huespedes.find(h => h.documento === formData.documento.trim());
-    if (existe) {
-      setAlert({ type: 'error', message: 'Este número de documento ya está registrado.' });
-      setLoading(false);
-      return;
-    }
-
-    // Crear nuevo huésped en memoria
-    const nuevoId = Math.max(...huespedes.map(h => h.id_huesped), 0) + 1;
-    const nuevoHuesped = {
-      id_huesped: nuevoId,
-      nombre:     formData.nombre.trim(),
-      documento:  formData.documento.trim(),
-      telefono:   formData.telefono.trim(),
-      correo:     formData.correo.trim(),
-      empresa:    formData.empresa.trim() || null,
-      lealtad:    'Silver',
-      estado:     'Activo',
-    };
-
-    setHuespedes(prev => [...prev, nuevoHuesped]);
-    setSelectedHuesped(nuevoHuesped);
-    setAlert({
-      type: 'success',
-      message: `¡Huésped "${nuevoHuesped.nombre}" registrado exitosamente! (Modo Simulación)`,
-      data: nuevoHuesped,
-    });
-    setFormData({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
-    setHabeasData(false);
+    } // cierre de if(backendActivo)
     setLoading(false);
   };
 
@@ -355,66 +279,8 @@ function App() {
       return;
     }
 
-    // ---- SIN BACKEND (Modo Simulación en React) ----
-    const habId  = parseInt(reservaData.id_habitacion);
-    const habObj = habitaciones.find(h => h.id_habitacion === habId);
-
-    if (!habObj) {
-      setReservaAlert({ type: 'error', message: 'Habitación no encontrada.' });
-      setLoading(false);
-      return;
-    }
-    if (habObj.estado === 'Mantenimiento') {
-      setReservaAlert({ type: 'error', message: `La habitación ${habObj.numero} está en Mantenimiento.` });
-      setLoading(false);
-      return;
-    }
-
-    // Verificar solapamiento de fechas (Double Booking)
-    const colision = reservas.find(r => {
-      if (r.id_habitacion !== habId) return false;
-      if (!['Confirmada', 'Check-In'].includes(r.estado)) return false;
-      const rE = new Date(r.fecha_entrada);
-      const rS = new Date(r.fecha_salida);
-      return eDt < rS && sDt > rE; // Fórmula de solapamiento
-    });
-
-    if (colision) {
-      setReservaAlert({
-        type: 'error',
-        message: `⚠️ Double Booking: El apartamento ${habObj.numero} ya está reservado del ${colision.fecha_entrada} al ${colision.fecha_salida}.`,
-      });
-      setLoading(false);
-      return;
-    }
-
-    // Calcular cotización
-    const noches    = Math.ceil(Math.abs(sDt - eDt) / (1000 * 60 * 60 * 24));
-    const subtotal  = noches * habObj.precio_noche;
-    const descuento = noches > 15 ? subtotal * 0.15 : 0;
-    const total     = subtotal - descuento;
-
-    const nuevaReserva = {
-      id_reserva:         Math.max(...reservas.map(r => r.id_reserva), 0) + 1,
-      id_huesped:         selectedHuesped.id_huesped,
-      huesped_nombre:     selectedHuesped.nombre,
-      huesped_documento:  selectedHuesped.documento,
-      id_habitacion:      habId,
-      habitacion_numero:  habObj.numero,
-      habitacion_tipo:    habObj.tipo,
-      fecha_entrada:      reservaData.fecha_entrada,
-      fecha_salida:       reservaData.fecha_salida,
-      estado:             'Confirmada',
-      creado_por:         `${usuarioSesion?.nombre || 'Empleado'} (${usuarioSesion?.rol || 'Simulación'})`,
-    };
-
-    setReservas(prev => [...prev, nuevaReserva]);
-    setReservaAlert({
-      type: 'success',
-      message: `✅ ¡Reserva confirmada para ${selectedHuesped.nombre} en Apto ${habObj.numero}! (Modo Simulación)`,
-      data: { cotizacion: { noches, subtotal, descuento, total } },
-    });
-    setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
+    // Sin backend: mostrar error claro, sin simulación
+    setReservaAlert({ type: 'error', message: '🔌 Sin conexión al servidor. No es posible crear reservas en este momento.' });
     setLoading(false);
   };
 
@@ -452,12 +318,8 @@ function App() {
         setAlert({ type: 'error', message: 'Error de conexión con el servidor.' });
       }
     } else {
-      const auditoriaSimulada = `${usuarioSesion?.nombre || 'Empleado'} (${usuarioSesion?.rol || 'Simulación'})`;
-      setHuespedes(prev => prev.map(item => item.id_huesped === h.id_huesped ? { ...item, estado: nuevoEstado, modificado_por: auditoriaSimulada } : item));
-      setAlert({ type: 'success', message: `Huésped ${nuevoEstado === 'Activo' ? 'activado' : 'desactivado'} por ${auditoriaSimulada}.` });
-      if (selectedHuesped?.id_huesped === h.id_huesped && nuevoEstado === 'Inactivo') {
-        setSelectedHuesped(null);
-      }
+      // Hallazgo 10: Sin backend, mostrar error. No modificar estado local.
+      setAlert({ type: 'error', message: '🔌 Sin conexión al servidor. No es posible modificar el estado del huésped.' });
     }
     setLoading(false);
   };
@@ -483,7 +345,7 @@ function App() {
         const res = await fetch(`${API_URL}/api/huespedes/${id_huesped}`, { method: 'DELETE', headers });
         const data = await res.json();
         if (res.ok) {
-          setAlert({ type: 'success', message: 'Huésped eliminado exitosamente.' });
+          setAlert({ type: 'success', message: data.message });
           if (selectedHuesped?.id_huesped === id_huesped) setSelectedHuesped(null);
           cargarDatosBackend(authToken);
         } else {
@@ -493,9 +355,8 @@ function App() {
         setAlert({ type: 'error', message: 'Error al comunicarse con el servidor.' });
       }
     } else {
-      setHuespedes(prev => prev.filter(h => h.id_huesped !== id_huesped));
-      if (selectedHuesped?.id_huesped === id_huesped) setSelectedHuesped(null);
-      setAlert({ type: 'success', message: 'Huésped eliminado (Modo Simulación).' });
+      // Hallazgo 10: Sin backend, mostrar error. No eliminar en local.
+      setAlert({ type: 'error', message: '🔌 Sin conexión al servidor. No es posible eliminar el huésped.' });
     }
     setLoading(false);
   };

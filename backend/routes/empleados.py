@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger("bookingsoft.empleados")
 """
 backend/routes/empleados.py
 Sprint 1 & Sprint 3 — Gestión y consulta de empleados del sistema
@@ -79,14 +81,14 @@ def listar_empleados(
             })
 
         cur.close()
-        conn.close()
+        connection.liberar_conexion(conn)
 
         return empleados
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al consultar el listado de empleados: {e}",
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
         )
 
 
@@ -114,7 +116,7 @@ def obtener_empleado(id_empleado: int):
         )
         fila = cur.fetchone()
         cur.close()
-        conn.close()
+        connection.liberar_conexion(conn)
 
         if not fila:
             raise HTTPException(
@@ -138,7 +140,7 @@ def obtener_empleado(id_empleado: int):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al consultar empleado: {e}",
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
         )
 
 
@@ -190,7 +192,7 @@ def modificar_rol(
         )
         fila = cur.fetchone()
         if not fila:
-            cur.close(); conn.close()
+            cur.close(); connection.liberar_conexion(conn)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No existe ningún empleado con id {id_empleado}.",
@@ -205,7 +207,7 @@ def modificar_rol(
             )
             total_gestion = cur.fetchone()[0]
             if total_gestion <= 1:
-                cur.close(); conn.close()
+                cur.close(); connection.liberar_conexion(conn)
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=(
@@ -223,7 +225,7 @@ def modificar_rol(
         res = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
+        connection.liberar_conexion(conn)
 
         return {
             "message": f"Rol de '{nombre_emp}' actualizado exitosamente.",
@@ -240,7 +242,7 @@ def modificar_rol(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al modificar rol: {e}",
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
         )
 
 
@@ -278,7 +280,7 @@ def modificar_estado(
         )
         fila = cur.fetchone()
         if not fila:
-            cur.close(); conn.close()
+            cur.close(); connection.liberar_conexion(conn)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No existe ningún empleado con id {id_empleado}.",
@@ -292,7 +294,7 @@ def modificar_estado(
             )
             total_gestion = cur.fetchone()[0]
             if total_gestion <= 1:
-                cur.close(); conn.close()
+                cur.close(); connection.liberar_conexion(conn)
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=(
@@ -310,7 +312,7 @@ def modificar_estado(
         res = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
+        connection.liberar_conexion(conn)
 
         return {
             "message": f"Estado de '{nombre_emp}' actualizado exitosamente.",
@@ -327,5 +329,5 @@ def modificar_estado(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al modificar estado: {e}",
+            detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
         )
