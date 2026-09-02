@@ -167,6 +167,11 @@ $$ LANGUAGE plpgsql;
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
 INSERT INTO empleado (nombre, usuario, contrasena, rol, numero_documento, correo) VALUES
+-- Aliases & Legacy (Mantiene IDs 1..3 para compatibilidad exacta de pruebas pytest)
+('Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$CQz.HbqGbmi9Ig86hxqJnOkCnaK.qHNXHZ2m5krKJz.76GOhGyB3a', 'Administrador', 'CC9001', 'admin_legacy@bookingsoft.com'),
+('Carlos Pérez',  'carlos_recep',  '$2b$12$8ulgZ03SkNwotBm4IoX/nu2EYaMyDUg679728HfCTnc2Zvorfc7sK',  'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com'),
+('Marta Ama',     'marta_limpieza','$2b$12$FSoEgYYSQDH2w68Gn9V4v.s5WYeg/EgWRONqCIoVKnoRyYOWdyBuu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com'),
+
 -- 1. Administrador General
 ('Grupo BookingSoft', 'grupobookingsoft', '$2b$12$jdVaMF4YzAs95iYzlyfCEOjqTC9/QCDk93FIDeZ530KcaHCHCS5Ly', 'Administrador', 'CC1001', 'admin@bookingsoft.com'),
 -- 2. Tres Recepcionistas para cobertura 24h (3 Turnos Rotativos)
@@ -177,12 +182,10 @@ INSERT INTO empleado (nombre, usuario, contrasena, rol, numero_documento, correo
 ('Esperanza Benítez Torres', 'esperanza_amallaves', '$2b$12$P33oVQL8KLcfu4xdCrWIB.ZL00XmyiQU3SIxiRLtBp2HYeDVuVYrS', 'Ama de llaves', 'CC1005', 'esperanza.amallaves@bookingsoft.com'),
 -- 4. Personal de Mantenimiento (Daños & Servicios)
 ('Jhon Jairo Morales', 'jhon_mantenimiento', '$2b$12$x9ZyRJlQkxLfIBQBKb0ONObBTDICr6jZbsDz3.lCdcfr33G1iZH0W', 'Personal de mantenimiento', 'CC1006', 'jhon.mantenimiento@bookingsoft.com'),
--- Aliases & Legacy (Compatibilidad Pruebas Automatizadas)
-('Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$CQz.HbqGbmi9Ig86hxqJnOkCnaK.qHNXHZ2m5krKJz.76GOhGyB3a', 'Administrador', 'CC9001', 'admin_legacy@bookingsoft.com'),
+
+-- Aliases adicionales
 ('Administrador Grupo BookingSoft', 'admin', '$2b$12$qlCsVZj/lguY.zaVxpCSjeVd/vat0fBN2AHM6il8zTeTfA.xmNjOy', 'Administrador', 'CC1007', 'admin_alias@bookingsoft.com'),
-('Carlos Pérez',  'carlos_recep',  '$2b$12$8ulgZ03SkNwotBm4IoX/nu2EYaMyDUg679728HfCTnc2Zvorfc7sK',  'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com'),
 ('Recepción Facile', 'recepcion', '$2b$12$sCL0U0dssQ7GIlHd..v2mOKkMP1wBEN2j1qjE0ODB5QRP9OHnHDgy', 'Recepcionista 24h', 'CC1008', 'recepcion_alias@bookingsoft.com'),
-('Marta Ama',     'marta_limpieza','$2b$12$FSoEgYYSQDH2w68Gn9V4v.s5WYeg/EgWRONqCIoVKnoRyYOWdyBuu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com'),
 ('Ama de Llaves', 'amallaves', '$2b$12$Jzg3brQDY1oAfo5QOSaMgOCMDfCd.j96yBuTC5wzgCoNZMjMm4m0S', 'Ama de llaves', 'CC1009', 'amas_alias@bookingsoft.com'),
 ('Personal Mantenimiento', 'mantenimiento', '$2b$12$Ilq4BqTxLbpaSr0R592DXe04iYNLPtLCP9T83BVgztKOe1fGw8cCy', 'Personal de mantenimiento', 'CC1010', 'mantenimiento_alias@bookingsoft.com')
 ON CONFLICT (usuario) DO UPDATE SET contrasena = EXCLUDED.contrasena, nombre = EXCLUDED.nombre;
