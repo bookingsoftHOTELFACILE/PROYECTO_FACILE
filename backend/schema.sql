@@ -167,14 +167,14 @@ $$ LANGUAGE plpgsql;
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
 INSERT INTO empleado (nombre, usuario, contrasena, rol, numero_documento, correo) VALUES
-('Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador', 'CC9001', 'admin_legacy@bookingsoft.com'),
-('Administrador Grupo BookingSoft', 'admin', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Administrador', 'CC1001', 'admin@bookingsoft.com'),
-('Carlos Pérez',  'carlos_recep',  '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W',  'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com'),
-('Recepción Facile', 'recepcion', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com'),
-('Marta Ama',     'marta_limpieza','$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com'),
-('Ama de Llaves', 'amallaves', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Ama de llaves', 'CC1003', 'amas@bookingsoft.com'),
-('Personal Mantenimiento', 'mantenimiento', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com')
-ON CONFLICT (usuario) DO NOTHING;
+('Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$CQz.HbqGbmi9Ig86hxqJnOkCnaK.qHNXHZ2m5krKJz.76GOhGyB3a', 'Administrador', 'CC9001', 'admin_legacy@bookingsoft.com'),
+('Administrador Grupo BookingSoft', 'admin', '$2b$12$qlCsVZj/lguY.zaVxpCSjeVd/vat0fBN2AHM6il8zTeTfA.xmNjOy', 'Administrador', 'CC1001', 'admin@bookingsoft.com'),
+('Carlos Pérez',  'carlos_recep',  '$2b$12$8ulgZ03SkNwotBm4IoX/nu2EYaMyDUg679728HfCTnc2Zvorfc7sK',  'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com'),
+('Recepción Facile', 'recepcion', '$2b$12$sCL0U0dssQ7GIlHd..v2mOKkMP1wBEN2j1qjE0ODB5QRP9OHnHDgy', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com'),
+('Marta Ama',     'marta_limpieza','$2b$12$FSoEgYYSQDH2w68Gn9V4v.s5WYeg/EgWRONqCIoVKnoRyYOWdyBuu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com'),
+('Ama de Llaves', 'amallaves', '$2b$12$Jzg3brQDY1oAfo5QOSaMgOCMDfCd.j96yBuTC5wzgCoNZMjMm4m0S', 'Ama de llaves', 'CC1003', 'amas@bookingsoft.com'),
+('Personal Mantenimiento', 'mantenimiento', '$2b$12$Ilq4BqTxLbpaSr0R592DXe04iYNLPtLCP9T83BVgztKOe1fGw8cCy', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com')
+ON CONFLICT (usuario) DO UPDATE SET contrasena = EXCLUDED.contrasena;
 
 -- Sembrado de 38 Alojamientos Reales Facile (14 Dúplex, 11 Dobles, 2 Familiares, 11 Habitaciones) + 2 Legacy para Tests
 INSERT INTO habitacion (numero, tipo, capacidad, precio_noche, estado) VALUES

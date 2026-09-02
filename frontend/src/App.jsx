@@ -4090,26 +4090,6 @@ function App() {
                 <LogIn size={16}/> {loading ? 'Validando...' : 'Entrar al Sistema'}
               </button>
             </form>
-
-            <div style={{ marginTop: '1.2rem', paddingTop: '0.8rem', borderTop: '1px solid #e2e8f0' }}>
-              <p style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '0.4rem', fontWeight: 700 }}>
-                ⚡ Acceso rápido por Rol Operativo (Pruebas & Sustentación Académica):
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.45rem 0.65rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} onClick={() => setLoginForm({ usuario: 'admin', contrasena: 'adminpassword123' })}>
-                  👑 <strong>Grupo BookingSoft</strong> (Administrador) — <code>admin / adminpassword123</code>
-                </button>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.45rem 0.65rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} onClick={() => setLoginForm({ usuario: 'recepcion', contrasena: 'recepcion123' })}>
-                  🛎️ <strong>Recepcionista 24h</strong> — <code>recepcion / recepcion123</code>
-                </button>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.45rem 0.65rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} onClick={() => setLoginForm({ usuario: 'amallaves', contrasena: 'amallaves123' })}>
-                  🧹 <strong>Ama de Llaves</strong> (Aseo) — <code>amallaves / amallaves123</code>
-                </button>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.45rem 0.65rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} onClick={() => setLoginForm({ usuario: 'mantenimiento', contrasena: 'mantenimiento123' })}>
-                  🔧 <strong>Personal de Mantenimiento</strong> (Daños) — <code>mantenimiento / mantenimiento123</code>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
