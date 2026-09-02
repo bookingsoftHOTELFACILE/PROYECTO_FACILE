@@ -193,6 +193,7 @@ const HuespedesPicker = ({ maxCapacidad = 4 }) => {
   const [bebes, setBebes] = useState(0);
   const [mascotas, setMascotas] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [showServiceAnimalModal, setShowServiceAnimalModal] = useState(false);
 
   const totalHuespedes = adultos + ninos;
 
@@ -337,6 +338,28 @@ const HuespedesPicker = ({ maxCapacidad = 4 }) => {
             </div>
           </div>
 
+          <div style={{ padding: '0.6rem 0 0.4rem', borderTop: '1px solid #f1f5f9', marginTop: '0.4rem' }}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowServiceAnimalModal(true);
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                color: '#0f172a',
+                textDecoration: 'underline',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '0.78rem'
+              }}
+            >
+              ¿Traes a un animal de servicio?
+            </button>
+          </div>
+
           <div className="huespedes-notice">
             Este alojamiento tiene una capacidad máxima de {maxCapacidad} huéspedes, sin incluir bebés. Si vienes con más de 2 mascotas, avísale al anfitrión.
           </div>
@@ -352,7 +375,311 @@ const HuespedesPicker = ({ maxCapacidad = 4 }) => {
           </div>
         </div>
       )}
+
+      {/* MODAL DE POLÍTICA DE ANIMALES DE SERVICIO */}
+      <ServiceAnimalModal
+        isOpen={showServiceAnimalModal}
+        onClose={() => setShowServiceAnimalModal(false)}
+      />
     </div>
+  );
+};
+
+// COMPONENTE MODAL DE POLÍTICA DE ANIMALES DE SERVICIO (ACCESIBILIDAD UNIVERSAL FACILE)
+const ServiceAnimalModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.7)',
+        backdropFilter: 'blur(6px)',
+        zIndex: 999999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem'
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: '24px',
+          maxWidth: '520px',
+          width: '100%',
+          overflow: 'hidden',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          position: 'relative',
+          animation: 'fadeIn 0.2s ease-out'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* BOTÓN CERRAR SUPERIOR */}
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '14px',
+            right: '14px',
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            background: 'rgba(15, 23, 42, 0.65)',
+            color: '#ffffff',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            zIndex: 10,
+            backdropFilter: 'blur(4px)'
+          }}
+          title="Cerrar política"
+        >
+          ✕
+        </button>
+
+        {/* ILUSTRACIÓN DE ANIMALES DE SERVICIO */}
+        <div style={{ width: '100%', height: '240px', overflow: 'hidden', background: '#f8fafc', position: 'relative' }}>
+          <img
+            src="/images/service_animal.png"
+            alt="Ilustración Animales de Servicio Apartamentos Facile"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
+
+        {/* CONTENIDO TEXTUAL CON LA POLÍTICA INSTITUCIONAL DE FACILE */}
+        <div style={{ padding: '1.4rem 1.6rem 1.6rem' }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.05em', color: '#e11d48', textTransform: 'uppercase', background: '#ffe4e6', padding: '0.25rem 0.65rem', borderRadius: '12px' }}>
+            Accesibilidad Inclusiva BookingSoft
+          </span>
+
+          <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0.8rem 0 0.6rem', lineHeight: 1.25 }}>
+            Animales de servicio
+          </h3>
+
+          <p style={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.5, margin: '0 0 1rem' }}>
+            Los animales de servicio no se consideran mascotas, así que <strong>no hace falta que los agregues aquí ni pagues suplementos adicionales.</strong>
+          </p>
+
+          <div style={{ background: '#f8fafc', borderLeft: '4px solid #e11d48', padding: '0.85rem 1rem', borderRadius: '10px', marginBottom: '1.2rem' }}>
+            <p style={{ margin: 0, fontSize: '0.84rem', color: '#475569', lineHeight: 1.45 }}>
+              🐕 <strong>Perros Guía & Asistencia:</strong> Tienen acceso garantizado a todas las instalaciones y suites de Apartamentos Facile Bogotá.
+              <br/><br/>
+              ❤️ <strong>Apoyo Emocional:</strong> ¿Viajas con un animal de apoyo emocional? Revisa nuestra política de accesibilidad o infórmanos en recepción antes de tu llegada.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              width: '100%',
+              padding: '0.85rem',
+              background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '12px',
+              fontWeight: 700,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(225, 29, 72, 0.3)'
+            }}
+          >
+            Entendido
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// COMPONENTE DE RESERVA PARA EL MODAL DE FIGMA CON CALENDARIO VISUAL DE OCUPACIÓN (ROJO/VERDE)
+const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  const [fechaEntrada, setFechaEntrada] = useState(todayStr);
+  const [fechaSalida, setFechaSalida] = useState(tomorrowStr);
+  const [calDate, setCalDate] = useState(new Date());
+
+  // Filtrar reservas activas para esta categoría de apartamento
+  const catReservas = reservas.filter(r => 
+    (r.tipo_habitacion === selectedApto.tipo || String(r.id_habitacion).startsWith(selectedApto.tipo)) &&
+    (r.estado === 'Confirmada' || r.estado === 'Check-In' || r.estado === 'Ocupada')
+  );
+
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let startDay = firstDay.getDay() - 1;
+  if (startDay === -1) startDay = 6;
+
+  const daysGrid = [];
+  for (let i = 0; i < startDay; i++) daysGrid.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const isOccupied = catReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
+    const isSelectedIn = fechaEntrada === dayStr;
+    const isSelectedOut = fechaSalida === dayStr;
+    const inRange = fechaEntrada && fechaSalida && dayStr >= fechaEntrada && dayStr <= fechaSalida;
+    daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
+  }
+
+  const handleDayClick = (item) => {
+    if (!item || item.isOccupied) return;
+    if (!fechaEntrada || (fechaEntrada && fechaSalida)) {
+      setFechaEntrada(item.dayStr);
+      setFechaSalida('');
+    } else if (fechaEntrada && !fechaSalida) {
+      if (item.dayStr <= fechaEntrada) {
+        setFechaEntrada(item.dayStr);
+        setFechaSalida('');
+      } else {
+        const hasBlock = catReservas.some(r => r.fecha_entrada <= item.dayStr && r.fecha_salida >= fechaEntrada);
+        if (hasBlock) {
+          alert('El rango seleccionado incluye fechas ocupadas en rojo.');
+          return;
+        }
+        setFechaSalida(item.dayStr);
+      }
+    }
+  };
+
+  return (
+    <>
+      <div className="figma-dates-box">
+        <div className="figma-dates-row">
+          <div className="figma-date-field">
+            <label className="figma-date-label">LLEGADA</label>
+            <input
+              type="date"
+              className="figma-date-input"
+              value={fechaEntrada}
+              onChange={e => setFechaEntrada(e.target.value)}
+            />
+          </div>
+          <div className="figma-date-field">
+            <label className="figma-date-label">SALIDA</label>
+            <input
+              type="date"
+              className="figma-date-input"
+              value={fechaSalida}
+              onChange={e => setFechaSalida(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="figma-date-field">
+          <label className="figma-date-label">HUÉSPEDES</label>
+          <HuespedesPicker maxCapacidad={selectedApto?.tipo === 'Familiares' ? 6 : selectedApto?.tipo === 'Dobles' ? 4 : 3} />
+        </div>
+      </div>
+
+      {/* CALENDARIO DE OCUPACIÓN Y DISPONIBILIDAD ESTILO RECEPCIÓN */}
+      <div style={{ marginTop: '0.8rem', background: '#f8fafc', padding: '0.85rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <button
+            type="button"
+            style={{ padding: '0.2rem 0.55rem', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+            onClick={() => setCalDate(new Date(year, month - 1, 1))}
+          >
+            ◀ Mes Ant.
+          </button>
+          <strong style={{ color: '#0f172a', fontSize: '0.84rem' }}>
+            🗓️ Disponibilidad: {monthNames[month]} {year}
+          </strong>
+          <button
+            type="button"
+            style={{ padding: '0.2rem 0.55rem', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+            onClick={() => setCalDate(new Date(year, month + 1, 1))}
+          >
+            Mes Sig. ▶
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.7rem', marginBottom: '0.5rem', fontSize: '0.72rem', justifyContent: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#991b1b', fontWeight: 700 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }}/> Ocupado
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#166534', fontWeight: 700 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/> Disponible
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#1d4ed8', fontWeight: 700 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#2563eb', display: 'inline-block' }}/> Tu Selección
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+          <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+          {daysGrid.map((item, idx) => {
+            if (!item) return <div key={`empty-${idx}`}/>;
+            let bg = '#dcfce7';
+            let color = '#166534';
+            let borderColor = '#86efac';
+
+            if (item.isOccupied) {
+              bg = '#fee2e2';
+              color = '#991b1b';
+              borderColor = '#fca5a5';
+            } else if (item.isSelectedIn || item.isSelectedOut) {
+              bg = '#2563eb';
+              color = '#ffffff';
+              borderColor = '#1d4ed8';
+            } else if (item.inRange) {
+              bg = '#dbeafe';
+              color = '#1e40af';
+              borderColor = '#93c5fd';
+            }
+
+            return (
+              <button
+                key={item.dayStr}
+                type="button"
+                onClick={() => handleDayClick(item)}
+                disabled={item.isOccupied}
+                title={item.isOccupied ? `Día ${item.d} Ocupado` : `Seleccionar fecha ${item.dayStr}`}
+                style={{
+                  background: bg,
+                  color: color,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '5px',
+                  padding: '0.3rem 0.1rem',
+                  fontSize: '0.76rem',
+                  cursor: item.isOccupied ? 'not-allowed' : 'pointer',
+                  fontWeight: 700,
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {item.d}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <button
+        className="btn-figma-reserve"
+        onClick={() => onReservar(fechaEntrada, fechaSalida)}
+        style={{ marginTop: '1.2rem' }}
+      >
+        Reservar este apartamento
+      </button>
+    </>
   );
 };
 
@@ -1765,8 +2092,12 @@ function App() {
         const alojamientosData = [
           {
             tipo: 'Dúplex',
+            nombreModal: 'Apartamento Dúplex',
+            numHabitaciones: '1 Habitación',
+            numBanos: '1.5 Baños',
+            formato: 'Dúplex en 2 Niveles',
             unidades: '14 unidades',
-            desc: '1 habitación, 1.5 baños, cocina totalmente equipada, sala, sofá cama, comedor, cuarto de lavado, lavadora-secadora, 2 televisores, Wi-Fi y balcón. Cama King o 2 camas sencillas.',
+            desc: 'Cuenta con 1 habitación privada, 1.5 baños, cocina totalmente equipada, sala social con sofá cama, comedor, cuarto de lavado con lavadora-secadora, 2 televisores HD, Wi-Fi de alta velocidad y balcón con vista.',
             personas: 'Hasta 3 personas',
             ambientes: '1 Hab. + 1.5 Baños',
             precio: '$250.000',
@@ -1780,8 +2111,12 @@ function App() {
           },
           {
             tipo: 'Dobles',
+            nombreModal: 'Apartamento Doble',
+            numHabitaciones: '2 Habitaciones',
+            numBanos: '2 Baños',
+            formato: 'Suite Doble',
             unidades: '11 unidades',
-            desc: '2 habitaciones, 2 baños, capacidad 4 personas. Habitación principal con cama King y vestier, habitación auxiliar con 2 camas sencillas o doble, sala, comedor, sofá cama, cocina equipada y 3 televisores.',
+            desc: 'Cuenta con 2 habitaciones (habitación principal con cama King y vestier, habitación auxiliar con 2 camas sencillas o doble), 2 baños completos, sala social, comedor, sofá cama, cocina equipada y 3 televisores HD.',
             personas: 'Hasta 4 personas',
             ambientes: '2 Hab. + 2 Baños',
             precio: '$350.000',
@@ -1795,8 +2130,12 @@ function App() {
           },
           {
             tipo: 'Familiares',
+            nombreModal: 'Apartamento Familiar',
+            numHabitaciones: '3 Habitaciones',
+            numBanos: '2 Baños',
+            formato: 'Suite Familiar',
             unidades: '2 unidades',
-            desc: '3 habitaciones, 2 baños, capacidad 6 personas. Habitación principal con cama King y vestier, 2 habitaciones auxiliares con cama nido, comedor de 6 puestos, sofá cama, cocina y 4 televisores.',
+            desc: 'Cuenta con 3 habitaciones (habitación principal King con vestier, 2 habitaciones auxiliares con cama nido), 2 baños completos, comedor de 6 puestos, sofá cama, cocina abierta y 4 televisores HD.',
             personas: 'Hasta 6 personas',
             ambientes: '3 Hab. + 2 Baños',
             precio: '$450.000',
@@ -1810,8 +2149,12 @@ function App() {
           },
           {
             tipo: 'Habitaciones',
+            nombreModal: 'Habitación Executive',
+            numHabitaciones: '1 Habitación',
+            numBanos: '1 Baño privado',
+            formato: 'Habitación Executive',
             unidades: '11 unidades',
-            desc: 'Habitación individual con baño privado, capacidad 2 personas, Wi-Fi y TV. Ideal para ejecutivos y viajeros de negocios en estadías cortas.',
+            desc: 'Cuenta con habitación confort individual, baño privado en suite, escritorio de trabajo, televisión HD y Wi-Fi de alta velocidad. Ideal para ejecutivos y viajes de negocios.',
             personas: 'Hasta 2 personas',
             ambientes: 'Baño privado',
             precio: 'Consultar',
@@ -1961,7 +2304,7 @@ function App() {
                       <span>&gt;</span>
                       <span className="link" onClick={() => { setSelectedAptoFigma(null); setActiveTab('apartamentos'); }}>Apartamentos</span>
                       <span>&gt;</span>
-                      <span className="active">Apartamento {selectedAptoFigma.tipo} — {selectedAptoFigma.ambientes}</span>
+                      <span className="active">{selectedAptoFigma.nombreModal || `Apartamento ${selectedAptoFigma.tipo}`}</span>
                     </div>
 
                     <div className="figma-detail-grid">
@@ -2003,9 +2346,9 @@ function App() {
 
                       <div className="figma-right-card">
                         <span className="figma-badge-pill">APARTAMENTO</span>
-                        <h2 className="figma-title">{selectedAptoFigma.tipo} — {selectedAptoFigma.ambientes}</h2>
+                        <h2 className="figma-title">{selectedAptoFigma.nombreModal || selectedAptoFigma.tipo}</h2>
                         <p className="figma-subtitle">
-                          Apartamento amoblado de lujo en El Chicó, Bogotá. Ideal para estadías individuales o en pareja.
+                          {selectedAptoFigma.desc}
                         </p>
 
                         <div className="figma-price-box">
@@ -2028,51 +2371,33 @@ function App() {
                             <div className="figma-spec-icon">🛏️</div>
                             <div className="figma-spec-text">
                               <span className="figma-spec-label">HABITACIONES</span>
-                              <span className="figma-spec-value">{selectedAptoFigma.ambientes}</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.numHabitaciones || selectedAptoFigma.ambientes}</span>
+                            </div>
+                          </div>
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">🚿</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">BAÑOS</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.numBanos || 'Privado en suite'}</span>
                             </div>
                           </div>
                           <div className="figma-spec-card">
                             <div className="figma-spec-icon">🛋️</div>
                             <div className="figma-spec-text">
                               <span className="figma-spec-label">FORMATO</span>
-                              <span className="figma-spec-value">{selectedAptoFigma.tipo}</span>
-                            </div>
-                          </div>
-                          <div className="figma-spec-card">
-                            <div className="figma-spec-icon">🚿</div>
-                            <div className="figma-spec-text">
-                              <span className="figma-spec-label">BAÑOS & SERVICIOS</span>
-                              <span className="figma-spec-value">Privados en suite</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.formato || selectedAptoFigma.tipo}</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="figma-dates-box">
-                          <div className="figma-dates-row">
-                            <div className="figma-date-field">
-                              <label className="figma-date-label">LLEGADA</label>
-                              <input type="date" className="figma-date-input" defaultValue={new Date().toISOString().split('T')[0]} />
-                            </div>
-                            <div className="figma-date-field">
-                              <label className="figma-date-label">SALIDA</label>
-                              <input type="date" className="figma-date-input" defaultValue={new Date(Date.now() + 86400000).toISOString().split('T')[0]} />
-                            </div>
-                          </div>
-                          <div className="figma-date-field">
-                            <label className="figma-date-label">HUÉSPEDES</label>
-                            <HuespedesPicker maxCapacidad={selectedAptoFigma?.tipo === 'Familiares' ? 6 : selectedAptoFigma?.tipo === 'Dobles' ? 4 : 3} />
-                          </div>
-                        </div>
-
-                        <button
-                          className="btn-figma-reserve"
-                          onClick={() => {
+                        <FigmaBookingBox
+                          selectedApto={selectedAptoFigma}
+                          reservas={reservas}
+                          onReservar={(inDate, outDate) => {
                             setSelectedAptoFigma(null);
                             handleReservarTipo(selectedAptoFigma.tipo);
                           }}
-                        >
-                          Reservar este apartamento
-                        </button>
+                        />
 
                         <a
                           href="https://wa.me/573153512085?text=Hola,%20quisiera%20consultar%20disponibilidad%20para%20el%20Apartamento%20Facile"
@@ -2927,8 +3252,8 @@ function App() {
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#166534', fontWeight: 700 }}>
                           <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#22c55e', display: 'inline-block' }}/> 🟢 Fechas Libres
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#854d0e', fontWeight: 700 }}>
-                          <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#eab308', display: 'inline-block' }}/> 🟡 Tu Selección
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#1d4ed8', fontWeight: 700 }}>
+                          <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }}/> 🔵 Tu Selección
                         </span>
                       </div>
 
@@ -2948,13 +3273,13 @@ function App() {
                             color = '#991b1b';
                             borderColor = '#fca5a5';
                           } else if (item.isSelectedIn || item.isSelectedOut) {
-                            bg = '#e11d48';
+                            bg = '#2563eb';
                             color = '#ffffff';
-                            borderColor = '#be123c';
+                            borderColor = '#1d4ed8';
                           } else if (item.inRange) {
-                            bg = '#fef08a';
-                            color = '#854d0e';
-                            borderColor = '#fde047';
+                            bg = '#dbeafe';
+                            color = '#1e40af';
+                            borderColor = '#93c5fd';
                           }
 
                           return (
@@ -3754,8 +4079,8 @@ function App() {
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#166534', fontWeight: 700 }}>
                         <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#22c55e', display: 'inline-block' }}/> 🟢 Fechas Libres
                       </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#854d0e', fontWeight: 700 }}>
-                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#eab308', display: 'inline-block' }}/> 🟡 Tu Selección
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#1d4ed8', fontWeight: 700 }}>
+                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }}/> 🔵 Tu Selección
                       </span>
                     </div>
 
@@ -3775,13 +4100,13 @@ function App() {
                           color = '#991b1b';
                           borderColor = '#fca5a5';
                         } else if (item.isSelectedIn || item.isSelectedOut) {
-                          bg = '#e11d48';
+                          bg = '#2563eb';
                           color = '#ffffff';
-                          borderColor = '#be123c';
+                          borderColor = '#1d4ed8';
                         } else if (item.inRange) {
-                          bg = '#fef08a';
-                          color = '#854d0e';
-                          borderColor = '#fde047';
+                          bg = '#dbeafe';
+                          color = '#1e40af';
+                          borderColor = '#93c5fd';
                         }
 
                         return (
