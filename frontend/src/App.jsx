@@ -310,8 +310,9 @@ const HuespedesPicker = ({ maxCapacidad = 4 }) => {
                   className="link-service"
                   onClick={(e) => {
                     e.stopPropagation();
-                    alert('Para animales de servicio aplica exención de restricciones. Por favor notificar al momento de reservar.');
+                    setShowServiceAnimalModal(true);
                   }}
+                  style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 600, color: '#0f172a' }}
                 >
                   ¿Traes a un animal de servicio?
                 </span>
@@ -336,28 +337,6 @@ const HuespedesPicker = ({ maxCapacidad = 4 }) => {
                 +
               </button>
             </div>
-          </div>
-
-          <div style={{ padding: '0.6rem 0 0.4rem', borderTop: '1px solid #f1f5f9', marginTop: '0.4rem' }}>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowServiceAnimalModal(true);
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                color: '#0f172a',
-                textDecoration: 'underline',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontSize: '0.78rem'
-              }}
-            >
-              ¿Traes a un animal de servicio?
-            </button>
           </div>
 
           <div className="huespedes-notice">
