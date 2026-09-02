@@ -856,6 +856,7 @@ function App() {
   const [galleryFilter, setGalleryFilter] = useState('todas'); // 'todas' | 'zonas' | 'apartamentos' | 'oficinas'
   const [lightboxIdx, setLightboxIdx] = useState(null); // visor de imágenes de la galería
   const [aptoLightboxPhoto, setAptoLightboxPhoto] = useState(null); // { photos: [...], index: n } o photo object
+  const [lightboxZoom, setLightboxZoom] = useState(false); // Estado de zoom 1.65x interactivo para imágenes en Lightbox
   const [aptoActivePhoto, setAptoActivePhoto] = useState({}); // { [aptoTipo]: activeIndex }
   const [selectedAptoFigma, setSelectedAptoFigma] = useState(null); // apartamento seleccionado para la vista de detalle Figma
 
@@ -2587,6 +2588,7 @@ function App() {
             })()}
 
             {/* LIGHTBOX MODAL NAVEGABLE A PANTALLA COMPLETA CON BOTONES IZQUIERDA / DERECHA */}
+            {/* VISOR LIGHTBOX EN ALTA RESOLUCIÓN CON ZOOM INTERACTIVO Y NAVEGACIÓN */}
             {aptoLightboxPhoto && (() => {
               const photosList = aptoLightboxPhoto.photos || [aptoLightboxPhoto];
               const currentIndex = aptoLightboxPhoto.index || 0;
@@ -2594,14 +2596,21 @@ function App() {
 
               const goPrev = (e) => {
                 if (e) e.stopPropagation();
+                setLightboxZoom(false);
                 const newIdx = (currentIndex - 1 + photosList.length) % photosList.length;
                 setAptoLightboxPhoto({ photos: photosList, index: newIdx });
               };
 
               const goNext = (e) => {
                 if (e) e.stopPropagation();
+                setLightboxZoom(false);
                 const newIdx = (currentIndex + 1) % photosList.length;
                 setAptoLightboxPhoto({ photos: photosList, index: newIdx });
+              };
+
+              const toggleZoom = (e) => {
+                if (e) e.stopPropagation();
+                setLightboxZoom(prev => !prev);
               };
 
               return (
@@ -2621,12 +2630,18 @@ function App() {
                     justifyContent: 'center',
                     padding: '1.5rem'
                   }}
-                  onClick={() => setAptoLightboxPhoto(null)}
+                  onClick={() => {
+                    setLightboxZoom(false);
+                    setAptoLightboxPhoto(null);
+                  }}
                 >
                   {/* BOTÓN CERRAR (X) */}
                   <button
                     type="button"
-                    onClick={() => setAptoLightboxPhoto(null)}
+                    onClick={() => {
+                      setLightboxZoom(false);
+                      setAptoLightboxPhoto(null);
+                    }}
                     style={{
                       position: 'absolute',
                       top: '20px',
@@ -2731,7 +2746,7 @@ function App() {
                     </button>
                   )}
 
-                  {/* CONTENEDOR DE LA FOTO EN ALTA RESOLUCIÓN */}
+                  {/* CONTENEDOR DE LA FOTO EN ALTA RESOLUCIÓN CON ZOOM */}
                   <div
                     onClick={(e) => e.stopPropagation()}
                     style={{
@@ -2747,11 +2762,51 @@ function App() {
                       alignItems: 'center'
                     }}
                   >
-                    <img
-                      src={activePhoto.url}
-                      alt={activePhoto.titulo || 'Fotografía'}
-                      style={{ maxHeight: '72vh', maxWidth: '88vw', objectFit: 'contain', display: 'block' }}
-                    />
+                    <div
+                      onClick={toggleZoom}
+                      style={{
+                        position: 'relative',
+                        overflow: 'hidden',
+                        cursor: lightboxZoom ? 'zoom-out' : 'zoom-in',
+                        maxHeight: '72vh',
+                        maxWidth: '88vw',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <img
+                        src={activePhoto.url}
+                        alt={activePhoto.titulo || 'Fotografía'}
+                        style={{
+                          maxHeight: '72vh',
+                          maxWidth: '88vw',
+                          objectFit: 'contain',
+                          display: 'block',
+                          transform: lightboxZoom ? 'scale(1.65)' : 'scale(1)',
+                          transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          background: 'rgba(15, 23, 42, 0.75)',
+                          backdropFilter: 'blur(4px)',
+                          color: '#ffffff',
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: '20px',
+                          fontSize: '0.76rem',
+                          fontWeight: 700,
+                          pointerEvents: 'none',
+                          border: '1px solid rgba(255,255,255,0.2)'
+                        }}
+                      >
+                        {lightboxZoom ? '🔍 Alejar (1.65x)' : '🔍 Haz clic para acercar'}
+                      </div>
+                    </div>
+
                     <div style={{ width: '100%', background: '#0f172a', padding: '1rem 1.5rem', borderTop: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
                       <div>
                         {activePhoto.titulo && (
