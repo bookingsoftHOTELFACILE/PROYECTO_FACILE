@@ -3056,7 +3056,7 @@ function App() {
             {/* SHOWCASE HIGHLIGHT TIPO BOOKING.COM AL INICIO DE LA GALERÍA */}
             <BookingShowcase
               photos={filteredList}
-              onOpenLightbox={(idx) => setLightboxIdx(idx)}
+              onOpenLightbox={(idx) => setAptoLightboxPhoto({ photos: filteredList, index: idx })}
               title="Vistas Destacadas del Apartahotel & Centro de Negocios"
             />
 
@@ -3071,7 +3071,7 @@ function App() {
                 <button
                   key={f.id}
                   type="button"
-                  onClick={() => { setGalleryFilter(f.id); setLightboxIdx(null); }}
+                  onClick={() => setGalleryFilter(f.id)}
                   style={{
                     padding: '0.65rem 1.25rem',
                     borderRadius: '25px',
@@ -3103,12 +3103,12 @@ function App() {
               ))}
             </div>
 
-            {/* GRID DE GALERÍA FOTOGRÁFICA (PURA FOTOGRAFÍA) */}
+            {/* GRID DE GALERÍA FOTOGRÁFICA (PURA FOTOGRAFÍA CON ZOOM INTERACTIVO) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.2rem', padding: '0 1rem 2rem' }}>
               {filteredList.map((item, idx) => (
                 <div
                   key={item.id}
-                  onClick={() => setLightboxIdx(idx)}
+                  onClick={() => setAptoLightboxPhoto({ photos: filteredList, index: idx })}
                   style={{
                     background: '#0f172a',
                     borderRadius: '16px',
@@ -3159,146 +3159,12 @@ function App() {
                     }}
                   >
                     <div style={{ background: '#ffffff', color: '#e11d48', padding: '0.6rem 1.2rem', borderRadius: '25px', fontWeight: 800, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 14px rgba(0,0,0,0.2)' }}>
-                      <Maximize2 size={16}/> Ampliar Fotografía
+                      <Maximize2 size={16}/> Ampliar Fotografía (Zoom)
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* LIGHTBOX MODAL FULLSCREEN AMPLIFICADOR DE FOTOS (SOLO IMAGEN) */}
-            {currentImage && (
-              <div
-                style={{
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  width: '100vw',
-                  height: '100vh',
-                  background: 'rgba(15, 23, 42, 0.94)',
-                  backdropFilter: 'blur(10px)',
-                  zIndex: 99999,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '1.5rem'
-                }}
-                onClick={() => setLightboxIdx(null)}
-              >
-                {/* BOTÓN CERRAR */}
-                <button
-                  type="button"
-                  onClick={() => setLightboxIdx(null)}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '25px',
-                    background: 'rgba(255,255,255,0.15)',
-                    border: 'none',
-                    color: '#ffffff',
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    zIndex: 100000
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                >
-                  <X size={24}/>
-                </button>
-
-                {/* NAVEGACIÓN ANTERIOR */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightboxIdx((lightboxIdx - 1 + filteredList.length) % filteredList.length);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    left: '25px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'rgba(255,255,255,0.15)',
-                    border: 'none',
-                    color: '#ffffff',
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    zIndex: 100000
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                >
-                  <ChevronLeft size={28}/>
-                </button>
-
-                {/* NAVEGACIÓN SIGUIENTE */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightboxIdx((lightboxIdx + 1) % filteredList.length);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    right: '25px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'rgba(255,255,255,0.15)',
-                    border: 'none',
-                    color: '#ffffff',
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    zIndex: 100000
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                >
-                  <ChevronRight size={28}/>
-                </button>
-
-                {/* CONTENEDOR DE LA IMAGEN EN ALTA RESOLUCIÓN (PURA FOTOGRAFÍA) */}
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    maxWidth: '90vw',
-                    maxHeight: '86vh',
-                    position: 'relative',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    boxShadow: '0 25px 60px rgba(0,0,0,0.7)',
-                    background: '#0f172a',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <img
-                    src={currentImage.url}
-                    alt="Fotografía Facile"
-                    style={{ maxHeight: '86vh', maxWidth: '90vw', objectFit: 'contain', display: 'block' }}
-                  />
-                </div>
-              </div>
-            )}
           </section>
         );
       })()}
