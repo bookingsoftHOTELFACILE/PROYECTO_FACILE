@@ -1804,3 +1804,164 @@ body {
   background: #ecfdf5;
 }
 
+/* ==========================================================================
+   DESPLEGABLE SELECTOR DE HUÉSPEDES ESTILO AIRBNB (ADULTOS, NIÑOS, BEBÉS, MASCOTAS)
+   ========================================================================== */
+.huespedes-trigger-box {
+  position: relative;
+  width: 100%;
+}
+
+.huespedes-trigger-btn {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+  transition: border-color 0.2s ease;
+}
+
+.huespedes-trigger-btn:hover,
+.huespedes-trigger-btn.active {
+  border-color: #e11d48;
+}
+
+.huespedes-popover-card {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  width: 100%;
+  min-width: 320px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18), 0 3px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  padding: 1.2rem;
+  z-index: 999999;
+  animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.huespedes-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.huespedes-row:last-of-type {
+  border-bottom: none;
+}
+
+.huespedes-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.huespedes-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.huespedes-sublabel {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+.huespedes-sublabel span.link-service {
+  color: #0f172a;
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.huespedes-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.stepper-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  border-color: #0f172a;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+.stepper-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  min-width: 18px;
+  text-align: center;
+}
+
+.huespedes-notice {
+  margin-top: 0.8rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.45;
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
+.huespedes-popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.8rem;
+}
+
+.btn-close-huespedes {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+}
+
