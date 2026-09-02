@@ -28,7 +28,7 @@ const BookingShowcase = ({ photos, onOpenLightbox, title }) => {
               <Camera size={22} color="#e11d48" /> {title}
             </h3>
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-              Explora las instalaciones en alta resolución estilo Booking.com
+            
             </p>
           </div>
           <button
@@ -247,6 +247,7 @@ function App() {
   const [lightboxIdx, setLightboxIdx] = useState(null); // visor de imágenes de la galería
   const [aptoLightboxPhoto, setAptoLightboxPhoto] = useState(null); // { photos: [...], index: n } o photo object
   const [aptoActivePhoto, setAptoActivePhoto] = useState({}); // { [aptoTipo]: activeIndex }
+  const [selectedAptoFigma, setSelectedAptoFigma] = useState(null); // apartamento seleccionado para la vista de detalle Figma
 
   // NAVEGACIÓN TECLADO PARA LIGHTBOX (FLECHA IZQUIERDA, FLECHA DERECHA, ESCAPE)
   useEffect(() => {
@@ -1677,8 +1678,8 @@ function App() {
                     {/* IMAGEN DE BANNER PRINCIPAL DE LA TARJETA */}
                     <div
                       style={{ position: 'relative', width: '100%', height: '195px', overflow: 'hidden', background: '#0f172a', cursor: 'pointer' }}
-                      onClick={() => setAptoLightboxPhoto({ photos: apto.fotos, index: activePhotoIndex })}
-                      title="Haz clic para ver la fotografía en pantalla completa"
+                      onClick={() => setSelectedAptoFigma(apto)}
+                      title="Haz clic para ver el detalle en el diseño de Figma"
                     >
                       <img
                         src={currentPhoto.url}
@@ -1688,9 +1689,9 @@ function App() {
                         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                       />
 
-                      {/* INSIGNIA VER MÁS */}
-                      <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.3rem 0.7rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Maximize2 size={13}/> Ampliar Foto
+                      {/* INSIGNIA VER DETALLE FIGMA */}
+                      <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Maximize2 size={13}/> Ver Detalle Figma
                       </div>
                     </div>
 
@@ -1731,15 +1732,198 @@ function App() {
                         <div className="price-text">
                           {apto.precio} <span>{apto.precioSub}</span>
                         </div>
-                        <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
-                          Reservar
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <button
+                            className="btn-book-red"
+                            style={{ background: '#0f172a', color: '#fff', padding: '0.45rem 0.75rem', fontSize: '0.78rem' }}
+                            onClick={() => setSelectedAptoFigma(apto)}
+                            title="Ver vista interactiva de Figma"
+                          >
+                            Detalle
+                          </button>
+                          <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
+                            Reservar
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+
+            {/* MODAL DETALLE DE APARTAMENTO IDENTICO AL MOCKUP DE FIGMA */}
+            {selectedAptoFigma && (() => {
+              const activeFigmaIdx = aptoActivePhoto[selectedAptoFigma.tipo] || 0;
+              const mainPhoto = selectedAptoFigma.fotos[activeFigmaIdx] || selectedAptoFigma.fotos[0];
+
+              return (
+                <div className="figma-modal-backdrop" onClick={() => setSelectedAptoFigma(null)}>
+                  <div className="figma-modal-card" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAptoFigma(null)}
+                      style={{
+                        position: 'absolute',
+                        top: '16px',
+                        right: '20px',
+                        background: '#f1f5f9',
+                        border: 'none',
+                        color: '#334155',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        zIndex: 10,
+                        fontWeight: 'bold',
+                        fontSize: '1.2rem',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      ✕
+                    </button>
+
+                    <div className="figma-breadcrumb">
+                      <span className="link" onClick={() => { setSelectedAptoFigma(null); setActiveTab('inicio'); }}>Inicio</span>
+                      <span>&gt;</span>
+                      <span className="link" onClick={() => { setSelectedAptoFigma(null); setActiveTab('apartamentos'); }}>Apartamentos</span>
+                      <span>&gt;</span>
+                      <span className="active">Apartamento {selectedAptoFigma.tipo} — {selectedAptoFigma.ambientes}</span>
+                    </div>
+
+                    <div className="figma-detail-grid">
+                      <div>
+                        <div
+                          className="figma-main-img-wrap"
+                          onClick={() => {
+                            setAptoLightboxPhoto({ photos: selectedAptoFigma.fotos, index: activeFigmaIdx });
+                          }}
+                          title="Haz clic para ampliar en pantalla completa"
+                        >
+                          <img src={mainPhoto.url} alt={mainPhoto.titulo} />
+                          <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15,23,42,0.85)', color: '#fff', padding: '0.35rem 0.85rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, backdropFilter: 'blur(4px)' }}>
+                            🔍 Ampliar Fotografía Real
+                          </div>
+                        </div>
+
+                        <div className="figma-thumbs-row">
+                          {selectedAptoFigma.fotos.slice(0, 4).map((f, i) => (
+                            <div
+                              key={i}
+                              className={`figma-thumb-item ${activeFigmaIdx === i ? 'active' : ''}`}
+                              onClick={() => setAptoActivePhoto(prev => ({ ...prev, [selectedAptoFigma.tipo]: i }))}
+                            >
+                              <img src={f.url} alt={f.titulo} />
+                            </div>
+                          ))}
+                          <div
+                            className="figma-thumb-item"
+                            onClick={() => setAptoLightboxPhoto({ photos: selectedAptoFigma.fotos, index: 0 })}
+                          >
+                            <img src={selectedAptoFigma.fotos[0]?.url} alt="Más fotos" />
+                            <div className="figma-thumb-more">
+                              +{selectedAptoFigma.fotos.length} fotos
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="figma-right-card">
+                        <span className="figma-badge-pill">APARTAMENTO</span>
+                        <h2 className="figma-title">{selectedAptoFigma.tipo} — {selectedAptoFigma.ambientes}</h2>
+                        <p className="figma-subtitle">
+                          Apartamento amoblado de lujo en El Chicó, Bogotá. Ideal para estadías individuales o en pareja.
+                        </p>
+
+                        <div className="figma-price-box">
+                          <div className="figma-price-label">TARIFA POR NOCHE</div>
+                          <div className="figma-price-amount">
+                            {selectedAptoFigma.precio} <span className="figma-price-unit">{selectedAptoFigma.precioSub}</span>
+                          </div>
+                          <div className="figma-price-tax">Impuestos aplican según perfil del huésped</div>
+                        </div>
+
+                        <div className="figma-specs-grid">
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">👥</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">CAPACIDAD</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.personas}</span>
+                            </div>
+                          </div>
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">🛏️</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">HABITACIONES</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.ambientes}</span>
+                            </div>
+                          </div>
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">🛋️</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">FORMATO</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.tipo}</span>
+                            </div>
+                          </div>
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">🚿</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">BAÑOS & SERVICIOS</span>
+                              <span className="figma-spec-value">Privados en suite</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="figma-dates-box">
+                          <div className="figma-dates-row">
+                            <div className="figma-date-field">
+                              <label className="figma-date-label">LLEGADA</label>
+                              <input type="date" className="figma-date-input" defaultValue={new Date().toISOString().split('T')[0]} />
+                            </div>
+                            <div className="figma-date-field">
+                              <label className="figma-date-label">SALIDA</label>
+                              <input type="date" className="figma-date-input" defaultValue={new Date(Date.now() + 86400000).toISOString().split('T')[0]} />
+                            </div>
+                          </div>
+                          <div className="figma-date-field">
+                            <label className="figma-date-label">HUÉSPEDES</label>
+                            <select className="figma-date-input">
+                              <option value="2">2 adultos</option>
+                              <option value="1">1 adulto</option>
+                              <option value="3">3 adultos</option>
+                              <option value="4">4 adultos</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <button
+                          className="btn-figma-reserve"
+                          onClick={() => {
+                            setSelectedAptoFigma(null);
+                            handleReservarTipo(selectedAptoFigma.tipo);
+                          }}
+                        >
+                          Reservar este apartamento
+                        </button>
+
+                        <a
+                          href="https://wa.me/573153512085?text=Hola,%20quisiera%20consultar%20disponibilidad%20para%20el%20Apartamento%20Facile"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-figma-whatsapp"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <span style={{ color: '#10b981', fontSize: '1.2rem', lineHeight: 1 }}>•</span> Consultar por WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* LIGHTBOX MODAL NAVEGABLE A PANTALLA COMPLETA CON BOTONES IZQUIERDA / DERECHA */}
             {aptoLightboxPhoto && (() => {
