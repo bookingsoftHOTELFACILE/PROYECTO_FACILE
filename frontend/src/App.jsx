@@ -244,6 +244,7 @@ function App() {
   const [reservaAlert, setReservaAlert] = useState(null);
   const [filtroHabitaciones, setFiltroHabitaciones] = useState('todas'); // 'todas' | 'amas_llaves' | 'mantenimiento'
   const [galleryFilter, setGalleryFilter] = useState('todas'); // 'todas' | 'zonas' | 'apartamentos' | 'oficinas'
+  const [lightboxIdx, setLightboxIdx] = useState(null); // visor de imágenes de la galería
   const [aptoLightboxPhoto, setAptoLightboxPhoto] = useState(null); // { photos: [...], index: n } o photo object
   const [aptoActivePhoto, setAptoActivePhoto] = useState({}); // { [aptoTipo]: activeIndex }
 
