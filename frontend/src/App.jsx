@@ -2342,6 +2342,64 @@ function App() {
                             </div>
                           </div>
                         </div>
+
+                        {/* COMODIDADES Y SERVICIOS DE LA SUITE (EQUILIBRIO DE COLUMNA IZQUIERDA) */}
+                        <div style={{ marginTop: '1.2rem', padding: '1.1rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                          <h4 style={{ margin: '0 0 0.8rem', fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            ✨ Lo que ofrece este apartamento
+                          </h4>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.8rem', color: '#334155' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>📶</span>
+                              <div>
+                                <strong>Wi-Fi Alta Velocidad</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Fibra 300 Mbps para teletrabajo</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>🍳</span>
+                              <div>
+                                <strong>Cocina Integral</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Equipada con vajilla y electrodomésticos</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>📺</span>
+                              <div>
+                                <strong>Smart TV 55"</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Streaming listo (Netflix / Prime)</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>🧺</span>
+                              <div>
+                                <strong>Zona de Lavado</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Lavadora/Secadora en suite</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>🔑</span>
+                              <div>
+                                <strong>Cerradura Digital</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Autocheck-in con código único</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>🌇</span>
+                              <div>
+                                <strong>Balcón Privado</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Vista a la ciudad de Bogotá</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ marginTop: '1rem', paddingTop: '0.8rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#475569' }}>
+                            <span>🕒 <strong>Check-in:</strong> 3:00 PM</span>
+                            <span>🕚 <strong>Check-out:</strong> 11:00 AM</span>
+                            <span>🛡️ <strong>Vigilancia:</strong> 24/7</span>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="figma-right-card">
