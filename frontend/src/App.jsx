@@ -557,7 +557,7 @@ function App() {
     // Nombre completo consolidado de los campos legales estilo Airbnb
     const nombreCompletoFinal = (nombreLegal || apellidoLegal)
       ? `${nombreLegal} ${apellidoLegal}`.trim()
-      : formData.nombre.trim();
+      : (formData.nombre || '').trim();
 
     if (!habeasData) {
       const msg = 'Debe aceptar los Términos del Servicio y la Política de Protección de Datos (Ley 1581 de 2012 de Colombia).';
@@ -565,7 +565,7 @@ function App() {
       setGuestSearchError(msg);
       return;
     }
-    if (!nombreCompletoFinal || !formData.documento.trim() || !formData.telefono.trim() || !formData.correo.trim()) {
+    if (!nombreCompletoFinal || !(formData.documento || '').trim() || !(formData.telefono || '').trim() || !(formData.correo || '').trim()) {
       const msg = 'Nombre, apellidos, documento, teléfono y correo electrónico son obligatorios.';
       setAlert({ type: 'error', message: msg });
       setGuestSearchError(msg);
@@ -867,16 +867,16 @@ function App() {
 
     // Procesar detección/registro de huésped presencial de forma inteligente
     if (!huespedDestino || (pmsWalkInGuest.documento && huespedDestino.documento !== pmsWalkInGuest.documento.trim())) {
-      const q = pmsWalkInGuest.documento ? pmsWalkInGuest.documento.trim() : '';
+      const q = (pmsWalkInGuest.documento || '').trim();
       const existente = huespedes.find(h => 
-        (q && h.documento && h.documento.trim() === q) || 
-        (pmsWalkInGuest.correo && h.correo && h.correo.toLowerCase() === pmsWalkInGuest.correo.trim().toLowerCase())
+        (q && h.documento && (h.documento || '').trim() === q) || 
+        (pmsWalkInGuest.correo && h.correo && (h.correo || '').toLowerCase() === (pmsWalkInGuest.correo || '').trim().toLowerCase())
       );
       if (existente) {
         huespedDestino = existente;
         setSelectedHuesped(existente);
-      } else if (pmsWalkInGuest.nombre.trim() && pmsWalkInGuest.documento.trim()) {
-        if (!pmsWalkInGuest.telefono.trim() || !pmsWalkInGuest.correo.trim()) {
+      } else if ((pmsWalkInGuest.nombre || '').trim() && (pmsWalkInGuest.documento || '').trim()) {
+        if (!(pmsWalkInGuest.telefono || '').trim() || !(pmsWalkInGuest.correo || '').trim()) {
           setReservaAlert({ type: 'error', message: 'Nombre, documento, teléfono y correo son obligatorios para registrar al nuevo huésped.' });
           setLoading(false);
           return;
@@ -887,12 +887,12 @@ function App() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                nombre: pmsWalkInGuest.nombre.trim(),
-                documento: pmsWalkInGuest.documento.trim(),
-                telefono: pmsWalkInGuest.telefono.trim(),
-                correo: pmsWalkInGuest.correo.trim(),
+                nombre: (pmsWalkInGuest.nombre || '').trim(),
+                documento: (pmsWalkInGuest.documento || '').trim(),
+                telefono: (pmsWalkInGuest.telefono || '').trim(),
+                correo: (pmsWalkInGuest.correo || '').trim(),
                 empresa: `Walk-in (${pmsWalkInGuest.tipo_documento || 'Cédula'})`,
-                password: pmsWalkInGuest.documento.trim()
+                password: (pmsWalkInGuest.documento || '').trim()
               })
             });
             const dataReg = await resReg.json();
@@ -901,10 +901,10 @@ function App() {
               setSelectedHuesped(huespedDestino);
             } else {
               // Si el usuario ya existía en backend por documento/correo
-              const qStr = pmsWalkInGuest.documento.trim() || pmsWalkInGuest.correo.trim();
+              const qStr = (pmsWalkInGuest.documento || '').trim() || (pmsWalkInGuest.correo || '').trim();
               const existenteBk = huespedes.find(h => 
                 (h.documento && h.documento === qStr) || 
-                (h.correo && h.correo.toLowerCase() === qStr.toLowerCase())
+                (h.correo && (h.correo || '').toLowerCase() === qStr.toLowerCase())
               );
               if (existenteBk) {
                 huespedDestino = existenteBk;
@@ -924,10 +924,10 @@ function App() {
           // Modo local fallback
           const nuevoH = {
             id_huesped: Date.now(),
-            nombre: pmsWalkInGuest.nombre.trim(),
-            documento: pmsWalkInGuest.documento.trim(),
-            telefono: pmsWalkInGuest.telefono.trim(),
-            correo: pmsWalkInGuest.correo.trim(),
+            nombre: (pmsWalkInGuest.nombre || '').trim(),
+            documento: (pmsWalkInGuest.documento || '').trim(),
+            telefono: (pmsWalkInGuest.telefono || '').trim(),
+            correo: (pmsWalkInGuest.correo || '').trim(),
             empresa: `Walk-in (${pmsWalkInGuest.tipo_documento || 'Cédula'})`,
             lealtad: 'Silver',
             estado: 'Activo'
@@ -1177,9 +1177,9 @@ function App() {
 
   // Buscar Huésped por Documento (Cédula / Pasaporte / Extranjería) y auto-completar datos
   const handleBuscarHuespedPorDocumento = (docValue) => {
-    const query = docValue ? docValue.trim() : pmsWalkInGuest.documento.trim();
+    const query = docValue ? docValue.trim() : (pmsWalkInGuest.documento || '').trim();
     if (!query) return;
-    const found = huespedes.find(h => h.documento && h.documento.trim() === query);
+    const found = huespedes.find(h => h.documento && (h.documento || '').trim() === query);
     if (found) {
       setPmsWalkInGuest(prev => ({
         ...prev,
@@ -1473,7 +1473,7 @@ function App() {
                         <User size={15} color="#e11d48"/>
                       </div>
                       <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.82rem' }}>
-                        {selectedHuesped.nombre.split(' ')[0]}
+                        {selectedHuesped.nombre ? selectedHuesped.nombre.split(' ')[0] : 'Huésped'}
                       </span>
                     </button>
 
@@ -3625,7 +3625,7 @@ function App() {
             <div id="pms-reservas-table" className="clean-card" style={{ marginBottom: '1.5rem' }}>
               <div className="clean-card-header">
                 <ListOrdered size={18} color="var(--color-primary-red)"/>
-                <h3 style={{ fontSize: '1.1rem' }}>Reservas Activas ({reservas.length})</h3>
+                <h3 style={{ fontSize: '1.1rem' }}>Reservas Activas ({reservas.filter(r => r.estado !== 'Cancelada').length})</h3>
               </div>
               <div className="pms-table-wrap">
                 <table className="pms-table">
@@ -3633,7 +3633,7 @@ function App() {
                     <tr><th>Huésped</th><th>Apto</th><th>Fechas</th><th>Origen</th><th>Acción</th></tr>
                   </thead>
                   <tbody>
-                    {reservas.map(r => (
+                    {reservas.filter(r => r.estado !== 'Cancelada').map(r => (
                       <tr key={r.id_reserva}>
                         <td>
                           <strong>{r.huesped_nombre}</strong>

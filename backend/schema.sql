@@ -168,12 +168,12 @@ $$ LANGUAGE plpgsql;
 
 INSERT INTO empleado (nombre, usuario, contrasena, rol, numero_documento, correo) VALUES
 ('Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador', 'CC9001', 'admin_legacy@bookingsoft.com'),
-('Administrador Grupo BookingSoft', 'admin', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Administrador', 'CC1001', 'admin@bookingsoft.com'),
+('Administrador Grupo BookingSoft', 'admin', '$2b$12$FpEogRToGVN/RTG7yfoTf.YJOxl9NALQFdkGxGZtyaho1xyFxPu4.', 'Administrador', 'CC1001', 'admin@bookingsoft.com'),
 ('Carlos Pérez',  'carlos_recep',  '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W',  'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com'),
-('Recepción Facile', 'recepcion', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com'),
+('Recepción Facile', 'recepcion', '$2b$12$xFzx1ZyRrZqzWZ66hDPkPusS3fgLdXVj7jAF1QemhNXnhUmnyvVx2', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com'),
 ('Marta Ama',     'marta_limpieza','$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com'),
-('Ama de Llaves', 'amallaves', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Ama de llaves', 'CC1003', 'amas@bookingsoft.com'),
-('Personal Mantenimiento', 'mantenimiento', '$2b$12$07a3l9jM/E4mFkG1hU6aUu8eQnNfN6rW1d1d1d1d1d1d1d1d1d1d.', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com')
+('Ama de Llaves', 'amallaves', '$2b$12$gv4HTZQQNejKEgig7wPUf.5HkxOkrk2O03hhpPWESMmW2J1EEma2C', 'Ama de llaves', 'CC1003', 'amas@bookingsoft.com'),
+('Personal Mantenimiento', 'mantenimiento', '$2b$12$Vf34a9wSLQW3GsUd2rFPnuRi.RAikm8I9G6fo4wBUJxeLUv3wRhpC', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com')
 ON CONFLICT (usuario) DO NOTHING;
 
 -- Sembrado de 38 Alojamientos Reales Facile (14 Dúplex, 11 Dobles, 2 Familiares, 11 Habitaciones) + 2 Legacy para Tests

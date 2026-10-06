@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/habitaciones", tags=["habitaciones"])
 
 
 # ── GET /api/habitaciones ─────────────────────────────────────────────────────
-@router.get("", dependencies=[Depends(requiere_rol(*_TODOS_LOS_ROLES))])
+@router.get("")
 def obtener_habitaciones():
     """Retorna el catálogo general de habitaciones."""
     try:

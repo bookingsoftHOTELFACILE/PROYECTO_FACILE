@@ -12,4 +12,7 @@ __pycache__/
 # Sistema y archivos temporales
 .DS_Store
 *.zip
+*.deb
 exposicion/
+test-results/
+playwright-report/

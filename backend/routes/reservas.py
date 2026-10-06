@@ -30,6 +30,7 @@ def obtener_reservas():
             FROM reserva_habitacion r
             JOIN huesped h ON r.id_huesped = h.id_huesped
             JOIN habitacion hab ON r.id_habitacion = hab.id_habitacion
+            WHERE r.estado != 'Cancelada'
             ORDER BY r.id_reserva ASC
         """
         cursor.execute(query_text)
