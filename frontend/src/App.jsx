@@ -28,7 +28,7 @@ const BookingShowcase = ({ photos, onOpenLightbox, title }) => {
               <Camera size={22} color="#e11d48" /> {title}
             </h3>
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-              Explora las instalaciones en alta resolución estilo Booking.com
+            
             </p>
           </div>
           <button
@@ -186,6 +186,616 @@ const BookingShowcase = ({ photos, onOpenLightbox, title }) => {
   );
 };
 
+// COMPONENTE DESPLEGABLE SELECTOR DE HUÉSPEDES ESTILO AIRBNB (ADULTOS, NIÑOS, BEBÉS, MASCOTAS)
+const HuespedesPicker = ({ maxCapacidad = 4 }) => {
+  const [adultos, setAdultos] = useState(1);
+  const [ninos, setNinos] = useState(0);
+  const [bebes, setBebes] = useState(0);
+  const [mascotas, setMascotas] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [showServiceAnimalModal, setShowServiceAnimalModal] = useState(false);
+
+  const totalHuespedes = adultos + ninos;
+
+  const getSummaryText = () => {
+    let parts = [];
+    if (totalHuespedes === 1) parts.push('1 huésped');
+    else parts.push(`${totalHuespedes} huéspedes`);
+
+    if (bebes > 0) parts.push(`${bebes} bebé${bebes > 1 ? 's' : ''}`);
+    if (mascotas > 0) parts.push(`${mascotas} mascota${mascotas > 1 ? 's' : ''}`);
+
+    return parts.join(', ');
+  };
+
+  return (
+    <div className="huespedes-trigger-box">
+      <div
+        className={`huespedes-trigger-btn ${isOpen ? 'active' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span>{getSummaryText()}</span>
+        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{isOpen ? '▲' : '▼'}</span>
+      </div>
+
+      {isOpen && (
+        <div className="huespedes-popover-card">
+          {/* Adultos */}
+          <div className="huespedes-row">
+            <div className="huespedes-info">
+              <span className="huespedes-label">Adultos</span>
+              <span className="huespedes-sublabel">Edad: 13 o más</span>
+            </div>
+            <div className="huespedes-stepper">
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={adultos <= 1}
+                onClick={(e) => { e.stopPropagation(); setAdultos(prev => Math.max(1, prev - 1)); }}
+              >
+                -
+              </button>
+              <span className="stepper-val">{adultos}</span>
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={totalHuespedes >= maxCapacidad}
+                onClick={(e) => { e.stopPropagation(); setAdultos(prev => prev + 1); }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Niños */}
+          <div className="huespedes-row">
+            <div className="huespedes-info">
+              <span className="huespedes-label">Niños</span>
+              <span className="huespedes-sublabel">De 2 a 12 años</span>
+            </div>
+            <div className="huespedes-stepper">
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={ninos <= 0}
+                onClick={(e) => { e.stopPropagation(); setNinos(prev => Math.max(0, prev - 1)); }}
+              >
+                -
+              </button>
+              <span className="stepper-val">{ninos}</span>
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={totalHuespedes >= maxCapacidad}
+                onClick={(e) => { e.stopPropagation(); setNinos(prev => prev + 1); }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Bebés */}
+          <div className="huespedes-row">
+            <div className="huespedes-info">
+              <span className="huespedes-label">Bebés</span>
+              <span className="huespedes-sublabel">Menos de 2 años</span>
+            </div>
+            <div className="huespedes-stepper">
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={bebes <= 0}
+                onClick={(e) => { e.stopPropagation(); setBebes(prev => Math.max(0, prev - 1)); }}
+              >
+                -
+              </button>
+              <span className="stepper-val">{bebes}</span>
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={bebes >= 5}
+                onClick={(e) => { e.stopPropagation(); setBebes(prev => prev + 1); }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Mascotas */}
+          <div className="huespedes-row">
+            <div className="huespedes-info">
+              <span className="huespedes-label">Mascotas</span>
+              <span className="huespedes-sublabel">
+                <span
+                  className="link-service"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowServiceAnimalModal(true);
+                  }}
+                  style={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 600, color: '#0f172a' }}
+                >
+                  ¿Traes a un animal de servicio?
+                </span>
+              </span>
+            </div>
+            <div className="huespedes-stepper">
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={mascotas <= 0}
+                onClick={(e) => { e.stopPropagation(); setMascotas(prev => Math.max(0, prev - 1)); }}
+              >
+                -
+              </button>
+              <span className="stepper-val">{mascotas}</span>
+              <button
+                type="button"
+                className="stepper-btn"
+                disabled={mascotas >= 5}
+                onClick={(e) => { e.stopPropagation(); setMascotas(prev => prev + 1); }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="huespedes-notice">
+            Este alojamiento tiene una capacidad máxima de {maxCapacidad} huéspedes, sin incluir bebés. Si vienes con más de 2 mascotas, avísale al anfitrión.
+          </div>
+
+          <div className="huespedes-popover-footer">
+            <button
+              type="button"
+              className="btn-close-huespedes"
+              onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE POLÍTICA DE ANIMALES DE SERVICIO */}
+      <ServiceAnimalModal
+        isOpen={showServiceAnimalModal}
+        onClose={() => setShowServiceAnimalModal(false)}
+      />
+    </div>
+  );
+};
+
+// COMPONENTE MODAL DE POLÍTICA DE ANIMALES DE SERVICIO Y ACCESIBILIDAD UNIVERSAL (FACILE BOGOTÁ)
+const ServiceAnimalModal = ({ isOpen, onClose }) => {
+  const [showFullPolicy, setShowFullPolicy] = useState(false);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(7px)',
+        zIndex: 999999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem'
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: '24px',
+          maxWidth: showFullPolicy ? '680px' : '520px',
+          width: '100%',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
+          position: 'relative',
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* BOTÓN CERRAR SUPERIOR */}
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '14px',
+            right: '14px',
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            background: 'rgba(15, 23, 42, 0.65)',
+            color: '#ffffff',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            zIndex: 10,
+            backdropFilter: 'blur(4px)'
+          }}
+          title="Cerrar política"
+        >
+          ✕
+        </button>
+
+        {/* ILUSTRACIÓN DE ANIMALES DE SERVICIO */}
+        <div style={{ width: '100%', height: showFullPolicy ? '180px' : '230px', overflow: 'hidden', background: '#f8fafc', position: 'relative', transition: 'height 0.3s ease' }}>
+          <img
+            src="/images/service_animal.png"
+            alt="Ilustración Animales de Servicio Apartamentos Facile"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
+
+        {/* CONTENIDO PRINCIPAL / VISTA RESUMEN VS COMPLETA */}
+        <div style={{ padding: '1.4rem 1.6rem 1.6rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.05em', color: '#e11d48', textTransform: 'uppercase', background: '#ffe4e6', padding: '0.25rem 0.65rem', borderRadius: '12px' }}>
+              Accesibilidad Inclusiva BookingSoft
+            </span>
+
+            {showFullPolicy && (
+              <button
+                type="button"
+                onClick={() => setShowFullPolicy(false)}
+                style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+              >
+                ◀ Volver al resumen
+              </button>
+            )}
+          </div>
+
+          {!showFullPolicy ? (
+            /* VISTA PRINCIPAL CORTA ESTILO AIRBNB CON ENLACE A POLÍTICA COMPLETA */
+            <>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0.4rem 0 0.6rem', lineHeight: 1.25 }}>
+                Animales de servicio
+              </h3>
+
+              <p style={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.5, margin: '0 0 1rem' }}>
+                Los animales de servicio no se consideran mascotas, así que <strong>no hace falta que los agregues aquí ni pagues suplementos adicionales.</strong>
+              </p>
+
+              <div style={{ background: '#f8fafc', borderLeft: '4px solid #e11d48', padding: '0.9rem 1.1rem', borderRadius: '10px', marginBottom: '1.2rem' }}>
+                <p style={{ margin: 0, fontSize: '0.86rem', color: '#475569', lineHeight: 1.5 }}>
+                  🐕 <strong>Perros Guía & Asistencia:</strong> Tienen acceso libre a todas las instalaciones y suites de Apartamentos Facile Bogotá.
+                  <br/><br/>
+                  ❤️ <strong>¿Viajas con un animal de apoyo emocional?</strong> Consulta nuestra{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowFullPolicy(true)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      color: '#0f172a',
+                      fontWeight: 800,
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                      fontSize: '0.86rem'
+                    }}
+                  >
+                    política de accesibilidad completa
+                  </button>.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowFullPolicy(true)}
+                  style={{
+                    flex: 1,
+                    padding: '0.8rem',
+                    background: '#f1f5f9',
+                    color: '#0f172a',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📖 Leer Política Completa
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{
+                    flex: 1,
+                    padding: '0.8rem',
+                    background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(225, 29, 72, 0.3)'
+                  }}
+                >
+                  Entendido
+                </button>
+              </div>
+            </>
+          ) : (
+            /* DOCUMENTO DETALLADO DE POLÍTICA DE ACCESIBILIDAD INSTITUCIONAL FACILE BOGOTÁ */
+            <div>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: '0.3rem 0 0.8rem', lineHeight: 1.25 }}>
+                Política Oficial de Accesibilidad e Inclusión Universal
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', fontSize: '0.88rem', color: '#334155', lineHeight: 1.55 }}>
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ margin: '0 0 0.4rem', color: '#0f172a', fontSize: '0.95rem', fontWeight: 800 }}>
+                    1. Definición y Exención de Tarifas
+                  </h4>
+                  <p style={{ margin: 0 }}>
+                    En <strong>Apartamentos Facile Bogotá & BookingSoft</strong>, reconocemos los animales de servicio (perros guía, lazarillos y de asistencia médica) como un derecho fundamental de accesibilidad. Por esta razón:
+                  </p>
+                  <ul style={{ margin: '0.5rem 0 0 1.2rem', padding: 0 }}>
+                    <li>No se aplican cargos suplementarios de limpieza ni tarifas adicionales por mascota.</li>
+                    <li>No cuentan dentro del límite estándar de mascotas del formulario de reserva.</li>
+                  </ul>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ margin: '0 0 0.4rem', color: '#0f172a', fontSize: '0.95rem', fontWeight: 800 }}>
+                    2. Acceso Garantizado a Instalaciones
+                  </h4>
+                  <p style={{ margin: 0 }}>
+                    Los animales de servicio tienen libre tránsito e ingreso autorizado a todas las áreas públicas y privadas del complejo, incluyendo:
+                  </p>
+                  <ul style={{ margin: '0.5rem 0 0 1.2rem', padding: 0 }}>
+                    <li>Recepción y lobby principal.</li>
+                    <li>Ascensores y pasillos de acceso a suites.</li>
+                    <li>Interior amoblado de los apartamentos reservables.</li>
+                  </ul>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ margin: '0 0 0.4rem', color: '#0f172a', fontSize: '0.95rem', fontWeight: 800 }}>
+                    3. Animales de Apoyo Emocional & Salud
+                  </h4>
+                  <p style={{ margin: 0 }}>
+                    Si tu acompañante es un animal de soporte o apoyo emocional, solicitamos notificarlo previamente a recepción o mediante las notas de reserva para coordinar la preparación adecuada de tu suite y ofrecerte la mejor experiencia.
+                  </p>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ margin: '0 0 0.4rem', color: '#0f172a', fontSize: '0.95rem', fontWeight: 800 }}>
+                    4. Convivencia Responsable & Normas
+                  </h4>
+                  <p style={{ margin: 0 }}>
+                    El animal debe estar bajo el control y supervisión permanente de su titular (con correa, arnés o comandos de voz). El huésped responderá únicamente por daños materiales directos ocasionados a la propiedad bajo la tarifa estándar de reparación sin penalizaciones adicionales.
+                  </p>
+                </div>
+
+                <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '12px', border: '1px solid #bfdbfe', color: '#1e40af' }}>
+                  <strong>💬 ¿Requieres asistencia especial de accesibilidad?</strong>
+                  <br/>
+                  Nuestro equipo de recepción 24/7 en Apartamentos Facile Bogotá está disponible para ayudarte. Escríbenos directamente al WhatsApp oficial o contáctanos en recepción al realizar tu check-in.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowFullPolicy(false)}
+                style={{
+                  marginTop: '1.2rem',
+                  width: '100%',
+                  padding: '0.85rem',
+                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '0.92rem',
+                  cursor: 'pointer'
+                }}
+              >
+                ◀ Volver
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// COMPONENTE DE RESERVA PARA EL MODAL DE FIGMA CON CALENDARIO VISUAL DE OCUPACIÓN (ROJO/VERDE)
+const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  const [fechaEntrada, setFechaEntrada] = useState(todayStr);
+  const [fechaSalida, setFechaSalida] = useState(tomorrowStr);
+  const [calDate, setCalDate] = useState(new Date());
+
+  // Filtrar reservas activas para esta categoría de apartamento
+  const catReservas = reservas.filter(r => 
+    (r.tipo_habitacion === selectedApto.tipo || String(r.id_habitacion).startsWith(selectedApto.tipo)) &&
+    (r.estado === 'Confirmada' || r.estado === 'Check-In' || r.estado === 'Ocupada')
+  );
+
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let startDay = firstDay.getDay() - 1;
+  if (startDay === -1) startDay = 6;
+
+  const daysGrid = [];
+  for (let i = 0; i < startDay; i++) daysGrid.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const isOccupied = catReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
+    const isSelectedIn = fechaEntrada === dayStr;
+    const isSelectedOut = fechaSalida === dayStr;
+    const inRange = fechaEntrada && fechaSalida && dayStr >= fechaEntrada && dayStr <= fechaSalida;
+    daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
+  }
+
+  const handleDayClick = (item) => {
+    if (!item || item.isOccupied) return;
+    if (!fechaEntrada || (fechaEntrada && fechaSalida)) {
+      setFechaEntrada(item.dayStr);
+      setFechaSalida('');
+    } else if (fechaEntrada && !fechaSalida) {
+      if (item.dayStr <= fechaEntrada) {
+        setFechaEntrada(item.dayStr);
+        setFechaSalida('');
+      } else {
+        const hasBlock = catReservas.some(r => r.fecha_entrada <= item.dayStr && r.fecha_salida >= fechaEntrada);
+        if (hasBlock) {
+          alert('El rango seleccionado incluye fechas ocupadas en rojo.');
+          return;
+        }
+        setFechaSalida(item.dayStr);
+      }
+    }
+  };
+
+  return (
+    <>
+      <div className="figma-dates-box">
+        <div className="figma-dates-row">
+          <div className="figma-date-field">
+            <label className="figma-date-label">LLEGADA</label>
+            <input
+              type="date"
+              className="figma-date-input"
+              value={fechaEntrada}
+              onChange={e => setFechaEntrada(e.target.value)}
+            />
+          </div>
+          <div className="figma-date-field">
+            <label className="figma-date-label">SALIDA</label>
+            <input
+              type="date"
+              className="figma-date-input"
+              value={fechaSalida}
+              onChange={e => setFechaSalida(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="figma-date-field">
+          <label className="figma-date-label">HUÉSPEDES</label>
+          <HuespedesPicker maxCapacidad={selectedApto?.tipo === 'Familiares' ? 6 : selectedApto?.tipo === 'Dobles' ? 4 : 3} />
+        </div>
+      </div>
+
+      {/* CALENDARIO DE OCUPACIÓN Y DISPONIBILIDAD ESTILO RECEPCIÓN */}
+      <div style={{ marginTop: '0.8rem', background: '#f8fafc', padding: '0.85rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <button
+            type="button"
+            style={{ padding: '0.2rem 0.55rem', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+            onClick={() => setCalDate(new Date(year, month - 1, 1))}
+          >
+            ◀ Mes Ant.
+          </button>
+          <strong style={{ color: '#0f172a', fontSize: '0.84rem' }}>
+            🗓️ Disponibilidad: {monthNames[month]} {year}
+          </strong>
+          <button
+            type="button"
+            style={{ padding: '0.2rem 0.55rem', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+            onClick={() => setCalDate(new Date(year, month + 1, 1))}
+          >
+            Mes Sig. ▶
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.7rem', marginBottom: '0.5rem', fontSize: '0.72rem', justifyContent: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#991b1b', fontWeight: 700 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }}/> Ocupado
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#166534', fontWeight: 700 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/> Disponible
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#1d4ed8', fontWeight: 700 }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#2563eb', display: 'inline-block' }}/> Tu Selección
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+          <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+          {daysGrid.map((item, idx) => {
+            if (!item) return <div key={`empty-${idx}`}/>;
+            let bg = '#dcfce7';
+            let color = '#166534';
+            let borderColor = '#86efac';
+
+            if (item.isOccupied) {
+              bg = '#fee2e2';
+              color = '#991b1b';
+              borderColor = '#fca5a5';
+            } else if (item.isSelectedIn || item.isSelectedOut) {
+              bg = '#2563eb';
+              color = '#ffffff';
+              borderColor = '#1d4ed8';
+            } else if (item.inRange) {
+              bg = '#dbeafe';
+              color = '#1e40af';
+              borderColor = '#93c5fd';
+            }
+
+            return (
+              <button
+                key={item.dayStr}
+                type="button"
+                onClick={() => handleDayClick(item)}
+                disabled={item.isOccupied}
+                title={item.isOccupied ? `Día ${item.d} Ocupado` : `Seleccionar fecha ${item.dayStr}`}
+                style={{
+                  background: bg,
+                  color: color,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '5px',
+                  padding: '0.3rem 0.1rem',
+                  fontSize: '0.76rem',
+                  cursor: item.isOccupied ? 'not-allowed' : 'pointer',
+                  fontWeight: 700,
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {item.d}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <button
+        className="btn-figma-reserve"
+        onClick={() => onReservar(fechaEntrada, fechaSalida)}
+        style={{ marginTop: '1.2rem' }}
+      >
+        Reservar este apartamento
+      </button>
+    </>
+  );
+};
+
 function App() {
   // ---- ESTADO DEL MODO DE CONEXIÓN ----
   const [backendActivo, setBackendActivo] = useState(false);
@@ -244,8 +854,11 @@ function App() {
   const [reservaAlert, setReservaAlert] = useState(null);
   const [filtroHabitaciones, setFiltroHabitaciones] = useState('todas'); // 'todas' | 'amas_llaves' | 'mantenimiento'
   const [galleryFilter, setGalleryFilter] = useState('todas'); // 'todas' | 'zonas' | 'apartamentos' | 'oficinas'
+  const [lightboxIdx, setLightboxIdx] = useState(null); // visor de imágenes de la galería
   const [aptoLightboxPhoto, setAptoLightboxPhoto] = useState(null); // { photos: [...], index: n } o photo object
+  const [lightboxZoom, setLightboxZoom] = useState(false); // Estado de zoom 1.65x interactivo para imágenes en Lightbox
   const [aptoActivePhoto, setAptoActivePhoto] = useState({}); // { [aptoTipo]: activeIndex }
+  const [selectedAptoFigma, setSelectedAptoFigma] = useState(null); // apartamento seleccionado para la vista de detalle Figma
 
   // NAVEGACIÓN TECLADO PARA LIGHTBOX (FLECHA IZQUIERDA, FLECHA DERECHA, ESCAPE)
   useEffect(() => {
@@ -1594,8 +2207,12 @@ function App() {
         const alojamientosData = [
           {
             tipo: 'Dúplex',
+            nombreModal: 'Apartamento Dúplex',
+            numHabitaciones: '1 Habitación',
+            numBanos: '1.5 Baños',
+            formato: 'Dúplex en 2 Niveles',
             unidades: '14 unidades',
-            desc: '1 habitación, 1.5 baños, cocina totalmente equipada, sala, sofá cama, comedor, cuarto de lavado, lavadora-secadora, 2 televisores, Wi-Fi y balcón. Cama King o 2 camas sencillas.',
+            desc: 'Cuenta con 1 habitación privada, 1.5 baños, cocina totalmente equipada, sala social con sofá cama, comedor, cuarto de lavado con lavadora-secadora, 2 televisores HD, Wi-Fi de alta velocidad y balcón con vista.',
             personas: 'Hasta 3 personas',
             ambientes: '1 Hab. + 1.5 Baños',
             precio: '$250.000',
@@ -1609,8 +2226,12 @@ function App() {
           },
           {
             tipo: 'Dobles',
+            nombreModal: 'Apartamento Doble',
+            numHabitaciones: '2 Habitaciones',
+            numBanos: '2 Baños',
+            formato: 'Suite Doble',
             unidades: '11 unidades',
-            desc: '2 habitaciones, 2 baños, capacidad 4 personas. Habitación principal con cama King y vestier, habitación auxiliar con 2 camas sencillas o doble, sala, comedor, sofá cama, cocina equipada y 3 televisores.',
+            desc: 'Cuenta con 2 habitaciones (habitación principal con cama King y vestier, habitación auxiliar con 2 camas sencillas o doble), 2 baños completos, sala social, comedor, sofá cama, cocina equipada y 3 televisores HD.',
             personas: 'Hasta 4 personas',
             ambientes: '2 Hab. + 2 Baños',
             precio: '$350.000',
@@ -1624,8 +2245,12 @@ function App() {
           },
           {
             tipo: 'Familiares',
+            nombreModal: 'Apartamento Familiar',
+            numHabitaciones: '3 Habitaciones',
+            numBanos: '2 Baños',
+            formato: 'Suite Familiar',
             unidades: '2 unidades',
-            desc: '3 habitaciones, 2 baños, capacidad 6 personas. Habitación principal con cama King y vestier, 2 habitaciones auxiliares con cama nido, comedor de 6 puestos, sofá cama, cocina y 4 televisores.',
+            desc: 'Cuenta con 3 habitaciones (habitación principal King con vestier, 2 habitaciones auxiliares con cama nido), 2 baños completos, comedor de 6 puestos, sofá cama, cocina abierta y 4 televisores HD.',
             personas: 'Hasta 6 personas',
             ambientes: '3 Hab. + 2 Baños',
             precio: '$450.000',
@@ -1639,8 +2264,12 @@ function App() {
           },
           {
             tipo: 'Habitaciones',
+            nombreModal: 'Habitación Executive',
+            numHabitaciones: '1 Habitación',
+            numBanos: '1 Baño privado',
+            formato: 'Habitación Executive',
             unidades: '11 unidades',
-            desc: 'Habitación individual con baño privado, capacidad 2 personas, Wi-Fi y TV. Ideal para ejecutivos y viajeros de negocios en estadías cortas.',
+            desc: 'Cuenta con habitación confort individual, baño privado en suite, escritorio de trabajo, televisión HD y Wi-Fi de alta velocidad. Ideal para ejecutivos y viajes de negocios.',
             personas: 'Hasta 2 personas',
             ambientes: 'Baño privado',
             precio: 'Consultar',
@@ -1677,8 +2306,8 @@ function App() {
                     {/* IMAGEN DE BANNER PRINCIPAL DE LA TARJETA */}
                     <div
                       style={{ position: 'relative', width: '100%', height: '195px', overflow: 'hidden', background: '#0f172a', cursor: 'pointer' }}
-                      onClick={() => setAptoLightboxPhoto({ photos: apto.fotos, index: activePhotoIndex })}
-                      title="Haz clic para ver la fotografía en pantalla completa"
+                      onClick={() => setSelectedAptoFigma(apto)}
+                      title="Haz clic para ver el detalle en el diseño de Figma"
                     >
                       <img
                         src={currentPhoto.url}
@@ -1688,9 +2317,9 @@ function App() {
                         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                       />
 
-                      {/* INSIGNIA VER MÁS */}
-                      <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.3rem 0.7rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Maximize2 size={13}/> Ampliar Foto
+                      {/* INSIGNIA VER DETALLE FIGMA */}
+                      <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Maximize2 size={13}/> Ver Detalle Figma
                       </div>
                     </div>
 
@@ -1731,9 +2360,19 @@ function App() {
                         <div className="price-text">
                           {apto.precio} <span>{apto.precioSub}</span>
                         </div>
-                        <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
-                          Reservar
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <button
+                            className="btn-book-red"
+                            style={{ background: '#0f172a', color: '#fff', padding: '0.45rem 0.75rem', fontSize: '0.78rem' }}
+                            onClick={() => setSelectedAptoFigma(apto)}
+                            title="Ver vista interactiva de Figma"
+                          >
+                            Detalle
+                          </button>
+                          <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
+                            Reservar
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1741,192 +2380,208 @@ function App() {
               })}
             </div>
 
-            {/* LIGHTBOX MODAL NAVEGABLE A PANTALLA COMPLETA CON BOTONES IZQUIERDA / DERECHA */}
-            {aptoLightboxPhoto && (() => {
-              const photosList = aptoLightboxPhoto.photos || [aptoLightboxPhoto];
-              const currentIndex = aptoLightboxPhoto.index || 0;
-              const activePhoto = photosList[currentIndex] || photosList[0];
-
-              const goPrev = (e) => {
-                if (e) e.stopPropagation();
-                const newIdx = (currentIndex - 1 + photosList.length) % photosList.length;
-                setAptoLightboxPhoto({ photos: photosList, index: newIdx });
-              };
-
-              const goNext = (e) => {
-                if (e) e.stopPropagation();
-                const newIdx = (currentIndex + 1) % photosList.length;
-                setAptoLightboxPhoto({ photos: photosList, index: newIdx });
-              };
+            {/* MODAL DETALLE DE APARTAMENTO IDENTICO AL MOCKUP DE FIGMA */}
+            {selectedAptoFigma && (() => {
+              const activeFigmaIdx = aptoActivePhoto[selectedAptoFigma.tipo] || 0;
+              const mainPhoto = selectedAptoFigma.fotos[activeFigmaIdx] || selectedAptoFigma.fotos[0];
 
               return (
-                <div
-                  style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    width: '100vw',
-                    height: '100vh',
-                    background: 'rgba(15, 23, 42, 0.96)',
-                    backdropFilter: 'blur(12px)',
-                    zIndex: 99999,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '1.5rem'
-                  }}
-                  onClick={() => setAptoLightboxPhoto(null)}
-                >
-                  {/* BOTÓN CERRAR (X) */}
-                  <button
-                    type="button"
-                    onClick={() => setAptoLightboxPhoto(null)}
-                    style={{
-                      position: 'absolute',
-                      top: '20px',
-                      right: '25px',
-                      background: 'rgba(255,255,255,0.15)',
-                      border: 'none',
-                      color: '#ffffff',
-                      width: '46px',
-                      height: '46px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      zIndex: 100000,
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                    title="Cerrar (Esc)"
-                  >
-                    <X size={26}/>
-                  </button>
-
-                  {/* NAVEGACIÓN FLECHA IZQUIERDA */}
-                  {photosList.length > 1 && (
+                <div className="figma-modal-backdrop" onClick={() => setSelectedAptoFigma(null)}>
+                  <div className="figma-modal-card" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      onClick={goPrev}
+                      onClick={() => setSelectedAptoFigma(null)}
                       style={{
                         position: 'absolute',
-                        left: '25px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'rgba(255,255,255,0.18)',
-                        border: '2px solid rgba(255,255,255,0.2)',
-                        color: '#ffffff',
-                        width: '54px',
-                        height: '54px',
+                        top: '16px',
+                        right: '20px',
+                        background: '#f1f5f9',
+                        border: 'none',
+                        color: '#334155',
+                        width: '40px',
+                        height: '40px',
                         borderRadius: '50%',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        zIndex: 100000,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+                        zIndex: 10,
+                        fontWeight: 'bold',
+                        fontSize: '1.2rem',
+                        transition: 'all 0.2s ease'
                       }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.background = '#e11d48';
-                        e.currentTarget.style.borderColor = '#e11d48';
-                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.18)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                      }}
-                      title="Fotografía Anterior (Flecha Izquierda)"
                     >
-                      <ChevronLeft size={32}/>
+                      ✕
                     </button>
-                  )}
 
-                  {/* NAVEGACIÓN FLECHA DERECHA */}
-                  {photosList.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={goNext}
-                      style={{
-                        position: 'absolute',
-                        right: '25px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'rgba(255,255,255,0.18)',
-                        border: '2px solid rgba(255,255,255,0.2)',
-                        color: '#ffffff',
-                        width: '54px',
-                        height: '54px',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        zIndex: 100000,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.background = '#e11d48';
-                        e.currentTarget.style.borderColor = '#e11d48';
-                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.18)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                      }}
-                      title="Siguiente Fotografía (Flecha Derecha)"
-                    >
-                      <ChevronRight size={32}/>
-                    </button>
-                  )}
+                    <div className="figma-breadcrumb">
+                      <span className="link" onClick={() => { setSelectedAptoFigma(null); setActiveTab('inicio'); }}>Inicio</span>
+                      <span>&gt;</span>
+                      <span className="link" onClick={() => { setSelectedAptoFigma(null); setActiveTab('apartamentos'); }}>Apartamentos</span>
+                      <span>&gt;</span>
+                      <span className="active">{selectedAptoFigma.nombreModal || `Apartamento ${selectedAptoFigma.tipo}`}</span>
+                    </div>
 
-                  {/* CONTENEDOR DE LA FOTO EN ALTA RESOLUCIÓN */}
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      maxWidth: '88vw',
-                      maxHeight: '82vh',
-                      position: 'relative',
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      boxShadow: '0 25px 60px rgba(0,0,0,0.7)',
-                      background: '#0f172a',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <img
-                      src={activePhoto.url}
-                      alt={activePhoto.titulo || 'Fotografía'}
-                      style={{ maxHeight: '72vh', maxWidth: '88vw', objectFit: 'contain', display: 'block' }}
-                    />
-                    <div style={{ width: '100%', background: '#0f172a', padding: '1rem 1.5rem', borderTop: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                    <div className="figma-detail-grid">
                       <div>
-                        {activePhoto.titulo && (
-                          <h3 style={{ margin: 0, color: '#ffffff', fontSize: '1.15rem', fontWeight: 800 }}>
-                            {activePhoto.titulo}
-                          </h3>
-                        )}
-                        {activePhoto.desc && (
-                          <p style={{ margin: '0.2rem 0 0', color: '#94a3b8', fontSize: '0.86rem' }}>
-                            {activePhoto.desc}
-                          </p>
-                        )}
+                        <div
+                          className="figma-main-img-wrap"
+                          onClick={() => {
+                            setAptoLightboxPhoto({ photos: selectedAptoFigma.fotos, index: activeFigmaIdx });
+                          }}
+                          title="Haz clic para ampliar en pantalla completa"
+                        >
+                          <img src={mainPhoto.url} alt={mainPhoto.titulo} />
+                          <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15,23,42,0.85)', color: '#fff', padding: '0.35rem 0.85rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, backdropFilter: 'blur(4px)' }}>
+                            🔍 Ampliar Fotografía Real
+                          </div>
+                        </div>
+
+                        <div className="figma-thumbs-row">
+                          {selectedAptoFigma.fotos.slice(0, 4).map((f, i) => (
+                            <div
+                              key={i}
+                              className={`figma-thumb-item ${activeFigmaIdx === i ? 'active' : ''}`}
+                              onClick={() => setAptoActivePhoto(prev => ({ ...prev, [selectedAptoFigma.tipo]: i }))}
+                            >
+                              <img src={f.url} alt={f.titulo} />
+                            </div>
+                          ))}
+                          <div
+                            className="figma-thumb-item"
+                            onClick={() => setAptoLightboxPhoto({ photos: selectedAptoFigma.fotos, index: 0 })}
+                          >
+                            <img src={selectedAptoFigma.fotos[0]?.url} alt="Más fotos" />
+                            <div className="figma-thumb-more">
+                              +{selectedAptoFigma.fotos.length} fotos
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* COMODIDADES Y SERVICIOS DE LA SUITE (EQUILIBRIO DE COLUMNA IZQUIERDA) */}
+                        <div style={{ marginTop: '1.2rem', padding: '1.1rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                          <h4 style={{ margin: '0 0 0.8rem', fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            ✨ Lo que ofrece este apartamento
+                          </h4>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.8rem', color: '#334155' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>📶</span>
+                              <div>
+                                <strong>Wi-Fi Alta Velocidad</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Fibra 300 Mbps para teletrabajo</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>🍳</span>
+                              <div>
+                                <strong>Cocina Integral</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Equipada con vajilla y electrodomésticos</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>📺</span>
+                              <div>
+                                <strong>Smart TV 55"</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Streaming listo (Netflix / Prime)</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>🧺</span>
+                              <div>
+                                <strong>Zona de Lavado</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Lavadora/Secadora en suite</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>🔑</span>
+                              <div>
+                                <strong>Cerradura Digital</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Autocheck-in con código único</div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '1.1rem' }}>🌇</span>
+                              <div>
+                                <strong>Balcón Privado</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Vista a la ciudad de Bogotá</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ marginTop: '1rem', paddingTop: '0.8rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#475569' }}>
+                            <span>🕒 <strong>Check-in:</strong> 3:00 PM</span>
+                            <span>🕚 <strong>Check-out:</strong> 11:00 AM</span>
+                            <span>🛡️ <strong>Vigilancia:</strong> 24/7</span>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* CONTADOR DE FOTOS */}
-                      {photosList.length > 1 && (
-                        <div style={{ background: '#e11d48', color: '#ffffff', padding: '0.35rem 0.85rem', borderRadius: '15px', fontSize: '0.8rem', fontWeight: 800, flexShrink: 0 }}>
-                          {currentIndex + 1} de {photosList.length}
+                      <div className="figma-right-card">
+                        <span className="figma-badge-pill">APARTAMENTO</span>
+                        <h2 className="figma-title">{selectedAptoFigma.nombreModal || selectedAptoFigma.tipo}</h2>
+                        <p className="figma-subtitle">
+                          {selectedAptoFigma.desc}
+                        </p>
+
+                        <div className="figma-price-box">
+                          <div className="figma-price-label">TARIFA POR NOCHE</div>
+                          <div className="figma-price-amount">
+                            {selectedAptoFigma.precio} <span className="figma-price-unit">{selectedAptoFigma.precioSub}</span>
+                          </div>
+                          <div className="figma-price-tax">Impuestos aplican según perfil del huésped</div>
                         </div>
-                      )}
+
+                        <div className="figma-specs-grid">
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">👥</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">CAPACIDAD</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.personas}</span>
+                            </div>
+                          </div>
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">🛏️</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">HABITACIONES</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.numHabitaciones || selectedAptoFigma.ambientes}</span>
+                            </div>
+                          </div>
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">🚿</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">BAÑOS</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.numBanos || 'Privado en suite'}</span>
+                            </div>
+                          </div>
+                          <div className="figma-spec-card">
+                            <div className="figma-spec-icon">🛋️</div>
+                            <div className="figma-spec-text">
+                              <span className="figma-spec-label">FORMATO</span>
+                              <span className="figma-spec-value">{selectedAptoFigma.formato || selectedAptoFigma.tipo}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <FigmaBookingBox
+                          selectedApto={selectedAptoFigma}
+                          reservas={reservas}
+                          onReservar={(inDate, outDate) => {
+                            setSelectedAptoFigma(null);
+                            handleReservarTipo(selectedAptoFigma.tipo);
+                          }}
+                        />
+
+                        <a
+                          href="https://wa.me/573153512085?text=Hola,%20quisiera%20consultar%20disponibilidad%20para%20el%20Apartamento%20Facile"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-figma-whatsapp"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <span style={{ color: '#10b981', fontSize: '1.2rem', lineHeight: 1 }}>•</span> Consultar por WhatsApp
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2150,13 +2805,13 @@ function App() {
           <section className="facile-section">
             <div className="section-title-wrap">
               <h2>Galería Fotográfica Real</h2>
-              <p>Conoce las instalaciones reales de Apartamentos Facile Bogotá & Centro de Negocios ({galleryItems.length} fotografías en total)</p>
+              <p>Conoce las instalaciones reales de Apartamentos Facile Bogotá & Centro de Negocios</p>
             </div>
 
             {/* SHOWCASE HIGHLIGHT TIPO BOOKING.COM AL INICIO DE LA GALERÍA */}
             <BookingShowcase
               photos={filteredList}
-              onOpenLightbox={(idx) => setLightboxIdx(idx)}
+              onOpenLightbox={(idx) => setAptoLightboxPhoto({ photos: filteredList, index: idx })}
               title="Vistas Destacadas del Apartahotel & Centro de Negocios"
             />
 
@@ -2171,7 +2826,7 @@ function App() {
                 <button
                   key={f.id}
                   type="button"
-                  onClick={() => { setGalleryFilter(f.id); setLightboxIdx(null); }}
+                  onClick={() => setGalleryFilter(f.id)}
                   style={{
                     padding: '0.65rem 1.25rem',
                     borderRadius: '25px',
@@ -2203,12 +2858,12 @@ function App() {
               ))}
             </div>
 
-            {/* GRID DE GALERÍA FOTOGRÁFICA (PURA FOTOGRAFÍA) */}
+            {/* GRID DE GALERÍA FOTOGRÁFICA (PURA FOTOGRAFÍA CON ZOOM INTERACTIVO) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.2rem', padding: '0 1rem 2rem' }}>
               {filteredList.map((item, idx) => (
                 <div
                   key={item.id}
-                  onClick={() => setLightboxIdx(idx)}
+                  onClick={() => setAptoLightboxPhoto({ photos: filteredList, index: idx })}
                   style={{
                     background: '#0f172a',
                     borderRadius: '16px',
@@ -2259,146 +2914,12 @@ function App() {
                     }}
                   >
                     <div style={{ background: '#ffffff', color: '#e11d48', padding: '0.6rem 1.2rem', borderRadius: '25px', fontWeight: 800, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 14px rgba(0,0,0,0.2)' }}>
-                      <Maximize2 size={16}/> Ampliar Fotografía
+                      <Maximize2 size={16}/> Ampliar Fotografía (Zoom)
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* LIGHTBOX MODAL FULLSCREEN AMPLIFICADOR DE FOTOS (SOLO IMAGEN) */}
-            {currentImage && (
-              <div
-                style={{
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  width: '100vw',
-                  height: '100vh',
-                  background: 'rgba(15, 23, 42, 0.94)',
-                  backdropFilter: 'blur(10px)',
-                  zIndex: 99999,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '1.5rem'
-                }}
-                onClick={() => setLightboxIdx(null)}
-              >
-                {/* BOTÓN CERRAR */}
-                <button
-                  type="button"
-                  onClick={() => setLightboxIdx(null)}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '25px',
-                    background: 'rgba(255,255,255,0.15)',
-                    border: 'none',
-                    color: '#ffffff',
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    zIndex: 100000
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                >
-                  <X size={24}/>
-                </button>
-
-                {/* NAVEGACIÓN ANTERIOR */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightboxIdx((lightboxIdx - 1 + filteredList.length) % filteredList.length);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    left: '25px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'rgba(255,255,255,0.15)',
-                    border: 'none',
-                    color: '#ffffff',
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    zIndex: 100000
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                >
-                  <ChevronLeft size={28}/>
-                </button>
-
-                {/* NAVEGACIÓN SIGUIENTE */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightboxIdx((lightboxIdx + 1) % filteredList.length);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    right: '25px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'rgba(255,255,255,0.15)',
-                    border: 'none',
-                    color: '#ffffff',
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    zIndex: 100000
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                >
-                  <ChevronRight size={28}/>
-                </button>
-
-                {/* CONTENEDOR DE LA IMAGEN EN ALTA RESOLUCIÓN (PURA FOTOGRAFÍA) */}
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    maxWidth: '90vw',
-                    maxHeight: '86vh',
-                    position: 'relative',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    boxShadow: '0 25px 60px rgba(0,0,0,0.7)',
-                    background: '#0f172a',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <img
-                    src={currentImage.url}
-                    alt="Fotografía Facile"
-                    style={{ maxHeight: '86vh', maxWidth: '90vw', objectFit: 'contain', display: 'block' }}
-                  />
-                </div>
-              </div>
-            )}
           </section>
         );
       })()}
@@ -2578,8 +3099,8 @@ function App() {
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#166534', fontWeight: 700 }}>
                           <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#22c55e', display: 'inline-block' }}/> 🟢 Fechas Libres
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#854d0e', fontWeight: 700 }}>
-                          <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#eab308', display: 'inline-block' }}/> 🟡 Tu Selección
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#1d4ed8', fontWeight: 700 }}>
+                          <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }}/> 🔵 Tu Selección
                         </span>
                       </div>
 
@@ -2599,13 +3120,13 @@ function App() {
                             color = '#991b1b';
                             borderColor = '#fca5a5';
                           } else if (item.isSelectedIn || item.isSelectedOut) {
-                            bg = '#e11d48';
+                            bg = '#2563eb';
                             color = '#ffffff';
-                            borderColor = '#be123c';
+                            borderColor = '#1d4ed8';
                           } else if (item.inRange) {
-                            bg = '#fef08a';
-                            color = '#854d0e';
-                            borderColor = '#fde047';
+                            bg = '#dbeafe';
+                            color = '#1e40af';
+                            borderColor = '#93c5fd';
                           }
 
                           return (
@@ -3405,8 +3926,8 @@ function App() {
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#166534', fontWeight: 700 }}>
                         <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#22c55e', display: 'inline-block' }}/> 🟢 Fechas Libres
                       </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#854d0e', fontWeight: 700 }}>
-                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#eab308', display: 'inline-block' }}/> 🟡 Tu Selección
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#1d4ed8', fontWeight: 700 }}>
+                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }}/> 🔵 Tu Selección
                       </span>
                     </div>
 
@@ -3426,13 +3947,13 @@ function App() {
                           color = '#991b1b';
                           borderColor = '#fca5a5';
                         } else if (item.isSelectedIn || item.isSelectedOut) {
-                          bg = '#e11d48';
+                          bg = '#2563eb';
                           color = '#ffffff';
-                          borderColor = '#be123c';
+                          borderColor = '#1d4ed8';
                         } else if (item.inRange) {
-                          bg = '#fef08a';
-                          color = '#854d0e';
-                          borderColor = '#fde047';
+                          bg = '#dbeafe';
+                          color = '#1e40af';
+                          borderColor = '#93c5fd';
                         }
 
                         return (
@@ -4091,26 +4612,6 @@ function App() {
                 <LogIn size={16}/> {loading ? 'Validando...' : 'Entrar al Sistema'}
               </button>
             </form>
-
-            <div style={{ marginTop: '1.2rem', paddingTop: '0.8rem', borderTop: '1px solid #e2e8f0' }}>
-              <p style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '0.4rem', fontWeight: 700 }}>
-                ⚡ Acceso rápido por Rol Operativo (Pruebas & Sustentación Académica):
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.45rem 0.65rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} onClick={() => setLoginForm({ usuario: 'admin', contrasena: 'adminpassword123' })}>
-                  👑 <strong>Grupo BookingSoft</strong> (Administrador) — <code>admin / adminpassword123</code>
-                </button>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.45rem 0.65rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} onClick={() => setLoginForm({ usuario: 'recepcion', contrasena: 'recepcion123' })}>
-                  🛎️ <strong>Recepcionista 24h</strong> — <code>recepcion / recepcion123</code>
-                </button>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.45rem 0.65rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} onClick={() => setLoginForm({ usuario: 'amallaves', contrasena: 'amallaves123' })}>
-                  🧹 <strong>Ama de Llaves</strong> (Aseo) — <code>amallaves / amallaves123</code>
-                </button>
-                <button type="button" className="btn-mini" style={{ textAlign: 'left', padding: '0.45rem 0.65rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} onClick={() => setLoginForm({ usuario: 'mantenimiento', contrasena: 'mantenimiento123' })}>
-                  🔧 <strong>Personal de Mantenimiento</strong> (Daños) — <code>mantenimiento / mantenimiento123</code>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -4721,6 +5222,251 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* VISOR LIGHTBOX GLOBAL EN ALTA RESOLUCIÓN CON ZOOM INTERACTIVO Y NAVEGACIÓN */}
+      {aptoLightboxPhoto && (() => {
+        const photosList = aptoLightboxPhoto.photos || [aptoLightboxPhoto];
+        const currentIndex = aptoLightboxPhoto.index || 0;
+        const activePhoto = photosList[currentIndex] || photosList[0];
+
+        const goPrev = (e) => {
+          if (e) e.stopPropagation();
+          setLightboxZoom(false);
+          const newIdx = (currentIndex - 1 + photosList.length) % photosList.length;
+          setAptoLightboxPhoto({ photos: photosList, index: newIdx });
+        };
+
+        const goNext = (e) => {
+          if (e) e.stopPropagation();
+          setLightboxZoom(false);
+          const newIdx = (currentIndex + 1) % photosList.length;
+          setAptoLightboxPhoto({ photos: photosList, index: newIdx });
+        };
+
+        const toggleZoom = (e) => {
+          if (e) e.stopPropagation();
+          setLightboxZoom(prev => !prev);
+        };
+
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(15, 23, 42, 0.96)',
+              backdropFilter: 'blur(12px)',
+              zIndex: 99999,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1.5rem'
+            }}
+            onClick={() => {
+              setLightboxZoom(false);
+              setAptoLightboxPhoto(null);
+            }}
+          >
+            {/* BOTÓN CERRAR (X) */}
+            <button
+              type="button"
+              onClick={() => {
+                setLightboxZoom(false);
+                setAptoLightboxPhoto(null);
+              }}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '25px',
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                color: '#ffffff',
+                width: '46px',
+                height: '46px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 100000,
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+              title="Cerrar (Esc)"
+            >
+              <X size={26}/>
+            </button>
+
+            {/* NAVEGACIÓN FLECHA IZQUIERDA */}
+            {photosList.length > 1 && (
+              <button
+                type="button"
+                onClick={goPrev}
+                style={{
+                  position: 'absolute',
+                  left: '25px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'rgba(255,255,255,0.18)',
+                  border: '2px solid rgba(255,255,255,0.2)',
+                  color: '#ffffff',
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  zIndex: 100000,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#e11d48';
+                  e.currentTarget.style.borderColor = '#e11d48';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.18)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                }}
+                title="Fotografía Anterior (Flecha Izquierda)"
+              >
+                <ChevronLeft size={32}/>
+              </button>
+            )}
+
+            {/* NAVEGACIÓN FLECHA DERECHA */}
+            {photosList.length > 1 && (
+              <button
+                type="button"
+                onClick={goNext}
+                style={{
+                  position: 'absolute',
+                  right: '25px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'rgba(255,255,255,0.18)',
+                  border: '2px solid rgba(255,255,255,0.2)',
+                  color: '#ffffff',
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  zIndex: 100000,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#e11d48';
+                  e.currentTarget.style.borderColor = '#e11d48';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.18)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                }}
+                title="Siguiente Fotografía (Flecha Derecha)"
+              >
+                <ChevronRight size={32}/>
+              </button>
+            )}
+
+            {/* CONTENEDOR DE LA FOTO EN ALTA RESOLUCIÓN CON ZOOM */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: '88vw',
+                maxHeight: '82vh',
+                position: 'relative',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                boxShadow: '0 25px 60px rgba(0,0,0,0.7)',
+                background: '#0f172a',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}
+            >
+              <div
+                onClick={toggleZoom}
+                style={{
+                  position: 'relative',
+                  overflow: 'hidden',
+                  cursor: lightboxZoom ? 'zoom-out' : 'zoom-in',
+                  maxHeight: '72vh',
+                  maxWidth: '88vw',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <img
+                  src={activePhoto.url}
+                  alt={activePhoto.titulo || 'Fotografía'}
+                  style={{
+                    maxHeight: '72vh',
+                    maxWidth: '88vw',
+                    objectFit: 'contain',
+                    display: 'block',
+                    transform: lightboxZoom ? 'scale(1.65)' : 'scale(1)',
+                    transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    background: 'rgba(15, 23, 42, 0.75)',
+                    backdropFilter: 'blur(4px)',
+                    color: '#ffffff',
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: '20px',
+                    fontSize: '0.76rem',
+                    fontWeight: 700,
+                    pointerEvents: 'none',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}
+                >
+                  {lightboxZoom ? '🔍 Alejar (1.65x)' : '🔍 Haz clic para acercar'}
+                </div>
+              </div>
+
+              <div style={{ width: '100%', background: '#0f172a', padding: '1rem 1.5rem', borderTop: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                <div>
+                  {activePhoto.titulo && (
+                    <h3 style={{ margin: 0, color: '#ffffff', fontSize: '1.15rem', fontWeight: 800 }}>
+                      {activePhoto.titulo}
+                    </h3>
+                  )}
+                  {activePhoto.desc && (
+                    <p style={{ margin: '0.2rem 0 0', color: '#94a3b8', fontSize: '0.86rem' }}>
+                      {activePhoto.desc}
+                    </p>
+                  )}
+                </div>
+
+                {/* CONTADOR DE FOTOS */}
+                {photosList.length > 1 && (
+                  <div style={{ background: '#e11d48', color: '#ffffff', padding: '0.35rem 0.85rem', borderRadius: '15px', fontSize: '0.8rem', fontWeight: 800, flexShrink: 0 }}>
+                    {currentIndex + 1} de {photosList.length}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* MODAL LEGAL INTERACTIVO NATIVO (TÉRMINOS Y POLÍTICAS PROPIAS FACILE & BOOKINGSOFT) */}
       {renderModalLegal()}
