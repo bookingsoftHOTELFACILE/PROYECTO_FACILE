@@ -4,7 +4,7 @@ import {
   AlertCircle, Calendar, Home, ListOrdered, Wifi, WifiOff, LogIn, 
   LogOut, Lock, User, Trash2, CheckCircle2, Wrench, Sparkles, MapPin, 
   Clock, ArrowRight, MessageCircle, Menu, Check, Search, Eye, EyeOff, KeyRound, Tag,
-  ChevronLeft, ChevronRight, X, Maximize2, Filter, Camera
+  ChevronLeft, ChevronRight, X, Maximize2, Filter, Camera, Heart
 } from 'lucide-react';
 
 // URL del backend FastAPI
@@ -1520,6 +1520,7 @@ function App() {
                     className="btn-airbnb-user"
                     onClick={() => setShowGuestAuthModal(true)}
                     title="Inicia sesión o regístrate como Huésped"
+                    aria-label="Inicia sesión o regístrate como Huésped"
                   >
                     <Menu size={16}/>
                     <User size={18}/>
@@ -4206,12 +4207,13 @@ function App() {
                   {guestAuthTab === 'login' ? (
                     <form onSubmit={handleGuestSearchSubmit} style={{ marginTop: '1rem' }}>
                       <div className="form-field">
-                        <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
+                        <label htmlFor="login-usuario" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
                           Número de Documento o Correo Electrónico
                         </label>
                         <div className="field-input-wrap">
                           <FileText className="field-icon" size={16} />
                           <input
+                            id="login-usuario"
                             type="text"
                             placeholder="Ej: 1017283944 o correo@ejemplo.com"
                             value={guestSearchQuery}
@@ -4224,7 +4226,7 @@ function App() {
 
                       <div className="form-field" style={{ marginTop: '0.8rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', margin: 0 }}>
+                          <label htmlFor="login-password" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', margin: 0 }}>
                             Contraseña
                           </label>
                           <button
@@ -4243,6 +4245,7 @@ function App() {
                         <div className="field-input-wrap">
                           <Lock className="field-icon" size={16} />
                           <input
+                            id="login-password"
                             type={showGuestPassword ? "text" : "password"}
                             placeholder="Ingrese su contraseña"
                             value={guestLoginPassword}
@@ -4407,7 +4410,9 @@ function App() {
                             <div className="field-input-wrap">
                               <FileText className="field-icon" size={16}/>
                               <input
+                                id="reg-nombre"
                                 type="text"
+                                aria-label="Nombre(s)"
                                 placeholder="Nombre(s)"
                                 value={nombreLegal}
                                 onChange={(e) => setNombreLegal(e.target.value)}
@@ -4419,7 +4424,9 @@ function App() {
                             <div className="field-input-wrap">
                               <FileText className="field-icon" size={16}/>
                               <input
+                                id="reg-apellido"
                                 type="text"
+                                aria-label="Apellido(s)"
                                 placeholder="Apellido(s)"
                                 value={apellidoLegal}
                                 onChange={(e) => setApellidoLegal(e.target.value)}
@@ -4436,12 +4443,13 @@ function App() {
                       {/* 2. DOCUMENTO DE IDENTIDAD Y TELÉFONO */}
                       <div className="form-row-2" style={{ marginBottom: '0.8rem' }}>
                         <div className="form-field">
-                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                          <label htmlFor="reg-documento" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
                             Documento (Cédula/Pasaporte)
                           </label>
                           <div className="field-input-wrap">
                             <ShieldCheck className="field-icon" size={16}/>
                             <input
+                              id="reg-documento"
                               type="text"
                               name="documento"
                               value={formData.documento}
@@ -4453,12 +4461,13 @@ function App() {
                           </div>
                         </div>
                         <div className="form-field">
-                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                          <label htmlFor="reg-telefono" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
                             Teléfono de contacto
                           </label>
                           <div className="field-input-wrap">
                             <Phone className="field-icon" size={16}/>
                             <input
+                              id="reg-telefono"
                               type="text"
                               name="telefono"
                               value={formData.telefono}
@@ -4473,12 +4482,13 @@ function App() {
 
                       {/* 3. FECHA DE NACIMIENTO */}
                       <div className="form-field" style={{ marginBottom: '0.8rem' }}>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
+                        <label htmlFor="reg-nacimiento" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
                           Fecha de nacimiento
                         </label>
                         <div className="field-input-wrap">
                           <Calendar className="field-icon" size={16}/>
                           <input
+                            id="reg-nacimiento"
                             type="date"
                             value={fechaNacimiento}
                             onChange={(e) => setFechaNacimiento(e.target.value)}
@@ -4493,12 +4503,13 @@ function App() {
                       {/* 4. CORREO Y CONTRASEÑA */}
                       <div className="form-row-2" style={{ marginBottom: '0.8rem' }}>
                         <div className="form-field">
-                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                          <label htmlFor="reg-correo" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
                             Correo electrónico
                           </label>
                           <div className="field-input-wrap">
                             <Mail className="field-icon" size={16}/>
                             <input
+                              id="reg-correo"
                               type="email"
                               name="correo"
                               value={formData.correo}
@@ -4509,12 +4520,13 @@ function App() {
                           </div>
                         </div>
                         <div className="form-field">
-                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                          <label htmlFor="reg-password" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
                             Contraseña
                           </label>
                           <div className="field-input-wrap">
                             <Lock className="field-icon" size={16}/>
                             <input
+                              id="reg-password"
                               type={showGuestPassword ? "text" : "password"}
                               name="password"
                               value={formData.password || ''}
