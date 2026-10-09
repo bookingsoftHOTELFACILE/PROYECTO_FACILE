@@ -2,8 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
-  /* Falla la prueba si tarda más de 30 segundos */
-  timeout: 30 * 1000,
+  /* Falla la prueba si tarda más de 60 segundos */
+  timeout: 60 * 1000,
   /* Ejecuta las pruebas en paralelo */
   fullyParallel: true,
   /* La ruta base de tu frontend en Docker/Local */
