@@ -206,15 +206,13 @@ def eliminar_reserva(
     id_reserva: int,
     usuario: Optional[UsuarioActual] = Depends(autenticar_opcional)
 ):
-    """
-    Cancela una reserva mediante baja lógica (UPDATE estado = 'Cancelada') sin destruir historial.
-    """
     audit_str = f"{usuario.nombre} ({usuario.rol})" if usuario else "Cliente Web (Público)"
+    conn = None
+    cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
         
-        # Obtener datos de la reserva antes de cancelarla
         cursor.execute("SELECT id_habitacion, estado FROM reserva_habitacion WHERE id_reserva = %s", (id_reserva,))
         res_row = cursor.fetchone()
         
@@ -225,12 +223,21 @@ def eliminar_reserva(
             else:
                 cursor.execute("UPDATE habitacion SET estado = 'Disponible', modificado_por = %s WHERE id_habitacion = %s", (audit_str, id_hab))
         
-        # Hallazgo 04: Baja lógica para preservar el registro contable de reservas
         cursor.execute("UPDATE reserva_habitacion SET estado = 'Cancelada', modificado_por = %s WHERE id_reserva = %s", (audit_str, id_reserva))
         conn.commit()
-        cursor.close()
-        connection.liberar_conexion(conn)
         return {"message": f"Reserva #{id_reserva} cancelada exitosamente por {audit_str}."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
-        )
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if conn:
+            connection.liberar_conexion(conn)

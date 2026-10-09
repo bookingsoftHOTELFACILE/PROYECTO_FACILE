@@ -17,12 +17,11 @@ class CambiarEstadoHuespedRequest(BaseModel):
 @router.get("/api/huespedes", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
 def obtener_huespedes():
     """Retorna la lista de todos los huéspedes ordenados por id."""
+    conn = None
+    cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE huesped ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
-        cursor.execute("ALTER TABLE huesped ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)")
-        conn.commit()
         cursor.execute("SELECT id_huesped, nombre, documento, telefono, correo, empresa, lealtad, estado, modificado_por FROM huesped ORDER BY id_huesped DESC")
         filas = cursor.fetchall()
         
@@ -40,11 +39,16 @@ def obtener_huespedes():
                 "modificado_por": f[8] or ""
             })
             
-        cursor.close()
-        connection.liberar_conexion(conn)
         return huespedes
     except Exception as e:
+        logger.error(f"Error al obtener huéspedes: {str(e)}")
         raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
+    finally:
+        if cursor:
+            try: cursor.close()
+            except Exception: pass
+        if conn:
+            connection.liberar_conexion(conn)
 
 @router.post("/api/user/registro", status_code=status.HTTP_201_CREATED)
 def registrar_usuario(
@@ -65,12 +69,11 @@ def registrar_usuario(
     clave_base = usuario.password.strip() if usuario.password else usuario.documento.strip()
     password_hash = bcrypt.hashpw(clave_base.encode(), bcrypt.gensalt()).decode()
 
+    conn = None
+    cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE huesped ADD COLUMN IF NOT EXISTS modificado_por VARCHAR(100)")
-        cursor.execute("ALTER TABLE huesped ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)")
-        conn.commit()
         
         # Validar si ya existe por documento o correo
         cursor.execute(
@@ -79,8 +82,6 @@ def registrar_usuario(
         )
         existente = cursor.fetchone()
         if existente:
-            cursor.close()
-            connection.liberar_conexion(conn)
             if existente[1] == usuario.documento.strip():
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -121,9 +122,6 @@ def registrar_usuario(
             "modificado_por": resultado[8]
         }
         
-        cursor.close()
-        connection.liberar_conexion(conn)
-        
         # Log de notificación por correo enviada exitosamente
         logger.info(f"📧 [EMAIL CONFIRMATION] Notificación de bienvenida enviada a '{usuario.correo}' para el huésped '{usuario.nombre}'.")
         
@@ -141,23 +139,29 @@ def registrar_usuario(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al procesar el registro."
         )
+    finally:
+        if cursor:
+            try: cursor.close()
+            except Exception: pass
+        if conn:
+            connection.liberar_conexion(conn)
 
 # ── POST /api/user/login (Inicio de sesión de Huésped con Documento/Correo + Contraseña) ──
 @router.post("/api/user/login")
 def login_huesped(payload: GuestLoginRequest):
     """Inicia sesión del huésped validando documento/correo y contraseña encriptada."""
-    q = payload.documento_o_correo.strip()
+    q = payload.documento_o_correo.strip()   
     if not q:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Debe ingresar su número de documento o correo electrónico."
         )
 
+    conn = None
+    cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE huesped ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)")
-        conn.commit()
 
         cursor.execute(
             "SELECT id_huesped, nombre, documento, telefono, correo, empresa, lealtad, estado, password_hash FROM huesped WHERE documento = %s OR LOWER(correo) = LOWER(%s)",
@@ -166,8 +170,6 @@ def login_huesped(payload: GuestLoginRequest):
         fila = cursor.fetchone()
 
         if not fila:
-            cursor.close()
-            connection.liberar_conexion(conn)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No encontramos un registro con estos datos. Regístrese en la opción 'Crear cuenta nueva'."
@@ -175,23 +177,24 @@ def login_huesped(payload: GuestLoginRequest):
 
         id_huesped, nombre, documento, telefono, correo, empresa, lealtad, estado, password_hash = fila
 
-        # Validar contraseña si se proporcionó y el hash existe
-        if payload.password and password_hash:
-            if not bcrypt.checkpw(payload.password.encode(), password_hash.encode()):
-                cursor.close()
-                connection.liberar_conexion(conn)
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="La contraseña ingresada es incorrecta. Verifique sus datos o use '¿Olvidaste tu contraseña?'."
-                )
-        elif payload.password and not password_hash:
-            # Asignar hash de la primera clave si la cuenta venía de migración antigua sin hash
+        # 1. Validar que el huésped sí envió una contraseña (evita el login nulo)
+        if not payload.password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="La contraseña es obligatoria."
+            )
+
+        # 2. Si no tenía contraseña previa (cuenta semilla de BD), inicializar con la primera clave enviada
+        if not password_hash:
             nuevo_hash = bcrypt.hashpw(payload.password.encode(), bcrypt.gensalt()).decode()
             cursor.execute("UPDATE huesped SET password_hash = %s WHERE id_huesped = %s", (nuevo_hash, id_huesped))
             conn.commit()
-
-        cursor.close()
-        connection.liberar_conexion(conn)
+        # 3. Si ya tiene contraseña registrada, validar que coincida con el hash
+        elif not bcrypt.checkpw(payload.password.encode(), password_hash.encode()):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Credenciales inválidas."
+            )
 
         usuario_dict = {
             "id_huesped": id_huesped,
@@ -217,6 +220,12 @@ def login_huesped(payload: GuestLoginRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al procesar el inicio de sesión."
         )
+    finally:
+        if cursor:
+            try: cursor.close()
+            except Exception: pass
+        if conn:
+            connection.liberar_conexion(conn)
 
 # ── POST /api/user/recuperar-password (Solicitud de recuperación de contraseña) ──
 @router.post("/api/user/recuperar-password")
@@ -229,6 +238,8 @@ def recuperar_password(payload: GuestRecuperarRequest):
             detail="Ingrese su número de documento o correo electrónico registrado."
         )
 
+    conn = None
+    cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
@@ -237,8 +248,6 @@ def recuperar_password(payload: GuestRecuperarRequest):
             (q, q.lower())
         )
         fila = cursor.fetchone()
-        cursor.close()
-        connection.liberar_conexion(conn)
 
         if not fila:
             raise HTTPException(
@@ -265,6 +274,12 @@ def recuperar_password(payload: GuestRecuperarRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al procesar la solicitud de recuperación."
         )
+    finally:
+        if cursor:
+            try: cursor.close()
+            except Exception: pass
+        if conn:
+            connection.liberar_conexion(conn)
 
 # ── POST /api/user/restablecer-password (Cambio de contraseña) ──
 @router.post("/api/user/restablecer-password")
@@ -279,11 +294,11 @@ def restablecer_password(payload: GuestRestablecerRequest):
 
     nuevo_hash = bcrypt.hashpw(payload.nueva_password.strip().encode(), bcrypt.gensalt()).decode()
 
+    conn = None
+    cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE huesped ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)")
-        conn.commit()
 
         cursor.execute(
             "UPDATE huesped SET password_hash = %s WHERE documento = %s OR LOWER(correo) = LOWER(%s) RETURNING id_huesped, nombre, correo",
@@ -291,8 +306,6 @@ def restablecer_password(payload: GuestRestablecerRequest):
         )
         resultado = cursor.fetchone()
         conn.commit()
-        cursor.close()
-        connection.liberar_conexion(conn)
 
         if not resultado:
             raise HTTPException(
@@ -313,9 +326,15 @@ def restablecer_password(payload: GuestRestablecerRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al actualizar la contraseña."
         )
+    finally:
+        if cursor:
+            try: cursor.close()
+            except Exception: pass
+        if conn:
+            connection.liberar_conexion(conn)
 
 # Hallazgo 03: Se requiere rol Recepcionista o Administrador para modificar estado de huésped
-@router.patch("/api/huespedes/{id_huesped}/estado", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h", "Recepcionista Noche"))])
+@router.patch("/api/huespedes/{id_huesped}/estado", dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
 def cambiar_estado_huesped(
     id_huesped: int,
     datos: CambiarEstadoHuespedRequest,
@@ -329,23 +348,20 @@ def cambiar_estado_huesped(
         raise HTTPException(status_code=400, detail="El estado debe ser 'Activo' o 'Inactivo'.")
         
     audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    conn = None
+    cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
-        # Hallazgo 06: modificado_por en schema.sql
         cursor.execute(
             "UPDATE huesped SET estado = %s, modificado_por = %s WHERE id_huesped = %s RETURNING id_huesped, nombre, estado, modificado_por",
             (datos.estado, audit_str, id_huesped)
         )
         res = cursor.fetchone()
         if not res:
-            cursor.close()
-            connection.liberar_conexion(conn)
             raise HTTPException(status_code=404, detail="Huésped no encontrado.")
             
         conn.commit()
-        cursor.close()
-        connection.liberar_conexion(conn)
         
         accion = "activado" if datos.estado == "Activo" else "desactivado"
         return {
@@ -357,9 +373,17 @@ def cambiar_estado_huesped(
                 "modificado_por": res[3]
             }
         }
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
-        )
+        logger.error(f"Error al cambiar estado de huésped: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
+    finally:
+        if cursor:
+            try: cursor.close()
+            except Exception: pass
+        if conn:
+            connection.liberar_conexion(conn)
 
 # Hallazgo 03: Solo Administrador puede dar de baja a un huésped.
 @router.delete("/api/huespedes/{id_huesped}", dependencies=[Depends(requiere_rol("Administrador"))])
@@ -372,23 +396,30 @@ def eliminar_huesped(
     contable de reservas y respetar la integridad referencial (ON DELETE RESTRICT).
     """
     audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    conn = None
+    cursor = None
     try:
         conn = connection.obtener_conexion()
         cursor = conn.cursor()
         cursor.execute("SELECT nombre FROM huesped WHERE id_huesped = %s", (id_huesped,))
         row = cursor.fetchone()
         if not row:
-            cursor.close()
-            connection.liberar_conexion(conn)
             raise HTTPException(status_code=404, detail="Huésped no encontrado.")
         nombre = row[0]
         
         # Hallazgo 04: Baja lógica del huésped marcándolo como Inactivo (preserva reservas)
         cursor.execute("UPDATE huesped SET estado = 'Inactivo', modificado_por = %s WHERE id_huesped = %s", (audit_str, id_huesped))
         conn.commit()
-        cursor.close()
-        connection.liberar_conexion(conn)
         return {"message": f"Huésped '{nombre}' desactivado (baja lógica) exitosamente por {audit_str}."}
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
-        )
+        logger.error(f"Error al eliminar huésped: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
+    finally:
+        if cursor:
+            try: cursor.close()
+            except Exception: pass
+        if conn:
+            connection.liberar_conexion(conn)
+

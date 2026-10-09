@@ -25,13 +25,13 @@ router = APIRouter(prefix="/api/habitaciones", tags=["habitaciones"])
 @router.get("")
 def obtener_habitaciones():
     """Retorna el catálogo general de habitaciones."""
+    conn = connection.obtener_conexion()
     try:
-        conn = connection.obtener_conexion()
         cursor = conn.cursor()
         # Hallazgo 06: Columnas modificado_por y detalle_mantenimiento declaradas directamente en schema.sql
-        cursor.execute("SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado, modificado_por, detalle_mantenimiento FROM habitacion ORDER BY numero ASC")
+        cursor.execute("SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado, modificado_por, detalle_mantenimiento FROM habitacion")
         filas = cursor.fetchall()
-        
+
         habitaciones = []
         for f in filas:
             habitaciones.append({
@@ -44,13 +44,20 @@ def obtener_habitaciones():
                 "modificado_por": f[6] or "",
                 "detalle_mantenimiento": f[7] or ""
             })
-            
-        cursor.close()
-        connection.liberar_conexion(conn)
+
         return habitaciones
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
-        )
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
+        
+    finally:
+        # El bloque finally SE EJECUTA SIEMPRE, haya éxito o error.
+        # Así garantizamos que la conexión NUNCA se quede colgada.
+        try:
+            cursor.close()
+        except:
+            pass
+        connection.liberar_conexion(conn)
 
 
 # ── GET /api/habitaciones/disponibilidad (RF-012) ──────────────────────────────

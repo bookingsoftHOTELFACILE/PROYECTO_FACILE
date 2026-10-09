@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS empleado (
     usuario           VARCHAR(50)  UNIQUE NOT NULL,
     contrasena        VARCHAR(255) NOT NULL,
     rol               VARCHAR(30)  NOT NULL
-        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento')),
+        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento', 'Conserje')),
     tipo_documento    VARCHAR(30)  NOT NULL DEFAULT 'Cédula de ciudadanía'
         CHECK (tipo_documento IN ('Cédula de ciudadanía', 'Pasaporte', 'Cédula de extranjería', 'Otro')),
     numero_documento  VARCHAR(30)  UNIQUE,
@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS huesped (
     documento VARCHAR(20) UNIQUE NOT NULL,
     telefono VARCHAR(15) NOT NULL,
     correo VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255),
     empresa VARCHAR(100), -- Vacío para turistas, completado para corporativos
     lealtad VARCHAR(20) NOT NULL DEFAULT 'Silver' CHECK (lealtad IN ('Silver', 'Gold', 'Platinum')),
     estado VARCHAR(20) NOT NULL DEFAULT 'Activo',
