@@ -4,7 +4,8 @@ import {
   AlertCircle, Calendar, Home, ListOrdered, Wifi, WifiOff, LogIn, 
   LogOut, Lock, User, Trash2, CheckCircle2, Wrench, Sparkles, MapPin, 
   Clock, ArrowRight, MessageCircle, Menu, Check, Search, Eye, EyeOff, KeyRound, Tag,
-  ChevronLeft, ChevronRight, X, Maximize2, Filter, Camera, Heart
+  ChevronLeft, ChevronRight, X, Maximize2, Filter, Camera, Heart,
+  GraduationCap, Globe, BookOpen, Music, Languages, Luggage, Award, Smile
 } from 'lucide-react';
 
 // URL del backend FastAPI
@@ -828,6 +829,37 @@ function App() {
   const [formData, setFormData] = useState({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
   const [habeasData, setHabeasData] = useState(false);
   const [selectedHuesped, setSelectedHuesped] = useState(null);
+
+  // ---- ESTADOS DE PERFIL DE HUÉSPED ESTILO AIRBNB ----
+  const [guestProfileExtras, setGuestProfileExtras] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bookingsoft_guest_profile_extras');
+      return saved ? JSON.parse(saved) : {
+        dedico: 'Ingeniero de Software / Consultor',
+        estudie: 'Universidad / SENA',
+        destino: 'Kioto, Japón',
+        mascotas: 'Un perro golden retriever',
+        decada: 'Años 90',
+        tiempo: 'Aprender nuevas tecnologías',
+        cancion: 'Clásicos del rock en español',
+        habilidad: 'Hacer café perfecto',
+        idiomas: 'Español, Inglés',
+        dato_curioso: 'Me encanta la gastronomía colombiana',
+        amo: 'Viajar los fines de semana y el café de origen',
+        biografia: 'El camino del aprendizaje y nuevos destinos'
+      };
+    } catch {
+      return {};
+    }
+  });
+  const [guestAvatarUrl, setGuestAvatarUrl] = useState(() => {
+    try {
+      return localStorage.getItem('bookingsoft_guest_avatar') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [profileSavedMsg, setProfileSavedMsg] = useState(false);
 
   // ---- ESTADO DE EMPLEADOS & GESTIÓN DE PERSONAL (ADMINISTRADOR / GRUPO BOOKINGSOFT) ----
   const [empleadosList, setEmpleadosList] = useState([]);
@@ -2092,18 +2124,25 @@ function App() {
 
                     {showGuestMenuDropdown && (
                       <div className="guest-dropdown-menu" onClick={() => setShowGuestMenuDropdown(false)}>
-                        <div style={{ padding: '0.6rem 1.1rem', background: '#fafafa', borderBottom: '1px solid #f1f5f9' }}>
-                          <p style={{ margin: 0, fontSize: '0.84rem', fontWeight: 700, color: '#0f172a' }}>
+                        <div style={{ padding: '0.8rem 1.1rem', background: '#fafafa', borderBottom: '1px solid #f1f5f9' }}>
+                          <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
                             {selectedHuesped.nombre}
                           </p>
                           <p style={{ margin: '0.1rem 0 0', fontSize: '0.75rem', color: '#64748b' }}>
                             {selectedHuesped.correo}
                           </p>
                         </div>
-                        <button className="guest-dropdown-item" onClick={() => { setActiveTab('reservar'); }}>
-                          <Calendar size={16} color="#e11d48" /> Mis Reservas de Apartamento
+                        <button className="guest-dropdown-item" onClick={() => { setActiveTab('perfil'); setShowGuestMenuDropdown(false); }}>
+                          <User size={16} color="#0f172a" /> Mi Perfil
                         </button>
-                        <button className="guest-dropdown-item" onClick={() => { setShowCommunityCommitmentModal(true); }}>
+                        <button className="guest-dropdown-item" onClick={() => { setActiveTab('viajes'); setShowGuestMenuDropdown(false); }}>
+                          <Luggage size={16} color="#0f172a" /> Viajes / Mis Reservas
+                        </button>
+                        <button className="guest-dropdown-item" onClick={() => { setActiveTab('reservar'); setShowGuestMenuDropdown(false); }}>
+                          <Calendar size={16} color="#0f172a" /> Reservar Apartamento
+                        </button>
+                        <div className="guest-dropdown-divider"></div>
+                        <button className="guest-dropdown-item" onClick={() => { setShowCommunityCommitmentModal(true); setShowGuestMenuDropdown(false); }}>
                           <Heart size={16} color="#e11d48" /> Compromiso de la Comunidad
                         </button>
                         <button
@@ -2931,95 +2970,105 @@ function App() {
       {activeTab === 'reservar' && (
         <section className="facile-section">
           <div className="section-title-wrap">
-            <h2>Reservar en Línea</h2>
-            <p>Auto-registro de huésped y reserva con cálculo automático de cotización</p>
+            <h2>{selectedHuesped ? 'Reservar Apartamento' : 'Reservar en Línea'}</h2>
+            <p>{selectedHuesped ? 'Seleccione las fechas y confirme su estadía de forma inmediata' : 'Auto-registro de huésped y reserva con cálculo automático de cotización'}</p>
           </div>
 
-          <div className="booking-grid">
-            {/* PASO 1: REGISTRO DE HUÉSPED */}
-            <div className="clean-card">
-              <div className="card-step-badge">Paso 1</div>
-              <div className="clean-card-header">
-                <UserPlus size={20} color="var(--color-primary-red)"/>
-                <h3>Registro de Huésped</h3>
+          <div className="booking-grid" style={selectedHuesped ? { gridTemplateColumns: '1fr', maxWidth: '850px', margin: '0 auto' } : {}}>
+            {/* PASO 1: REGISTRO DE HUÉSPED (Solo se muestra a visitantes no autenticados) */}
+            {!selectedHuesped && (
+              <div className="clean-card">
+                <div className="card-step-badge">Paso 1</div>
+                <div className="clean-card-header">
+                  <UserPlus size={20} color="var(--color-primary-red)"/>
+                  <h3>Registro de Huésped</h3>
+                </div>
+                <p className="clean-card-desc">
+                  Cree su perfil público para habilitar la reserva de su apartamento.
+                </p>
+
+                <form onSubmit={handleUserSubmit}>
+                  <div className="form-field">
+                    <label>Nombre Completo</label>
+                    <div className="field-input-wrap">
+                      <FileText className="field-icon" size={16}/>
+                      <input type="text" name="nombre" value={formData.nombre} onChange={handleUserChange} placeholder="Ej: Liliana Restrepo" required/>
+                    </div>
+                  </div>
+
+                  <div className="form-row-2">
+                    <div className="form-field">
+                      <label>Documento (Solo números)</label>
+                      <div className="field-input-wrap">
+                        <ShieldCheck className="field-icon" size={16}/>
+                        <input type="text" name="documento" value={formData.documento} onChange={handleUserChange} placeholder="Ej: 1017283944" maxLength={15} required/>
+                      </div>
+                    </div>
+                    <div className="form-field">
+                      <label>Teléfono de Contacto</label>
+                      <div className="field-input-wrap">
+                        <Phone className="field-icon" size={16}/>
+                        <input type="text" name="telefono" value={formData.telefono} onChange={handleUserChange} placeholder="Ej: 3154449876" maxLength={15} required/>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-row-2">
+                    <div className="form-field">
+                      <label>Correo Electrónico</label>
+                      <div className="field-input-wrap">
+                        <Mail className="field-icon" size={16}/>
+                        <input type="email" name="correo" value={formData.correo} onChange={handleUserChange} placeholder="Ej: correo@ejemplo.com" required/>
+                      </div>
+                    </div>
+                    <div className="form-field">
+                      <label>Empresa (Opcional)</label>
+                      <div className="field-input-wrap">
+                        <Briefcase className="field-icon" size={16}/>
+                        <input type="text" name="empresa" value={formData.empresa} onChange={handleUserChange} placeholder="Ej: Bancolombia"/>
+                      </div>
+                    </div>
+                  </div>
+
+                  <label className="checkbox-legal">
+                    <input type="checkbox" checked={habeasData} onChange={(e) => setHabeasData(e.target.checked)}/>
+                    <span>Autorizo el tratamiento de mis datos personales según la <strong>Ley de Habeas Data (Ley 1581 de 2012)</strong>.</span>
+                  </label>
+
+                  <button type="submit" className="btn-submit-red" disabled={loading}>
+                    <UserPlus size={16}/> {loading ? 'Registrando...' : 'Registrarme como Huésped'}
+                  </button>
+                </form>
+
+                {alert && (
+                  <div className={`msg-alert msg-${alert.type}`}>
+                    <AlertCircle size={18}/>
+                    <span>{alert.message}</span>
+                  </div>
+                )}
               </div>
-              <p className="clean-card-desc">
-                Cree su perfil público para habilitar la reserva de su apartamento.
-              </p>
+            )}
 
-              <form onSubmit={handleUserSubmit}>
-                <div className="form-field">
-                  <label>Nombre Completo</label>
-                  <div className="field-input-wrap">
-                    <FileText className="field-icon" size={16}/>
-                    <input type="text" name="nombre" value={formData.nombre} onChange={handleUserChange} placeholder="Ej: Liliana Restrepo" required/>
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-field">
-                    <label>Documento (Solo números)</label>
-                    <div className="field-input-wrap">
-                      <ShieldCheck className="field-icon" size={16}/>
-                      <input type="text" name="documento" value={formData.documento} onChange={handleUserChange} placeholder="Ej: 1017283944" maxLength={15} required/>
-                    </div>
-                  </div>
-                  <div className="form-field">
-                    <label>Teléfono de Contacto</label>
-                    <div className="field-input-wrap">
-                      <Phone className="field-icon" size={16}/>
-                      <input type="text" name="telefono" value={formData.telefono} onChange={handleUserChange} placeholder="Ej: 3154449876" maxLength={15} required/>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-field">
-                    <label>Correo Electrónico</label>
-                    <div className="field-input-wrap">
-                      <Mail className="field-icon" size={16}/>
-                      <input type="email" name="correo" value={formData.correo} onChange={handleUserChange} placeholder="Ej: correo@ejemplo.com" required/>
-                    </div>
-                  </div>
-                  <div className="form-field">
-                    <label>Empresa (Opcional)</label>
-                    <div className="field-input-wrap">
-                      <Briefcase className="field-icon" size={16}/>
-                      <input type="text" name="empresa" value={formData.empresa} onChange={handleUserChange} placeholder="Ej: Bancolombia"/>
-                    </div>
-                  </div>
-                </div>
-
-                <label className="checkbox-legal">
-                  <input type="checkbox" checked={habeasData} onChange={(e) => setHabeasData(e.target.checked)}/>
-                  <span>Autorizo el tratamiento de mis datos personales según la <strong>Ley de Habeas Data (Ley 1581 de 2012)</strong>.</span>
-                </label>
-
-                <button type="submit" className="btn-submit-red" disabled={loading}>
-                  <UserPlus size={16}/> {loading ? 'Registrando...' : 'Registrarme como Huésped'}
-                </button>
-              </form>
-
-              {alert && (
-                <div className={`msg-alert msg-${alert.type}`}>
-                  <AlertCircle size={18}/>
-                  <span>{alert.message}</span>
-                </div>
-              )}
-            </div>
-
-            {/* PASO 2: CREACIÓN DE RESERVA */}
+            {/* CREACIÓN DE RESERVA */}
             <div className="clean-card">
-              <div className="card-step-badge">Paso 2</div>
+              {!selectedHuesped && <div className="card-step-badge">Paso 2</div>}
               <div className="clean-card-header">
                 <Calendar size={20} color="var(--color-primary-red)"/>
-                <h3>Crear Reserva</h3>
+                <h3>{selectedHuesped ? 'Confirmar Nueva Reserva' : 'Crear Reserva'}</h3>
               </div>
 
               {selectedHuesped ? (
-                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.6rem 0.8rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '0.85rem' }}>Huésped: <strong>{selectedHuesped.nombre}</strong> (Doc: {selectedHuesped.documento})</span>
-                  <button className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar</button>
+                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.75rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                    <div style={{ width: '32px', height: '32px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <User size={18} color="#e11d48"/>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{selectedHuesped.nombre}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Doc: {selectedHuesped.documento} {selectedHuesped.correo ? `• ${selectedHuesped.correo}` : ''}</div>
+                    </div>
+                  </div>
+                  <button className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar / Cerrar</button>
                 </div>
               ) : (
                 <p className="clean-card-desc" style={{ color: '#b45309' }}>
@@ -3216,6 +3265,453 @@ function App() {
               )}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* =========================================================================
+          VISTA: MI PERFIL (ESTILO AIRBNB EXACTO)
+          ========================================================================= */}
+      {activeTab === 'perfil' && (
+        <section className="facile-section" style={{ paddingTop: '1.5rem' }}>
+          {selectedHuesped ? (
+            <div className="airbnb-profile-container">
+              {profileSavedMsg && (
+                <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', padding: '0.8rem 1.2rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 600 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#059669" />
+                    <span>¡Tu perfil se ha actualizado correctamente! Los cambios son visibles para la comunidad.</span>
+                  </div>
+                  <button onClick={() => setProfileSavedMsg(false)} style={{ background: 'none', border: 'none', color: '#065f46', cursor: 'pointer', fontWeight: 700 }}>✕</button>
+                </div>
+              )}
+
+              <div className="airbnb-profile-grid">
+                {/* COLUMNA IZQUIERDA: TARJETA DE PERFIL Y FOTO */}
+                <div className="airbnb-profile-card">
+                  <div className="airbnb-avatar-wrapper">
+                    <div className="airbnb-avatar-circle">
+                      {guestAvatarUrl ? (
+                        <img src={guestAvatarUrl} alt={selectedHuesped.nombre} className="airbnb-avatar-img" />
+                      ) : (
+                        <span>{selectedHuesped.nombre ? selectedHuesped.nombre.charAt(0).toUpperCase() : 'H'}</span>
+                      )}
+                    </div>
+                    <label className="airbnb-avatar-badge-btn" title="Subir o cambiar fotografía">
+                      <Camera size={14} color="#0f172a" />
+                      <span>Agrega</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              const b64 = reader.result;
+                              setGuestAvatarUrl(b64);
+                              try { localStorage.setItem('bookingsoft_guest_avatar', b64); } catch {}
+                              setProfileSavedMsg(true);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <h2 style={{ margin: '0 0 0.3rem', fontSize: '1.45rem', fontWeight: 800, color: '#0f172a' }}>
+                    {selectedHuesped.nombre}
+                  </h2>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '1.2rem' }}>
+                    <ShieldCheck size={14} color="#059669" /> Huésped Verificado • {selectedHuesped.lealtad || 'Silver'}
+                  </div>
+
+                  <div style={{ textAlign: 'left', borderTop: '1px solid #f1f5f9', paddingTop: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem', color: '#475569' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <FileText size={16} color="#94a3b8" />
+                      <span><strong>Documento:</strong> {selectedHuesped.documento}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <Mail size={16} color="#94a3b8" />
+                      <span style={{ wordBreak: 'break-all' }}><strong>Correo:</strong> {selectedHuesped.correo}</span>
+                    </div>
+                    {selectedHuesped.telefono && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <Phone size={16} color="#94a3b8" />
+                        <span><strong>Teléfono:</strong> {selectedHuesped.telefono}</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <Calendar size={16} color="#94a3b8" />
+                      <span><strong>Miembro desde:</strong> 2026</span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1.2rem', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <button
+                      className="btn-airbnb-black"
+                      style={{ width: '100%', padding: '0.7rem' }}
+                      onClick={() => setActiveTab('viajes')}
+                    >
+                      <Luggage size={16} /> Ver Mis Reservas / Viajes
+                    </button>
+                    <button
+                      style={{ background: 'none', border: '1px solid #e2e8f0', color: '#64748b', borderRadius: '8px', padding: '0.6rem', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}
+                      onClick={() => {
+                        setSelectedHuesped(null);
+                        setActiveTab('inicio');
+                        setAlert({ type: 'info', message: 'Sesión cerrada.' });
+                      }}
+                    >
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                </div>
+
+                {/* COLUMNA DERECHA: SECCIÓN MI PERFIL ESTILO AIRBNB */}
+                <div className="airbnb-profile-title-col">
+                  <h1>Mi perfil</h1>
+                  <p className="airbnb-profile-sub">
+                    Los anfitriones y huéspedes pueden ver tu perfil y es posible que aparezca en Apartamentos Facile para ayudarnos a fomentar la confianza en nuestra comunidad.{' '}
+                    <span 
+                      style={{ color: '#0f172a', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}
+                      onClick={() => setShowCommunityCommitmentModal(true)}
+                    >
+                      Más información
+                    </span>
+                  </p>
+
+                  <div className="airbnb-questions-grid">
+                    {/* Dónde estudié */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <GraduationCap size={19} color="#475569" />
+                        <span>Dónde estudié</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Escribe tu universidad o institución..."
+                        value={guestProfileExtras.estudie || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, estudie: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* A qué me dedico */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Briefcase size={19} color="#475569" />
+                        <span>A qué me dedico</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Tu profesión u ocupación..."
+                        value={guestProfileExtras.dedico || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, dedico: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* A dónde siempre quise ir */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Globe size={19} color="#475569" />
+                        <span>A dónde siempre quise ir</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Destino soñado..."
+                        value={guestProfileExtras.destino || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, destino: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Mascotas */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Heart size={19} color="#475569" />
+                        <span>Mascotas</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="¿Tienes perros, gatos u otras mascotas?..."
+                        value={guestProfileExtras.mascotas || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, mascotas: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Década en la que nací */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Sparkles size={19} color="#475569" />
+                        <span>Década en la que nací</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Ej: Años 90, Años 80..."
+                        value={guestProfileExtras.decada || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, decada: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* A qué dedico demasiado tiempo */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Clock size={19} color="#475569" />
+                        <span>A qué dedico demasiado tiempo</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Tus pasatiempos o aficiones..."
+                        value={guestProfileExtras.tiempo || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, tiempo: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Mi canción favorita en la secundaria */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Music size={19} color="#475569" />
+                        <span>Mi canción favorita en la secundaria</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Canción o banda favorita..."
+                        value={guestProfileExtras.cancion || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, cancion: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Mi habilidad menos útil */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Smile size={19} color="#475569" />
+                        <span>Mi habilidad menos útil</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Ej: Hacer trucos de magia sencillos..."
+                        value={guestProfileExtras.habilidad || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, habilidad: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Dato curioso sobre mí */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Award size={19} color="#475569" />
+                        <span>Dato curioso sobre mí</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Un dato divertido o anecdótico..."
+                        value={guestProfileExtras.dato_curioso || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, dato_curioso: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Amo */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Heart size={19} color="#e11d48" />
+                        <span>Amo</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Qué cosas te apasionan en la vida..."
+                        value={guestProfileExtras.amo || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, amo: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* El título de mi biografía sería */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <BookOpen size={19} color="#475569" />
+                        <span>El título de mi biografía sería</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Una frase que te resuma..."
+                        value={guestProfileExtras.biografia || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, biografia: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Idiomas que hablo */}
+                    <div className="airbnb-question-card">
+                      <div className="airbnb-question-label">
+                        <Languages size={19} color="#475569" />
+                        <span>Idiomas que hablo</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        className="airbnb-question-input"
+                        placeholder="Ej: Español, Inglés, Francés..."
+                        value={guestProfileExtras.idiomas || ''}
+                        onChange={(e) => setGuestProfileExtras(prev => ({ ...prev, idiomas: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center' }}>
+                    <button 
+                      type="button" 
+                      className="airbnb-btn-done"
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('bookingsoft_guest_profile_extras', JSON.stringify(guestProfileExtras));
+                        } catch {}
+                        setProfileSavedMsg(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      Listo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+              <User size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
+              <h3>Inicia sesión para ver tu perfil</h3>
+              <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>Debes identificarte como huésped para consultar o editar tu perfil público.</p>
+              <button className="btn-airbnb-primary" onClick={() => setShowGuestAuthModal(true)}>
+                Iniciar sesión o registrarme
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* =========================================================================
+          VISTA: VIAJES Y RESERVAS DE HUÉSPED (ESTILO AIRBNB)
+          ========================================================================= */}
+      {activeTab === 'viajes' && (
+        <section className="facile-section" style={{ paddingTop: '1.5rem' }}>
+          {selectedHuesped ? (() => {
+            const misReservas = reservas.filter(r => 
+              String(r.id_huesped) === String(selectedHuesped.id_huesped) || 
+              (selectedHuesped.documento && String(r.huesped_documento) === String(selectedHuesped.documento))
+            );
+
+            return (
+              <div className="airbnb-profile-container">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.4rem' }}>
+                      Viajes y Reservas de Apartamento
+                    </h1>
+                    <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0 }}>
+                      Gestiona tus estadías en Apartamentos Facile, consulta fechas de check-in y confirma nuevas noches.
+                    </p>
+                  </div>
+                  <button 
+                    className="btn-airbnb-primary"
+                    style={{ margin: 0, padding: '0.75rem 1.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    onClick={() => setActiveTab('reservar')}
+                  >
+                    <Calendar size={18} /> Reservar otro apartamento
+                  </button>
+                </div>
+
+                {misReservas.length > 0 ? (
+                  <div className="airbnb-trips-grid">
+                    {misReservas.map(res => {
+                      return (
+                        <div key={res.id_reserva} className="airbnb-trip-card">
+                          <div style={{ height: '180px', background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
+                            <img 
+                              src={`/img/apto_${(res.id_reserva % 6) + 1}.jpg`} 
+                              alt={`Apto ${res.habitacion_numero}`}
+                              onError={(e) => { e.currentTarget.src = '/img/hero.jpg'; }}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                            <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                              {res.estado}
+                            </div>
+                          </div>
+                          <div style={{ padding: '1.4rem' }}>
+                            <h3 style={{ margin: '0 0 0.4rem', fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
+                              Apartamento {res.habitacion_numero} — {res.habitacion_tipo}
+                            </h3>
+                            <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <MapPin size={15} color="#e11d48" /> Calle 97 #21-62, Chicó / Bogotá D.C.
+                            </p>
+
+                            <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '0.8rem 1rem', marginBottom: '1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                              <div>
+                                <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Llegada (Check-in)</span>
+                                <strong style={{ color: '#0f172a' }}>{res.fecha_entrada}</strong>
+                              </div>
+                              <ArrowRight size={16} color="#94a3b8" />
+                              <div>
+                                <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Salida (Check-out)</span>
+                                <strong style={{ color: '#0f172a' }}>{res.fecha_salida}</strong>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: '0.82rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <CheckCircle2 size={15} /> Reserva Confirmada
+                              </span>
+                              <button 
+                                className="btn-mini"
+                                onClick={() => {
+                                  alert(`Reserva #${res.id_reserva} en Apartamentos Facile.\nApartamento: ${res.habitacion_numero} (${res.habitacion_tipo})\nFechas: ${res.fecha_entrada} al ${res.fecha_salida}\nHuésped: ${selectedHuesped.nombre}\nEstado: ${res.estado}`);
+                                }}
+                              >
+                                Ver Detalle
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '3.5rem 2rem', textAlign: 'center', maxWidth: '600px', margin: '2rem auto', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
+                    <div style={{ width: '70px', height: '70px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.2rem' }}>
+                      <Luggage size={32} color="#e11d48" />
+                    </div>
+                    <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>
+                      Aún no tienes ningún viaje reservado
+                    </h3>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', margin: '0 0 1.8rem' }}>
+                      ¡Es hora de preparar tus maletas! Explora nuestros 38 apartamentos con cocina equipada, WiFi de alta velocidad y servicios ejecutivos.
+                    </p>
+                    <button 
+                      className="btn-airbnb-primary" 
+                      style={{ margin: 0, padding: '0.85rem 2rem' }}
+                      onClick={() => setActiveTab('reservar')}
+                    >
+                      Explorar Apartamentos y Reservar
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })() : (
+            <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+              <Luggage size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
+              <h3>Inicia sesión para ver tus viajes</h3>
+              <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>Identifícate como huésped para consultar tus reservas activas.</p>
+              <button className="btn-airbnb-primary" onClick={() => setShowGuestAuthModal(true)}>
+                Iniciar sesión o registrarme
+              </button>
+            </div>
+          )}
         </section>
       )}
 
