@@ -4,8 +4,8 @@ test('Successful registration of a new guest with unique dynamic data', async ({
   // ARRANGE
   const uniqueId = Date.now();
   const email = `test${uniqueId}@example.com`;
-  const documento = String(uniqueId).slice(-8);
-  const telefono = `310${String(uniqueId).slice(-7)}`;
+  const documento = `PAS${String(uniqueId).slice(-6)}`;
+  const telefono = `57310${String(uniqueId).slice(-7)}`;
 
   await page.goto('/');
 
