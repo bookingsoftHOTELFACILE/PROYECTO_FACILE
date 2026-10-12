@@ -11,7 +11,7 @@ export default defineConfig({
     baseURL: 'http://localhost:3001',
     trace: 'on-first-retry',
     launchOptions: {
-        slowMo: 2000,
+      slowMo: 1000,
     },
   },
   /* Configuramos solo Chromium (Chrome) para empezar rápido */

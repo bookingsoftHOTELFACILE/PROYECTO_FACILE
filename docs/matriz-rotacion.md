@@ -27,7 +27,7 @@ Anota la cobertura real al cerrar cada semana. El umbral de la semana siguiente 
 
 | Semana | Frontend (%) | Backend (%) | Umbral configurado para la semana siguiente |
 |---|---|---|---|
-| S1 (línea base) | | | |
+| S1 (línea base) | 0% | 43% | 43% (Backend) / 0% (Frontend) |
 
 ## Registro de vocero aleatorio
 
