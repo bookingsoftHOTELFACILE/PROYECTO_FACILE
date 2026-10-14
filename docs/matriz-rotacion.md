@@ -15,11 +15,11 @@ Reglas:
 
 | Integrante (usuario GitHub) | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 | S9 |
 |---|---|---|---|---|---|---|---|---|---|
-| @integrante-1 | E2E | Front | | | | | | | |
-| @integrante-2 | E2E | API | | | | | | | |
-| @integrante-3 | E2E | BD | | | | | | | |
-| @integrante-4 | E2E | | | | | | | | |
-| @integrante-5 | E2E | | | | | | | | |
+| @Davidlopez2204 (David López) | E2E | Front | | | | | | | |
+| @jocmiguelchicoc (José Chico) | E2E | API | | | | | | | |
+| @maicolmayor23-code (Maicol Mayor) | E2E | BD | | | | | | | |
+| @xiomaraecheverry (Ashly Echeverri) | E2E | | | | | | | | |
+| @sebasparada (Sebastián Parada) | E2E | | | | | | | | |
 
 ## Cobertura semanal
 
