@@ -14,12 +14,15 @@ export default defineConfig({
     }
   },
   test: {
+    globals: true,
     environment: 'jsdom',
     passWithNoTests: true,
     coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
       include: ['src/**'],
-      exclude: ['src/main.jsx'], // arranque de React: no tiene lógica de negocio
-      thresholds: { lines: 0, branches: 0, functions: 0, statements: 0 }, // línea base semana 1
+      exclude: ['src/main.jsx'],
+      thresholds: { lines: 0, branches: 0, functions: 0, statements: 0 },
     },
-  },
+  }
 })

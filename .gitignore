@@ -19,3 +19,4 @@ playwright-report/
 GUIA_SUSTENTACION/
 coverage/
 *.lcov
+.pytest_cache/
