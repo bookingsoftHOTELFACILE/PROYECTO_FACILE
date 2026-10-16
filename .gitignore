@@ -17,3 +17,5 @@ exposicion/
 test-results/
 playwright-report/
 GUIA_SUSTENTACION/
+coverage/
+.pytest_cache/

@@ -12,5 +12,19 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  test: {
+    globals: true,
+    environment: 'node',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        lines: 0,
+        functions: 0,
+        branches: 0,
+        statements: 0
+      }
+    }
   }
 })
