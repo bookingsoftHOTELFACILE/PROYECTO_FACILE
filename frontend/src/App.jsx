@@ -797,13 +797,52 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
   );
 };
 
+const CATALOGO_HABITACIONES_INICIAL = [
+  ...Array.from({ length: 14 }, (_, i) => ({
+    id_habitacion: i + 1,
+    numero: `D${101 + i}`,
+    tipo: 'Dúplex',
+    capacidad: 3,
+    precio_noche: 250000,
+    estado: 'Disponible',
+    piso: i < 7 ? 'Piso 1' : 'Piso 2',
+    zona: i < 7 ? 'Piso 1 — Zona Dúplex Norte' : 'Piso 2 — Zona Dúplex Sur'
+  })),
+  ...Array.from({ length: 11 }, (_, i) => ({
+    id_habitacion: 15 + i,
+    numero: `DB${201 + i}`,
+    tipo: 'Dobles',
+    capacidad: 4,
+    precio_noche: 350000,
+    estado: 'Disponible',
+    piso: i < 6 ? 'Piso 2' : 'Piso 3',
+    zona: i < 6 ? 'Piso 2 — Suite Doble Lateral' : 'Piso 3 — Suite Doble Panorámica'
+  })),
+  { id_habitacion: 26, numero: 'F301', tipo: 'Familiares', capacidad: 6, precio_noche: 450000, estado: 'Disponible', piso: 'Piso 3', zona: 'Piso 3 — Ala Familiar Premium' },
+  { id_habitacion: 27, numero: 'F302', tipo: 'Familiares', capacidad: 6, precio_noche: 450000, estado: 'Disponible', piso: 'Piso 3', zona: 'Piso 3 — Ala Familiar Ejecutiva' },
+  ...Array.from({ length: 11 }, (_, i) => ({
+    id_habitacion: 28 + i,
+    numero: `H${401 + i}`,
+    tipo: 'Habitaciones',
+    capacidad: 2,
+    precio_noche: 180000,
+    estado: 'Disponible',
+    piso: 'Piso 4',
+    zona: 'Piso 4 — Nivel Executive Business'
+  }))
+];
+
 function App() {
   // ---- ESTADO DEL MODO DE CONEXIÓN ----
   const [backendActivo, setBackendActivo] = useState(false);
 
   // ---- ESTADO DE DATOS ----
-  const [huespedes, setHuespedes] = useState([]);
-  const [habitaciones, setHabitaciones] = useState([]);
+  const [huespedes, setHuespedes] = useState([
+    { id_huesped: 1, nombre: 'John Doe', documento: '12345678', telefono: '3115551234', correo: 'john.doe@example.com', lealtad: 'Silver', estado: 'Activo' },
+    { id_huesped: 2, nombre: 'Sofía Restrepo', documento: '98765432', telefono: '3126667890', correo: 'sofia.restrepo@bancolombia.com.co', lealtad: 'Gold', estado: 'Activo' },
+    { id_huesped: 3, nombre: 'Thomas Miller', documento: 'PP998877', telefono: '+155589012', correo: 'thomas.miller@siemens.com', lealtad: 'Platinum', estado: 'Activo' }
+  ]);
+  const [habitaciones, setHabitaciones] = useState(CATALOGO_HABITACIONES_INICIAL);
   const [reservas, setReservas] = useState([]);
   const [espaciosNegocio, setEspaciosNegocio] = useState([]);
   const [reservasNegocio, setReservasNegocio] = useState([]);
@@ -886,6 +925,7 @@ function App() {
   const [reservaAlert, setReservaAlert] = useState(null);
   const [filtroHabitaciones, setFiltroHabitaciones] = useState('todas'); // 'todas' | 'amas_llaves' | 'mantenimiento'
   const [galleryFilter, setGalleryFilter] = useState('todas'); // 'todas' | 'zonas' | 'apartamentos' | 'oficinas'
+  const [filtroTipoApto, setFiltroTipoApto] = useState('todas'); // 'todas' | 'Dúplex' | 'Dobles' | 'Familiares' | 'Habitaciones'
   const [lightboxIdx, setLightboxIdx] = useState(null); // visor de imágenes de la galería
   const [aptoLightboxPhoto, setAptoLightboxPhoto] = useState(null); // { photos: [...], index: n } o photo object
   const [lightboxZoom, setLightboxZoom] = useState(false); // Estado de zoom 1.65x interactivo para imágenes en Lightbox
@@ -1026,7 +1066,40 @@ function App() {
         setLoginError(data.detail || 'Credenciales incorrectas.');
       }
     } catch {
-      setLoginError('Error de conexión con el servidor.');
+      // Fallback local si backend está en segundo plano o desconectado
+      const u = loginForm.usuario.trim();
+      const p = loginForm.contrasena;
+      if ((u === 'bookingsoft_admin' || u === 'admin') && p === 'Admin2026!') {
+        setUsuarioSesion({ usuario: u, nombre: 'Equipo BookingSoft', rol: 'Administrador' });
+        setShowLoginModal(false);
+        setLoginForm({ usuario: '', contrasena: '' });
+        setActiveTab('pms');
+        setPmsSubTab('empleados');
+        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Administrador!' });
+      } else if ((u === 'carlos_recep' || u === 'recepcion') && p === 'Recep2026!') {
+        setUsuarioSesion({ usuario: u, nombre: 'Carlos Pérez', rol: 'Recepcionista 24h' });
+        setShowLoginModal(false);
+        setLoginForm({ usuario: '', contrasena: '' });
+        setActiveTab('pms');
+        setPmsSubTab('recepcion');
+        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Recepcionista 24h!' });
+      } else if ((u === 'marta_limpieza' || u === 'amallaves') && p === 'marta123') {
+        setUsuarioSesion({ usuario: u, nombre: 'Marta Ama', rol: 'Ama de llaves' });
+        setShowLoginModal(false);
+        setLoginForm({ usuario: '', contrasena: '' });
+        setActiveTab('pms');
+        setPmsSubTab('planta');
+        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Ama de llaves!' });
+      } else if ((u === 'jhon_mantenimiento' || u === 'mantenimiento') && p === 'Mantenimiento2026!') {
+        setUsuarioSesion({ usuario: u, nombre: 'Jhon Jairo Morales', rol: 'Personal de mantenimiento' });
+        setShowLoginModal(false);
+        setLoginForm({ usuario: '', contrasena: '' });
+        setActiveTab('pms');
+        setPmsSubTab('planta');
+        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Mantenimiento!' });
+      } else {
+        setLoginError('Credenciales incorrectas o servidor no disponible.');
+      }
     }
     setLoading(false);
   };
@@ -1043,9 +1116,11 @@ function App() {
   useEffect(() => {
     const verificarBackend = async () => {
       try {
-        const res = await fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(3000) });
-        if (res.ok) {
+        const res = await fetch(`${API_URL}/api/habitaciones`, { signal: AbortSignal.timeout(2000) });
+        if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
           setBackendActivo(true);
+        } else {
+          setBackendActivo(false);
         }
       } catch {
         setBackendActivo(false);
@@ -1053,6 +1128,30 @@ function App() {
     };
     verificarBackend();
   }, []);
+
+  // Sincronizar navegación con el historial del navegador para evitar pantalla en blanco al dar Atrás
+  useEffect(() => {
+    try {
+      window.history.replaceState({ tab: 'apartamentos' }, '', window.location.href);
+    } catch {}
+
+    const handlePopState = (event) => {
+      if (event.state && event.state.tab) {
+        setActiveTab(event.state.tab);
+      } else {
+        setActiveTab('apartamentos');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navegarATab = (tab) => {
+    setActiveTab(tab);
+    try {
+      window.history.pushState({ tab }, '', window.location.href);
+    } catch {}
+  };
 
   // Cargar datos
   const cargarDatosBackend = async (token = authToken) => {
@@ -1088,7 +1187,7 @@ function App() {
     if (reservaData.id_habitacion && reservaData.fecha_entrada && reservaData.fecha_salida) {
       const eDt = new Date(reservaData.fecha_entrada + 'T00:00:00');
       const sDt = new Date(reservaData.fecha_salida + 'T00:00:00');
-      const hab = habitaciones.find(h => String(h.id_habitacion) === String(reservaData.id_habitacion));
+      const hab = habitaciones.find(h => String(h.id_habitacion) === String(reservaData.id_habitacion) || String(h.numero) === String(reservaData.id_habitacion));
       if (!isNaN(eDt.getTime()) && !isNaN(sDt.getTime()) && sDt > eDt && hab) {
         const diffMs = sDt.getTime() - eDt.getTime();
         const noches = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
@@ -1359,7 +1458,21 @@ function App() {
           setGuestSearchError(formatErrorMessage(data.detail) || 'Error al iniciar sesión.');
         }
       } catch {
-        setGuestSearchError('Error de conexión con el servidor.');
+        // Fallback local si backend no responde o está offline
+        const encontrado = huespedes.find(h => 
+          (h.documento && h.documento.toLowerCase() === q.toLowerCase()) ||
+          (h.correo && h.correo.toLowerCase() === q.toLowerCase()) ||
+          (h.telefono && h.telefono.toLowerCase() === q.toLowerCase())
+        );
+        if (encontrado) {
+          setSelectedHuesped(encontrado);
+          setShowGuestAuthModal(false);
+          setGuestSearchQuery('');
+          setGuestLoginPassword('');
+          setAlert({ type: 'success', message: `¡Bienvenido de nuevo, ${encontrado.nombre}!` });
+        } else {
+          setGuestSearchError('No encontramos un registro con estos datos. Regístrese en la opción "Crear cuenta nueva".');
+        }
       }
     } else {
       // Fallback local
@@ -1379,6 +1492,7 @@ function App() {
         setShowGuestAuthModal(false);
         setGuestSearchQuery('');
         setGuestLoginPassword('');
+        setAlert({ type: 'success', message: `¡Bienvenido de nuevo, ${encontrado.nombre}!` });
       } else {
         setGuestSearchError('No encontramos un registro con estos datos. Regístrese en la opción "Crear cuenta nueva".');
       }
@@ -1466,12 +1580,12 @@ function App() {
   const handleReservarTipo = (tipoNombre) => {
     const habDispo = habitaciones.find(h => h.tipo === tipoNombre && h.estado === 'Disponible');
     if (habDispo) {
-      setReservaData(prev => ({ ...prev, id_habitacion: String(habDispo.id_habitacion) }));
+      setReservaData(prev => ({ ...prev, id_habitacion: String(habDispo.id_habitacion || habDispo.numero) }));
     }
     if (!selectedHuesped) {
       setShowGuestAuthModal(true);
     } else {
-      setActiveTab('reservar');
+      navegarATab('reservar');
       window.scrollTo({ top: 500, behavior: 'smooth' });
     }
   };
@@ -2311,8 +2425,8 @@ function App() {
             desc: 'Cuenta con habitación confort individual, baño privado en suite, escritorio de trabajo, televisión HD y Wi-Fi de alta velocidad. Ideal para ejecutivos y viajes de negocios.',
             personas: 'Hasta 2 personas',
             ambientes: 'Baño privado',
-            precio: 'Consultar',
-            precioSub: 'tarifa',
+            precio: '$180.000',
+            precioSub: 'COP/noche',
             fotos: [
               { url: '/images/apartamentos/IMG_9495-HDR.jpg', titulo: 'Habitación — Alcoba Ejecutiva', desc: 'Cama confort, escritorio de trabajo y TV' },
               { url: '/images/apartamentos/IMG_9498-HDR.jpg', titulo: 'Habitación — Vista Interna', desc: 'Entorno silencioso para descanso o teletrabajo' },
@@ -2322,6 +2436,10 @@ function App() {
           }
         ];
 
+        const alojamientosVisibles = filtroTipoApto === 'todas'
+          ? alojamientosData
+          : alojamientosData.filter(apto => apto.tipo === filtroTipoApto);
+
         return (
           <section className="facile-section" style={{ borderTop: activeTab === 'inicio' ? '1px solid #e2e8f0' : 'none' }}>
             <div className="section-title-wrap">
@@ -2329,95 +2447,397 @@ function App() {
               <p>38 unidades disponibles en 4 categorías — Reserve directamente con nosotros</p>
             </div>
 
-            <div className="apto-grid">
-              {alojamientosData.map((apto) => {
-                const activePhotoIndex = aptoActivePhoto[apto.tipo] || 0;
-                const currentPhoto = apto.fotos[activePhotoIndex] || apto.fotos[0];
-
+            {/* BOTONES DE FILTRO POR CATEGORÍA SIN RECARGA */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem', marginBottom: '2rem', flexWrap: 'wrap', padding: '0 1rem' }}>
+              {[
+                { id: 'todas', label: 'Ver Todos', count: 38 },
+                { id: 'Dúplex', label: 'Dúplex', count: 14 },
+                { id: 'Dobles', label: 'Dobles', count: 11 },
+                { id: 'Familiares', label: 'Familiares', count: 2 },
+                { id: 'Habitaciones', label: 'Habitaciones', count: 11 }
+              ].map(f => {
+                const isActive = filtroTipoApto === f.id;
                 return (
-                  <div key={apto.tipo} className="apto-item">
-                    {/* ENCABEZADO ORIGINAL DE LA TARJETA CON NOMBRE VISIBLE */}
-                    <div className="apto-header">
-                      <h3>{apto.tipo}</h3>
-                      <span className="badge-red-num">{apto.unidades}</span>
-                    </div>
-
-                    {/* IMAGEN DE BANNER PRINCIPAL DE LA TARJETA */}
-                    <div
-                      style={{ position: 'relative', width: '100%', height: '195px', overflow: 'hidden', background: '#0f172a', cursor: 'pointer' }}
-                      onClick={() => setSelectedAptoFigma(apto)}
-                      title="Haz clic para ver el detalle en el diseño de Figma"
-                    >
-                      <img
-                        src={currentPhoto.url}
-                        alt={currentPhoto.titulo}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease' }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                      />
-
-                      {/* INSIGNIA VER DETALLE FIGMA */}
-                      <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <Maximize2 size={13}/> Ver Detalle Figma
-                      </div>
-                    </div>
-
-                    {/* MINI CARRUSEL DE MINIATURAS FOTOGRÁFICAS */}
-                    <div style={{ display: 'flex', gap: '0.4rem', padding: '0.5rem 0.8rem', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', overflowX: 'auto' }}>
-                      {apto.fotos.map((f, i) => (
-                        <div
-                          key={i}
-                          onClick={() => setAptoActivePhoto(prev => ({ ...prev, [apto.tipo]: i }))}
-                          style={{
-                            width: '52px',
-                            height: '38px',
-                            borderRadius: '6px',
-                            overflow: 'hidden',
-                            cursor: 'pointer',
-                            border: activePhotoIndex === i ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
-                            opacity: activePhotoIndex === i ? 1 : 0.65,
-                            transition: 'all 0.2s ease',
-                            flexShrink: 0
-                          }}
-                        >
-                          <img src={f.url} alt="Vista" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* CUERPO Y DETALLES */}
-                    <div className="apto-body">
-                      <p className="apto-text">
-                        {apto.desc}
-                      </p>
-                      <div className="apto-specs">
-                        <span className="spec-pill"><Users size={12}/> {apto.personas}</span>
-                        <span className="spec-pill"><Wifi size={12}/> Wi-Fi</span>
-                        <span className="spec-pill"><Home size={12}/> {apto.ambientes}</span>
-                      </div>
-                      <div className="apto-footer">
-                        <div className="price-text">
-                          {apto.precio} <span>{apto.precioSub}</span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.4rem' }}>
-                          <button
-                            className="btn-book-red"
-                            style={{ background: '#0f172a', color: '#fff', padding: '0.45rem 0.75rem', fontSize: '0.78rem' }}
-                            onClick={() => setSelectedAptoFigma(apto)}
-                            title="Ver vista interactiva de Figma"
-                          >
-                            Detalle
-                          </button>
-                          <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
-                            Reservar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setFiltroTipoApto(f.id)}
+                    style={{
+                      padding: '0.6rem 1.15rem',
+                      borderRadius: '25px',
+                      border: isActive ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
+                      background: isActive ? '#e11d48' : '#ffffff',
+                      color: isActive ? '#ffffff' : '#334155',
+                      fontSize: '0.84rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      boxShadow: isActive ? '0 4px 12px rgba(225,29,72,0.25)' : '0 2px 6px rgba(0,0,0,0.03)',
+                      transition: 'all 0.2s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem'
+                    }}
+                  >
+                    <span>{f.label}</span>
+                    <span style={{
+                      background: isActive ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+                      color: isActive ? '#ffffff' : '#64748b',
+                      padding: '0.12rem 0.45rem',
+                      borderRadius: '12px',
+                      fontSize: '0.72rem',
+                      fontWeight: 800
+                    }}>
+                      {f.count}
+                    </span>
+                  </button>
                 );
               })}
             </div>
+
+            {/* VISTA 1: CUANDO SE MUESTRAN TODAS LAS CATEGORÍAS (4 COLUMNAS BALANCEADAS) */}
+            {filtroTipoApto === 'todas' ? (
+              <div className="apto-grid">
+                {alojamientosVisibles.map((apto) => {
+                  const activePhotoIndex = aptoActivePhoto[apto.tipo] || 0;
+                  const currentPhoto = apto.fotos[activePhotoIndex] || apto.fotos[0];
+
+                  return (
+                    <div key={apto.tipo} className="apto-item">
+                      {/* ENCABEZADO ORIGINAL DE LA TARJETA CON NOMBRE VISIBLE */}
+                      <div className="apto-header">
+                        <h3>{apto.tipo}</h3>
+                        <span className="badge-red-num">{apto.unidades}</span>
+                      </div>
+
+                      {/* IMAGEN DE BANNER PRINCIPAL DE LA TARJETA */}
+                      <div
+                        style={{ position: 'relative', width: '100%', height: '195px', overflow: 'hidden', background: '#0f172a', cursor: 'pointer' }}
+                        onClick={() => setSelectedAptoFigma(apto)}
+                        title="Haz clic para ver el detalle en el diseño de Figma"
+                      >
+                        <img
+                          src={currentPhoto.url}
+                          alt={currentPhoto.titulo}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease' }}
+                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                        />
+
+                        {/* INSIGNIA VER DETALLE FIGMA */}
+                        <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Maximize2 size={13}/> Ver Detalle Figma
+                        </div>
+                      </div>
+
+                      {/* MINI CARRUSEL DE MINIATURAS FOTOGRÁFICAS */}
+                      <div style={{ display: 'flex', gap: '0.4rem', padding: '0.5rem 0.8rem', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', overflowX: 'auto' }}>
+                        {apto.fotos.map((f, i) => (
+                          <div
+                            key={i}
+                            onClick={() => setAptoActivePhoto(prev => ({ ...prev, [apto.tipo]: i }))}
+                            style={{
+                              width: '52px',
+                              height: '38px',
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              cursor: 'pointer',
+                              border: activePhotoIndex === i ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
+                              opacity: activePhotoIndex === i ? 1 : 0.65,
+                              transition: 'all 0.2s ease',
+                              flexShrink: 0
+                            }}
+                          >
+                            <img src={f.url} alt="Vista" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* CUERPO Y DETALLES */}
+                      <div className="apto-body">
+                        <p className="apto-text">
+                          {apto.desc}
+                        </p>
+                        <div className="apto-specs">
+                          <span className="spec-pill"><Users size={12}/> {apto.personas}</span>
+                          <span className="spec-pill"><Wifi size={12}/> Wi-Fi</span>
+                          <span className="spec-pill"><Home size={12}/> {apto.ambientes}</span>
+                        </div>
+                        <div className="apto-footer">
+                          <div className="price-text">
+                            {apto.precio} <span>{apto.precioSub}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            <button
+                              className="btn-book-red"
+                              style={{ background: '#0f172a', color: '#fff', padding: '0.45rem 0.75rem', fontSize: '0.78rem' }}
+                              onClick={() => setSelectedAptoFigma(apto)}
+                              title="Ver vista interactiva de Figma"
+                            >
+                              Detalle
+                            </button>
+                            <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
+                              Reservar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* VISTA 2: CUANDO SE FILTRA UNA CATEGORÍA ESPECÍFICA (APROVECHA 100% EL ANCHO Y MUESTRA TODAS SUS UNIDADES) */
+              <div>
+                {alojamientosVisibles.map((apto) => {
+                  const activePhotoIndex = aptoActivePhoto[apto.tipo] || 0;
+                  const currentPhoto = apto.fotos[activePhotoIndex] || apto.fotos[0];
+
+                  // Lista de unidades de esta categoría (backend o distribución oficial)
+                  const unidadesDefault = {
+                    'Dúplex': Array.from({ length: 14 }, (_, i) => ({
+                      id: `D${101 + i}`,
+                      numero: `D${101 + i}`,
+                      tipo: 'Dúplex',
+                      capacidad: 3,
+                      precio: 250000,
+                      piso: i < 7 ? 'Piso 1' : 'Piso 2'
+                    })),
+                    'Dobles': Array.from({ length: 11 }, (_, i) => ({
+                      id: `DB${201 + i}`,
+                      numero: `DB${201 + i}`,
+                      tipo: 'Dobles',
+                      capacidad: 4,
+                      precio: 350000,
+                      piso: i < 6 ? 'Piso 2' : 'Piso 3'
+                    })),
+                    'Familiares': [
+                      { id: 'F301', numero: 'F301', tipo: 'Familiares', capacidad: 6, precio: 450000, piso: 'Piso 3' },
+                      { id: 'F302', numero: 'F302', tipo: 'Familiares', capacidad: 6, precio: 450000, piso: 'Piso 3' }
+                    ],
+                    'Habitaciones': Array.from({ length: 11 }, (_, i) => ({
+                      id: `H${401 + i}`,
+                      numero: `H${401 + i}`,
+                      tipo: 'Habitaciones',
+                      capacidad: 2,
+                      precio: 180000,
+                      piso: 'Piso 4'
+                    }))
+                  }[apto.tipo] || [];
+
+                  const unidadesFinales = habitaciones.length > 0
+                    ? habitaciones.filter(h => h.tipo === apto.tipo && !['101A', '102A'].includes(String(h.numero))).map(h => ({
+                        id: h.id_habitacion || h.numero,
+                        numero: String(h.numero),
+                        tipo: h.tipo,
+                        capacidad: h.capacidad,
+                        precio: Number(h.precio_noche || 0),
+                        piso: String(h.numero || '').startsWith('D') ? 'Pisos 1-2' : (String(h.numero || '').startsWith('DB') ? 'Pisos 2-3' : (String(h.numero || '').startsWith('F') ? 'Piso 3' : 'Piso 4'))
+                      }))
+                    : unidadesDefault;
+
+                  return (
+                    <div key={apto.tipo}>
+                      {/* TARJETA DESTACADA HORIZONTAL (APROVECHA EL 100% DEL ESPACIO SUPERIOR) */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                        background: '#ffffff',
+                        borderRadius: '16px',
+                        border: '1px solid #e2e8f0',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                        marginBottom: '2.5rem'
+                      }}>
+                        {/* COLUMNA IZQUIERDA: FOTO PRINCIPAL Y MINIATURAS */}
+                        <div style={{ background: '#0f172a', display: 'flex', flexDirection: 'column' }}>
+                          <div
+                            style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', cursor: 'pointer' }}
+                            onClick={() => setSelectedAptoFigma(apto)}
+                            title="Haz clic para ver el detalle en Figma"
+                          >
+                            <img
+                              src={currentPhoto.url}
+                              alt={currentPhoto.titulo}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease' }}
+                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
+                              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                            />
+                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.4rem 0.85rem', borderRadius: '15px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <Maximize2 size={14}/> Ver Detalle Figma
+                            </div>
+                          </div>
+
+                          {/* MINI CARRUSEL DE MINIATURAS FOTOGRÁFICAS */}
+                          <div style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem 1rem', background: '#090d16', overflowX: 'auto' }}>
+                            {apto.fotos.map((f, i) => (
+                              <div
+                                key={i}
+                                onClick={() => setAptoActivePhoto(prev => ({ ...prev, [apto.tipo]: i }))}
+                                style={{
+                                  width: '64px',
+                                  height: '46px',
+                                  borderRadius: '6px',
+                                  overflow: 'hidden',
+                                  cursor: 'pointer',
+                                  border: activePhotoIndex === i ? '2px solid #e11d48' : '1.5px solid #334155',
+                                  opacity: activePhotoIndex === i ? 1 : 0.65,
+                                  transition: 'all 0.2s ease',
+                                  flexShrink: 0
+                                }}
+                              >
+                                <img src={f.url} alt="Vista" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* COLUMNA DERECHA: INFORMACIÓN COMPLETA Y ESPECIFICACIONES */}
+                        <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <h3 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>{apto.tipo}</h3>
+                              <span className="badge-red-num" style={{ fontSize: '0.85rem', padding: '0.35rem 0.85rem' }}>{apto.unidades}</span>
+                            </div>
+
+                            <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: '1.65', marginBottom: '1.5rem' }}>
+                              {apto.desc}
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Users size={14}/> {apto.personas}</span>
+                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Wifi size={14}/> Wi-Fi de alta velocidad</span>
+                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Home size={14}/> {apto.ambientes}</span>
+                            </div>
+                          </div>
+
+                          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                            <div>
+                              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#e11d48', lineHeight: 1 }}>
+                                {apto.precio}
+                              </div>
+                              <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{apto.precioSub}</span>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '0.6rem' }}>
+                              <button
+                                className="btn-book-red"
+                                style={{ background: '#0f172a', color: '#fff', padding: '0.6rem 1.1rem', fontSize: '0.86rem' }}
+                                onClick={() => setSelectedAptoFigma(apto)}
+                                title="Ver vista interactiva de Figma"
+                              >
+                                Detalle Completo
+                              </button>
+                              <button
+                                className="btn-book-red"
+                                style={{ padding: '0.6rem 1.25rem', fontSize: '0.86rem' }}
+                                onClick={() => handleReservarTipo(apto.tipo)}
+                              >
+                                Reservar {apto.tipo}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* SUBSECCIÓN: TODAS LAS UNIDADES DISPONIBLES DE ESTA CATEGORÍA (LLENAN EL ANCHO DE LA PANTALLA) */}
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
+                              Unidades asignables de {apto.tipo} ({unidadesFinales.length} disponibles)
+                            </h3>
+                            <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.84rem' }}>
+                              Selecciona tu apartamento para asignarlo directamente a tu reserva
+                            </p>
+                          </div>
+                          <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.3rem 0.8rem', borderRadius: '15px', fontSize: '0.78rem', fontWeight: 700 }}>
+                            ● Todas las unidades disponibles
+                          </span>
+                        </div>
+
+                        {/* GRID DE UNIDADES ESPECÍFICAS DE ESTA CATEGORÍA */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '1rem' }}>
+                          {unidadesFinales.map((unidad) => (
+                            <div
+                              key={unidad.id}
+                              style={{
+                                background: '#ffffff',
+                                borderRadius: '12px',
+                                border: '1px solid #e2e8f0',
+                                padding: '1rem',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)';
+                                e.currentTarget.style.borderColor = '#e11d48';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+                                e.currentTarget.style.borderColor = '#e2e8f0';
+                              }}
+                            >
+                              <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                  <span style={{ background: '#e11d48', color: '#ffffff', padding: '0.25rem 0.65rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 800 }}>
+                                    Apto {unidad.numero}
+                                  </span>
+                                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>
+                                    {unidad.piso}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '0.84rem', color: '#334155', fontWeight: 600, marginBottom: '0.3rem' }}>
+                                  {apto.formato || apto.tipo}
+                                </div>
+                                <div style={{ fontSize: '0.76rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.75rem' }}>
+                                  <Users size={12}/> Capacidad: {unidad.capacidad} pers.
+                                </div>
+                              </div>
+
+                              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                  <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#e11d48' }}>
+                                    ${Number(unidad.precio).toLocaleString('es-CO')}
+                                  </div>
+                                  <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>COP / noche</div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setReservaData(prev => ({ ...prev, id_habitacion: String(unidad.id || unidad.numero) }));
+                                    navegarATab('reservar');
+                                  }}
+                                  style={{
+                                    background: '#0f172a',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    padding: '0.4rem 0.75rem',
+                                    borderRadius: '6px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
+                                  onMouseLeave={e => e.currentTarget.style.background = '#0f172a'}
+                                >
+                                  Reservar
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* MODAL DETALLE DE APARTAMENTO IDENTICO AL MOCKUP DE FIGMA */}
             {selectedAptoFigma && (() => {
@@ -3051,6 +3471,35 @@ function App() {
 
             {/* CREACIÓN DE RESERVA */}
             <div className="clean-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.6rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('apartamentos');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    padding: '0.45rem 0.95rem',
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#e2e8f0'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
+                >
+                  ◀ Volver a Alojamientos
+                </button>
+                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>Apartamentos Facile • Bogotá</span>
+              </div>
+
               {!selectedHuesped && <div className="card-step-badge">Paso 2</div>}
               <div className="clean-card-header">
                 <Calendar size={20} color="var(--color-primary-red)"/>
@@ -3064,11 +3513,11 @@ function App() {
                       <User size={18} color="#e11d48"/>
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{selectedHuesped.nombre}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Doc: {selectedHuesped.documento} {selectedHuesped.correo ? `• ${selectedHuesped.correo}` : ''}</div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{selectedHuesped?.nombre || 'Huésped Registrado'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Doc: {selectedHuesped?.documento || 'N/A'} {selectedHuesped?.correo ? `• ${selectedHuesped.correo}` : ''}</div>
                     </div>
                   </div>
-                  <button className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar / Cerrar</button>
+                  <button type="button" className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar / Cerrar</button>
                 </div>
               ) : (
                 <p className="clean-card-desc" style={{ color: '#b45309' }}>
@@ -3084,8 +3533,8 @@ function App() {
                     <select name="id_habitacion" value={reservaData.id_habitacion} onChange={handleReservaChange} required disabled={!selectedHuesped}>
                       <option value="">-- Elija un apartamento --</option>
                       {habitaciones.map(h => (
-                        <option key={h.id_habitacion} value={h.id_habitacion} disabled={h.estado === 'Mantenimiento'}>
-                          Apto {h.numero} - {h.tipo} ({h.estado}) - ${h.precio_noche.toLocaleString('es-CO')} COP/noche
+                        <option key={h.id_habitacion || h.numero} value={String(h.id_habitacion || h.numero)} disabled={h.estado === 'Mantenimiento'}>
+                          Apto {h.numero} — {h.tipo} • {h.zona || h.piso || 'Torre Facile'} • Capacidad: {h.capacidad || 2} pers. • ${Number(h.precio_noche || 0).toLocaleString('es-CO')} COP/noche ({h.estado || 'Disponible'})
                         </option>
                       ))}
                     </select>
@@ -3236,18 +3685,18 @@ function App() {
                 {cotizacion && (
                   <div className="live-quote-box">
                     <h4>Resumen de Cotización</h4>
-                    <div className="quote-row"><span>Valor por Noche:</span><strong>${cotizacion.precio_noche ? cotizacion.precio_noche.toLocaleString('es-CO') : '0'} COP / noche</strong></div>
-                    <div className="quote-row"><span>Duración de Estadía:</span><span>{cotizacion.noches} {cotizacion.noches === 1 ? 'noche' : 'noches'}</span></div>
-                    <div className="quote-row"><span>Subtotal Estadía:</span><span>${cotizacion.subtotal.toLocaleString('es-CO')} COP</span></div>
-                    {cotizacion.descuento > 0 && (
+                    <div className="quote-row"><span>Valor por Noche:</span><strong>${Number(cotizacion.precio_noche || 0).toLocaleString('es-CO')} COP / noche</strong></div>
+                    <div className="quote-row"><span>Duración de Estadía:</span><span>{cotizacion.noches || 1} {(cotizacion.noches || 1) === 1 ? 'noche' : 'noches'}</span></div>
+                    <div className="quote-row"><span>Subtotal Estadía:</span><span>${Number(cotizacion.subtotal || 0).toLocaleString('es-CO')} COP</span></div>
+                    {Number(cotizacion.descuento || 0) > 0 && (
                       <div className="quote-row discount">
-                        <span>Descuento Larga Estadía ({cotizacion.noches >= 15 ? '15%' : '10%'}):</span>
-                        <span>-${cotizacion.descuento.toLocaleString('es-CO')} COP</span>
+                        <span>Descuento Larga Estadía ({(cotizacion.noches || 0) >= 15 ? '15%' : '10%'}):</span>
+                        <span>-${Number(cotizacion.descuento || 0).toLocaleString('es-CO')} COP</span>
                       </div>
                     )}
                     <div className="quote-row final-total">
                       <span>Total a Pagar:</span>
-                      <span>${cotizacion.total.toLocaleString('es-CO')} COP</span>
+                      <span>${Number(cotizacion.total || 0).toLocaleString('es-CO')} COP</span>
                     </div>
                   </div>
                 )}
