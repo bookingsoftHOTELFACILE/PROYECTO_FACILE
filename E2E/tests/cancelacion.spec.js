@@ -3,7 +3,14 @@ import { execSync } from 'child_process';
 
 test.beforeEach(() => {
   try {
-    execSync('docker exec -i bookingsoft-db psql -U bookingsof4 -d bookingsoft -c "UPDATE reserva_habitacion SET estado = \'Confirmada\' WHERE id_reserva IN (1, 2);"', { stdio: 'ignore' });
+    execSync('docker exec -i bookingsoft-db psql -U bookingsof4 -d bookingsoft -c "DELETE FROM reserva_habitacion WHERE id_reserva > 2; UPDATE reserva_habitacion SET estado = \'Confirmada\' WHERE id_reserva IN (1, 2);"', { stdio: 'ignore' });
+  } catch {
+  }
+});
+
+test.afterAll(() => {
+  try {
+    execSync('docker exec -i bookingsoft-db psql -U bookingsof4 -d bookingsoft -c "DELETE FROM reserva_habitacion WHERE id_reserva > 2; UPDATE reserva_habitacion SET estado = \'Confirmada\' WHERE id_reserva IN (1, 2);"', { stdio: 'ignore' });
   } catch {
   }
 });
