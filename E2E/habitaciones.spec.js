@@ -1,11 +1,20 @@
 import { test, expect } from '@playwright/test';
+import { execSync } from 'child_process';
+
+test.beforeEach(() => {
+  try {
+    execSync('docker exec -i bookingsoft-db psql -U bookingsof4 -d bookingsoft -c "DELETE FROM reserva_habitacion WHERE id_huesped = 1 AND id_reserva > 2;"', { stdio: 'ignore' });
+  } catch {
+    // Si no hay acceso a docker directo, se continúa la ejecución normal
+  }
+});
 
 test('Successful registration of a new guest with unique dynamic data', async ({ page }) => {
   // ARRANGE
   const uniqueId = Date.now();
   const email = `test${uniqueId}@example.com`;
-  const documento = String(uniqueId).slice(-8);
-  const telefono = `310${String(uniqueId).slice(-7)}`;
+  const documento = `PAS${String(uniqueId).slice(-6)}`;
+  const telefono = `57310${String(uniqueId).slice(-7)}`;
 
   await page.goto('/');
 
@@ -40,8 +49,9 @@ test('Complete the room reservation flow for an authenticated user', async ({ pa
 
   await page.getByRole('button', { name: 'Apartamentos' }).click();
   await page.getByRole('button', { name: 'Reservar' }).first().click();
-  await page.getByRole('button', { name: '1', exact: true }).click();
-  await page.getByRole('button', { name: '7', exact: true }).click();
+  await page.getByRole('button', { name: 'Mes Sig. ▶' }).click();
+  await page.getByRole('button', { name: '20', exact: true }).click();
+  await page.getByRole('button', { name: '25', exact: true }).click();
   await page.getByRole('button', { name: 'Confirmar Reserva' }).click();
 
   // ASSERT
