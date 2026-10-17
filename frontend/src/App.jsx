@@ -1069,29 +1069,29 @@ function App() {
       // Fallback local si backend está en segundo plano o desconectado
       const u = loginForm.usuario.trim();
       const p = loginForm.contrasena;
-      if ((u === 'bookingsoft_admin' || u === 'admin') && p === 'Admin2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Equipo BookingSoft', rol: 'Administrador' });
+      if ((u === 'admin' || u === 'bookingsoft_admin') && p === 'Admin2026!') {
+        setUsuarioSesion({ usuario: u, nombre: 'Administrador BookingSoft', rol: 'Administrador' });
         setShowLoginModal(false);
         setLoginForm({ usuario: '', contrasena: '' });
         setActiveTab('pms');
         setPmsSubTab('empleados');
         setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Administrador!' });
-      } else if ((u === 'carlos_recep' || u === 'recepcion') && p === 'Recep2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Carlos Pérez', rol: 'Recepcionista 24h' });
+      } else if ((u === 'recepcion' || u === 'carlos_recep') && p === 'Recep2026!') {
+        setUsuarioSesion({ usuario: u, nombre: 'Carlos Recepción', rol: 'Recepcionista 24h' });
         setShowLoginModal(false);
         setLoginForm({ usuario: '', contrasena: '' });
         setActiveTab('pms');
         setPmsSubTab('recepcion');
         setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Recepcionista 24h!' });
-      } else if ((u === 'marta_limpieza' || u === 'amallaves') && p === 'marta123') {
-        setUsuarioSesion({ usuario: u, nombre: 'Marta Ama', rol: 'Ama de llaves' });
+      } else if ((u === 'amallaves' || u === 'marta_limpieza') && (p === 'Amallaves2026!' || p === 'marta123')) {
+        setUsuarioSesion({ usuario: u, nombre: 'Marta Ama de Llaves', rol: 'Ama de llaves' });
         setShowLoginModal(false);
         setLoginForm({ usuario: '', contrasena: '' });
         setActiveTab('pms');
         setPmsSubTab('planta');
         setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Ama de llaves!' });
-      } else if ((u === 'jhon_mantenimiento' || u === 'mantenimiento') && p === 'Mantenimiento2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Jhon Jairo Morales', rol: 'Personal de mantenimiento' });
+      } else if ((u === 'mantenimiento' || u === 'jhon_mantenimiento') && p === 'Mantenimiento2026!') {
+        setUsuarioSesion({ usuario: u, nombre: 'Jhon Mantenimiento', rol: 'Personal de mantenimiento' });
         setShowLoginModal(false);
         setLoginForm({ usuario: '', contrasena: '' });
         setActiveTab('pms');

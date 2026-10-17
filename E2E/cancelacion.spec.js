@@ -10,7 +10,7 @@ test('Successful cancellation of an existing room reservation', async ({ page })
 
   // ACT
   await page.getByRole('button', { name: /Acceso Personal Autorizado/i }).click();
-  await page.getByLabel('Usuario').fill('bookingsoft_admin');
+  await page.getByLabel('Usuario').fill('admin');
   await page.getByLabel('Contraseña').fill('Admin2026!');
   await page.getByRole('button', { name: 'Entrar al Sistema' }).click();
 
