@@ -35,7 +35,7 @@ def admin_token(client):
     (Las credenciales deben coincidir con el seed data en schema.sql)
     """
     res = client.post("/api/auth/login", json={
-        "usuario": "bookingsoft_admin",
+        "usuario": "admin",
         "contrasena": "Admin2026!"
     })
     return res.json()["access_token"]

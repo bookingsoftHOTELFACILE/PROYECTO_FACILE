@@ -468,12 +468,12 @@ Acceso mediante botón superior con validación JWT, organizado en sub-pestañas
 
 El archivo `schema.sql` aprovisiona credenciales cifradas con bcrypt para validación funcional de cada perfil RBAC:
 
-| Usuario         | Contraseña         | Rol en el Sistema             | Vista / Sub-pestaña por Defecto        |
-| :-------------- | :----------------- | :---------------------------- | :------------------------------------- |
-| `admin`         | `adminpassword123` | **Administrador**             | 👑 Personal & Roles (Acceso total)     |
-| `recepcion`     | `recepcion123`     | **Recepcionista 24h**         | 🛎️ Recepción y reservas walk-in        |
-| `amallaves`     | `amallaves123`     | **Ama de llaves**             | 🧹 Planta (Solo aseo y disponibilidad) |
-| `mantenimiento` | `mantenimiento123` | **Personal de mantenimiento** | 🔧 Planta (Bitácora de mantenimiento)  |
+| Usuario         | Contraseña           | Rol en el Sistema             | Vista / Sub-pestaña por Defecto        |
+| :-------------- | :------------------- | :---------------------------- | :------------------------------------- |
+| `admin`         | `Admin2026!`         | **Administrador**             | 👑 Personal & Roles (Acceso total)     |
+| `recepcion`     | `Recep2026!`         | **Recepcionista 24h**         | 🛎️ Recepción y reservas walk-in        |
+| `amallaves`     | `Amallaves2026!`     | **Ama de llaves**             | 🧹 Planta (Solo aseo y disponibilidad) |
+| `mantenimiento` | `Mantenimiento2026!` | **Personal de mantenimiento** | 🔧 Planta (Bitácora de mantenimiento)  |
 
 > ⚠️ **Aviso de Entorno Educativo:** Estas contraseñas son de uso público para revisión docente del SENA y pruebas de integración locales. En un despliegue de producción deben cambiarse mediante el script de rotación de secretos.
 

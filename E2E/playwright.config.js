@@ -1,24 +1,36 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Puerto del frontend. Por defecto 3001 (Docker) o configurable con FRONT_PORT
+const port = Number(process.env.FRONT_PORT ?? 3001);
+const baseURL = process.env.BASE_URL ?? `http://localhost:${port}`;
+
 export default defineConfig({
   testDir: '.',
-  /* Falla la prueba si tarda más de 60 segundos */
   timeout: 60 * 1000,
-  /* Ejecuta las pruebas en paralelo */
-  fullyParallel: true,
-  /* La ruta base de tu frontend en Docker/Local */
+  fullyParallel: false,
+  workers: 1,
   use: {
-    baseURL: 'http://localhost:3001',
+    baseURL,
     trace: 'on-first-retry',
     launchOptions: {
-        slowMo: 2000,
+      slowMo: 2000,
     },
   },
-  /* Configuramos solo Chromium (Chrome) para empezar rápido */
+  reporter: [['list'], ['html', { open: 'never' }]],
+  retries: process.env.CI ? 1 : 0,
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome'
+      },
     },
   ],
+  webServer: {
+    command: `node node_modules/vite/bin/vite.js --port ${port} --strictPort`,
+    cwd: '../frontend',
+    url: baseURL,
+    reuseExistingServer: !process.env.CI,
+  },
 });
