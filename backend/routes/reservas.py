@@ -6,6 +6,11 @@ import psycopg2
 from database import connection
 from dependencies import requiere_rol, autenticar, autenticar_opcional, UsuarioActual
 from models.schemas import ReservaCreate
+from services.reservas_service import (
+    validar_fechas_reserva,
+    validar_habitacion_disponible,
+    ValidationError as ServiceValidationError
+)
 logger = logging.getLogger("bookingsoft.reservas")
 
 # RF-009: roles autorizados para el módulo de reservas.
@@ -73,14 +78,13 @@ def crear_reserva(
     """Crea una reserva de habitación calculando cotización e impidiendo colisiones de fechas (RF-011) registrando la auditoría del creador."""
     audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})" if usuario else "Huésped (Reserva Web)"
     
-    # 1. Validar formato y coherencia de fechas
+    # 1. Validar formato y coherencia de fechas usando el servicio (Capa API)
     try:
-        entrada_dt = datetime.strptime(reserva.fecha_entrada, "%Y-%m-%d").date()
-        salida_dt = datetime.strptime(reserva.fecha_salida, "%Y-%m-%d").date()
-    except ValueError:
+        entrada_dt, salida_dt = validar_fechas_reserva(reserva.fecha_entrada, reserva.fecha_salida)
+    except ServiceValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato de fechas inválido. Debe ser AAAA-MM-DD."
+            detail=str(e)
         )
 
     conn = None
@@ -96,10 +100,13 @@ def crear_reserva(
             raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
         precio_noche, numero_hab, estado_hab, capacidad_hab = hab_row
         
-        if estado_hab == "Mantenimiento":
+        # Validación de estado con el servicio
+        try:
+            validar_habitacion_disponible(estado_hab, numero_hab)
+        except ServiceValidationError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"La habitación {numero_hab} se encuentra en Mantenimiento y no acepta nuevas reservas."
+                detail=str(e)
             )
 
         if reserva.numero_personas > capacidad_hab:
