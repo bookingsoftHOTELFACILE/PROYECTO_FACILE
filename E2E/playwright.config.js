@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Puerto del frontend. Por defecto 3001 (Docker) o configurable con FRONT_PORT
-const port = Number(process.env.FRONT_PORT ?? 3001);
+// Puerto del frontend. Por defecto 3000 (Vite) o configurable con FRONT_PORT
+const port = Number(process.env.FRONT_PORT ?? 3000);
 const baseURL = process.env.BASE_URL ?? `http://localhost:${port}`;
 
 export default defineConfig({
@@ -13,7 +13,7 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     launchOptions: {
-      slowMo: 2000,
+      slowMo: process.env.SLOWMO ? Number(process.env.SLOWMO) : (process.env.CI ? 0 : 300),
     },
   },
   reporter: [['list'], ['html', { open: 'never' }]],
@@ -23,7 +23,6 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        channel: 'chrome'
       },
     },
   ],
