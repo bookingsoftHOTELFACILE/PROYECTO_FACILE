@@ -8,6 +8,8 @@ import {
   GraduationCap, Globe, BookOpen, Music, Languages, Luggage, Award, Smile
 } from 'lucide-react';
 
+import { calcularCotizacion } from './utils/pricing.js';
+
 // URL del backend FastAPI
 const API_URL = '';
 
@@ -1185,25 +1187,20 @@ function App() {
   // Cotización en tiempo real a prueba de fallos
   useEffect(() => {
     if (reservaData.id_habitacion && reservaData.fecha_entrada && reservaData.fecha_salida) {
-      const eDt = new Date(reservaData.fecha_entrada + 'T00:00:00');
-      const sDt = new Date(reservaData.fecha_salida + 'T00:00:00');
       const hab = habitaciones.find(h => String(h.id_habitacion) === String(reservaData.id_habitacion) || String(h.numero) === String(reservaData.id_habitacion));
-      if (!isNaN(eDt.getTime()) && !isNaN(sDt.getTime()) && sDt > eDt && hab) {
-        const diffMs = sDt.getTime() - eDt.getTime();
-        const noches = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
-        const precio_noche = Number(hab.precio_noche) || 0;
-        const subtotal = noches * precio_noche;
-        const descuento = noches >= 15 ? subtotal * 0.15 : (noches >= 7 ? subtotal * 0.10 : 0);
-        const total = Math.max(0, subtotal - descuento);
-        setCotizacion({
-          precio_noche,
-          noches,
-          subtotal,
-          descuento,
-          total,
-          habitacion: hab
+      if (hab) {
+        const calculo = calcularCotizacion({
+          fechaEntrada: reservaData.fecha_entrada,
+          fechaSalida: reservaData.fecha_salida,
+          precioNoche: hab.precio_noche
         });
-        return;
+        if (calculo) {
+          setCotizacion({
+            ...calculo,
+            habitacion: hab
+          });
+          return;
+        }
       }
     }
     setCotizacion(null);
