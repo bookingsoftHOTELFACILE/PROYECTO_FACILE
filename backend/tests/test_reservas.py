@@ -88,7 +88,7 @@ def test_reserva_concurrencia_double_booking():
     # ── Autenticación ─────────────────────────────────────────────────────────
     with httpx.Client(base_url=BASE_URL) as c:
         r = c.post("/api/auth/login", json={
-            "usuario": "bookingsoft_admin",
+            "usuario": "admin",
             "contrasena": "Admin2026!"
         })
         token = r.json()["access_token"]
