@@ -4645,6 +4645,20 @@ function App() {
                 <ListOrdered size={18} color="var(--color-primary-red)"/>
                 <h3 style={{ fontSize: '1.1rem' }}>Reservas Activas ({reservas.filter(r => r.estado !== 'Cancelada').length})</h3>
               </div>
+              {reservaAlert && (
+                <div style={{
+                  padding: '0.75rem 1rem',
+                  margin: '0.8rem 1rem',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  background: reservaAlert.type === 'success' ? '#f0fdf4' : '#fee2e2',
+                  color: reservaAlert.type === 'success' ? '#166534' : '#991b1b',
+                  border: `1px solid ${reservaAlert.type === 'success' ? '#bbf7d0' : '#fca5a5'}`
+                }}>
+                  {reservaAlert.message}
+                </div>
+              )}
               <div className="pms-table-wrap">
                 <table className="pms-table">
                   <thead>
@@ -5083,18 +5097,18 @@ function App() {
 
             <form onSubmit={handleLoginSubmit}>
               <div className="form-field">
-                <label>Usuario</label>
+                <label htmlFor="empleado-usuario">Usuario</label>
                 <div className="field-input-wrap">
                   <User className="field-icon" size={16}/>
-                  <input type="text" placeholder="Ej: admin" value={loginForm.usuario} onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })} required/>
+                  <input id="empleado-usuario" type="text" placeholder="Ej: admin" value={loginForm.usuario} onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })} required/>
                 </div>
               </div>
 
               <div className="form-field">
-                <label>Contraseña</label>
+                <label htmlFor="empleado-contrasena">Contraseña</label>
                 <div className="field-input-wrap">
                   <Lock className="field-icon" size={16}/>
-                  <input type="password" placeholder="••••••••" value={loginForm.contrasena} onChange={(e) => setLoginForm({ ...loginForm, contrasena: e.target.value })} required/>
+                  <input id="empleado-contrasena" type="password" placeholder="••••••••" value={loginForm.contrasena} onChange={(e) => setLoginForm({ ...loginForm, contrasena: e.target.value })} required/>
                 </div>
               </div>
 
