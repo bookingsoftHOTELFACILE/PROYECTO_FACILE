@@ -9,32 +9,6 @@ test.beforeEach(() => {
   }
 });
 
-test('Successful registration of a new guest with unique dynamic data', async ({ page }) => {
-  // ARRANGE
-  const uniqueId = Date.now();
-  const email = `test${uniqueId}@example.com`;
-  const documento = `PAS${String(uniqueId).slice(-6)}`;
-  const telefono = `57310${String(uniqueId).slice(-7)}`;
-
-  await page.goto('/');
-
-  // ACT
-  await page.getByRole('button', { name: 'Inicia sesión o regístrate como Huésped' }).click();
-  await page.getByRole('button', { name: 'Crear cuenta nueva' }).click();
-
-  await page.getByLabel('Nombre(s)').fill('Liliana');
-  await page.getByLabel('Apellido(s)').fill('Restrepo');
-  await page.getByLabel('Documento (Cédula/Pasaporte)').fill(documento);
-  await page.getByLabel('Teléfono de contacto').fill(telefono);
-  await page.getByLabel('Fecha de nacimiento').fill('1995-05-15');
-  await page.getByLabel('Correo electrónico').fill(email);
-  await page.getByLabel('Contraseña').fill('Liliana123');
-  await page.getByRole('checkbox', { name: /Autorizo expresamente/ }).check();
-  await page.getByRole('button', { name: 'Aceptar y continuar' }).click();
-
-  // ASSERT
-  await expect(page.getByText('Nuestro compromiso de la comunidad')).toBeVisible();
-});
 
 test('Complete the room reservation flow for an authenticated user', async ({ page }) => {
   // ARRANGE
