@@ -28,7 +28,7 @@ def test_registro_usuario_duplicado(client, admin_token):
     # Se intenta registrar el usuario que ya existe por el seed data
     payload = {
         "nombre": "Duplicado",
-        "usuario": "bookingsoft_admin",  # Ya existe
+        "usuario": "admin",  # Ya existe
         "contrasena": "Password123!",
         "tipo_documento": "Cédula de ciudadanía",
         "numero_documento": "11111111",
@@ -43,7 +43,7 @@ def test_registro_usuario_duplicado(client, admin_token):
 
 def test_login_valido(client):
     response = client.post("/api/auth/login", json={
-        "usuario": "carlos_recep",
+        "usuario": "recepcion",
         "contrasena": "Recep2026!"
     })
     
@@ -56,7 +56,7 @@ def test_login_valido(client):
 
 def test_login_credenciales_incorrectas(client):
     res_bad_pass = client.post("/api/auth/login", json={
-        "usuario": "bookingsoft_admin",
+        "usuario": "admin",
         "contrasena": "Mal12345"
     })
     res_bad_user = client.post("/api/auth/login", json={
@@ -102,10 +102,10 @@ def test_control_acceso_sin_token(client):
     assert response.status_code == 401
 
 def test_control_acceso_rol_sin_permiso(client):
-    # Login como Ama de llaves (marta_limpieza) que no tiene permisos operativos
+    # Login como Ama de llaves (amallaves) que no tiene permisos operativos
     res_login = client.post("/api/auth/login", json={
-        "usuario": "marta_limpieza",
-        "contrasena": "marta123"
+        "usuario": "amallaves",
+        "contrasena": "Amallaves2026!"
     })
     token = res_login.json()["access_token"]
     
