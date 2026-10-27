@@ -5,6 +5,7 @@ import sys
 
 # Agregar el directorio backend al path para que pueda importar módulos locales
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+os.environ.setdefault("JWT_SECRET", "super_secret_jwt_key_for_testing_123456789")
 
 from main import app
 from database import connection
@@ -13,9 +14,12 @@ from database import connection
 def setup_db():
     """
     Se ejecuta una vez por sesión de pruebas para garantizar
-    que la base de datos esté inicializada (recrea tablas de forma idempotente).
+    que la base de datos esté inicializada si está disponible.
     """
-    connection.inicializar_base_de_datos()
+    try:
+        connection.inicializar_base_de_datos()
+    except (SystemExit, Exception):
+        pass
     yield
     # No cerramos la db aquí, psycopg2 usa conexiones por request, pero 
     # podemos dejar esto abierto a un teardown si fuera necesario.
