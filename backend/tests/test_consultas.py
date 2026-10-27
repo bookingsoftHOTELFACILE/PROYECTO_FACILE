@@ -16,9 +16,9 @@ def test_rf002_consulta_listado_empleados(client):
     - Ama de llaves -> 403 Forbidden
     - El campo 'contrasena' NUNCA debe estar en la respuesta.
     """
-    t_admin = get_token(client, "admin", "Admin2026!")
-    t_recep = get_token(client, "recepcion", "Recep2026!")
-    t_ama   = get_token(client, "amallaves", "Amallaves2026!")
+    t_admin = get_token(client, "bookingsoft_admin", "Admin2026!")
+    t_recep = get_token(client, "carlos_recep", "Recep2026!")
+    t_ama   = get_token(client, "marta_limpieza", "marta123")
 
     # Admin
     res_admin = client.get("/api/empleados", headers={"Authorization": f"Bearer {t_admin}"})
@@ -46,7 +46,7 @@ def test_rf003_consulta_empleado_especifico(client):
     - ID inexistente -> 404 Not Found
     - El campo 'contrasena' NUNCA debe estar en la respuesta.
     """
-    t_recep = get_token(client, "recepcion", "Recep2026!")
+    t_recep = get_token(client, "carlos_recep", "Recep2026!")
     headers = {"Authorization": f"Bearer {t_recep}"}
 
     # Empleado existente
@@ -68,8 +68,8 @@ def test_recepcionista_gestion_rol_y_estado(client):
     - PATCH /api/empleados/{id}/estado -> 200 OK con Recepcionista
     - Ama de llaves -> 403 Forbidden en ambos
     """
-    t_recep = get_token(client, "recepcion", "Recep2026!")
-    t_ama   = get_token(client, "amallaves", "Amallaves2026!")
+    t_recep = get_token(client, "carlos_recep", "Recep2026!")
+    t_ama   = get_token(client, "marta_limpieza", "marta123")
 
     h_recep = {"Authorization": f"Bearer {t_recep}"}
     h_ama   = {"Authorization": f"Bearer {t_ama}"}
@@ -93,8 +93,8 @@ def test_rf012_consulta_disponibilidad(client):
     - Acceso permitido: Recepcionista 24h, Administrador, Conserje.
     - Retorna disponibilidad correcta según reservas existentes.
     """
-    t_recep = get_token(client, "recepcion", "Recep2026!")
-    t_ama   = get_token(client, "amallaves", "Amallaves2026!")
+    t_recep = get_token(client, "carlos_recep", "Recep2026!")
+    t_ama   = get_token(client, "marta_limpieza", "marta123")
 
     h_recep = {"Authorization": f"Bearer {t_recep}"}
     h_ama   = {"Authorization": f"Bearer {t_ama}"}

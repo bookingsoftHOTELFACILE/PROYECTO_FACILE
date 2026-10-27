@@ -17,14 +17,3 @@ dependencies = [
     "pyjwt==2.8.0",
     "email-validator==2.1.1",
 ]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-v --tb=short --cov=routes --cov=database --cov-report=term-missing"
-
-[tool.coverage.run]
-source = ["routes", "database"]
-omit = []
-
-[tool.coverage.report]
-fail_under = 0

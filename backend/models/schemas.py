@@ -1,7 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Literal
-from datetime import date
-import re
+
 
 # --- Schemas de Huéspedes (existentes) ---
 
@@ -85,30 +84,3 @@ class TokenResponse(BaseModel):
     """Respuesta exitosa de login con el JWT."""
     access_token: str
     token_type: str = "bearer"
-
-class Huesped(BaseModel):
-    nombres: str
-    documento: str
-    correo: str
-    fecha_nacimiento: date
-    fecha_referencia: Optional[date] = None
-
-    # REGLA 1: validar formato de correo con Regex
-    @field_validator('correo')
-    @classmethod
-    def validar_formato_correo(cls, valor: str) -> str:
-        patron = r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$'
-        if not re.match(patron, valor.strip()):
-            raise ValueError("El formato del correo electronico es invalido")
-        return valor.strip().lower()
-
-    # REGLA 2: validar mayoria de edad (minimo 18 años)
-    @field_validator('fecha_nacimiento')
-    @classmethod
-    def validar_mayoria_edad(cls, fecha_nac: date, info) -> date:
-        ref = info.data.get('fecha_referencia') or date.today()
-        edad = ref.year - fecha_nac.year - ((ref.month, ref.day) < (fecha_nac.month, fecha_nac.day))
-
-        if edad < 18:
-            raise ValueError("El huesped debe ser mayor de edad (minimo 18 años).")
-        return fecha_nac

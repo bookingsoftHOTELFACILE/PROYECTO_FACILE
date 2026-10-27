@@ -1,17 +1,11 @@
 {
-  "name": "bookingsoft-e2e",
+  "name": "bookinsgsoft-e2e",
   "version": "1.0.0",
-  "private": true,
-  "packageManager": "pnpm@12.6.0",
   "scripts": {
     "test": "playwright test",
-    "test:registro": "playwright test registro.spec.js",
-    "test:ui": "playwright test --ui",
-    "codegen": "playwright codegen http://localhost:3000",
-    "report": "playwright show-report"
+    "test:ui": "playwright test --ui"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.5"
+    "@playwright/test": "^1.40.0"
   }
 }

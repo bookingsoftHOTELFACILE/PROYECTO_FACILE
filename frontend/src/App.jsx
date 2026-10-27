@@ -797,52 +797,13 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
   );
 };
 
-const CATALOGO_HABITACIONES_INICIAL = [
-  ...Array.from({ length: 14 }, (_, i) => ({
-    id_habitacion: i + 1,
-    numero: `D${101 + i}`,
-    tipo: 'Dúplex',
-    capacidad: 3,
-    precio_noche: 250000,
-    estado: 'Disponible',
-    piso: i < 7 ? 'Piso 1' : 'Piso 2',
-    zona: i < 7 ? 'Piso 1 — Zona Dúplex Norte' : 'Piso 2 — Zona Dúplex Sur'
-  })),
-  ...Array.from({ length: 11 }, (_, i) => ({
-    id_habitacion: 15 + i,
-    numero: `DB${201 + i}`,
-    tipo: 'Dobles',
-    capacidad: 4,
-    precio_noche: 350000,
-    estado: 'Disponible',
-    piso: i < 6 ? 'Piso 2' : 'Piso 3',
-    zona: i < 6 ? 'Piso 2 — Suite Doble Lateral' : 'Piso 3 — Suite Doble Panorámica'
-  })),
-  { id_habitacion: 26, numero: 'F301', tipo: 'Familiares', capacidad: 6, precio_noche: 450000, estado: 'Disponible', piso: 'Piso 3', zona: 'Piso 3 — Ala Familiar Premium' },
-  { id_habitacion: 27, numero: 'F302', tipo: 'Familiares', capacidad: 6, precio_noche: 450000, estado: 'Disponible', piso: 'Piso 3', zona: 'Piso 3 — Ala Familiar Ejecutiva' },
-  ...Array.from({ length: 11 }, (_, i) => ({
-    id_habitacion: 28 + i,
-    numero: `H${401 + i}`,
-    tipo: 'Habitaciones',
-    capacidad: 2,
-    precio_noche: 180000,
-    estado: 'Disponible',
-    piso: 'Piso 4',
-    zona: 'Piso 4 — Nivel Executive Business'
-  }))
-];
-
 function App() {
   // ---- ESTADO DEL MODO DE CONEXIÓN ----
   const [backendActivo, setBackendActivo] = useState(false);
 
   // ---- ESTADO DE DATOS ----
-  const [huespedes, setHuespedes] = useState([
-    { id_huesped: 1, nombre: 'John Doe', documento: '12345678', telefono: '3115551234', correo: 'john.doe@example.com', lealtad: 'Silver', estado: 'Activo' },
-    { id_huesped: 2, nombre: 'Sofía Restrepo', documento: '98765432', telefono: '3126667890', correo: 'sofia.restrepo@bancolombia.com.co', lealtad: 'Gold', estado: 'Activo' },
-    { id_huesped: 3, nombre: 'Thomas Miller', documento: 'PP998877', telefono: '+155589012', correo: 'thomas.miller@siemens.com', lealtad: 'Platinum', estado: 'Activo' }
-  ]);
-  const [habitaciones, setHabitaciones] = useState(CATALOGO_HABITACIONES_INICIAL);
+  const [huespedes, setHuespedes] = useState([]);
+  const [habitaciones, setHabitaciones] = useState([]);
   const [reservas, setReservas] = useState([]);
   const [espaciosNegocio, setEspaciosNegocio] = useState([]);
   const [reservasNegocio, setReservasNegocio] = useState([]);
@@ -925,7 +886,6 @@ function App() {
   const [reservaAlert, setReservaAlert] = useState(null);
   const [filtroHabitaciones, setFiltroHabitaciones] = useState('todas'); // 'todas' | 'amas_llaves' | 'mantenimiento'
   const [galleryFilter, setGalleryFilter] = useState('todas'); // 'todas' | 'zonas' | 'apartamentos' | 'oficinas'
-  const [filtroTipoApto, setFiltroTipoApto] = useState('todas'); // 'todas' | 'Dúplex' | 'Dobles' | 'Familiares' | 'Habitaciones'
   const [lightboxIdx, setLightboxIdx] = useState(null); // visor de imágenes de la galería
   const [aptoLightboxPhoto, setAptoLightboxPhoto] = useState(null); // { photos: [...], index: n } o photo object
   const [lightboxZoom, setLightboxZoom] = useState(false); // Estado de zoom 1.65x interactivo para imágenes en Lightbox
@@ -1066,40 +1026,7 @@ function App() {
         setLoginError(data.detail || 'Credenciales incorrectas.');
       }
     } catch {
-      // Fallback local si backend está en segundo plano o desconectado
-      const u = loginForm.usuario.trim();
-      const p = loginForm.contrasena;
-      if ((u === 'admin' || u === 'bookingsoft_admin') && p === 'Admin2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Administrador BookingSoft', rol: 'Administrador' });
-        setShowLoginModal(false);
-        setLoginForm({ usuario: '', contrasena: '' });
-        setActiveTab('pms');
-        setPmsSubTab('empleados');
-        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Administrador!' });
-      } else if ((u === 'recepcion' || u === 'carlos_recep') && p === 'Recep2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Carlos Recepción', rol: 'Recepcionista 24h' });
-        setShowLoginModal(false);
-        setLoginForm({ usuario: '', contrasena: '' });
-        setActiveTab('pms');
-        setPmsSubTab('recepcion');
-        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Recepcionista 24h!' });
-      } else if ((u === 'amallaves' || u === 'marta_limpieza') && (p === 'Amallaves2026!' || p === 'marta123')) {
-        setUsuarioSesion({ usuario: u, nombre: 'Marta Ama de Llaves', rol: 'Ama de llaves' });
-        setShowLoginModal(false);
-        setLoginForm({ usuario: '', contrasena: '' });
-        setActiveTab('pms');
-        setPmsSubTab('planta');
-        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Ama de llaves!' });
-      } else if ((u === 'mantenimiento' || u === 'jhon_mantenimiento') && p === 'Mantenimiento2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Jhon Mantenimiento', rol: 'Personal de mantenimiento' });
-        setShowLoginModal(false);
-        setLoginForm({ usuario: '', contrasena: '' });
-        setActiveTab('pms');
-        setPmsSubTab('planta');
-        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Mantenimiento!' });
-      } else {
-        setLoginError('Credenciales incorrectas o servidor no disponible.');
-      }
+      setLoginError('Error de conexión con el servidor.');
     }
     setLoading(false);
   };
@@ -1116,11 +1043,9 @@ function App() {
   useEffect(() => {
     const verificarBackend = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/habitaciones`, { signal: AbortSignal.timeout(2000) });
-        if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
+        const res = await fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
           setBackendActivo(true);
-        } else {
-          setBackendActivo(false);
         }
       } catch {
         setBackendActivo(false);
@@ -1128,30 +1053,6 @@ function App() {
     };
     verificarBackend();
   }, []);
-
-  // Sincronizar navegación con el historial del navegador para evitar pantalla en blanco al dar Atrás
-  useEffect(() => {
-    try {
-      window.history.replaceState({ tab: 'apartamentos' }, '', window.location.href);
-    } catch {}
-
-    const handlePopState = (event) => {
-      if (event.state && event.state.tab) {
-        setActiveTab(event.state.tab);
-      } else {
-        setActiveTab('apartamentos');
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  const navegarATab = (tab) => {
-    setActiveTab(tab);
-    try {
-      window.history.pushState({ tab }, '', window.location.href);
-    } catch {}
-  };
 
   // Cargar datos
   const cargarDatosBackend = async (token = authToken) => {
@@ -1187,7 +1088,7 @@ function App() {
     if (reservaData.id_habitacion && reservaData.fecha_entrada && reservaData.fecha_salida) {
       const eDt = new Date(reservaData.fecha_entrada + 'T00:00:00');
       const sDt = new Date(reservaData.fecha_salida + 'T00:00:00');
-      const hab = habitaciones.find(h => String(h.id_habitacion) === String(reservaData.id_habitacion) || String(h.numero) === String(reservaData.id_habitacion));
+      const hab = habitaciones.find(h => String(h.id_habitacion) === String(reservaData.id_habitacion));
       if (!isNaN(eDt.getTime()) && !isNaN(sDt.getTime()) && sDt > eDt && hab) {
         const diffMs = sDt.getTime() - eDt.getTime();
         const noches = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
@@ -1458,21 +1359,7 @@ function App() {
           setGuestSearchError(formatErrorMessage(data.detail) || 'Error al iniciar sesión.');
         }
       } catch {
-        // Fallback local si backend no responde o está offline
-        const encontrado = huespedes.find(h => 
-          (h.documento && h.documento.toLowerCase() === q.toLowerCase()) ||
-          (h.correo && h.correo.toLowerCase() === q.toLowerCase()) ||
-          (h.telefono && h.telefono.toLowerCase() === q.toLowerCase())
-        );
-        if (encontrado) {
-          setSelectedHuesped(encontrado);
-          setShowGuestAuthModal(false);
-          setGuestSearchQuery('');
-          setGuestLoginPassword('');
-          setAlert({ type: 'success', message: `¡Bienvenido de nuevo, ${encontrado.nombre}!` });
-        } else {
-          setGuestSearchError('No encontramos un registro con estos datos. Regístrese en la opción "Crear cuenta nueva".');
-        }
+        setGuestSearchError('Error de conexión con el servidor.');
       }
     } else {
       // Fallback local
@@ -1492,7 +1379,6 @@ function App() {
         setShowGuestAuthModal(false);
         setGuestSearchQuery('');
         setGuestLoginPassword('');
-        setAlert({ type: 'success', message: `¡Bienvenido de nuevo, ${encontrado.nombre}!` });
       } else {
         setGuestSearchError('No encontramos un registro con estos datos. Regístrese en la opción "Crear cuenta nueva".');
       }
@@ -1580,12 +1466,12 @@ function App() {
   const handleReservarTipo = (tipoNombre) => {
     const habDispo = habitaciones.find(h => h.tipo === tipoNombre && h.estado === 'Disponible');
     if (habDispo) {
-      setReservaData(prev => ({ ...prev, id_habitacion: String(habDispo.id_habitacion || habDispo.numero) }));
+      setReservaData(prev => ({ ...prev, id_habitacion: String(habDispo.id_habitacion) }));
     }
     if (!selectedHuesped) {
       setShowGuestAuthModal(true);
     } else {
-      navegarATab('reservar');
+      setActiveTab('reservar');
       window.scrollTo({ top: 500, behavior: 'smooth' });
     }
   };
@@ -1608,69 +1494,7 @@ function App() {
     e.preventDefault();
 
     if (!reservaData.id_habitacion) {
-      setReservaAlert({ type: 'error', message: 'Debe seleccionar un apartamento o espacio de coworking.' });
-      return;
-    }
-
-    if (String(reservaData.id_habitacion).startsWith('coworking-')) {
-      const espId = parseInt(String(reservaData.id_habitacion).replace('coworking-', ''));
-      const espacioSel = espaciosNegocio.find(esp => esp.id_espacio === espId);
-
-      let huespedDestino = selectedHuesped;
-      if (!huespedDestino && pmsWalkInGuest.documento) {
-        huespedDestino = huespedes.find(h => h.documento === (pmsWalkInGuest.documento || '').trim());
-      }
-
-      if (!huespedDestino) {
-        setReservaAlert({ type: 'error', message: 'Debe iniciar sesión o seleccionar un huésped primero.' });
-        return;
-      }
-
-      const hInicio = reservaNegocioForm.hora_inicio || '09:00';
-      const hFin = reservaNegocioForm.hora_fin || '11:00';
-      if (hFin <= hInicio) {
-        setReservaAlert({ type: 'error', message: 'La hora de fin debe ser posterior a la de inicio.' });
-        return;
-      }
-
-      setLoading(true);
-      setReservaAlert(null);
-
-      try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-        const res = await fetch(`${API_URL}/api/centro-negocios/reservas`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            id_espacio: espId,
-            tipo_cliente: 'Huésped Registrado',
-            id_huesped: huespedDestino.id_huesped,
-            nombre_cliente: huespedDestino.nombre,
-            documento_cliente: huespedDestino.documento || null,
-            correo_cliente: huespedDestino.correo || null,
-            fecha: reservaNegocioForm.fecha || new Date().toISOString().split('T')[0],
-            hora_inicio: hInicio,
-            hora_fin: hFin,
-            observaciones: reservaNegocioForm.observaciones || null,
-          }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setReservaAlert({
-            type: 'success',
-            message: data.message || `✓ ¡Reserva de ${espacioSel?.nombre || 'espacio'} confirmada exitosamente!`
-          });
-          setReservaData(prev => ({ ...prev, id_habitacion: '' }));
-          setReservaNegocioForm({ id_espacio: '', tipo_cliente: 'Huésped Registrado', id_huesped: '', nombre_cliente: '', documento_cliente: '', fecha: new Date().toISOString().split('T')[0], hora_inicio: '09:00', hora_fin: '11:00', observaciones: '' });
-          cargarDatosBackend(authToken);
-        } else {
-          setReservaAlert({ type: 'error', message: formatErrorMessage(data.detail) });
-        }
-      } catch {
-        setReservaAlert({ type: 'error', message: 'Error de conexión al reservar espacio de coworking.' });
-      }
-      setLoading(false);
+      setReservaAlert({ type: 'error', message: 'Debe seleccionar un apartamento o habitación.' });
       return;
     }
 
@@ -2487,8 +2311,8 @@ function App() {
             desc: 'Cuenta con habitación confort individual, baño privado en suite, escritorio de trabajo, televisión HD y Wi-Fi de alta velocidad. Ideal para ejecutivos y viajes de negocios.',
             personas: 'Hasta 2 personas',
             ambientes: 'Baño privado',
-            precio: '$180.000',
-            precioSub: 'COP/noche',
+            precio: 'Consultar',
+            precioSub: 'tarifa',
             fotos: [
               { url: '/images/apartamentos/IMG_9495-HDR.jpg', titulo: 'Habitación — Alcoba Ejecutiva', desc: 'Cama confort, escritorio de trabajo y TV' },
               { url: '/images/apartamentos/IMG_9498-HDR.jpg', titulo: 'Habitación — Vista Interna', desc: 'Entorno silencioso para descanso o teletrabajo' },
@@ -2498,10 +2322,6 @@ function App() {
           }
         ];
 
-        const alojamientosVisibles = filtroTipoApto === 'todas'
-          ? alojamientosData
-          : alojamientosData.filter(apto => apto.tipo === filtroTipoApto);
-
         return (
           <section className="facile-section" style={{ borderTop: activeTab === 'inicio' ? '1px solid #e2e8f0' : 'none' }}>
             <div className="section-title-wrap">
@@ -2509,397 +2329,95 @@ function App() {
               <p>38 unidades disponibles en 4 categorías — Reserve directamente con nosotros</p>
             </div>
 
-            {/* BOTONES DE FILTRO POR CATEGORÍA SIN RECARGA */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem', marginBottom: '2rem', flexWrap: 'wrap', padding: '0 1rem' }}>
-              {[
-                { id: 'todas', label: 'Ver Todos', count: 38 },
-                { id: 'Dúplex', label: 'Dúplex', count: 14 },
-                { id: 'Dobles', label: 'Dobles', count: 11 },
-                { id: 'Familiares', label: 'Familiares', count: 2 },
-                { id: 'Habitaciones', label: 'Habitaciones', count: 11 }
-              ].map(f => {
-                const isActive = filtroTipoApto === f.id;
+            <div className="apto-grid">
+              {alojamientosData.map((apto) => {
+                const activePhotoIndex = aptoActivePhoto[apto.tipo] || 0;
+                const currentPhoto = apto.fotos[activePhotoIndex] || apto.fotos[0];
+
                 return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setFiltroTipoApto(f.id)}
-                    style={{
-                      padding: '0.6rem 1.15rem',
-                      borderRadius: '25px',
-                      border: isActive ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
-                      background: isActive ? '#e11d48' : '#ffffff',
-                      color: isActive ? '#ffffff' : '#334155',
-                      fontSize: '0.84rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      boxShadow: isActive ? '0 4px 12px rgba(225,29,72,0.25)' : '0 2px 6px rgba(0,0,0,0.03)',
-                      transition: 'all 0.2s ease',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.45rem'
-                    }}
-                  >
-                    <span>{f.label}</span>
-                    <span style={{
-                      background: isActive ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
-                      color: isActive ? '#ffffff' : '#64748b',
-                      padding: '0.12rem 0.45rem',
-                      borderRadius: '12px',
-                      fontSize: '0.72rem',
-                      fontWeight: 800
-                    }}>
-                      {f.count}
-                    </span>
-                  </button>
+                  <div key={apto.tipo} className="apto-item">
+                    {/* ENCABEZADO ORIGINAL DE LA TARJETA CON NOMBRE VISIBLE */}
+                    <div className="apto-header">
+                      <h3>{apto.tipo}</h3>
+                      <span className="badge-red-num">{apto.unidades}</span>
+                    </div>
+
+                    {/* IMAGEN DE BANNER PRINCIPAL DE LA TARJETA */}
+                    <div
+                      style={{ position: 'relative', width: '100%', height: '195px', overflow: 'hidden', background: '#0f172a', cursor: 'pointer' }}
+                      onClick={() => setSelectedAptoFigma(apto)}
+                      title="Haz clic para ver el detalle en el diseño de Figma"
+                    >
+                      <img
+                        src={currentPhoto.url}
+                        alt={currentPhoto.titulo}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease' }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                      />
+
+                      {/* INSIGNIA VER DETALLE FIGMA */}
+                      <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Maximize2 size={13}/> Ver Detalle Figma
+                      </div>
+                    </div>
+
+                    {/* MINI CARRUSEL DE MINIATURAS FOTOGRÁFICAS */}
+                    <div style={{ display: 'flex', gap: '0.4rem', padding: '0.5rem 0.8rem', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', overflowX: 'auto' }}>
+                      {apto.fotos.map((f, i) => (
+                        <div
+                          key={i}
+                          onClick={() => setAptoActivePhoto(prev => ({ ...prev, [apto.tipo]: i }))}
+                          style={{
+                            width: '52px',
+                            height: '38px',
+                            borderRadius: '6px',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            border: activePhotoIndex === i ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
+                            opacity: activePhotoIndex === i ? 1 : 0.65,
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0
+                          }}
+                        >
+                          <img src={f.url} alt="Vista" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CUERPO Y DETALLES */}
+                    <div className="apto-body">
+                      <p className="apto-text">
+                        {apto.desc}
+                      </p>
+                      <div className="apto-specs">
+                        <span className="spec-pill"><Users size={12}/> {apto.personas}</span>
+                        <span className="spec-pill"><Wifi size={12}/> Wi-Fi</span>
+                        <span className="spec-pill"><Home size={12}/> {apto.ambientes}</span>
+                      </div>
+                      <div className="apto-footer">
+                        <div className="price-text">
+                          {apto.precio} <span>{apto.precioSub}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <button
+                            className="btn-book-red"
+                            style={{ background: '#0f172a', color: '#fff', padding: '0.45rem 0.75rem', fontSize: '0.78rem' }}
+                            onClick={() => setSelectedAptoFigma(apto)}
+                            title="Ver vista interactiva de Figma"
+                          >
+                            Detalle
+                          </button>
+                          <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
+                            Reservar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
-
-            {/* VISTA 1: CUANDO SE MUESTRAN TODAS LAS CATEGORÍAS (4 COLUMNAS BALANCEADAS) */}
-            {filtroTipoApto === 'todas' ? (
-              <div className="apto-grid">
-                {alojamientosVisibles.map((apto) => {
-                  const activePhotoIndex = aptoActivePhoto[apto.tipo] || 0;
-                  const currentPhoto = apto.fotos[activePhotoIndex] || apto.fotos[0];
-
-                  return (
-                    <div key={apto.tipo} className="apto-item">
-                      {/* ENCABEZADO ORIGINAL DE LA TARJETA CON NOMBRE VISIBLE */}
-                      <div className="apto-header">
-                        <h3>{apto.tipo}</h3>
-                        <span className="badge-red-num">{apto.unidades}</span>
-                      </div>
-
-                      {/* IMAGEN DE BANNER PRINCIPAL DE LA TARJETA */}
-                      <div
-                        style={{ position: 'relative', width: '100%', height: '195px', overflow: 'hidden', background: '#0f172a', cursor: 'pointer' }}
-                        onClick={() => setSelectedAptoFigma(apto)}
-                        title="Haz clic para ver el detalle en el diseño de Figma"
-                      >
-                        <img
-                          src={currentPhoto.url}
-                          alt={currentPhoto.titulo}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease' }}
-                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                        />
-
-                        {/* INSIGNIA VER DETALLE FIGMA */}
-                        <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <Maximize2 size={13}/> Ver Detalle Figma
-                        </div>
-                      </div>
-
-                      {/* MINI CARRUSEL DE MINIATURAS FOTOGRÁFICAS */}
-                      <div style={{ display: 'flex', gap: '0.4rem', padding: '0.5rem 0.8rem', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', overflowX: 'auto' }}>
-                        {apto.fotos.map((f, i) => (
-                          <div
-                            key={i}
-                            onClick={() => setAptoActivePhoto(prev => ({ ...prev, [apto.tipo]: i }))}
-                            style={{
-                              width: '52px',
-                              height: '38px',
-                              borderRadius: '6px',
-                              overflow: 'hidden',
-                              cursor: 'pointer',
-                              border: activePhotoIndex === i ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
-                              opacity: activePhotoIndex === i ? 1 : 0.65,
-                              transition: 'all 0.2s ease',
-                              flexShrink: 0
-                            }}
-                          >
-                            <img src={f.url} alt="Vista" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* CUERPO Y DETALLES */}
-                      <div className="apto-body">
-                        <p className="apto-text">
-                          {apto.desc}
-                        </p>
-                        <div className="apto-specs">
-                          <span className="spec-pill"><Users size={12}/> {apto.personas}</span>
-                          <span className="spec-pill"><Wifi size={12}/> Wi-Fi</span>
-                          <span className="spec-pill"><Home size={12}/> {apto.ambientes}</span>
-                        </div>
-                        <div className="apto-footer">
-                          <div className="price-text">
-                            {apto.precio} <span>{apto.precioSub}</span>
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            <button
-                              className="btn-book-red"
-                              style={{ background: '#0f172a', color: '#fff', padding: '0.45rem 0.75rem', fontSize: '0.78rem' }}
-                              onClick={() => setSelectedAptoFigma(apto)}
-                              title="Ver vista interactiva de Figma"
-                            >
-                              Detalle
-                            </button>
-                            <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
-                              Reservar
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              /* VISTA 2: CUANDO SE FILTRA UNA CATEGORÍA ESPECÍFICA (APROVECHA 100% EL ANCHO Y MUESTRA TODAS SUS UNIDADES) */
-              <div>
-                {alojamientosVisibles.map((apto) => {
-                  const activePhotoIndex = aptoActivePhoto[apto.tipo] || 0;
-                  const currentPhoto = apto.fotos[activePhotoIndex] || apto.fotos[0];
-
-                  // Lista de unidades de esta categoría (backend o distribución oficial)
-                  const unidadesDefault = {
-                    'Dúplex': Array.from({ length: 14 }, (_, i) => ({
-                      id: `D${101 + i}`,
-                      numero: `D${101 + i}`,
-                      tipo: 'Dúplex',
-                      capacidad: 3,
-                      precio: 250000,
-                      piso: i < 7 ? 'Piso 1' : 'Piso 2'
-                    })),
-                    'Dobles': Array.from({ length: 11 }, (_, i) => ({
-                      id: `DB${201 + i}`,
-                      numero: `DB${201 + i}`,
-                      tipo: 'Dobles',
-                      capacidad: 4,
-                      precio: 350000,
-                      piso: i < 6 ? 'Piso 2' : 'Piso 3'
-                    })),
-                    'Familiares': [
-                      { id: 'F301', numero: 'F301', tipo: 'Familiares', capacidad: 6, precio: 450000, piso: 'Piso 3' },
-                      { id: 'F302', numero: 'F302', tipo: 'Familiares', capacidad: 6, precio: 450000, piso: 'Piso 3' }
-                    ],
-                    'Habitaciones': Array.from({ length: 11 }, (_, i) => ({
-                      id: `H${401 + i}`,
-                      numero: `H${401 + i}`,
-                      tipo: 'Habitaciones',
-                      capacidad: 2,
-                      precio: 180000,
-                      piso: 'Piso 4'
-                    }))
-                  }[apto.tipo] || [];
-
-                  const unidadesFinales = habitaciones.length > 0
-                    ? habitaciones.filter(h => h.tipo === apto.tipo && !['101A', '102A'].includes(String(h.numero))).map(h => ({
-                        id: h.id_habitacion || h.numero,
-                        numero: String(h.numero),
-                        tipo: h.tipo,
-                        capacidad: h.capacidad,
-                        precio: Number(h.precio_noche || 0),
-                        piso: String(h.numero || '').startsWith('D') ? 'Pisos 1-2' : (String(h.numero || '').startsWith('DB') ? 'Pisos 2-3' : (String(h.numero || '').startsWith('F') ? 'Piso 3' : 'Piso 4'))
-                      }))
-                    : unidadesDefault;
-
-                  return (
-                    <div key={apto.tipo}>
-                      {/* TARJETA DESTACADA HORIZONTAL (APROVECHA EL 100% DEL ESPACIO SUPERIOR) */}
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                        background: '#ffffff',
-                        borderRadius: '16px',
-                        border: '1px solid #e2e8f0',
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                        marginBottom: '2.5rem'
-                      }}>
-                        {/* COLUMNA IZQUIERDA: FOTO PRINCIPAL Y MINIATURAS */}
-                        <div style={{ background: '#0f172a', display: 'flex', flexDirection: 'column' }}>
-                          <div
-                            style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', cursor: 'pointer' }}
-                            onClick={() => setSelectedAptoFigma(apto)}
-                            title="Haz clic para ver el detalle en Figma"
-                          >
-                            <img
-                              src={currentPhoto.url}
-                              alt={currentPhoto.titulo}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease' }}
-                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
-                              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                            />
-                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.4rem 0.85rem', borderRadius: '15px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              <Maximize2 size={14}/> Ver Detalle Figma
-                            </div>
-                          </div>
-
-                          {/* MINI CARRUSEL DE MINIATURAS FOTOGRÁFICAS */}
-                          <div style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem 1rem', background: '#090d16', overflowX: 'auto' }}>
-                            {apto.fotos.map((f, i) => (
-                              <div
-                                key={i}
-                                onClick={() => setAptoActivePhoto(prev => ({ ...prev, [apto.tipo]: i }))}
-                                style={{
-                                  width: '64px',
-                                  height: '46px',
-                                  borderRadius: '6px',
-                                  overflow: 'hidden',
-                                  cursor: 'pointer',
-                                  border: activePhotoIndex === i ? '2px solid #e11d48' : '1.5px solid #334155',
-                                  opacity: activePhotoIndex === i ? 1 : 0.65,
-                                  transition: 'all 0.2s ease',
-                                  flexShrink: 0
-                                }}
-                              >
-                                <img src={f.url} alt="Vista" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* COLUMNA DERECHA: INFORMACIÓN COMPLETA Y ESPECIFICACIONES */}
-                        <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff' }}>
-                          <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                              <h3 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>{apto.tipo}</h3>
-                              <span className="badge-red-num" style={{ fontSize: '0.85rem', padding: '0.35rem 0.85rem' }}>{apto.unidades}</span>
-                            </div>
-
-                            <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: '1.65', marginBottom: '1.5rem' }}>
-                              {apto.desc}
-                            </p>
-
-                            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Users size={14}/> {apto.personas}</span>
-                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Wifi size={14}/> Wi-Fi de alta velocidad</span>
-                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Home size={14}/> {apto.ambientes}</span>
-                            </div>
-                          </div>
-
-                          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                            <div>
-                              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#e11d48', lineHeight: 1 }}>
-                                {apto.precio}
-                              </div>
-                              <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{apto.precioSub}</span>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '0.6rem' }}>
-                              <button
-                                className="btn-book-red"
-                                style={{ background: '#0f172a', color: '#fff', padding: '0.6rem 1.1rem', fontSize: '0.86rem' }}
-                                onClick={() => setSelectedAptoFigma(apto)}
-                                title="Ver vista interactiva de Figma"
-                              >
-                                Detalle Completo
-                              </button>
-                              <button
-                                className="btn-book-red"
-                                style={{ padding: '0.6rem 1.25rem', fontSize: '0.86rem' }}
-                                onClick={() => handleReservarTipo(apto.tipo)}
-                              >
-                                Reservar {apto.tipo}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* SUBSECCIÓN: TODAS LAS UNIDADES DISPONIBLES DE ESTA CATEGORÍA (LLENAN EL ANCHO DE LA PANTALLA) */}
-                      <div style={{ marginBottom: '1rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          <div>
-                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
-                              Unidades asignables de {apto.tipo} ({unidadesFinales.length} disponibles)
-                            </h3>
-                            <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.84rem' }}>
-                              Selecciona tu apartamento para asignarlo directamente a tu reserva
-                            </p>
-                          </div>
-                          <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.3rem 0.8rem', borderRadius: '15px', fontSize: '0.78rem', fontWeight: 700 }}>
-                            ● Todas las unidades disponibles
-                          </span>
-                        </div>
-
-                        {/* GRID DE UNIDADES ESPECÍFICAS DE ESTA CATEGORÍA */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '1rem' }}>
-                          {unidadesFinales.map((unidad) => (
-                            <div
-                              key={unidad.id}
-                              style={{
-                                background: '#ffffff',
-                                borderRadius: '12px',
-                                border: '1px solid #e2e8f0',
-                                padding: '1rem',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'space-between',
-                                transition: 'all 0.2s ease'
-                              }}
-                              onMouseEnter={e => {
-                                e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)';
-                                e.currentTarget.style.borderColor = '#e11d48';
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
-                                e.currentTarget.style.borderColor = '#e2e8f0';
-                              }}
-                            >
-                              <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                  <span style={{ background: '#e11d48', color: '#ffffff', padding: '0.25rem 0.65rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 800 }}>
-                                    Apto {unidad.numero}
-                                  </span>
-                                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>
-                                    {unidad.piso}
-                                  </span>
-                                </div>
-                                <div style={{ fontSize: '0.84rem', color: '#334155', fontWeight: 600, marginBottom: '0.3rem' }}>
-                                  {apto.formato || apto.tipo}
-                                </div>
-                                <div style={{ fontSize: '0.76rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.75rem' }}>
-                                  <Users size={12}/> Capacidad: {unidad.capacidad} pers.
-                                </div>
-                              </div>
-
-                              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                  <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#e11d48' }}>
-                                    ${Number(unidad.precio).toLocaleString('es-CO')}
-                                  </div>
-                                  <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>COP / noche</div>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setReservaData(prev => ({ ...prev, id_habitacion: String(unidad.id || unidad.numero) }));
-                                    navegarATab('reservar');
-                                  }}
-                                  style={{
-                                    background: '#0f172a',
-                                    color: '#ffffff',
-                                    border: 'none',
-                                    padding: '0.4rem 0.75rem',
-                                    borderRadius: '6px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s ease'
-                                  }}
-                                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                                  onMouseLeave={e => e.currentTarget.style.background = '#0f172a'}
-                                >
-                                  Reservar
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
 
             {/* MODAL DETALLE DE APARTAMENTO IDENTICO AL MOCKUP DE FIGMA */}
             {selectedAptoFigma && (() => {
@@ -3256,17 +2774,7 @@ function App() {
                       <span className="spec-pill"><Briefcase size={13}/> Pantalla HD 65" / Proyector</span>
                       <span className="spec-pill"><Clock size={13}/> Alquiler Flexible por Horas</span>
                     </div>
-                    <button
-                      className="btn-book-red"
-                      onClick={() => {
-                        const mapOficinas = { 'sala_1': 1, 'sala_2': 2, 'sala_3': 3 };
-                        const espTarget = mapOficinas[oficina.id] || 1;
-                        setReservaData(prev => ({ ...prev, id_habitacion: `coworking-${espTarget}` }));
-                        setActiveTab('reservar');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      style={{ padding: '0.75rem 1.8rem', fontSize: '0.92rem' }}
-                    >
+                    <button className="btn-book-red" onClick={() => setActiveTab('reservar')} style={{ padding: '0.75rem 1.8rem', fontSize: '0.92rem' }}>
                       Consultar Disponibilidad / Reservar
                     </button>
                   </div>
@@ -3543,35 +3051,6 @@ function App() {
 
             {/* CREACIÓN DE RESERVA */}
             <div className="clean-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.6rem' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('apartamentos');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  style={{
-                    background: '#f8fafc',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '8px',
-                    padding: '0.45rem 0.95rem',
-                    fontSize: '0.84rem',
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.45rem',
-                    transition: 'all 0.15s ease'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#e2e8f0'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
-                >
-                  ◀ Volver a Alojamientos
-                </button>
-                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>Apartamentos Facile • Bogotá</span>
-              </div>
-
               {!selectedHuesped && <div className="card-step-badge">Paso 2</div>}
               <div className="clean-card-header">
                 <Calendar size={20} color="var(--color-primary-red)"/>
@@ -3585,11 +3064,11 @@ function App() {
                       <User size={18} color="#e11d48"/>
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{selectedHuesped?.nombre || 'Huésped Registrado'}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Doc: {selectedHuesped?.documento || 'N/A'} {selectedHuesped?.correo ? `• ${selectedHuesped.correo}` : ''}</div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{selectedHuesped.nombre}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Doc: {selectedHuesped.documento} {selectedHuesped.correo ? `• ${selectedHuesped.correo}` : ''}</div>
                     </div>
                   </div>
-                  <button type="button" className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar / Cerrar</button>
+                  <button className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar / Cerrar</button>
                 </div>
               ) : (
                 <p className="clean-card-desc" style={{ color: '#b45309' }}>
@@ -3599,287 +3078,183 @@ function App() {
 
               <form onSubmit={handleReservaSubmit}>
                 <div className="form-field">
-                  <label>Seleccionar Apartamento o Espacio de Coworking</label>
+                  <label>Seleccionar Apartamento / Unidad</label>
                   <div className="field-input-wrap">
-                    {String(reservaData.id_habitacion).startsWith('coworking-') ? (
-                      <Briefcase className="field-icon" size={16}/>
-                    ) : (
-                      <Home className="field-icon" size={16}/>
-                    )}
+                    <Home className="field-icon" size={16}/>
                     <select name="id_habitacion" value={reservaData.id_habitacion} onChange={handleReservaChange} required disabled={!selectedHuesped}>
-                      <option value="">-- Elija un apartamento o espacio de coworking --</option>
-                      <optgroup label="🏨 Apartamentos / Unidades">
-                        {habitaciones.map(h => (
-                          <option key={h.id_habitacion || h.numero} value={String(h.id_habitacion || h.numero)} disabled={h.estado === 'Mantenimiento'}>
-                            Apto {h.numero} — {h.tipo} • {h.zona || h.piso || 'Torre Facile'} • Capacidad: {h.capacidad || 2} pers. • ${Number(h.precio_noche || 0).toLocaleString('es-CO')} COP/noche ({h.estado || 'Disponible'})
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="💼 Salas de Juntas & Coworking (Por Horas)">
-                        {espaciosNegocio.map(e => (
-                          <option key={`coworking-${e.id_espacio}`} value={`coworking-${e.id_espacio}`} disabled={e.estado === 'Mantenimiento'}>
-                            💼 {e.nombre} ({e.tipo}) • Capacidad: {e.capacidad} pers. • ${Number(e.precio_hora).toLocaleString('es-CO')} COP/hora ({e.estado || 'Disponible'})
-                          </option>
-                        ))}
-                      </optgroup>
+                      <option value="">-- Elija un apartamento --</option>
+                      {habitaciones.map(h => (
+                        <option key={h.id_habitacion} value={h.id_habitacion} disabled={h.estado === 'Mantenimiento'}>
+                          Apto {h.numero} - {h.tipo} ({h.estado}) - ${h.precio_noche.toLocaleString('es-CO')} COP/noche
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
-                {String(reservaData.id_habitacion).startsWith('coworking-') ? (() => {
-                  const espId = parseInt(String(reservaData.id_habitacion).replace('coworking-', ''));
-                  const espSel = espaciosNegocio.find(e => e.id_espacio === espId);
-                  const [hI, mI] = (reservaNegocioForm.hora_inicio || '09:00').split(':').map(Number);
-                  const [hF, mF] = (reservaNegocioForm.hora_fin || '11:00').split(':').map(Number);
-                  const duracion = Math.max(1, Math.round(((hF * 60 + (mF || 0)) - (hI * 60 + (mI || 0))) / 60));
-                  const precioHora = espSel ? Number(espSel.precio_hora) : 0;
-                  let total = duracion * precioHora;
-                  if (espSel?.tipo === 'Sala de Juntas') {
-                    if (duracion >= 8) total = 450000;
-                    else if (duracion >= 4) total = 250000;
-                  } else {
-                    if (duracion >= 8) total = 100000;
-                    else if (duracion >= 4) total = 70000;
+                {/* CALENDARIO DE OCUPACIÓN */}
+                {reservaData.id_habitacion && (() => {
+                  const year = calDate.getFullYear();
+                  const month = calDate.getMonth();
+                  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                  const habReservas = reservas.filter(r => String(r.id_habitacion) === String(reservaData.id_habitacion) && (r.estado === 'Confirmada' || r.estado === 'Check-In'));
+
+                  const firstDay = new Date(year, month, 1);
+                  const daysInMonth = new Date(year, month + 1, 0).getDate();
+                  let startDay = firstDay.getDay() - 1;
+                  if (startDay === -1) startDay = 6;
+
+                  const daysGrid = [];
+                  for (let i = 0; i < startDay; i++) daysGrid.push(null);
+                  for (let d = 1; d <= daysInMonth; d++) {
+                    const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const isOccupied = habReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
+                    const isSelectedIn = reservaData.fecha_entrada === dayStr;
+                    const isSelectedOut = reservaData.fecha_salida === dayStr;
+                    const inRange = reservaData.fecha_entrada && reservaData.fecha_salida && dayStr >= reservaData.fecha_entrada && dayStr <= reservaData.fecha_salida;
+                    daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
                   }
 
+                  const handleDayClick = (item) => {
+                    if (!item || item.isOccupied) return;
+                    if (!reservaData.fecha_entrada || (reservaData.fecha_entrada && reservaData.fecha_salida)) {
+                      setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
+                    } else if (reservaData.fecha_entrada && !reservaData.fecha_salida) {
+                      if (item.dayStr <= reservaData.fecha_entrada) {
+                        setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
+                      } else {
+                        const hasBlock = habReservas.some(r => r.fecha_entrada <= item.dayStr && r.fecha_salida >= reservaData.fecha_entrada);
+                        if (hasBlock) {
+                          setReservaAlert({ type: 'error', message: 'El rango incluye fechas ya reservadas en rojo.' });
+                          return;
+                        }
+                        setReservaData(prev => ({ ...prev, fecha_salida: item.dayStr }));
+                      }
+                    }
+                  };
+
                   return (
-                    <div style={{ marginTop: '1.2rem' }}>
-                      <div className="form-row-3" style={{ marginBottom: '1rem' }}>
-                        <div className="form-field">
-                          <label>Fecha de Reserva *</label>
-                          <div className="field-input-wrap">
-                            <input
-                              type="date"
-                              value={reservaNegocioForm.fecha}
-                              min={new Date().toISOString().split('T')[0]}
-                              onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, fecha: e.target.value })}
-                              required
-                              disabled={!selectedHuesped}
-                            />
-                          </div>
-                        </div>
-                        <div className="form-field">
-                          <label>Hora Inicio *</label>
-                          <div className="field-input-wrap">
-                            <input
-                              type="time"
-                              value={reservaNegocioForm.hora_inicio}
-                              onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, hora_inicio: e.target.value })}
-                              required
-                              disabled={!selectedHuesped}
-                            />
-                          </div>
-                        </div>
-                        <div className="form-field">
-                          <label>Hora Fin *</label>
-                          <div className="field-input-wrap">
-                            <input
-                              type="time"
-                              value={reservaNegocioForm.hora_fin}
-                              onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, hora_fin: e.target.value })}
-                              required
-                              disabled={!selectedHuesped}
-                            />
-                          </div>
-                        </div>
+                    <div style={{ background: '#ffffff', padding: '1rem', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '1.2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                        <button type="button" className="btn-mini" onClick={() => setCalDate(new Date(year, month - 1, 1))}>◀ Mes Ant.</button>
+                        <strong style={{ color: '#0f172a', fontSize: '0.92rem', textTransform: 'capitalize' }}>🗓️ Disponibilidad en Calendario: {monthNames[month]} {year}</strong>
+                        <button className="btn-mini" type="button" onClick={() => setCalDate(new Date(year, month + 1, 1))}>Mes Sig. ▶</button>
                       </div>
 
-                      <div className="form-field" style={{ marginBottom: '1rem' }}>
-                        <label>Observaciones / Requerimientos Especiales</label>
-                        <div className="field-input-wrap">
-                          <input
-                            type="text"
-                            placeholder="Ej: Video beam, estación de café gourmet, tomas de corriente..."
-                            value={reservaNegocioForm.observaciones}
-                            onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, observaciones: e.target.value })}
-                            disabled={!selectedHuesped}
-                          />
-                        </div>
+                      <div style={{ display: 'flex', gap: '1.2rem', marginBottom: '0.8rem', fontSize: '0.78rem', justifyContent: 'center' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#991b1b', fontWeight: 700 }}>
+                          <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#ef4444', display: 'inline-block' }}/> 🔴 Fechas Ocupadas
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#166534', fontWeight: 700 }}>
+                          <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#22c55e', display: 'inline-block' }}/> 🟢 Fechas Libres
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#1d4ed8', fontWeight: 700 }}>
+                          <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }}/> 🔵 Tu Selección
+                        </span>
                       </div>
 
-                      <div className="live-quote-box" style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '1.2rem', marginBottom: '1.2rem' }}>
-                        <h4 style={{ margin: '0 0 0.8rem', color: '#0f172a', fontSize: '0.95rem' }}>Resumen de Cotización — Centro de Negocios</h4>
-                        <div className="quote-row"><span>Espacio:</span><strong>{espSel?.nombre || 'Sala / Coworking'} ({espSel?.tipo})</strong></div>
-                        <div className="quote-row"><span>Tarifa por Hora:</span><span>${Number(espSel?.precio_hora || 0).toLocaleString('es-CO')} COP / hora</span></div>
-                        <div className="quote-row"><span>Horario:</span><span>{reservaNegocioForm.hora_inicio} a {reservaNegocioForm.hora_fin} ({duracion} {duracion === 1 ? 'hora' : 'horas'})</span></div>
-                        <div className="quote-row final-total" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.6rem', marginTop: '0.6rem', fontWeight: 800, color: '#e11d48', fontSize: '1.1rem' }}>
-                          <span>Total a Pagar:</span>
-                          <span>${Number(total).toLocaleString('es-CO')} COP</span>
-                        </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+                        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
                       </div>
 
-                      <button type="submit" className="btn-submit-red" disabled={loading || !selectedHuesped}>
-                        <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : `Confirmar Reserva de ${espSel?.nombre || 'Espacio'}`}
-                      </button>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                        {daysGrid.map((item, idx) => {
+                          if (!item) return <div key={`empty-${idx}`}/>;
+                          let bg = '#dcfce7';
+                          let color = '#166534';
+                          let borderColor = '#86efac';
+
+                          if (item.isOccupied) {
+                            bg = '#fee2e2';
+                            color = '#991b1b';
+                            borderColor = '#fca5a5';
+                          } else if (item.isSelectedIn || item.isSelectedOut) {
+                            bg = '#2563eb';
+                            color = '#ffffff';
+                            borderColor = '#1d4ed8';
+                          } else if (item.inRange) {
+                            bg = '#dbeafe';
+                            color = '#1e40af';
+                            borderColor = '#93c5fd';
+                          }
+
+                          return (
+                            <button
+                              key={item.dayStr}
+                              type="button"
+                              onClick={() => handleDayClick(item)}
+                              disabled={item.isOccupied}
+                              title={item.isOccupied ? `Día ${item.d} Ocupado` : `Seleccionar fecha ${item.dayStr}`}
+                              style={{
+                                background: bg,
+                                color: color,
+                                border: `1px solid ${borderColor}`,
+                                borderRadius: '6px',
+                                padding: '0.45rem 0.2rem',
+                                fontSize: '0.8rem',
+                                cursor: item.isOccupied ? 'not-allowed' : 'pointer',
+                                fontWeight: 'bold',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.15s ease'
+                              }}
+                            >
+                              <span>{item.d}</span>
+                              {item.isOccupied && <span style={{ fontSize: '0.55rem', textTransform: 'uppercase', marginTop: '1px' }}>Ocupado</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   );
-                })() : (
-                  <>
-                    {/* CALENDARIO DE OCUPACIÓN */}
-                    {reservaData.id_habitacion && (() => {
-                      const year = calDate.getFullYear();
-                      const month = calDate.getMonth();
-                      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                      const habReservas = reservas.filter(r => String(r.id_habitacion) === String(reservaData.id_habitacion) && (r.estado === 'Confirmada' || r.estado === 'Check-In'));
+                })()}
 
-                      const firstDay = new Date(year, month, 1);
-                      const daysInMonth = new Date(year, month + 1, 0).getDate();
-                      let startDay = firstDay.getDay() - 1;
-                      if (startDay === -1) startDay = 6;
-
-                      const daysGrid = [];
-                      for (let i = 0; i < startDay; i++) daysGrid.push(null);
-                      for (let d = 1; d <= daysInMonth; d++) {
-                        const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                        const isOccupied = habReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
-                        const isSelectedIn = reservaData.fecha_entrada === dayStr;
-                        const isSelectedOut = reservaData.fecha_salida === dayStr;
-                        const inRange = reservaData.fecha_entrada && reservaData.fecha_salida && dayStr >= reservaData.fecha_entrada && dayStr <= reservaData.fecha_salida;
-                        daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
-                      }
-
-                      const handleDayClick = (item) => {
-                        if (!item || item.isOccupied) return;
-                        if (!reservaData.fecha_entrada || (reservaData.fecha_entrada && reservaData.fecha_salida)) {
-                          setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
-                        } else if (reservaData.fecha_entrada && !reservaData.fecha_salida) {
-                          if (item.dayStr <= reservaData.fecha_entrada) {
-                            setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
-                          } else {
-                            const hasBlock = habReservas.some(r => r.fecha_entrada <= item.dayStr && r.fecha_salida >= reservaData.fecha_entrada);
-                            if (hasBlock) {
-                              setReservaAlert({ type: 'error', message: 'El rango incluye fechas ya reservadas en rojo.' });
-                              return;
-                            }
-                            setReservaData(prev => ({ ...prev, fecha_salida: item.dayStr }));
-                          }
-                        }
-                      };
-
-                      return (
-                        <div style={{ background: '#ffffff', padding: '1rem', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '1.2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                            <button type="button" className="btn-mini" onClick={() => setCalDate(new Date(year, month - 1, 1))}>◀ Mes Ant.</button>
-                            <strong style={{ color: '#0f172a', fontSize: '0.92rem', textTransform: 'capitalize' }}>🗓️ Disponibilidad en Calendario: {monthNames[month]} {year}</strong>
-                            <button className="btn-mini" type="button" onClick={() => setCalDate(new Date(year, month + 1, 1))}>Mes Sig. ▶</button>
-                          </div>
-
-                          <div style={{ display: 'flex', gap: '1.2rem', marginBottom: '0.8rem', fontSize: '0.78rem', justifyContent: 'center' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#991b1b', fontWeight: 700 }}>
-                              <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#ef4444', display: 'inline-block' }}/> 🔴 Fechas Ocupadas
-                            </span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#166534', fontWeight: 700 }}>
-                              <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#22c55e', display: 'inline-block' }}/> 🟢 Fechas Libres
-                            </span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#1d4ed8', fontWeight: 700 }}>
-                              <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }}/> 🔵 Tu Selección
-                            </span>
-                          </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
-                            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
-                          </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-                            {daysGrid.map((item, idx) => {
-                              if (!item) return <div key={`empty-${idx}`}/>;
-                              let bg = '#dcfce7';
-                              let color = '#166534';
-                              let borderColor = '#86efac';
-
-                              if (item.isOccupied) {
-                                bg = '#fee2e2';
-                                color = '#991b1b';
-                                borderColor = '#fca5a5';
-                              } else if (item.isSelectedIn || item.isSelectedOut) {
-                                bg = '#2563eb';
-                                color = '#ffffff';
-                                borderColor = '#1d4ed8';
-                              } else if (item.inRange) {
-                                bg = '#dbeafe';
-                                color = '#1e40af';
-                                borderColor = '#93c5fd';
-                              }
-
-                              return (
-                                <button
-                                  key={item.dayStr}
-                                  type="button"
-                                  onClick={() => handleDayClick(item)}
-                                  disabled={item.isOccupied}
-                                  title={item.isOccupied ? `Día ${item.d} Ocupado` : `Seleccionar fecha ${item.dayStr}`}
-                                  style={{
-                                    background: bg,
-                                    color: color,
-                                    border: `1px solid ${borderColor}`,
-                                    borderRadius: '6px',
-                                    padding: '0.45rem 0.2rem',
-                                    fontSize: '0.8rem',
-                                    cursor: item.isOccupied ? 'not-allowed' : 'pointer',
-                                    fontWeight: 'bold',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    transition: 'all 0.15s ease'
-                                  }}
-                                >
-                                  <span>{item.d}</span>
-                                  {item.isOccupied && <span style={{ fontSize: '0.55rem', textTransform: 'uppercase', marginTop: '1px' }}>Ocupado</span>}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    <div className="form-row-3">
-                      <div className="form-field">
-                        <label>Check-In</label>
-                        <div className="field-input-wrap">
-                          <input type="date" name="fecha_entrada" value={reservaData.fecha_entrada} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
-                        </div>
-                      </div>
-                      <div className="form-field">
-                        <label>Check-Out</label>
-                        <div className="field-input-wrap">
-                          <input type="date" name="fecha_salida" value={reservaData.fecha_salida} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
-                        </div>
-                      </div>
-                      <div className="form-field">
-                        <label>Personas</label>
-                        <div className="field-input-wrap">
-                          <Users className="field-icon" size={16}/>
-                          <input type="number" name="numero_personas" min="1" max="10" value={reservaData.numero_personas} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
-                        </div>
-                      </div>
+                <div className="form-row-3">
+                  <div className="form-field">
+                    <label>Check-In</label>
+                    <div className="field-input-wrap">
+                      <input type="date" name="fecha_entrada" value={reservaData.fecha_entrada} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
                     </div>
+                  </div>
+                  <div className="form-field">
+                    <label>Check-Out</label>
+                    <div className="field-input-wrap">
+                      <input type="date" name="fecha_salida" value={reservaData.fecha_salida} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
+                    </div>
+                  </div>
+                  <div className="form-field">
+                    <label>Personas</label>
+                    <div className="field-input-wrap">
+                      <Users className="field-icon" size={16}/>
+                      <input type="number" name="numero_personas" min="1" max="10" value={reservaData.numero_personas} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
+                    </div>
+                  </div>
+                </div>
 
-                    {cotizacion && (
-                      <div className="live-quote-box">
-                        <h4>Resumen de Cotización</h4>
-                        <div className="quote-row"><span>Valor por Noche:</span><strong>${Number(cotizacion.precio_noche || 0).toLocaleString('es-CO')} COP / noche</strong></div>
-                        <div className="quote-row"><span>Duración de Estadía:</span><span>{cotizacion.noches || 1} {(cotizacion.noches || 1) === 1 ? 'noche' : 'noches'}</span></div>
-                        <div className="quote-row"><span>Subtotal Estadía:</span><span>${Number(cotizacion.subtotal || 0).toLocaleString('es-CO')} COP</span></div>
-                        {Number(cotizacion.descuento || 0) > 0 && (
-                          <div className="quote-row discount">
-                            <span>Descuento Larga Estadía ({(cotizacion.noches || 0) >= 15 ? '15%' : '10%'}):</span>
-                            <span>-${Number(cotizacion.descuento || 0).toLocaleString('es-CO')} COP</span>
-                          </div>
-                        )}
-                        <div className="quote-row final-total">
-                          <span>Total a Pagar:</span>
-                          <span>${Number(cotizacion.total || 0).toLocaleString('es-CO')} COP</span>
-                        </div>
+                {cotizacion && (
+                  <div className="live-quote-box">
+                    <h4>Resumen de Cotización</h4>
+                    <div className="quote-row"><span>Valor por Noche:</span><strong>${cotizacion.precio_noche ? cotizacion.precio_noche.toLocaleString('es-CO') : '0'} COP / noche</strong></div>
+                    <div className="quote-row"><span>Duración de Estadía:</span><span>{cotizacion.noches} {cotizacion.noches === 1 ? 'noche' : 'noches'}</span></div>
+                    <div className="quote-row"><span>Subtotal Estadía:</span><span>${cotizacion.subtotal.toLocaleString('es-CO')} COP</span></div>
+                    {cotizacion.descuento > 0 && (
+                      <div className="quote-row discount">
+                        <span>Descuento Larga Estadía ({cotizacion.noches >= 15 ? '15%' : '10%'}):</span>
+                        <span>-${cotizacion.descuento.toLocaleString('es-CO')} COP</span>
                       </div>
                     )}
-
-                    <button type="submit" className="btn-submit-red" disabled={loading || !selectedHuesped}>
-                      <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : 'Confirmar Reserva'}
-                    </button>
-                  </>
+                    <div className="quote-row final-total">
+                      <span>Total a Pagar:</span>
+                      <span>${cotizacion.total.toLocaleString('es-CO')} COP</span>
+                    </div>
+                  </div>
                 )}
+
+                <button type="submit" className="btn-submit-red" disabled={loading || !selectedHuesped}>
+                  <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : 'Confirmar Reserva'}
+                </button>
               </form>
 
               {reservaAlert && (
@@ -4230,10 +3605,6 @@ function App() {
               String(r.id_huesped) === String(selectedHuesped.id_huesped) || 
               (selectedHuesped.documento && String(r.huesped_documento) === String(selectedHuesped.documento))
             );
-            const misReservasCoworking = reservasNegocio.filter(rn => 
-              (selectedHuesped.id_huesped && String(rn.id_huesped) === String(selectedHuesped.id_huesped)) || 
-              (selectedHuesped.documento && String(rn.documento_cliente) === String(selectedHuesped.documento))
-            );
 
             return (
               <div className="airbnb-profile-container">
@@ -4315,7 +3686,7 @@ function App() {
                       <Luggage size={32} color="#e11d48" />
                     </div>
                     <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>
-                      Aún no tienes ningún apartamento reservado
+                      Aún no tienes ningún viaje reservado
                     </h3>
                     <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', margin: '0 0 1.8rem' }}>
                       ¡Es hora de preparar tus maletas! Explora nuestros 38 apartamentos con cocina equipada, WiFi de alta velocidad y servicios ejecutivos.
@@ -4327,55 +3698,6 @@ function App() {
                     >
                       Explorar Apartamentos y Reservar
                     </button>
-                  </div>
-                )}
-
-                {misReservasCoworking.length > 0 && (
-                  <div style={{ marginTop: '3rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.2rem' }}>
-                      <Briefcase size={22} color="#e11d48" />
-                      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                        Reservas en Centro de Negocios & Coworking ({misReservasCoworking.length})
-                      </h2>
-                    </div>
-                    <div className="airbnb-trips-grid">
-                      {misReservasCoworking.map(rn => (
-                        <div key={rn.id_reserva_negocio} className="airbnb-trip-card" style={{ border: '1px solid #cbd5e1' }}>
-                          <div style={{ background: '#f8fafc', padding: '1.2rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                              <span style={{ fontSize: '0.72rem', fontWeight: 800, background: 'rgba(225, 29, 72, 0.1)', color: '#e11d48', padding: '0.25rem 0.6rem', borderRadius: '12px' }}>
-                                {rn.tipo_espacio}
-                              </span>
-                              <h3 style={{ margin: '0.4rem 0 0', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
-                                {rn.espacio}
-                              </h3>
-                            </div>
-                            <span style={{ background: '#dcfce7', color: '#166534', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-                              {rn.estado}
-                            </span>
-                          </div>
-                          <div style={{ padding: '1.2rem' }}>
-                            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '0.8rem', marginBottom: '1rem', fontSize: '0.82rem' }}>
-                              <div style={{ marginBottom: '0.3rem' }}>📅 Fecha: <strong>{rn.fecha}</strong></div>
-                              <div>⏰ Horario: <strong>{rn.hora_inicio} a {rn.hora_fin} ({rn.duracion_horas}h)</strong></div>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div>
-                                <span style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>Total Liquidado</span>
-                                <strong style={{ fontSize: '1.05rem', color: '#e11d48' }}>${Number(rn.precio_total).toLocaleString('es-CO')} COP</strong>
-                              </div>
-                              <button
-                                className="btn-mini"
-                                style={{ color: '#ef4444', fontWeight: 700, border: '1px solid #fca5a5' }}
-                                onClick={() => handleCancelarReservaNegocio(rn.id_reserva_negocio)}
-                              >
-                                Cancelar Reserva
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 )}
               </div>
@@ -5323,20 +4645,6 @@ function App() {
                 <ListOrdered size={18} color="var(--color-primary-red)"/>
                 <h3 style={{ fontSize: '1.1rem' }}>Reservas Activas ({reservas.filter(r => r.estado !== 'Cancelada').length})</h3>
               </div>
-              {reservaAlert && (
-                <div style={{
-                  padding: '0.75rem 1rem',
-                  margin: '0.8rem 1rem',
-                  borderRadius: '10px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  background: reservaAlert.type === 'success' ? '#f0fdf4' : '#fee2e2',
-                  color: reservaAlert.type === 'success' ? '#166534' : '#991b1b',
-                  border: `1px solid ${reservaAlert.type === 'success' ? '#bbf7d0' : '#fca5a5'}`
-                }}>
-                  {reservaAlert.message}
-                </div>
-              )}
               <div className="pms-table-wrap">
                 <table className="pms-table">
                   <thead>
@@ -5775,18 +5083,18 @@ function App() {
 
             <form onSubmit={handleLoginSubmit}>
               <div className="form-field">
-                <label htmlFor="empleado-usuario">Usuario</label>
+                <label>Usuario</label>
                 <div className="field-input-wrap">
                   <User className="field-icon" size={16}/>
-                  <input id="empleado-usuario" type="text" placeholder="Ej: admin" value={loginForm.usuario} onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })} required/>
+                  <input type="text" placeholder="Ej: admin" value={loginForm.usuario} onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })} required/>
                 </div>
               </div>
 
               <div className="form-field">
-                <label htmlFor="empleado-contrasena">Contraseña</label>
+                <label>Contraseña</label>
                 <div className="field-input-wrap">
                   <Lock className="field-icon" size={16}/>
-                  <input id="empleado-contrasena" type="password" placeholder="••••••••" value={loginForm.contrasena} onChange={(e) => setLoginForm({ ...loginForm, contrasena: e.target.value })} required/>
+                  <input type="password" placeholder="••••••••" value={loginForm.contrasena} onChange={(e) => setLoginForm({ ...loginForm, contrasena: e.target.value })} required/>
                 </div>
               </div>
 
