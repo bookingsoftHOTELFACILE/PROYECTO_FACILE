@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LoginForm from './components/LoginForm';
 import { 
   UserPlus, ShieldCheck, Mail, Phone, FileText, Briefcase, Users, 
   AlertCircle, Calendar, Home, ListOrdered, Wifi, WifiOff, LogIn, 
@@ -1007,8 +1008,11 @@ function App() {
   };
 
   // Iniciar sesión contra /api/auth/login
-  const handleLoginSubmit = async (e) => {
-    if (e) e.preventDefault();
+  const handleLoginSubmit = async (e, credsOverride) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    const creds = credsOverride || (e && typeof e === 'object' && e.usuario ? e : loginForm);
+    const u = (creds.usuario || '').trim();
+    const p = creds.contrasena || '';
     setLoginError(null);
     setLoading(true);
 
@@ -1017,8 +1021,8 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          usuario: loginForm.usuario.trim(),
-          contrasena: loginForm.contrasena,
+          usuario: u,
+          contrasena: p,
         }),
       });
 
@@ -1028,16 +1032,16 @@ function App() {
         const token = data.access_token;
         setAuthToken(token);
         let rol = 'Empleado';
-        let nombre = loginForm.usuario.trim();
+        let nombre = u;
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           rol = payload.rol || 'Empleado';
-          nombre = payload.nombre || payload.sub || loginForm.usuario.trim();
+          nombre = payload.nombre || payload.sub || u;
         } catch {
           // fallback
         }
 
-        setUsuarioSesion({ usuario: loginForm.usuario.trim(), nombre, rol });
+        setUsuarioSesion({ usuario: u, nombre, rol });
         setShowLoginModal(false);
         setLoginForm({ usuario: '', contrasena: '' });
         cargarDatosBackend(token);
@@ -1067,8 +1071,6 @@ function App() {
       }
     } catch {
       // Fallback local si backend está en segundo plano o desconectado
-      const u = loginForm.usuario.trim();
-      const p = loginForm.contrasena;
       if ((u === 'admin' || u === 'bookingsoft_admin') && p === 'Admin2026!') {
         setUsuarioSesion({ usuario: u, nombre: 'Administrador BookingSoft', rol: 'Administrador' });
         setShowLoginModal(false);
@@ -5758,51 +5760,19 @@ function App() {
         </footer>
       )}
 
-      {/* MODAL DE LOGIN PARA EMPLEADOS */}
-      {showLoginModal && (
-        <div className="modal-backdrop" onClick={() => setShowLoginModal(false)}>
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <h3>
-                <Lock size={18}/> Iniciar Sesión Empleado
-              </h3>
-              <button className="btn-x" onClick={() => setShowLoginModal(false)}>✕</button>
-            </div>
-
-            <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1.2rem' }}>
-              Ingrese con sus credenciales de empleado para acceder al sistema de gestión PMS.
-            </p>
-
-            <form onSubmit={handleLoginSubmit}>
-              <div className="form-field">
-                <label htmlFor="empleado-usuario">Usuario</label>
-                <div className="field-input-wrap">
-                  <User className="field-icon" size={16}/>
-                  <input id="empleado-usuario" type="text" placeholder="Ej: admin" value={loginForm.usuario} onChange={(e) => setLoginForm({ ...loginForm, usuario: e.target.value })} required/>
-                </div>
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="empleado-contrasena">Contraseña</label>
-                <div className="field-input-wrap">
-                  <Lock className="field-icon" size={16}/>
-                  <input id="empleado-contrasena" type="password" placeholder="••••••••" value={loginForm.contrasena} onChange={(e) => setLoginForm({ ...loginForm, contrasena: e.target.value })} required/>
-                </div>
-              </div>
-
-              {loginError && (
-                <div style={{ color: '#b91c1c', background: '#fee2e2', padding: '0.5rem', borderRadius: '4px', fontSize: '0.78rem', marginBottom: '0.8rem' }}>
-                  ⚠️ {loginError}
-                </div>
-              )}
-
-              <button type="submit" className="btn-submit-red" disabled={loading}>
-                <LogIn size={16}/> {loading ? 'Validando...' : 'Entrar al Sistema'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* MODAL DE LOGIN PARA EMPLEADOS (PMS) - Componente extraído y testeado con RTL */}
+      <LoginForm
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSubmit={async (creds) => {
+          setLoginForm(creds);
+          await handleLoginSubmit(null, creds);
+        }}
+        loading={loading}
+        error={loginError}
+        initialUsuario={loginForm.usuario}
+        initialContrasena={loginForm.contrasena}
+      />
       {/* MODAL HUÉSPED AIRBNB ("Inicia sesión o regístrate") */}
       {showGuestAuthModal && (
         <div className="modal-backdrop" onClick={() => setShowGuestAuthModal(false)}>
