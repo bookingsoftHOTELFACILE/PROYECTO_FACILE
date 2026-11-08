@@ -39,10 +39,11 @@ jobs:
       - name: 📥 Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: 🐍 Configurar Python 3.11
+      - name: 🐍 Configurar Python 3.11 con Caché de Pip
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: 📦 Instalar Pipenv y dependencias
         working-directory: backend
@@ -50,9 +51,10 @@ jobs:
           pip install --upgrade pip pipenv
           pipenv install --system --skip-lock --dev
 
-      - name: 🧪 Ejecutar suite de pruebas (pytest)
+      - name: 🧪 Ejecutar suite de pruebas con Cobertura (Pytest 80% mínimo)
         working-directory: backend
-        run: pytest --tb=short -v
+        run: |
+          pytest --tb=short -v --cov=routes --cov=database --cov=services --cov-report=term-missing --cov-fail-under=80
 
       - name: 🔍 Auditoría de seguridad (pip-audit)
         working-directory: backend

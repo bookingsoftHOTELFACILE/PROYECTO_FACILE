@@ -27,4 +27,4 @@ source = ["routes", "database", "services"]
 omit = []
 
 [tool.coverage.report]
-fail_under = 0
+fail_under = 80
