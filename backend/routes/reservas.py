@@ -185,9 +185,10 @@ def crear_reserva(
         if pgcode == 'P0001' or 'Mantenimiento' in err_msg:
             cleaned = err_msg.split('CONTEXT:')[0].replace('ERROR: ', '').strip()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=cleaned)
+        logger.error(f"Error de base de datos relacional en crear_reserva: {err_msg}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error de base de datos relacional: {err_msg}"
+            detail="Error interno del servidor al procesar la solicitud."
         )
     except HTTPException as he:
         raise he
