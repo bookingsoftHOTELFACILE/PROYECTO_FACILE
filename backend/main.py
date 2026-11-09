@@ -1,7 +1,10 @@
 import os
 import sys
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Hallazgo 02 - Fail Fast: Verificar que JWT_SECRET esté adecuadamente configurado y no sea vacío ni por defecto
 jwt_secret_val = os.getenv("JWT_SECRET", "").strip()
@@ -39,6 +42,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Hallazgo Semana 4 (Capa E2E - Contrato de Errores):
+# Traducir JSON mal formado a HTTP 400 con formato estándar {"detail": "..."}
+# manteniendo el comportamiento por defecto (422) para errores de validación de campos/tipos.
+@app.exception_handler(RequestValidationError)
+async def handle_request_validation(request: Request, exc: RequestValidationError):
+    if any(error.get("type") == "json_invalid" for error in exc.errors()):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": "JSON mal formado en el cuerpo de la petición."},
+        )
+    return await request_validation_exception_handler(request, exc)
 
 # Registrar los módulos de rutas
 app.include_router(huespedes.router)

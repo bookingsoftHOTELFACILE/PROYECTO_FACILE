@@ -17,7 +17,7 @@ Reglas:
 |---|---|---|---|---|---|---|---|---|---|
 | @Davidlopez2204 (David López) | E2E | API | | | | | | | |
 | @jocmiguelchicoc (José Chico) | E2E | Front | | | | | | | |
-| @maicolmayor23-code (Maicol Mayor) | E2E | API | | | | | | | |
+| @maicolmayor23-code (Maicol Mayor) | E2E | API | Front | E2E | | | | | |
 | @xiomaraecheverry (Ashly Echeverri) | E2E | BD | | | | | | | |
 | @sebasparada (Sebastián Parada) | E2E | BD | | | | | | | |
 
