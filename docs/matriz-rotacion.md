@@ -15,7 +15,7 @@ Reglas:
 
 | Integrante (usuario GitHub) | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 | S9 |
 |---|---|---|---|---|---|---|---|---|---|
-| @Davidlopez2204 (David López) | E2E | API | | | | | | | |
+| @Davidlopez2204 (David López) | E2E | API |Front:RegistroHuespedForm| | | | | | |
 | @jocmiguelchicoc (José Chico) | E2E | Front | | | | | | | |
 | @maicolmayor23-code (Maicol Mayor) | E2E | API | | | | | | | |
 | @xiomaraecheverry (Ashly Echeverri) | E2E | BD | | | | | | | |
