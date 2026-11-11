@@ -248,3 +248,67 @@ def eliminar_reserva(
                 pass
         if conn:
             connection.liberar_conexion(conn)
+
+
+@router.put("/{id_reserva}/cancelar")
+def cancelar_reserva(
+    id_reserva: int,
+    usuario: Optional[UsuarioActual] = Depends(autenticar_opcional)
+):
+    """Cancela una reserva existente y devuelve 404 si no existe (Contrato HTTP - Semana 4)."""
+    audit_str = f"{usuario.nombre} ({usuario.rol})" if usuario else "Cliente Web (Público)"
+    conn = None
+    cursor = None
+    try:
+        conn = connection.obtener_conexion()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT id_habitacion, estado FROM reserva_habitacion WHERE id_reserva = %s",
+            (id_reserva,)
+        )
+        res_row = cursor.fetchone()
+
+        if not res_row:
+            # MUTANTE SEMANA 4: Cambiar "Reserva no encontrada" por otro mensaje para verificar que el test falla
+            raise HTTPException(status_code=404, detail="Reserva no encontrada")
+
+        id_hab, estado_res = res_row
+        if estado_res in ("Check-In", "Completada", "Ocupada"):
+            cursor.execute(
+                "UPDATE habitacion SET estado = 'En limpieza', modificado_por = %s WHERE id_habitacion = %s",
+                (audit_str, id_hab)
+            )
+        else:
+            cursor.execute(
+                "UPDATE habitacion SET estado = 'Disponible', modificado_por = %s WHERE id_habitacion = %s",
+                (audit_str, id_hab)
+            )
+
+        cursor.execute(
+            "UPDATE reserva_habitacion SET estado = 'Cancelada', modificado_por = %s WHERE id_reserva = %s",
+            (audit_str, id_reserva)
+        )
+        conn.commit()
+        return {
+            "id_reserva": id_reserva,
+            "estado": "Cancelada",
+            "message": f"Reserva #{id_reserva} cancelada exitosamente por {audit_str}."
+        }
+    except HTTPException:
+        raise
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if conn:
+            connection.liberar_conexion(conn)
