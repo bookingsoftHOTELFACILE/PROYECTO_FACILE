@@ -11,6 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from database import connection
 from dependencies import requiere_rol
+from models.schemas import habitacion_a_dto
 
 # Todos los roles del sistema tienen acceso al catálogo general de habitaciones
 _TODOS_LOS_ROLES = ("Administrador", "Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento", "Conserje")
@@ -34,16 +35,7 @@ def obtener_habitaciones():
 
         habitaciones = []
         for f in filas:
-            habitaciones.append({
-                "id_habitacion": f[0],
-                "numero": f[1],
-                "tipo": f[2],
-                "capacidad": f[3],
-                "precio_noche": float(f[4]),
-                "estado": f[5],
-                "modificado_por": f[6] or "",
-                "detalle_mantenimiento": f[7] or ""
-            })
+            habitaciones.append(habitacion_a_dto(f))
 
         return habitaciones
         
@@ -51,8 +43,6 @@ def obtener_habitaciones():
         raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
         
     finally:
-        # El bloque finally SE EJECUTA SIEMPRE, haya éxito o error.
-        # Así garantizamos que la conexión NUNCA se quede colgada.
         try:
             cursor.close()
         except:

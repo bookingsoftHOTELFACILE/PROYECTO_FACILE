@@ -2,7 +2,7 @@ name: CI – BookingSoft Backend
 
 on:
   push:
-    branches: ["main", "develop", "feature/*", "fix/*"]
+    branches: ["main", "develop", "feature/*", "fix/*", "test/*"]
   pull_request:
     branches: ["main", "develop"]
 
@@ -50,9 +50,9 @@ jobs:
           pip install --upgrade pip pipenv
           pipenv install --system --skip-lock --dev
 
-      - name: 🧪 Ejecutar suite de pruebas (pytest)
+      - name: 🧪 Ejecutar suite de pruebas (pytest + cobertura >= 30%)
         working-directory: backend
-        run: pytest --tb=short -v
+        run: pytest --tb=short -v --cov=. --cov-report=term-missing --cov-fail-under=30
 
       - name: 🔍 Auditoría de seguridad (pip-audit)
         working-directory: backend
