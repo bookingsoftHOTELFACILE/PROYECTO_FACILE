@@ -55,6 +55,23 @@ def liberar_conexion(conn: psycopg2.extensions.connection) -> None:
         _pool.putconn(conn)
 
 
+# Migraciones idempotentes que schema.sql no puede aplicar por sí solo:
+# schema.sql solo se ejecuta cuando las tablas no existen, por lo que las bases vivas
+# no recibirían columnas nuevas. Cada entrada debe ser segura de repetir (IF NOT EXISTS).
+# Ver también el bloque ALTER equivalente dentro de schema.sql.
+_MIGRACIONES = (
+    # HU-005 (CA-005.1 / CA-005.4): marca temporal física del check-in / check-out.
+    "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP",
+    "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP",
+)
+
+
+def _aplicar_migraciones(cursor):
+    """Ejecuta las migraciones idempotentes declaradas en _MIGRACIONES."""
+    for sql in _MIGRACIONES:
+        cursor.execute(sql)
+
+
 def inicializar_base_de_datos():
     """
     Conecta a PostgreSQL e inicializa tablas via schema.sql.
@@ -95,6 +112,10 @@ def inicializar_base_de_datos():
                 print("[FastAPI] ADVERTENCIA: No se encontró schema.sql.")
         else:
             print("[FastAPI] Conexión exitosa a PostgreSQL. Las tablas ya existen y están activas.")
+
+        # Aplica las columnas nuevas a bases vivas (idempotente).
+        _aplicar_migraciones(cursor)
+        conn.commit()
 
         cursor.close()
         liberar_conexion(conn)

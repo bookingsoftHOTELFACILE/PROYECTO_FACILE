@@ -21,6 +21,7 @@ const VistaPms = () => {
   setPmsSubTab, handleCreateEmpleadoSubmit, handleChangeEmpleadoRol, handleToggleEmpleadoEstado,
   handleReservaChange, handlePmsWalkInGuestChange, handleReservaSubmit, handleToggleEstadoHuesped,
   handleDeleteHuesped, handleDeleteReserva, handleCambiarEstadoHabitacion, handleReportarDano,
+  handleCambiarEstadoReserva, walkinCheckinInmediato, setWalkinCheckinInmediato,
   handleCrearReservaNegocio, handleBuscarHuespedPorDocumento, handleCancelarReservaNegocio
   } = useApp();
   return (
@@ -855,6 +856,26 @@ const VistaPms = () => {
                 </div>
               )}
 
+              {/* HU-005 / CA-005.2: check-in directo para llegadas sin reserva previa (walk-in) */}
+              <label
+                htmlFor="pms-walkin-checkin"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem',
+                  padding: '0.7rem 0.9rem', background: '#f8fafc', border: '1px dashed #cbd5e1',
+                  borderRadius: '10px', fontSize: '0.82rem', fontWeight: 600, color: '#334155',
+                  cursor: 'pointer'
+                }}
+              >
+                <input
+                  id="pms-walkin-checkin"
+                  type="checkbox"
+                  checked={walkinCheckinInmediato}
+                  onChange={(e) => setWalkinCheckinInmediato(e.target.checked)}
+                  style={{ width: '16px', height: '16px', accentColor: '#e11d48', cursor: 'pointer' }}
+                />
+                🚪 Registrar check-in directo (el huésped ya se encuentra en la unidad)
+              </label>
+
               <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end', alignItems: 'center', marginTop: '1.2rem' }}>
                 <button
                   type="button"
@@ -863,6 +884,7 @@ const VistaPms = () => {
                     setSelectedHuesped(null);
                     setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
                     setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', telefono: '', correo: '' });
+                    setWalkinCheckinInmediato(false);
                   }}
                 >
                   Limpiar Formulario
@@ -967,10 +989,19 @@ const VistaPms = () => {
               <div className="pms-table-wrap">
                 <table className="pms-table">
                   <thead>
-                    <tr><th>Huésped</th><th>Apto</th><th>Fechas</th><th>Origen</th><th>Acción</th></tr>
+                    <tr><th>Huésped</th><th>Apto</th><th>Fechas</th><th>Estado</th><th>Origen</th><th>Acción</th></tr>
                   </thead>
                   <tbody>
-                    {reservas.filter(r => r.estado !== 'Cancelada').map(r => (
+                    {reservas.filter(r => r.estado !== 'Cancelada').map(r => {
+                      // HU-005: colores por estado del ciclo de vida (Confirmada / Check-In / Completada).
+                      const estadoEstilos = {
+                        'Confirmada': { bg: '#fef3c7', fg: '#b45309', icono: '📅' },
+                        'Check-In': { bg: '#dcfce7', fg: '#166534', icono: '🚪' },
+                        'Completada': { bg: '#e0f2fe', fg: '#0369a1', icono: '✅' }
+                      };
+                      const est = estadoEstilos[r.estado] || { bg: '#f1f5f9', fg: '#475569', icono: '•' };
+
+                      return (
                       <tr key={r.id_reserva}>
                         <td>
                           <strong>{r.huesped_nombre}</strong>
@@ -980,18 +1011,61 @@ const VistaPms = () => {
                         <td style={{ fontSize: '0.72rem' }}>
                           In: {r.fecha_entrada}<br/>Out: {r.fecha_salida}
                         </td>
+                        <td style={{ fontSize: '0.72rem' }}>
+                          <span className="badge-tag" style={{ background: est.bg, color: est.fg, fontSize: '0.7rem' }}>
+                            {est.icono} {r.estado}
+                          </span>
+                          {/* HU-005 (CA-005.1 / CA-005.4): marca temporal física registrada en el backend */}
+                          {r.checkin_at && (
+                            <span style={{ display: 'block', color: '#166534', fontWeight: 600, marginTop: '0.15rem' }}>
+                              Entrada: {r.checkin_at}
+                            </span>
+                          )}
+                          {r.checkout_at && (
+                            <span style={{ display: 'block', color: '#0369a1', fontWeight: 600, marginTop: '0.15rem' }}>
+                              Salida: {r.checkout_at}
+                            </span>
+                          )}
+                        </td>
                         <td>
                           <span className="badge-tag" style={{ background: r.creado_por?.includes('Web') ? '#e0f2fe' : '#fef3c7', color: r.creado_por?.includes('Web') ? '#0369a1' : '#b45309', fontSize: '0.7rem' }}>
                             {r.creado_por?.includes('Web') ? '🌐 Web Pública' : `👨‍💼 ${r.creado_por || 'Recepción'}`}
                           </span>
                         </td>
-                        <td>
-                          <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteReserva(r.id_reserva)}>
-                            Cancelar
-                          </button>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {/* HU-005: transiciones 'Confirmada -> Check-In -> Completada' */}
+                          {r.estado === 'Confirmada' && (
+                            <button
+                              id={`pms-checkin-${r.id_reserva}`}
+                              className="btn-mini"
+                              style={{ color: '#166534', fontWeight: 700, marginRight: '0.35rem' }}
+                              onClick={() => handleCambiarEstadoReserva(r.id_reserva, 'Check-In')}
+                            >
+                              🚪 Check-in
+                            </button>
+                          )}
+                          {r.estado === 'Check-In' && (
+                            <button
+                              id={`pms-checkout-${r.id_reserva}`}
+                              className="btn-mini"
+                              style={{ color: '#2563eb', fontWeight: 700, marginRight: '0.35rem' }}
+                              onClick={() => handleCambiarEstadoReserva(r.id_reserva, 'Completada')}
+                            >
+                              🚪 Check-out
+                            </button>
+                          )}
+                          {r.estado !== 'Completada' && (
+                            <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteReserva(r.id_reserva)}>
+                              Cancelar
+                            </button>
+                          )}
+                          {r.estado === 'Completada' && (
+                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>✓ Estadía finalizada</span>
+                          )}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

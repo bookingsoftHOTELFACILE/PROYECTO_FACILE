@@ -5,10 +5,12 @@ from datetime import datetime
 import psycopg2
 from database import connection
 from dependencies import requiere_rol, autenticar, autenticar_opcional, UsuarioActual
-from models.schemas import ReservaCreate
+from models.schemas import ReservaCreate, ReservaEstadoUpdate
 from services.reservas_service import (
     validar_fechas_reserva,
     validar_habitacion_disponible,
+    validar_checkin_habitacion,
+    parse_fecha,
     ValidationError as ServiceValidationError
 )
 logger = logging.getLogger("bookingsoft.reservas")
@@ -31,7 +33,8 @@ def obtener_reservas():
         query_text = """
             SELECT r.id_reserva, r.id_huesped, h.nombre as huesped_nombre, h.documento as huesped_documento,
                    r.id_habitacion, hab.numero as habitacion_numero, hab.tipo as habitacion_tipo,
-                   r.fecha_entrada, r.fecha_salida, r.estado, r.creado_por
+                   r.fecha_entrada, r.fecha_salida, r.estado, r.creado_por,
+                   r.checkin_at, r.checkout_at
             FROM reserva_habitacion r
             JOIN huesped h ON r.id_huesped = h.id_huesped
             JOIN habitacion hab ON r.id_habitacion = hab.id_habitacion
@@ -54,7 +57,10 @@ def obtener_reservas():
                 "fecha_entrada": f[7].strftime("%Y-%m-%d") if hasattr(f[7], 'strftime') else str(f[7]),
                 "fecha_salida": f[8].strftime("%Y-%m-%d") if hasattr(f[8], 'strftime') else str(f[8]),
                 "estado": f[9],
-                "creado_por": f[10] or ""
+                "creado_por": f[10] or "",
+                # HU-005 (CA-005.1 / CA-005.4): marca temporal física real, vacía si no hay check-in.
+                "checkin_at": f[11].strftime("%Y-%m-%d %H:%M") if f[11] else None,
+                "checkout_at": f[12].strftime("%Y-%m-%d %H:%M") if f[12] else None
             })
             
         cursor.close()
@@ -117,7 +123,22 @@ def crear_reserva(
                     f"{capacidad_hab} persona(s), pero se solicitaron {reserva.numero_personas}."
                 )
             )
-            
+
+        # HU-005 / CA-005.2: registro de check-in directo para llegadas sin reserva previa.
+        # Restringido a personal operativo: el público (autenticar_opcional) nunca puede usarlo.
+        es_checkin_directo = bool(reserva.checkin_inmediato)
+        if es_checkin_directo:
+            if not (usuario and usuario.rol in _ROLES_RESERVAS):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Solo el personal autorizado puede registrar un check-in directo."
+                )
+            # HU-005 / CA-005.3: no se permite check-in en unidad ocupada o en mantenimiento.
+            try:
+                validar_checkin_habitacion(estado_hab, numero_hab)
+            except ServiceValidationError as e:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
         # B. Calcular noches y liquidación usando la función PL/pgSQL
         cursor.execute("SELECT noches, subtotal, descuento_aplicado, total FROM fn_calcular_noches_y_precio(%s, %s, %s)",
                        (reserva.fecha_entrada, reserva.fecha_salida, precio_noche))
@@ -125,18 +146,31 @@ def crear_reserva(
         noches, subtotal, descuento, total = cot_row
         
         # C. Insertar la reserva registrando creado_por
+        # HU-005: con check-in directo nace en 'Check-In' con su marca temporal real.
         insertar_query = """
-            INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado, creado_por)
-            VALUES (%s, %s, %s, %s, 'Confirmada', %s)
-            RETURNING id_reserva, id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado, creado_por
+            INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado, checkin_at, creado_por)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id_reserva, id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado, creado_por, checkin_at
         """
-        cursor.execute(insertar_query, (reserva.id_huesped, reserva.id_habitacion, reserva.fecha_entrada, reserva.fecha_salida, audit_str))
+        estado_inicial = 'Check-In' if es_checkin_directo else 'Confirmada'
+        checkin_inicial = datetime.now() if es_checkin_directo else None
+        cursor.execute(insertar_query, (
+            reserva.id_huesped, reserva.id_habitacion, reserva.fecha_entrada,
+            reserva.fecha_salida, estado_inicial, checkin_inicial, audit_str
+        ))
         res_row = cursor.fetchone()
         
         # Obtener detalles del huésped
         cursor.execute("SELECT nombre, documento FROM huesped WHERE id_huesped = %s", (reserva.id_huesped,))
         hues_row = cursor.fetchone()
-        
+
+        # HU-005: la unidad queda ocupada en cuanto se registra la entrada física.
+        if es_checkin_directo:
+            cursor.execute(
+                "UPDATE habitacion SET estado = 'Ocupada', modificado_por = %s WHERE id_habitacion = %s",
+                (audit_str, reserva.id_habitacion)
+            )
+
         conn.commit()
         
         nueva_res = {
@@ -150,11 +184,17 @@ def crear_reserva(
             "fecha_entrada": res_row[3].strftime("%Y-%m-%d") if hasattr(res_row[3], 'strftime') else str(res_row[3]),
             "fecha_salida": res_row[4].strftime("%Y-%m-%d") if hasattr(res_row[4], 'strftime') else str(res_row[4]),
             "estado": res_row[5],
-            "creado_por": res_row[6]
+            "creado_por": res_row[6],
+            "checkin_at": res_row[7].strftime("%Y-%m-%d %H:%M") if res_row[7] else None,
+            "checkout_at": None
         }
         
         return {
-            "message": f"Reserva confirmada exitosamente por {audit_str}.",
+            "message": (
+                f"Check-in directo registrado por {audit_str}."
+                if es_checkin_directo
+                else f"Reserva confirmada exitosamente por {audit_str}."
+            ),
             "reserva": nueva_res,
             "cotizacion": {
                 "noches": noches,
@@ -207,6 +247,157 @@ def crear_reserva(
                 connection.liberar_conexion(conn)
             except Exception:
                 pass
+
+# HU-005 (CA-005.1 / CA-005.4 / CA-005.5): entrada y salida física de huéspedes.
+@router.patch("/{id_reserva}/estado", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
+def cambiar_estado_reserva(
+    id_reserva: int,
+    data: ReservaEstadoUpdate,
+    usuario: UsuarioActual = Depends(autenticar)
+):
+    """
+    Registra el check-in o el check-out de una reserva (README: `Confirmada -> Check-In -> Completada`).
+
+    - `Check-In`   (CA-005.1): marca la hora real de entrada y deja la unidad en 'Ocupada'.
+    - `Completada` (CA-005.4): marca la hora real de salida, libera la unidad a 'En limpieza'
+      y calcula las noches de la estadía entre fecha de entrada y fecha de salida (CA-005.5).
+
+    Cualquier otra transición se rechaza con 409 para no romper el ciclo de vida.
+    """
+    nuevo_estado = data.estado
+    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+    conn = None
+    cursor = None
+    try:
+        conn = connection.obtener_conexion()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """SELECT estado, id_habitacion, fecha_entrada, fecha_salida, checkin_at
+               FROM reserva_habitacion WHERE id_reserva = %s""",
+            (id_reserva,)
+        )
+        fila = cursor.fetchone()
+        if not fila:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f"La reserva #{id_reserva} no existe.")
+
+        estado_actual, id_habitacion, fecha_entrada, fecha_salida, checkin_at = fila
+
+        if nuevo_estado == "Check-In":
+            # CA-005.3: solo se entra a una reserva confirmada y una unidad libre.
+            if estado_actual != "Confirmada":
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"No es posible el check-in: la reserva está en estado '{estado_actual}'."
+                )
+            cursor.execute("SELECT numero, estado FROM habitacion WHERE id_habitacion = %s", (id_habitacion,))
+            hab_row = cursor.fetchone()
+            if not hab_row:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="La habitación de la reserva no existe.")
+            numero_hab, estado_hab = hab_row
+            try:
+                validar_checkin_habitacion(estado_hab, numero_hab)
+            except ServiceValidationError as e:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+            cursor.execute(
+                """UPDATE reserva_habitacion
+                   SET estado = 'Check-In', checkin_at = NOW(), modificado_por = %s
+                   WHERE id_reserva = %s""",
+                (audit_str, id_reserva)
+            )
+            cursor.execute(
+                "UPDATE habitacion SET estado = 'Ocupada', modificado_por = %s WHERE id_habitacion = %s",
+                (audit_str, id_habitacion)
+            )
+            conn.commit()
+
+            cursor.execute(
+                "SELECT checkin_at, checkout_at FROM reserva_habitacion WHERE id_reserva = %s",
+                (id_reserva,)
+            )
+            marcas = cursor.fetchone()
+            return {
+                "message": f"Check-in registrado para la reserva #{id_reserva} por {audit_str}.",
+                "reserva": {
+                    "id_reserva": id_reserva,
+                    "estado": "Check-In",
+                    "checkin_at": marcas[0].strftime("%Y-%m-%d %H:%M") if marcas[0] else None,
+                    "checkout_at": marcas[1].strftime("%Y-%m-%d %H:%M") if marcas[1] else None,
+                },
+                "habitacion": {"id_habitacion": id_habitacion, "estado": "Ocupada"}
+            }
+
+        # ---- Check-out (CA-005.4 / CA-005.5) ----
+        if estado_actual != "Check-In":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"No es posible el check-out: la reserva está en estado '{estado_actual}'."
+            )
+        if not checkin_at:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="No es posible el check-out: la reserva no tiene registrado el check-in."
+            )
+
+        # CA-005.5: noches reales de la estadía entre fecha de entrada y fecha de salida.
+        noches = (parse_fecha(fecha_salida) - parse_fecha(fecha_entrada)).days
+
+        cursor.execute(
+            """UPDATE reserva_habitacion
+               SET estado = 'Completada', checkout_at = NOW(), modificado_por = %s
+               WHERE id_reserva = %s""",
+            (audit_str, id_reserva)
+        )
+        # El ciclo operativo de la unidad: Ocupada -> En limpieza (README).
+        cursor.execute(
+            "UPDATE habitacion SET estado = 'En limpieza', modificado_por = %s WHERE id_habitacion = %s",
+            (audit_str, id_habitacion)
+        )
+        conn.commit()
+
+        cursor.execute(
+            "SELECT checkin_at, checkout_at FROM reserva_habitacion WHERE id_reserva = %s",
+            (id_reserva,)
+        )
+        marcas = cursor.fetchone()
+        return {
+            "message": f"Check-out registrado para la reserva #{id_reserva} por {audit_str}.",
+            "reserva": {
+                "id_reserva": id_reserva,
+                "estado": "Completada",
+                "noches": noches,
+                "checkin_at": marcas[0].strftime("%Y-%m-%d %H:%M") if marcas[0] else None,
+                "checkout_at": marcas[1].strftime("%Y-%m-%d %H:%M") if marcas[1] else None,
+            },
+            "habitacion": {"id_habitacion": id_habitacion, "estado": "En limpieza"}
+        }
+    except HTTPException as he:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        raise he
+    except Exception:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        logger.exception("Error inesperado al cambiar el estado de la reserva #%s", id_reserva)
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
+    finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if conn:
+            connection.liberar_conexion(conn)
+
 
 @router.delete("/{id_reserva}")
 def eliminar_reserva(

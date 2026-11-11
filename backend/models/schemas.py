@@ -32,6 +32,14 @@ class ReservaCreate(BaseModel):
     # RN-011.4: el número de personas no puede superar la capacidad de la unidad.
     # RF-011: campo obligatorio, debe ser mayor a cero.
     numero_personas: int = Field(..., ge=1, description="Número de personas (mín. 1, no puede superar la capacidad de la unidad)")
+    # HU-005 / CA-005.2: registro de check-in directo para llegadas sin reserva previa
+    # (walk-in). Requiere rol operativo en el endpoint; el público siempre queda en False.
+    checkin_inmediato: bool = False
+
+
+class ReservaEstadoUpdate(BaseModel):
+    """HU-005: transición de estado de la reserva (check-in / check-out)."""
+    estado: Literal['Check-In', 'Completada']
 
 
 # --- Schemas de Empleados / Autenticación (Sprint 1) ---

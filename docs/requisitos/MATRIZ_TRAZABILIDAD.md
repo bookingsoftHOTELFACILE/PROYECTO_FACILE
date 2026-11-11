@@ -8,8 +8,8 @@
   ¿Impacto? Sin este documento, no es posible auditar la cobertura funcional del sistema.
 -->
 
-> **Fecha de actualización:** 2026-08-31
-> **Estado global:** 12 Requisitos Funcionales Implementados y Probados | 3 Requisitos Diferidos a Fase 2 (Alcance Delimitado)
+> **Fecha de actualización:** 2026-11-10
+> **Estado global:** 12 Requisitos Funcionales Implementados y Probados | 3 Requisitos Diferidos a Fase 2 (Alcance Delimitado) | HU-005 (Check-in / Check-out) implementado en Fase B
 
 ---
 
@@ -31,6 +31,7 @@
 | **RF-012** (Consulta Disponibilidad Habitaciones) | HU-005, HU-009 | RNF-011 | `GET /api/habitaciones` | ✅ Implementado y probado | `test_rf012_consulta_disponibilidad` |
 | **RF-013** (Modificación de Reserva) | HU-005 | N/A | N/A | ⏳ Fase 2 (Diferido) | Ver Sección de Decisiones de Alcance |
 | **RF-014** (Cancelación de Reserva) | HU-005 | RNF-009, RNF-010 | `DELETE /api/reservas/{id}` | ✅ Implementado y probado | `test_borrar_reserva`<br>`test_recepcionista_cancela_reserva` (baja lógica: `estado = 'Cancelada'`) |
+| **HU-005** (Check-in / Check-out) | HU-005 | RNF-009, RNF-011 | `PATCH /api/reservas/{id}/estado`<br>`POST /api/reservas` (`checkin_inmediato`) | ✅ Implementado y probado | `test_checkin_checkout.py` (7 pruebas: CA-005.1 → CA-005.5)<br>`E2E/tests/checkin_checkout.spec.js` |
 | **RF-015** (Reserva Espacios Coworking) | HU-013 | N/A | N/A | ⏳ Fase 2 (Diferido) | Ver Sección de Decisiones de Alcance |
 
 ---
@@ -43,7 +44,7 @@ Las siguientes funcionalidades fueron catalogadas y documentadas intencionalment
 | :--- | :--- | :--- |
 | **RF-013** | Modificación de fechas/habitaciones en reserva existente | Para garantizar la integridad referencial y prevenir condiciones de carrera (Double-Booking), el flujo de modificación exige la atomicidad de una cancelación (`DELETE`) seguida de una nueva creación (`POST`). La edición in-situ requeriría re-evaluar la exclusión GiST de PostgreSQL sobre rangos solapados en una misma transacción. Se priorizó la atomicidad de la creación (RF-011) e inmutabilidad de la reserva creada. |
 | **RF-015** | Alquiler de salas de coworking / reuniones | El núcleo de negocio (Core PMS) del Apartahotel Facile se concentra en la pernoctación y gestión de habitaciones. Las salas de coworking representan una unidad de negocio secundaria cuyo esquema de tarificación (por hora) difiere del esquema por noche de la hotelería. |
-| **HU-005 (Check-in / Check-out)** | Registro de entrada y salida física de huéspedes | El sistema administra el ciclo de vida operativo de la reserva (Confirmada / Cancelada) y el estado de limpieza/mantenimiento de la habitación. El proceso de entrega de llaves (Check-in/out) se difiere para integración con cerraduras electrónicas en Fase 2. |
+| **HU-005 (Entrega de llaves electrónicas)** | Integración del check-in/check-out con cerraduras inteligentes | El ciclo de vida de la reserva (`Confirmada → Check-In → Completada`), las marcas temporales de entrada/salida y el cálculo de noches **ya están implementados y probados** en Fase B vía `PATCH /api/reservas/{id}/estado`. Lo que se difiere a Fase 2 es únicamente la integración física con cerraduras electrónicas para la apertura automática de puertas al registrar la entrada. |
 
 ---
 

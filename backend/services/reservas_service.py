@@ -70,6 +70,34 @@ def validar_habitacion_disponible(
     return True
 
 
+def validar_checkin_habitacion(
+    estado_habitacion: str,
+    numero_habitacion: str = ""
+) -> bool:
+    """
+    HU-005 / CA-005.3: bloquea el check-in cuando la unidad está ocupada o en mantenimiento.
+    Admite 'Disponible' y 'En limpieza' (unidad libre para recibir al huésped).
+
+    Lanza ValidationError si la unidad no admite check-in.
+    """
+    if not estado_habitacion or not estado_habitacion.strip():
+        raise ValidationError("El estado de la habitación es obligatorio.")
+
+    estado_limpio = estado_habitacion.strip().lower()
+    num_str = f" {numero_habitacion}".rstrip()
+
+    if estado_limpio == "ocupada":
+        raise ValidationError(
+            f"La habitación{num_str} está ocupada: no es posible registrar el check-in."
+        )
+    if estado_limpio == "mantenimiento":
+        raise ValidationError(
+            f"La habitación{num_str} se encuentra en Mantenimiento y no admite check-in."
+        )
+
+    return True
+
+
 def calcular_costo_estadia(
     fecha_entrada: Union[str, date],
     fecha_salida: Union[str, date],

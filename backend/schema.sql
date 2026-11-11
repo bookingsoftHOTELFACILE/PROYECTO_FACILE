@@ -108,6 +108,12 @@ CREATE TABLE IF NOT EXISTS reserva_habitacion (
     ) WHERE (estado IN ('Confirmada', 'Check-In'))
 );
 
+-- HU-005 (CA-005.1 / CA-005.4): marca temporal física real del check-in y del check-out.
+-- Idempotente: las bases vivas ya tienen la tabla creada, por lo que la migración se
+-- ejecuta también en cada arranque (ver backend/database/connection.py::_MIGRACIONES).
+ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP;
+ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP;
+
 -- 3. SQL Extendido: Funciones y Triggers en PL/pgSQL
 
 -- A. Función para validar mantenimiento en PostgreSQL

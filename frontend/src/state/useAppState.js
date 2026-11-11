@@ -170,6 +170,8 @@ export function useAppState() {
     telefono: '',
     correo: ''
   });
+  // HU-005 / CA-005.2: check-in directo al crear la reserva en recepción (walk-in).
+  const [walkinCheckinInmediato, setWalkinCheckinInmediato] = useState(false);
 
   // ---- ESTADO DE SUB-PESTAÑAS INDIVIDUALES EN EL PANEL PMS ----
   const [pmsSubTab, setPmsSubTab] = useState('recepcion'); // 'recepcion' | 'huespedes' | 'reservas' | 'planta' | 'coworking' | 'todos'
@@ -885,6 +887,8 @@ export function useAppState() {
             fecha_entrada: reservaData.fecha_entrada,
             fecha_salida: reservaData.fecha_salida,
             numero_personas: parseInt(reservaData.numero_personas || 1),
+            // HU-005 / CA-005.2: check-in directo (solo recepción; el backend exige rol operativo).
+            checkin_inmediato: walkinCheckinInmediato,
           }});
         const data = res.data;
         if (res.ok) {
@@ -893,9 +897,12 @@ export function useAppState() {
           }
           setReservaAlert({
             type: 'success',
-            message: `¡Reserva presencial confirmada exitosamente para ${huespedDestino.nombre} (Doc: ${huespedDestino.documento})!`,
+            message: walkinCheckinInmediato
+              ? `✓ Check-in directo registrado para ${huespedDestino.nombre} (Doc: ${huespedDestino.documento}).`
+              : `¡Reserva presencial confirmada exitosamente para ${huespedDestino.nombre} (Doc: ${huespedDestino.documento})!`,
             data
           });
+          setWalkinCheckinInmediato(false);
           setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
           setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', telefono: '', correo: '' });
           cargarDatosBackend(authToken);
@@ -992,6 +999,40 @@ export function useAppState() {
         if (res.ok) {
           setReservas(prev => prev.filter(r => r.id_reserva !== id_reserva));
           setReservaAlert({ type: 'success', message: data.message || '✓ Reserva cancelada exitosamente.' });
+          cargarDatosBackend(authToken);
+        } else {
+          setReservaAlert({ type: 'error', message: formatErrorMessage(data.detail) });
+        }
+      } catch {
+        setReservaAlert({ type: 'error', message: 'Error al comunicarse con el servidor.' });
+      }
+    }
+    setLoading(false);
+  };
+
+  // HU-005 — Check-in / Check-out de la reserva (PMS > Reservas)
+  const handleCambiarEstadoReserva = async (id_reserva, nuevoEstado) => {
+    const esCheckIn = nuevoEstado === 'Check-In';
+    const etiqueta = esCheckIn ? 'check-in' : 'check-out';
+    if (!window.confirm(`¿Confirmar el ${etiqueta} de la reserva #${id_reserva}?`)) return;
+
+    setLoading(true);
+    if (backendActivo) {
+      try {
+        const res = await apiFetch(`/api/reservas/${id_reserva}/estado`, {
+          method: 'PATCH',
+          token: authToken,
+          body: { estado: nuevoEstado }
+        });
+        const data = res.data;
+        if (res.ok) {
+          // Refresca reservas y habitaciones: la unidad cambia de 'Ocupada' a 'En limpieza'.
+          setReservas(prev => prev.map(r => (
+            r.id_reserva === id_reserva
+              ? { ...r, ...(data.reserva || {}) }
+              : r
+          )));
+          setReservaAlert({ type: 'success', message: data.message || `✓ ${etiqueta} registrado.` });
           cargarDatosBackend(authToken);
         } else {
           setReservaAlert({ type: 'error', message: formatErrorMessage(data.detail) });
@@ -1143,6 +1184,7 @@ export function useAppState() {
     cargarDatosBackend, handleCreateEmpleadoSubmit, handleChangeEmpleadoRol, handleToggleEmpleadoEstado, handleUserChange, handleReservaChange,
     handleUserSubmit, handleGuestSearchSubmit, handleGuestRecuperarSubmit, handleGuestRestablecerSubmit, handleReservarTipo, handlePmsWalkInGuestChange,
     handleReservaSubmit, handleSelectApartamentoCatalog, handleToggleEstadoHuesped, handleSelectHuesped, handleDeleteHuesped, handleDeleteReserva,
+    handleCambiarEstadoReserva, walkinCheckinInmediato, setWalkinCheckinInmediato,
     handleCambiarEstadoHabitacion, handleReportarDano, handleCrearReservaNegocio, handleBuscarHuespedPorDocumento, handleCancelarReservaNegocio
   };
 }
