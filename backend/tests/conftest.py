@@ -7,9 +7,6 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 os.environ.setdefault("JWT_SECRET", "super_secret_jwt_key_for_testing_123456789")
 
-from main import app
-from database import connection
-
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
     """
@@ -17,8 +14,9 @@ def setup_db():
     que la base de datos esté inicializada si está disponible.
     """
     try:
+        from database import connection
         connection.inicializar_base_de_datos()
-    except (SystemExit, Exception):
+    except (ImportError, SystemExit, Exception):
         pass
     yield
     # No cerramos la db aquí, psycopg2 usa conexiones por request, pero 
@@ -29,6 +27,7 @@ def client():
     """
     Retorna una instancia de TestClient para hacer peticiones HTTP al API.
     """
+    from main import app
     with TestClient(app) as c:
         yield c
 

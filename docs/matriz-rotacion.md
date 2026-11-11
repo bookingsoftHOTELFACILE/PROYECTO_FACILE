@@ -19,7 +19,7 @@ Reglas:
 | @jocmiguelchicoc (José Chico) | E2E | Front | | | | | | | |
 | @maicolmayor23-code (Maicol Mayor) | E2E | API | | | | | | | |
 | @xiomaraecheverry (Ashly Echeverri) | E2E | BD | | Front | | | | | |
-| @sebasparada (Sebastián Parada) | E2E | BD | | | | | | | |
+| @sebasparada (Sebastián Parada) | E2E | BD | | | BD: FakeReservaRepository | | | | |
 
 ## Cobertura semanal
 
