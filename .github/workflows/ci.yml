@@ -66,3 +66,8 @@ jobs:
           npm install -g pnpm@9
           pnpm install --no-frozen-lockfile
           pnpm audit --audit-level moderate || true
+
+      - name: ⚛️ Pruebas de Frontend (Vitest + RTL)
+        working-directory: frontend
+        run: |
+          pnpm test
