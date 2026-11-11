@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TablaGestionReservas from './components/TablaGestionReservas';
 import { 
   UserPlus, ShieldCheck, Mail, Phone, FileText, Briefcase, Users, 
   AlertCircle, Calendar, Home, ListOrdered, Wifi, WifiOff, LogIn, 
@@ -5318,57 +5319,11 @@ function App() {
 
           {/* 3. SUB-PESTAÑA 3: RESERVAS ACTIVAS DE APARTAMENTOS */}
           {(pmsSubTab === 'reservas' || pmsSubTab === 'todos') && (
-            <div id="pms-reservas-table" className="clean-card" style={{ marginBottom: '1.5rem' }}>
-              <div className="clean-card-header">
-                <ListOrdered size={18} color="var(--color-primary-red)"/>
-                <h3 style={{ fontSize: '1.1rem' }}>Reservas Activas ({reservas.filter(r => r.estado !== 'Cancelada').length})</h3>
-              </div>
-              {reservaAlert && (
-                <div style={{
-                  padding: '0.75rem 1rem',
-                  margin: '0.8rem 1rem',
-                  borderRadius: '10px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  background: reservaAlert.type === 'success' ? '#f0fdf4' : '#fee2e2',
-                  color: reservaAlert.type === 'success' ? '#166534' : '#991b1b',
-                  border: `1px solid ${reservaAlert.type === 'success' ? '#bbf7d0' : '#fca5a5'}`
-                }}>
-                  {reservaAlert.message}
-                </div>
-              )}
-              <div className="pms-table-wrap">
-                <table className="pms-table">
-                  <thead>
-                    <tr><th>Huésped</th><th>Apto</th><th>Fechas</th><th>Origen</th><th>Acción</th></tr>
-                  </thead>
-                  <tbody>
-                    {reservas.filter(r => r.estado !== 'Cancelada').map(r => (
-                      <tr key={r.id_reserva}>
-                        <td>
-                          <strong>{r.huesped_nombre}</strong>
-                          <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>Doc: {r.huesped_documento}</span>
-                        </td>
-                        <td><span className="badge-tag badge-occup">Apto {r.habitacion_numero}</span></td>
-                        <td style={{ fontSize: '0.72rem' }}>
-                          In: {r.fecha_entrada}<br/>Out: {r.fecha_salida}
-                        </td>
-                        <td>
-                          <span className="badge-tag" style={{ background: r.creado_por?.includes('Web') ? '#e0f2fe' : '#fef3c7', color: r.creado_por?.includes('Web') ? '#0369a1' : '#b45309', fontSize: '0.7rem' }}>
-                            {r.creado_por?.includes('Web') ? '🌐 Web Pública' : `👨‍💼 ${r.creado_por || 'Recepción'}`}
-                          </span>
-                        </td>
-                        <td>
-                          <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteReserva(r.id_reserva)}>
-                            Cancelar
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <TablaGestionReservas
+              reservas={reservas}
+              onCancelar={handleDeleteReserva}
+              reservaAlert={reservaAlert}
+            />
           )}
 
           {/* 4. SUB-PESTAÑA 4: GESTIÓN DE PLANTAS (AMAS DE LLAVES & MANTENIMIENTO) */}
