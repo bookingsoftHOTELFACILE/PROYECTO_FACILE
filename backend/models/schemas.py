@@ -47,16 +47,14 @@ class ReservaEstadoUpdate(BaseModel):
 ROLES_ASIGNABLES = Literal[
     'Recepcionista 24h',
     'Ama de llaves',
-    'Personal de mantenimiento',
-    'Conserje'
+    'Personal de mantenimiento'
 ]
 
 ROLES_VALIDOS = Literal[
     'Administrador',
     'Recepcionista 24h',
     'Ama de llaves',
-    'Personal de mantenimiento',
-    'Conserje'
+    'Personal de mantenimiento'
 ]
 
 TIPOS_DOCUMENTO = Literal[

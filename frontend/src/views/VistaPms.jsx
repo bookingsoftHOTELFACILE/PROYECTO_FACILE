@@ -344,7 +344,6 @@ const VistaPms = () => {
                         <option value="Recepcionista 24h">Recepcionista 24h</option>
                         <option value="Ama de llaves">Ama de llaves (Limpieza)</option>
                         <option value="Personal de mantenimiento">Personal de mantenimiento (Reparaciones)</option>
-                        <option value="Conserje">Conserje</option>
                       </select>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -413,7 +412,6 @@ const VistaPms = () => {
                               <option value="Recepcionista 24h">Recepcionista 24h</option>
                               <option value="Ama de llaves">Ama de llaves</option>
                               <option value="Personal de mantenimiento">Personal de mantenimiento</option>
-                              <option value="Conserje">Conserje</option>
                             </select>
                           )}
                         </td>

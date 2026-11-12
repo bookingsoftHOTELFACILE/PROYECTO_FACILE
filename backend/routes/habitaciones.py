@@ -13,10 +13,10 @@ from database import connection
 from dependencies import requiere_rol
 
 # Todos los roles del sistema tienen acceso al catálogo general de habitaciones
-_TODOS_LOS_ROLES = ("Administrador", "Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento", "Conserje")
+_TODOS_LOS_ROLES = ("Administrador", "Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento")
 
 # Roles autorizados para consulta operacional de disponibilidad y reservas
-_ROLES_DISPONIBILIDAD = ("Administrador", "Recepcionista 24h", "Conserje")
+_ROLES_DISPONIBILIDAD = ("Administrador", "Recepcionista 24h")
 
 router = APIRouter(prefix="/api/habitaciones", tags=["habitaciones"])
 
@@ -107,7 +107,7 @@ def consultar_disponibilidad(
     """
     RF-012 — Consulta de disponibilidad de habitaciones por rango de fechas en tiempo real.
 
-    - Roles autorizados: Administrador, Recepcionista 24h, Conserje.
+    - Roles autorizados: Administrador, Recepcionista 24h.
     - Query Params:
         * fecha_entrada (AAAA-MM-DD): Obligatorio
         * fecha_salida (AAAA-MM-DD): Obligatorio
@@ -216,7 +216,7 @@ class HabitacionEstadoUpdate(BaseModel):
     estado: str
     detalle_mantenimiento: Optional[str] = None
 
-_ROLES_GESTION_HABITACION = ("Administrador", "Ama de llaves", "Personal de mantenimiento", "Recepcionista 24h", "Conserje")
+_ROLES_GESTION_HABITACION = ("Administrador", "Ama de llaves", "Personal de mantenimiento", "Recepcionista 24h")
 
 @router.patch("/{id_habitacion}/estado", dependencies=[Depends(requiere_rol(*_ROLES_GESTION_HABITACION))])
 def cambiar_estado_habitacion(

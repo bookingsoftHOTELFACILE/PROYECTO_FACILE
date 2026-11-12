@@ -15,7 +15,7 @@ from services.reservas_service import (
 logger = logging.getLogger("bookingsoft.reservas")
 
 # RF-009: roles autorizados para el módulo de reservas.
-_ROLES_RESERVAS = ("Administrador", "Recepcionista 24h", "Conserje")
+_ROLES_RESERVAS = ("Administrador", "Recepcionista 24h")
 
 router = APIRouter(prefix="/api/reservas", tags=["reservas"])
 

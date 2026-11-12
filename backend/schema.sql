@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS empleado (
     usuario           VARCHAR(50)  UNIQUE NOT NULL,
     contrasena        VARCHAR(255) NOT NULL,
     rol               VARCHAR(30)  NOT NULL
-        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento', 'Conserje')),
+        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento')),
     tipo_documento    VARCHAR(30)  NOT NULL DEFAULT 'Cédula de ciudadanía'
         CHECK (tipo_documento IN ('Cédula de ciudadanía', 'Pasaporte', 'Cédula de extranjería', 'Otro')),
     numero_documento  VARCHAR(30)  UNIQUE,

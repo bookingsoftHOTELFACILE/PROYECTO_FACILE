@@ -79,7 +79,7 @@
 
 | Elemento | Detalle |
 | :--- | :--- |
-| **Endpoint de ciclo de vida** | `PATCH /api/reservas/{id}/estado` — body `{ "estado": "Check-In" \| "Completada" }`. RBAC con `requiere_rol()` (Administrador, Recepcionista 24h, Conserje). |
+| **Endpoint de ciclo de vida** | `PATCH /api/reservas/{id}/estado` — body `{ "estado": "Check-In" \| "Completada" }`. RBAC con `requiere_rol()` (Administrador, Recepcionista 24h). |
 | **Check-in directo (CA-005.2)** | `POST /api/reservas` acepta `checkin_inmediato: true`; el backend lo rechaza con `403` si no hay rol operativo autenticado. |
 | **Marcas temporales (CA-005.1 / CA-005.4)** | Columnas `checkin_at` y `checkout_at` en `reserva_habitacion`, expuestas por `GET /api/reservas`. Aplicadas a bases vivas por migración idempotente en `database/connection.py::_MIGRACIONES` (y declaradas en `schema.sql`). |
 | **Transiciones válidas** | `Confirmada → Check-In → Completada`. Cualquier otra combinación devuelve `409`; una reserva cancelada no admite check-in. |

@@ -82,15 +82,15 @@ def test_recepcionista_gestion_rol_y_estado(client):
     # Restablecer estado a Activo
     client.patch("/api/empleados/3/estado", json={"estado": "Activo"}, headers=h_recep)
 
-    # Ama de llaves intenta modificar rol
-    res_ama = client.patch("/api/empleados/3/rol", json={"rol": "Conserje"}, headers=h_ama)
+    # Ama de llaves intenta modificar rol (rol válido, pero sin permiso → 403)
+    res_ama = client.patch("/api/empleados/3/rol", json={"rol": "Personal de mantenimiento"}, headers=h_ama)
     assert res_ama.status_code == 403
 
 
 def test_rf012_consulta_disponibilidad(client):
     """
     RF-012 — Consulta de disponibilidad de habitaciones por rango de fechas.
-    - Acceso permitido: Recepcionista 24h, Administrador, Conserje.
+    - Acceso permitido: Recepcionista 24h y Administrador.
     - Retorna disponibilidad correcta según reservas existentes.
     """
     t_recep = get_token(client, "recepcion", "Recep2026!")

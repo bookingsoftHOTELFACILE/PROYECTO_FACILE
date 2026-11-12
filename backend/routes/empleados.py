@@ -24,7 +24,9 @@ from dependencies import UsuarioActual, autenticar, requiere_rol
 router = APIRouter(prefix="/api/empleados", tags=["empleados"])
 
 # Roles asignables vía API — RN-006.2 excluye explícitamente 'Administrador'.
-_ROLES_ASIGNABLES = ("Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento", "Conserje")
+# RF-006 / RN-006.2: roles que un Administrador puede reasignar (el rol
+# 'Administrador' no se reasigna desde este endpoint).
+_ROLES_ASIGNABLES = ("Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento")
 
 # Roles con capacidad de gestión administrativa sobre el personal del apartahotel
 _ROLES_GESTION = ("Administrador", "Recepcionista 24h")
@@ -155,8 +157,8 @@ def modificar_rol(
     RF-006 / HU-004 CA-004.5 — Cambia el rol de un empleado.
 
     RN-006.1: Administrador y Recepcionista 24h pueden modificar roles.
-    RN-006.2: los roles asignables son exclusivamente: Recepcionista 24h, Ama de llaves,
-              Personal de mantenimiento y Conserje. El rol 'Administrador' no puede
+    RN-006.2: los roles asignables son exclusivamente: Recepcionista 24h, Ama de llaves
+              y Personal de mantenimiento. El rol 'Administrador' no puede
               asignarse a través de este endpoint.
     Salvaguarda: si se intenta quitar el rol de gestión a un usuario y este es el único
                  usuario con rol de gestión activo, la operación se rechaza con 409 Conflict.
