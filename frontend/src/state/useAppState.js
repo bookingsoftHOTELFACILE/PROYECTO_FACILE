@@ -284,7 +284,8 @@ export function useAppState() {
   useEffect(() => {
     const verificarBackend = async () => {
       try {
-        const res = await apiFetch(`/api/habitaciones`, {timeoutMs: 2000});
+        // El inventario exige rol (H-02); la comprobación de disponibilidad usa /health.
+        const res = await apiFetch(`/health`, {timeoutMs: 2000});
         if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
           setBackendActivo(true);
         } else {
@@ -324,9 +325,19 @@ export function useAppState() {
   // Cargar datos
   const cargarDatosBackend = async (token = authToken) => {
     try {
+      // H-02: el inventario completo exige rol operativo. Sin sesión (o sin rol)
+      // se cae al catálogo público, que omite los datos internos de mantenimiento.
+      const fetchHabitaciones = async () => {
+        const res = await apiFetch(`/api/habitaciones`, {token: token});
+        if (res.status === 401 || res.status === 403) {
+          return apiFetch(`/api/habitaciones/publicas`);
+        }
+        return res;
+      };
+
       const [gRes, hRes, rRes, eRes, rnRes, empRes] = await Promise.all([
         apiFetch(`/api/huespedes`, {token: token}),
-        apiFetch(`/api/habitaciones`, {token: token}),
+        fetchHabitaciones(),
         apiFetch(`/api/reservas`, {token: token}),
         apiFetch(`/api/centro-negocios/espacios`),
         apiFetch(`/api/centro-negocios/reservas`),

@@ -195,4 +195,25 @@ Estos elementos no deben modificarse y son la base técnica sólida del proyecto
 
 ---
 
+## 8. Estado de la remediación
+
+| Fase | Hallazgos | Estado | Verificación |
+| :--- | :--- | :--- | :--- |
+| **A** — Descomponer `App.jsx` | M-01, M-02, M-03 | ✅ Completada | `App.jsx` 6.665 → **94** líneas; 25 `fetch` centralizados en `apiFetch`; `vite build` + `vitest` 6/6 + E2E 4/5. |
+| **B** — Check-in / Check-out | **H-03** | ✅ Completada | `PATCH /api/reservas/{id}/estado` con máquina de estados, marcas temporales y cálculo de noches; `pytest` **49/49** (7 nuevos) + spec E2E propio. |
+| **C** — Seguridad | **H-01, H-02** | ✅ Completada | `DELETE /api/reservas/{id}` y `GET /api/habitaciones` exigen rol operativo; nuevo `GET /api/habitaciones/publicas` para el portal sin sesión; `pytest` **55/55** (6 nuevos) + E2E 5/6. |
+| **D** — Refactor backend | M-05 a M-08 | ⏳ Pendiente | — |
+| **E** — Higiene y README | B-01 a B-06 | ⏳ Pendiente | — |
+
+**Arreglos colaterales realizados durante la remediación:**
+- Contraseñas sembradas corruptas en la BD viva (`$2b$12$…1d1d1d` en cuatro usuarios): restaurados los hashes de `schema.sql`.
+- `backend/tests/test_reservas.py` apuntaba a `localhost:4000`; ahora usa `API_BASE_URL` (puerto 4001).
+- `GET /api/habitaciones` se usaba además como *health probe* sin sesión; la comprobación pasó a `/health`.
+
+**Fallo E2E preexistente (no introducido por la remediación):**
+`E2E/tests/proteccion_doble_clic.spec.js` — el botón de confirmación no se deshabilita a tiempo.
+Verificado reproduciendo el fallo con el monolito original de 6.665 líneas, por lo que no es una regresión.
+
+---
+
 _BookingSoft © 2026 — Apartahotel Facile. Auditoría interna de arquitectura._

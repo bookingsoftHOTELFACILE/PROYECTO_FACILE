@@ -22,9 +22,11 @@ router = APIRouter(prefix="/api/habitaciones", tags=["habitaciones"])
 
 
 # ── GET /api/habitaciones ─────────────────────────────────────────────────────
-@router.get("")
+# H-02: el inventario completo (incluye detalle de mantenimiento y quién lo
+# modificó) exige rol operativo; el portal público usa /api/habitaciones/publicas.
+@router.get("", dependencies=[Depends(requiere_rol(*_TODOS_LOS_ROLES))])
 def obtener_habitaciones():
-    """Retorna el catálogo general de habitaciones."""
+    """Retorna el catálogo general de habitaciones (roles operativos)."""
     conn = connection.obtener_conexion()
     try:
         cursor = conn.cursor()
@@ -56,6 +58,41 @@ def obtener_habitaciones():
         try:
             cursor.close()
         except:
+            pass
+        connection.liberar_conexion(conn)
+
+
+# ── GET /api/habitaciones/publicas ────────────────────────────────────────────
+# H-02: catálogo mínimo sin sesión para el portal público (HU-009). Expone lo
+# necesario para mostrar el inventario sin filtrar datos internos de operación.
+@router.get("/publicas")
+def obtener_habitaciones_publicas():
+    """Retorna el catálogo público de habitaciones sin datos internos de mantenimiento."""
+    conn = connection.obtener_conexion()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado FROM habitacion"
+        )
+        filas = cursor.fetchall()
+
+        return [
+            {
+                "id_habitacion": f[0],
+                "numero": f[1],
+                "tipo": f[2],
+                "capacidad": f[3],
+                "precio_noche": float(f[4]),
+                "estado": f[5],
+            }
+            for f in filas
+        ]
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
+    finally:
+        try:
+            cursor.close()
+        except Exception:
             pass
         connection.liberar_conexion(conn)
 

@@ -1,8 +1,7 @@
 import logging
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 import psycopg2
+from fastapi import APIRouter, Depends, HTTPException, status
 from database import connection
 from dependencies import requiere_rol, autenticar, autenticar_opcional, UsuarioActual
 from models.schemas import ReservaCreate, ReservaEstadoUpdate
@@ -399,12 +398,14 @@ def cambiar_estado_reserva(
             connection.liberar_conexion(conn)
 
 
-@router.delete("/{id_reserva}")
+# RF-009: el borrado lógico de una reserva también exige rol operativo (H-01).
+@router.delete("/{id_reserva}", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
 def eliminar_reserva(
     id_reserva: int,
-    usuario: Optional[UsuarioActual] = Depends(autenticar_opcional)
+    usuario: UsuarioActual = Depends(autenticar)
 ):
-    audit_str = f"{usuario.nombre} ({usuario.rol})" if usuario else "Cliente Web (Público)"
+    """Cancela una reserva (baja lógica) registrando quién lo hizo."""
+    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
     conn = None
     cursor = None
     try:

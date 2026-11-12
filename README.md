@@ -346,6 +346,7 @@ BookingSoft aplica el principio de mínimo privilegio mediante dependencias inye
 | `/api/huespedes/{id}/estado`         | `PATCH`  | Modificar estado de huésped       |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
 | `/api/huespedes/{id}`                | `DELETE` | Baja lógica de huésped            |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
 | `/api/habitaciones`                  |  `GET`   | Consultar estado de habitaciones  |   ❌    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/habitaciones/publicas`         |  `GET`   | Catálogo público de habitaciones  |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
 | `/api/habitaciones`                  |  `POST`  | Dar de alta nueva unidad          |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
 | `/api/habitaciones/{id}`             |  `PUT`   | Actualizar capacidad o tarifas    |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
 | `/api/habitaciones/{id}/estado`      | `PATCH`  | Cambiar estado de habitación      |   ❌    |  ✅   |      ✅       |      ✅       |      ✅       |
@@ -390,7 +391,8 @@ La API expone **24 endpoints REST** con serialización estricta mediante modelos
 
 ### 4. Módulo de Habitaciones (`/api/habitaciones`)
 
-- `GET /api/habitaciones`: Inventario físico con estado actual (`Disponible`, `Ocupada`, `En limpieza`, `Mantenimiento`).
+- `GET /api/habitaciones`: Inventario físico con estado actual (`Disponible`, `Ocupada`, `En limpieza`, `Mantenimiento`). **Requiere rol operativo**: expone el detalle de mantenimiento y quién lo modificó.
+- `GET /api/habitaciones/publicas`: Catálogo mínimo **sin sesión** para el portal público (`numero`, `tipo`, `capacidad`, `precio_noche`, `estado`). No expone datos internos de operación.
 - `POST /api/habitaciones`: Alta de habitación con capacidad y tarifa por noche.
 - `PUT /api/habitaciones/{id}`: Actualización de metadatos de la unidad.
 - `PATCH /api/habitaciones/{id}/estado`: Cambio de estado operativo (usado por Ama de Llaves para liberar habitaciones y por Mantenimiento para registrar averías).
