@@ -120,11 +120,11 @@ def inicializar_base_de_datos():
         cursor.close()
         liberar_conexion(conn)
 
-    except Exception as e:
-        # Hallazgo 07: El detalle técnico va al log del servidor, nunca al cliente HTTP
-        logger.error(
-            "[ERROR CRÍTICO] Fallo de conexión con PostgreSQL. Host: %s:%s | Base: %s | Usuario: %s | Error: %s",
-            DB_HOST, DB_PORT, DB_NAME, DB_USER, e
+    except Exception:
+        # Hallazgo 07 / M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception(
+            "[ERROR CRÍTICO] Fallo de conexión con PostgreSQL. Host: %s:%s | Base: %s | Usuario: %s",
+            DB_HOST, DB_PORT, DB_NAME, DB_USER
         )
         print(f"\n❌ [ERROR CRÍTICO] Fallo de conexión con la base de datos PostgreSQL.")
         print(f"   Host: {DB_HOST}:{DB_PORT} | Base: {DB_NAME} | Usuario: {DB_USER}")

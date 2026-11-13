@@ -9,8 +9,8 @@ RF-009 / RF-012: Consulta de disponibilidad de unidades habitacionales en tiempo
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from database import connection
 from dependencies import requiere_rol
+from repositories import cursor_escritura, cursor_lectura
 
 # Todos los roles del sistema tienen acceso al catálogo general de habitaciones
 _TODOS_LOS_ROLES = ("Administrador", "Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento")
@@ -27,39 +27,32 @@ router = APIRouter(prefix="/api/habitaciones", tags=["habitaciones"])
 @router.get("", dependencies=[Depends(requiere_rol(*_TODOS_LOS_ROLES))])
 def obtener_habitaciones():
     """Retorna el catálogo general de habitaciones (roles operativos)."""
-    conn = connection.obtener_conexion()
     try:
-        cursor = conn.cursor()
-        # Hallazgo 06: Columnas modificado_por y detalle_mantenimiento declaradas directamente en schema.sql
-        cursor.execute("SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado, modificado_por, detalle_mantenimiento FROM habitacion")
-        filas = cursor.fetchall()
+        # M-05: cursor, conexión y liberación viven en la capa de repositorios.
+        with cursor_lectura() as cur:
+            # Hallazgo 06: Columnas modificado_por y detalle_mantenimiento declaradas directamente en schema.sql
+            cur.execute("SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado, modificado_por, detalle_mantenimiento FROM habitacion")
+            filas = cur.fetchall()
 
-        habitaciones = []
-        for f in filas:
-            habitaciones.append({
-                "id_habitacion": f[0],
-                "numero": f[1],
-                "tipo": f[2],
-                "capacidad": f[3],
-                "precio_noche": float(f[4]),
-                "estado": f[5],
-                "modificado_por": f[6] or "",
-                "detalle_mantenimiento": f[7] or ""
-            })
+        # M-06: cada fila es un dict; se lee por nombre de columna.
+        return [
+            {
+                "id_habitacion": f["id_habitacion"],
+                "numero": f["numero"],
+                "tipo": f["tipo"],
+                "capacidad": f["capacidad"],
+                "precio_noche": float(f["precio_noche"]),
+                "estado": f["estado"],
+                "modificado_por": f["modificado_por"] or "",
+                "detalle_mantenimiento": f["detalle_mantenimiento"] or ""
+            }
+            for f in filas
+        ]
 
-        return habitaciones
-        
-    except Exception as e:
+    except Exception:
+        # Hallazgo M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception("GET /api/habitaciones — fallo al consultar el catálogo")
         raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
-        
-    finally:
-        # El bloque finally SE EJECUTA SIEMPRE, haya éxito o error.
-        # Así garantizamos que la conexión NUNCA se quede colgada.
-        try:
-            cursor.close()
-        except:
-            pass
-        connection.liberar_conexion(conn)
 
 
 # ── GET /api/habitaciones/publicas ────────────────────────────────────────────
@@ -68,33 +61,29 @@ def obtener_habitaciones():
 @router.get("/publicas")
 def obtener_habitaciones_publicas():
     """Retorna el catálogo público de habitaciones sin datos internos de mantenimiento."""
-    conn = connection.obtener_conexion()
     try:
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado FROM habitacion"
-        )
-        filas = cursor.fetchall()
+        with cursor_lectura() as cur:
+            cur.execute(
+                "SELECT id_habitacion, numero, tipo, capacidad, precio_noche, estado FROM habitacion"
+            )
+            filas = cur.fetchall()
 
+        # M-06: acceso por nombre de columna.
         return [
             {
-                "id_habitacion": f[0],
-                "numero": f[1],
-                "tipo": f[2],
-                "capacidad": f[3],
-                "precio_noche": float(f[4]),
-                "estado": f[5],
+                "id_habitacion": f["id_habitacion"],
+                "numero": f["numero"],
+                "tipo": f["tipo"],
+                "capacidad": f["capacidad"],
+                "precio_noche": float(f["precio_noche"]),
+                "estado": f["estado"],
             }
             for f in filas
         ]
     except Exception:
+        # Hallazgo M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception("GET /api/habitaciones/publicas — fallo al consultar el catálogo público")
         raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud.")
-    finally:
-        try:
-            cursor.close()
-        except Exception:
-            pass
-        connection.liberar_conexion(conn)
 
 
 # ── GET /api/habitaciones/disponibilidad (RF-012) ──────────────────────────────
@@ -132,76 +121,76 @@ def consultar_disponibilidad(
         )
 
     try:
-        conn = connection.obtener_conexion()
-        cur = conn.cursor()
+        with cursor_lectura() as cur:
 
-        # Si se especificó id_habitacion, validar que exista
-        if id_habitacion is not None:
-            cur.execute("SELECT id_habitacion FROM habitacion WHERE id_habitacion = %s", (id_habitacion,))
-            if not cur.fetchone():
-                cur.close(); connection.liberar_conexion(conn)
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"La habitación especificada con id {id_habitacion} no existe."
-                )
+            # Si se especificó id_habitacion, validar que exista
+            if id_habitacion is not None:
+                cur.execute("SELECT id_habitacion FROM habitacion WHERE id_habitacion = %s", (id_habitacion,))
+                if not cur.fetchone():
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"La habitación especificada con id {id_habitacion} no existe."
+                    )
 
-        # Consulta SQL con determinación de disponibilidad por solapamiento de daterange
-        query = """
-            SELECT 
-                h.id_habitacion, 
-                h.numero, 
-                h.tipo, 
-                h.capacidad, 
-                h.precio_noche, 
-                h.estado AS estado_base,
-                CASE 
-                    WHEN h.estado = 'Mantenimiento' THEN 'Mantenimiento'
-                    WHEN EXISTS (
-                        SELECT 1 FROM reserva_habitacion r
-                        WHERE r.id_habitacion = h.id_habitacion
-                          AND r.estado IN ('Confirmada', 'Check-In')
-                          AND r.fecha_entrada < %s::date
-                          AND r.fecha_salida > %s::date
-                    ) THEN 'Ocupada'
-                    ELSE 'Disponible'
-                END AS estado_rango
-            FROM habitacion h
-            WHERE 1=1
-        """
-        params = [fecha_salida, fecha_entrada]
+            # Consulta SQL con determinación de disponibilidad por solapamiento de daterange
+            query = """
+                SELECT 
+                    h.id_habitacion, 
+                    h.numero, 
+                    h.tipo, 
+                    h.capacidad, 
+                    h.precio_noche, 
+                    h.estado AS estado_base,
+                    CASE 
+                        WHEN h.estado = 'Mantenimiento' THEN 'Mantenimiento'
+                        WHEN EXISTS (
+                            SELECT 1 FROM reserva_habitacion r
+                            WHERE r.id_habitacion = h.id_habitacion
+                              AND r.estado IN ('Confirmada', 'Check-In')
+                              AND r.fecha_entrada < %s::date
+                              AND r.fecha_salida > %s::date
+                        ) THEN 'Ocupada'
+                        ELSE 'Disponible'
+                    END AS estado_rango
+                FROM habitacion h
+                WHERE 1=1
+            """
+            params = [fecha_salida, fecha_entrada]
 
-        if id_habitacion is not None:
-            query += " AND h.id_habitacion = %s"
-            params.append(id_habitacion)
+            if id_habitacion is not None:
+                query += " AND h.id_habitacion = %s"
+                params.append(id_habitacion)
 
-        query += " ORDER BY h.numero ASC"
+            query += " ORDER BY h.numero ASC"
 
-        cur.execute(query, params)
-        filas = cur.fetchall()
+            cur.execute(query, params)
+            filas = cur.fetchall()
 
+        # M-06: se lee por nombre de columna en lugar del desempaquetado posicional.
         resultado = []
         for f in filas:
-            id_hab, numero, tipo, capacidad, precio_noche, estado_base, estado_rango = f
-            es_disponible = (estado_rango == 'Disponible')
+            es_disponible = (f["estado_rango"] == 'Disponible')
             resultado.append({
-                "id_habitacion": id_hab,
-                "numero": numero,
-                "tipo": tipo,
-                "capacidad": capacidad,
-                "precio_noche": float(precio_noche),
-                "estado_base": estado_base,
-                "estado_rango": estado_rango,
+                "id_habitacion": f["id_habitacion"],
+                "numero": f["numero"],
+                "tipo": f["tipo"],
+                "capacidad": f["capacidad"],
+                "precio_noche": float(f["precio_noche"]),
+                "estado_base": f["estado_base"],
+                "estado_rango": f["estado_rango"],
                 "disponible": es_disponible
             })
-
-        cur.close()
-        connection.liberar_conexion(conn)
 
         return resultado
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        # Hallazgo M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception(
+            "GET /api/habitaciones/disponibilidad — fallo al consultar el rango %s → %s (habitación %s)",
+            fecha_entrada, fecha_salida, id_habitacion,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP
@@ -239,28 +228,24 @@ def cambiar_estado_habitacion(
     detalle = data.detalle_mantenimiento or ""
     
     try:
-        conn = connection.obtener_conexion()
-        cur = conn.cursor()
-        # Hallazgo 06: Columnas modificado_por y detalle_mantenimiento declaradas directamente en schema.sql
-        
-        # Si se restablece a Disponible o En limpieza sin especificar detalle, se borra el reporte de daño anterior
-        if data.estado in ("Disponible", "En limpieza") and not data.detalle_mantenimiento:
-            detalle = ""
+        # M-05: commit / rollback viven en la capa de repositorios.
+        with cursor_escritura() as cur:
+            # Hallazgo 06: Columnas modificado_por y detalle_mantenimiento declaradas directamente en schema.sql
 
-        cur.execute(
-            "UPDATE habitacion SET estado = %s, modificado_por = %s, detalle_mantenimiento = %s WHERE id_habitacion = %s RETURNING numero",
-            (data.estado, audit_str, detalle, id_habitacion)
-        )
-        row = cur.fetchone()
-        if not row:
-            cur.close(); connection.liberar_conexion(conn)
-            raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
-            
-        numero_hab = row[0]
-        conn.commit()
-        cur.close()
-        connection.liberar_conexion(conn)
-        
+            # Si se restablece a Disponible o En limpieza sin especificar detalle, se borra el reporte de daño anterior
+            if data.estado in ("Disponible", "En limpieza") and not data.detalle_mantenimiento:
+                detalle = ""
+
+            cur.execute(
+                "UPDATE habitacion SET estado = %s, modificado_por = %s, detalle_mantenimiento = %s WHERE id_habitacion = %s RETURNING numero",
+                (data.estado, audit_str, detalle, id_habitacion)
+            )
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
+
+            numero_hab = row["numero"]
+
         msg_extra = f" [Reporte: {detalle}]" if detalle else ""
         return {
             "message": f"Apartamento {numero_hab} actualizado a estado '{data.estado}' por {audit_str}.{msg_extra}",
@@ -271,7 +256,9 @@ def cambiar_estado_habitacion(
         }
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        # Hallazgo M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception("PATCH /api/habitaciones/%s/estado — fallo al actualizar el estado", id_habitacion)
         raise HTTPException(status_code=500, detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg en logger, no en HTTP
         )
 

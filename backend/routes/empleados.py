@@ -18,8 +18,8 @@ Notas de implementación:
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from database import connection
 from dependencies import UsuarioActual, autenticar, requiere_rol
+from repositories import cursor_escritura, cursor_lectura
 
 router = APIRouter(prefix="/api/empleados", tags=["empleados"])
 
@@ -46,48 +46,45 @@ def listar_empleados(
     - Excluye explícitamente la contraseña de la respuesta por seguridad.
     """
     try:
-        conn = connection.obtener_conexion()
-        cur = conn.cursor()
+        with cursor_lectura() as cur:
+            query = """
+                SELECT id_empleado, nombre, usuario, rol, estado, tipo_documento, numero_documento, correo
+                FROM empleado
+                WHERE 1=1
+            """
+            params = []
 
-        query = """
-            SELECT id_empleado, nombre, usuario, rol, estado, tipo_documento, numero_documento, correo
-            FROM empleado
-            WHERE 1=1
-        """
-        params = []
+            if estado:
+                query += " AND estado = %s"
+                params.append(estado.strip())
 
-        if estado:
-            query += " AND estado = %s"
-            params.append(estado.strip())
+            if rol:
+                query += " AND rol = %s"
+                params.append(rol.strip())
 
-        if rol:
-            query += " AND rol = %s"
-            params.append(rol.strip())
+            query += " ORDER BY id_empleado ASC"
 
-        query += " ORDER BY id_empleado ASC"
+            cur.execute(query, params)
+            filas = cur.fetchall()
 
-        cur.execute(query, params)
-        filas = cur.fetchall()
+        # M-06: se lee por nombre de columna en lugar de por posición.
+        return [
+            {
+                "id_empleado": f["id_empleado"],
+                "nombre": f["nombre"],
+                "usuario": f["usuario"],
+                "rol": f["rol"],
+                "estado": f["estado"],
+                "tipo_documento": f["tipo_documento"],
+                "numero_documento": f["numero_documento"],
+                "correo": f["correo"],
+            }
+            for f in filas
+        ]
 
-        empleados = []
-        for f in filas:
-            empleados.append({
-                "id_empleado": f[0],
-                "nombre": f[1],
-                "usuario": f[2],
-                "rol": f[3],
-                "estado": f[4],
-                "tipo_documento": f[5],
-                "numero_documento": f[6],
-                "correo": f[7],
-            })
-
-        cur.close()
-        connection.liberar_conexion(conn)
-
-        return empleados
-
-    except Exception as e:
+    except Exception:
+        # Hallazgo M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception("GET /api/empleados — fallo al consultar el listado (estado=%s, rol=%s)", estado, rol)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
@@ -105,20 +102,16 @@ def obtener_empleado(id_empleado: int):
     - Retorna 404 si el ID especificado no existe.
     """
     try:
-        conn = connection.obtener_conexion()
-        cur = conn.cursor()
-
-        cur.execute(
-            """
-            SELECT id_empleado, nombre, usuario, rol, estado, tipo_documento, numero_documento, correo
-            FROM empleado
-            WHERE id_empleado = %s
-            """,
-            (id_empleado,),
-        )
-        fila = cur.fetchone()
-        cur.close()
-        connection.liberar_conexion(conn)
+        with cursor_lectura() as cur:
+            cur.execute(
+                """
+                SELECT id_empleado, nombre, usuario, rol, estado, tipo_documento, numero_documento, correo
+                FROM empleado
+                WHERE id_empleado = %s
+                """,
+                (id_empleado,),
+            )
+            fila = cur.fetchone()
 
         if not fila:
             raise HTTPException(
@@ -126,20 +119,23 @@ def obtener_empleado(id_empleado: int):
                 detail=f"No se encontró ningún empleado con id {id_empleado}.",
             )
 
+        # M-06: acceso por nombre de columna.
         return {
-            "id_empleado": fila[0],
-            "nombre": fila[1],
-            "usuario": fila[2],
-            "rol": fila[3],
-            "estado": fila[4],
-            "tipo_documento": fila[5],
-            "numero_documento": fila[6],
-            "correo": fila[7],
+            "id_empleado": fila["id_empleado"],
+            "nombre": fila["nombre"],
+            "usuario": fila["usuario"],
+            "rol": fila["rol"],
+            "estado": fila["estado"],
+            "tipo_documento": fila["tipo_documento"],
+            "numero_documento": fila["numero_documento"],
+            "correo": fila["correo"],
         }
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        # Hallazgo M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception("GET /api/empleados/%s — fallo al consultar el empleado", id_empleado)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
@@ -184,64 +180,63 @@ def modificar_rol(
         )
 
     try:
-        conn = connection.obtener_conexion()
-        cur = conn.cursor()
+        # M-05: commit/rollback vive en la capa de repositorios.
+        with cursor_escritura() as cur:
 
-        # Verificar que el empleado existe
-        cur.execute(
-            "SELECT id_empleado, nombre, rol, estado FROM empleado WHERE id_empleado = %s",
-            (id_empleado,),
-        )
-        fila = cur.fetchone()
-        if not fila:
-            cur.close(); connection.liberar_conexion(conn)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No existe ningún empleado con id {id_empleado}.",
-            )
-        _, nombre_emp, rol_actual, estado_emp = fila
-
-        # Salvaguarda: si el cambio remueve un rol de gestión (Administrador o Recepcionista 24h),
-        # verificar que quede al menos un usuario activo con rol de gestión en el sistema.
-        if rol_actual in _ROLES_GESTION and nuevo_rol not in _ROLES_GESTION:
+            # Verificar que el empleado existe
             cur.execute(
-                "SELECT COUNT(*) FROM empleado WHERE rol IN ('Administrador', 'Recepcionista 24h') AND estado = 'Activo'",
+                "SELECT id_empleado, nombre, rol, estado FROM empleado WHERE id_empleado = %s",
+                (id_empleado,),
             )
-            total_gestion = cur.fetchone()[0]
-            if total_gestion <= 1:
-                cur.close(); connection.liberar_conexion(conn)
+            fila = cur.fetchone()
+            if not fila:
                 raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=(
-                        "No es posible modificar el rol: este empleado es el único usuario "
-                        "activo con permisos de gestión (Administrador o Recepcionista 24h) "
-                        "en el sistema."
-                    ),
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"No existe ningún empleado con id {id_empleado}.",
                 )
+            nombre_emp = fila["nombre"]
+            rol_actual = fila["rol"]
 
-        # Aplicar el cambio
-        cur.execute(
-            "UPDATE empleado SET rol = %s WHERE id_empleado = %s RETURNING id_empleado, nombre, rol",
-            (nuevo_rol, id_empleado),
-        )
-        res = cur.fetchone()
-        conn.commit()
-        cur.close()
-        connection.liberar_conexion(conn)
+            # Salvaguarda: si el cambio remueve un rol de gestión (Administrador o Recepcionista 24h),
+            # verificar que quede al menos un usuario activo con rol de gestión en el sistema.
+            if rol_actual in _ROLES_GESTION and nuevo_rol not in _ROLES_GESTION:
+                cur.execute(
+                    "SELECT COUNT(*) AS total FROM empleado WHERE rol IN ('Administrador', 'Recepcionista 24h') AND estado = 'Activo'",
+                )
+                total_gestion = cur.fetchone()["total"]
+                if total_gestion <= 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=(
+                            "No es posible modificar el rol: este empleado es el único usuario "
+                            "activo con permisos de gestión (Administrador o Recepcionista 24h) "
+                            "en el sistema."
+                        ),
+                    )
 
+            # Aplicar el cambio
+            cur.execute(
+                "UPDATE empleado SET rol = %s WHERE id_empleado = %s RETURNING id_empleado, nombre, rol",
+                (nuevo_rol, id_empleado),
+            )
+            res = cur.fetchone()
+
+        # M-06: se lee por nombre de columna.
         return {
             "message": f"Rol de '{nombre_emp}' actualizado exitosamente.",
             "empleado": {
-                "id_empleado": res[0],
-                "nombre": res[1],
+                "id_empleado": res["id_empleado"],
+                "nombre": res["nombre"],
                 "rol_anterior": rol_actual,
-                "rol_nuevo": res[2],
+                "rol_nuevo": res["rol"],
             },
         }
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        # Hallazgo M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception("PATCH /api/empleados/%s/rol — fallo al asignar el rol %r", id_empleado, nuevo_rol)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,
@@ -272,63 +267,63 @@ def modificar_estado(
         )
 
     try:
-        conn = connection.obtener_conexion()
-        cur = conn.cursor()
+        # M-05: commit/rollback vive en la capa de repositorios.
+        with cursor_escritura() as cur:
 
-        # Verificar que el empleado existe
-        cur.execute(
-            "SELECT id_empleado, nombre, rol, estado FROM empleado WHERE id_empleado = %s",
-            (id_empleado,),
-        )
-        fila = cur.fetchone()
-        if not fila:
-            cur.close(); connection.liberar_conexion(conn)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No existe ningún empleado con id {id_empleado}.",
-            )
-        _, nombre_emp, rol_emp, estado_actual = fila
-
-        # Salvaguarda: si se intenta desactivar a un usuario con rol de gestión, verificar que quede otro activo.
-        if nuevo_estado == "Inactivo" and estado_actual == "Activo" and rol_emp in _ROLES_GESTION:
+            # Verificar que el empleado existe
             cur.execute(
-                "SELECT COUNT(*) FROM empleado WHERE rol IN ('Administrador', 'Recepcionista 24h') AND estado = 'Activo'",
+                "SELECT id_empleado, nombre, rol, estado FROM empleado WHERE id_empleado = %s",
+                (id_empleado,),
             )
-            total_gestion = cur.fetchone()[0]
-            if total_gestion <= 1:
-                cur.close(); connection.liberar_conexion(conn)
+            fila = cur.fetchone()
+            if not fila:
                 raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=(
-                        "No es posible desactivar este empleado: es el único usuario "
-                        "activo con permisos de gestión (Administrador o Recepcionista 24h) "
-                        "en el sistema."
-                    ),
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"No existe ningún empleado con id {id_empleado}.",
                 )
+            nombre_emp = fila["nombre"]
+            rol_emp = fila["rol"]
+            estado_actual = fila["estado"]
 
-        # Aplicar el cambio
-        cur.execute(
-            "UPDATE empleado SET estado = %s WHERE id_empleado = %s RETURNING id_empleado, nombre, estado",
-            (nuevo_estado, id_empleado),
-        )
-        res = cur.fetchone()
-        conn.commit()
-        cur.close()
-        connection.liberar_conexion(conn)
+            # Salvaguarda: si se intenta desactivar a un usuario con rol de gestión, verificar que quede otro activo.
+            if nuevo_estado == "Inactivo" and estado_actual == "Activo" and rol_emp in _ROLES_GESTION:
+                cur.execute(
+                    "SELECT COUNT(*) AS total FROM empleado WHERE rol IN ('Administrador', 'Recepcionista 24h') AND estado = 'Activo'",
+                )
+                total_gestion = cur.fetchone()["total"]
+                if total_gestion <= 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=(
+                            "No es posible desactivar este empleado: es el único usuario "
+                            "activo con permisos de gestión (Administrador o Recepcionista 24h) "
+                            "en el sistema."
+                        ),
+                    )
 
+            # Aplicar el cambio
+            cur.execute(
+                "UPDATE empleado SET estado = %s WHERE id_empleado = %s RETURNING id_empleado, nombre, estado",
+                (nuevo_estado, id_empleado),
+            )
+            res = cur.fetchone()
+
+        # M-06: se lee por nombre de columna.
         return {
             "message": f"Estado de '{nombre_emp}' actualizado exitosamente.",
             "empleado": {
-                "id_empleado": res[0],
-                "nombre": res[1],
+                "id_empleado": res["id_empleado"],
+                "nombre": res["nombre"],
                 "estado_anterior": estado_actual,
-                "estado_nuevo": res[2],
+                "estado_nuevo": res["estado"],
             },
         }
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        # Hallazgo M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception("PATCH /api/empleados/%s/estado — fallo al asignar el estado %r", id_empleado, nuevo_estado)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP,

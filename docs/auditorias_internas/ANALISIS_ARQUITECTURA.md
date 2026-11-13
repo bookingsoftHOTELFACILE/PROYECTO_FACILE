@@ -135,14 +135,22 @@ Las 25 llamadas `fetch` construyen URL, encabezados y manejo de errores de forma
 ### M-05 — Sin capa de repositorio en el backend
 Cada endpoint repite el patrón `obtener_conexion()` → `cursor` → `try/except` → `finally: liberar_conexion()`. Afecta a los 6 módulos de rutas; un cambio en la política de conexiones obliga a editar 6 archivos y 36 bloques.
 
+> **Estado (Fase D):** resuelto. Nueva capa `backend/repositories/` con `cursor_lectura()` y `cursor_escritura()`, context managers que garantizan cierre del cursor, devolución al pool y `commit`/`rollback` automáticos. Los 6 routers consumen esa capa y **0** puntos de `routes/` llaman `obtener_conexion()` directamente.
+
 ### M-06 — Acceso posicional a filas de resultado
 63 expresiones del tipo `f[0]`, `res_row[3]`, `hab_row[0]`. Alterar el orden o el número de columnas de un `SELECT` produce errores en tiempo de ejecución sin aviso en la edición.
+
+> **Estado (Fase D):** resuelto. Todos los cursores se crean con `RealDictCursor` desde la capa de repositorios; las **63** accesiones posicionales pasaron a `fila["nombre_columna"]` (los alias SQL son las claves del dict).
 
 ### M-07 — Manejo de errores opaco
 24 respuestas `HTTP 500` con mensaje genérico y muy poca instrumentación `logger.exception`. El detalle se descarta, lo correcto para el cliente, pero tampoco queda trazabilidad para diagnóstico.
 
+> **Estado (Fase D):** resuelto. Los **26** `500` genéricos se acompañan ahora de `logger.exception(...)` con traza completa. Además se dejó de filtrar el detalle técnico en `GET /health` y en el error de base de datos de `POST /api/reservas`, y el único `logger.error` sin traza (arranque de `connection.py`) pasó a `logger.exception`.
+
 ### M-08 — Inconsistencia de estilo entre módulos
 `huespedes.py` declara rutas completas (`/api/huespedes`) en el decorador; los otros cinco módulos usan `APIRouter(prefix=...)`. Añade un endpoint exige recordar dos convenciones distintas.
+
+> **Estado (Fase D):** resuelto. `huespedes.py` expone dos routers con prefijo declarado — `router` (`/api/huespedes`) y `router_user` (`/api/user`) — y todos sus decoradores usan rutas relativas como el resto de módulos. `main.py` registra ambos.
 
 ---
 
@@ -202,13 +210,15 @@ Estos elementos no deben modificarse y son la base técnica sólida del proyecto
 | **A** — Descomponer `App.jsx` | M-01, M-02, M-03 | ✅ Completada | `App.jsx` 6.665 → **94** líneas; 25 `fetch` centralizados en `apiFetch`; `vite build` + `vitest` 6/6 + E2E 4/5. |
 | **B** — Check-in / Check-out | **H-03** | ✅ Completada | `PATCH /api/reservas/{id}/estado` con máquina de estados, marcas temporales y cálculo de noches; `pytest` **49/49** (7 nuevos) + spec E2E propio. |
 | **C** — Seguridad | **H-01, H-02** | ✅ Completada | `DELETE /api/reservas/{id}` y `GET /api/habitaciones` exigen rol operativo; nuevo `GET /api/habitaciones/publicas` para el portal sin sesión; `pytest` **55/55** (6 nuevos) + E2E 5/6. |
-| **D** — Refactor backend | M-05 a M-08 | ⏳ Pendiente | — |
+| **D** — Refactor backend | M-05 a M-08 | ✅ Completada | Nueva capa `repositories/` (`cursor_lectura` / `cursor_escritura` con `commit` y `rollback` automáticos) adoptada por los **6** routers: 0 usos directos de `obtener_conexion()` en `routes/`; cursores `RealDictCursor` (acceso por nombre en todas las filas); `logger.exception` en los **26** `500` genéricos; prefijos de router unificados (`/api/huespedes` + `/api/user`). `pytest` **55/55** + **44** sondas en vivo + E2E 5/6. |
 | **E** — Higiene y README | B-01 a B-06 | ⏳ Pendiente | — |
 
 **Arreglos colaterales realizados durante la remediación:**
 - Contraseñas sembradas corruptas en la BD viva (`$2b$12$…1d1d1d` en cuatro usuarios): restaurados los hashes de `schema.sql`.
 - `backend/tests/test_reservas.py` apuntaba a `localhost:4000`; ahora usa `API_BASE_URL` (puerto 4001).
 - `GET /api/habitaciones` se usaba además como *health probe* sin sesión; la comprobación pasó a `/health`.
+- **Rol "Conserje" eliminado** (commit `945cfe9`): no pertenece al modelo de negocio (Administrador, Recepcionista 24h, Ama de llaves, Personal de mantenimiento y Huésped) y la restricción `CHECK` de la BD ya lo excluía, así que el código ofrecía un rol que PostgreSQL rechazaba con `23514`.
+- `DELETE /api/centro-negocios/reservas/{id}` devolvía **500** en lugar de **404** (el `except Exception` absorbía el `HTTPException`); corregido durante la Fase D.
 
 **Fallo E2E preexistente (no introducido por la remediación):**
 `E2E/tests/proteccion_doble_clic.spec.js` — el botón de confirmación no se deshabilita a tiempo.

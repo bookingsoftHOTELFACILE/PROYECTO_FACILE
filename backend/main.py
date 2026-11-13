@@ -1,7 +1,10 @@
+import logging
 import os
 import sys
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+
+logger = logging.getLogger("bookingsoft")
 
 # Hallazgo 02 - Fail Fast: Verificar que JWT_SECRET esté adecuadamente configurado y no sea vacío ni por defecto
 jwt_secret_val = os.getenv("JWT_SECRET", "").strip()
@@ -42,6 +45,7 @@ app.add_middleware(
 
 # Registrar los módulos de rutas
 app.include_router(huespedes.router)
+app.include_router(huespedes.router_user)
 app.include_router(habitaciones.router)
 app.include_router(reservas.router)
 app.include_router(auth.router)
@@ -59,9 +63,12 @@ def health_check():
             "message": "Servidor de BookingSoft (FastAPI) funcionando correctamente.",
             "modo": "Físico (PostgreSQL)"
         }
-    except Exception as e:
+    except Exception:
+        # Hallazgo M-07: el detalle técnico (host, usuario, error de PG) va al log
+        # del servidor; al cliente sólo llega un mensaje genérico.
+        logger.exception("GET /health — fallo de conexión con PostgreSQL")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Fallo de conexión con la base de datos PostgreSQL: {e}"
+            detail="Servicio no disponible: no hay conexión con la base de datos."
         )
 
