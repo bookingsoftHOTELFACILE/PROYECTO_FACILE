@@ -156,14 +156,15 @@ Cada endpoint repite el patrón `obtener_conexion()` → `cursor` → `try/excep
 
 ## 5. Hallazgos de Severidad Baja
 
-| ID | Hallazgo | Ubicación |
-| --- | --- | --- |
-| B-01 | `README.md` declara 15 pruebas; existen 30 | `README.md` § Pruebas |
-| B-02 | La estructura de repositorio del `README` no menciona `services/`, `E2E/` ni `test_reservas_service.py` | `README.md` § Estructura |
-| B-03 | `coverage/` y `dist/` versionados en el repositorio | `frontend/coverage`, `frontend/dist` |
-| B-04 | Reporte de cobertura obsoleto referenciando `LoginForm.jsx` | `frontend/coverage/coverage-final.json` |
-| B-05 | `GET /health` expone el mensaje de la excepción de la base de datos al cliente | `backend/main.py` |
-| B-06 | Umbrales de cobertura en `vite.config.js` fijados a 0 | `frontend/vite.config.js` |
+| ID | Hallazgo | Ubicación | Estado |
+| --- | --- | --- | --- |
+| B-01 | `README.md` declara 15 pruebas; existen 30 | `README.md` § Pruebas | ✅ **Fase E**: el README declara **55** pruebas de integración en 7 archivos (más 6 unitarias en Vitest y 6 specs E2E), con tabla de cobertura por archivo y comandos. |
+| B-02 | La estructura de repositorio del `README` no menciona `services/`, `E2E/` ni `test_reservas_service.py` | `README.md` § Estructura | ✅ **Fase E**: árbol reescrito con `backend/repositories/`, `services/`, `routes/` (6), `tests/` (7), `E2E/`, `frontend/src/{api,context,state,data,views,components}` y `.github/`; las rutas de `docs/auditorias_internas/` quedaron corregidas. |
+| B-03 | `coverage/` y `dist/` versionados en el repositorio | `frontend/coverage`, `frontend/dist` | ✅ Resuelto antes de la remediación (commit `1f35ed9`); verificado en la Fase E: **0** ficheros trackeados y `.gitignore` cubre `coverage/`, `dist/`, `test-results/` y `playwright-report/`. |
+| B-04 | Reporte de cobertura obsoleto referenciando `LoginForm.jsx` | `frontend/coverage/coverage-final.json` | ✅ **Fase E**: reporte regenerado el 2026-11-12; no queda ningún fichero `LoginForm*.html` (el único `LoginForm` que aparece es la variable de estado `loginForm` del código actual). |
+| B-05 | `GET /health` expone el mensaje de la excepción de la base de datos al cliente | `backend/main.py` | ✅ **Fase D**: la sonda devuelve siempre `{"status": "ok"}` / `{"status": "error"}` sin detalle técnico. |
+| B-06 | Umbrales de cobertura en `vite.config.js` fijados a 0 | `frontend/vite.config.js` | ✅ **Fase E**: umbrales `lines/statements 1`, `functions 8`, `branches 45`, con la base medida (1.25 / 1.25 / 50.98 / 10.71) documentada en el propio fichero. Verificado que un umbral por encima de la base rompe el `run` con `exit 1`. |
+| B-07 | El README y la matriz RBAC documentaban `POST`, `PUT` y `DELETE /api/habitaciones`, que **no existen**, y omitían 5 endpoints reales; además usaban rutas `guest-*` inexistentes | `README.md` § Endpoints, `MATRIZ_ROLES_ENDPOINTS.md` | ✅ **Fase E**: ambos documentos alineados con `GET /openapi.json` (**27 endpoints**). El alta, la edición y la baja de unidades quedan marcadas como limitación conocida (el catálogo se siembra desde `schema.sql`). |
 
 ---
 
@@ -177,7 +178,7 @@ Estos elementos no deben modificarse y son la base técnica sólida del proyecto
 4. **Fail-fast de seguridad** en `main.py`: el proceso aborta si `JWT_SECRET` falta o contiene el valor por defecto.
 5. **Capa `services/reservas_service.py`** con lógica pura, sin dependencias de BD ni HTTP, cubierta por pruebas unitarias parametrizadas (principios FIRST).
 6. **RBAC mediante fábrica de dependencias** `requiere_rol(*roles)` — declarativo y uniforme.
-7. **30 pruebas de integración sobre PostgreSQL real**, sin mocks, ejecutándose también en CI con auditoría `pip-audit`.
+7. **55 pruebas de integración sobre PostgreSQL real**, sin mocks, ejecutándose también en CI con auditoría `pip-audit`.
 8. **Pruebas E2E con localizadores accesibles** (`getByRole`, `getByLabel`) e `id` estables, lo que permite refactorizar la estructura del JSX sin romper la suite.
 9. **Auditoría transaccional** (`creado_por`, `modificado_por`) y bajas lógicas en todas las entidades.
 10. **Docker Compose con `healthchecks`** encadenados y volúmenes persistentes.
@@ -193,10 +194,10 @@ Estos elementos no deben modificarse y son la base técnica sólida del proyecto
 | **B** | Implementar `PATCH /api/reservas/{id}/estado` con máquina de estados, registro de fecha/hora de entrada y salida, y resumen de estadía (HU-005) | **H-03** | Alto |
 | **C** | Exigir autenticación y rol en `GET /api/habitaciones` y `DELETE /api/reservas/{id}` | **H-01, H-02** | Bajo |
 | **D** | Capa `repositories/`, `RealDictCursor`, prefijos unificados, `logger.exception` | M-05, M-06, M-07, M-08 | Medio |
-| **E** | Actualizar `README.md`, limpiar artefactos versionados, regenerar cobertura | B-01 a B-06 | Bajo |
+| **E** | Actualizar `README.md`, limpiar artefactos versionados, regenerar cobertura | B-01 a B-07 | Bajo |
 
 **Criterio de aceptación global de la remediación:**
-- `pytest` (30+) y `npx playwright test` en verde tras cada fase.
+- `pytest` (55) y `npx playwright test` en verde tras cada fase.
 - Sin regresión visual ni funcional verificada en el portal público y en el PMS.
 - `App.jsx` por debajo de 600 líneas al cierre de la Fase A.
 - Cobertura de líneas del frontend por encima del 0 % actual y umbrales de `vite.config.js` elevados.
@@ -211,7 +212,7 @@ Estos elementos no deben modificarse y son la base técnica sólida del proyecto
 | **B** — Check-in / Check-out | **H-03** | ✅ Completada | `PATCH /api/reservas/{id}/estado` con máquina de estados, marcas temporales y cálculo de noches; `pytest` **49/49** (7 nuevos) + spec E2E propio. |
 | **C** — Seguridad | **H-01, H-02** | ✅ Completada | `DELETE /api/reservas/{id}` y `GET /api/habitaciones` exigen rol operativo; nuevo `GET /api/habitaciones/publicas` para el portal sin sesión; `pytest` **55/55** (6 nuevos) + E2E 5/6. |
 | **D** — Refactor backend | M-05 a M-08 | ✅ Completada | Nueva capa `repositories/` (`cursor_lectura` / `cursor_escritura` con `commit` y `rollback` automáticos) adoptada por los **6** routers: 0 usos directos de `obtener_conexion()` en `routes/`; cursores `RealDictCursor` (acceso por nombre en todas las filas); `logger.exception` en los **26** `500` genéricos; prefijos de router unificados (`/api/huespedes` + `/api/user`). `pytest` **55/55** + **44** sondas en vivo + E2E 5/6. |
-| **E** — Higiene y README | B-01 a B-06 | ⏳ Pendiente | — |
+| **E** — Higiene y README | B-01 a B-07 | ✅ Completada | `README.md` reescrito en su estructura, catálogo de **27 endpoints** (antes declaraba 24 e inventaba `POST/PUT/DELETE /api/habitaciones` y rutas `guest-*`), matriz RBAC alineada con `openapi.json` y sección de pruebas con **55 + 6 + 6**; `MATRIZ_ROLES_ENDPOINTS.md` reconstruido sin la columna inexistente "Recepcionista Noche"; `vite.config.js` con umbrales reales (base 1.25 % líneas) y verificación de que el gate falla si se superan; cobertura regenerada y artefactos comprobados como no trackeados. `pytest` **55/55** + `vite build` + `vitest` **6/6** + E2E 5/6. |
 
 **Arreglos colaterales realizados durante la remediación:**
 - Contraseñas sembradas corruptas en la BD viva (`$2b$12$…1d1d1d` en cuatro usuarios): restaurados los hashes de `schema.sql`.
