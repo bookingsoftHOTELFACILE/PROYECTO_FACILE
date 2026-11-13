@@ -26,7 +26,14 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       include: ['src/**'],
       exclude: ['src/main.jsx'],
-      thresholds: { lines: 0, branches: 0, functions: 0, statements: 0 },
+      // Hallazgo B-06: los umbrales estaban en 0, de modo que `--coverage` nunca
+      // fallaba. Se fija una base medida con `npx vitest run --coverage` el
+      // 2026-11-12: 1.25% líneas · 1.25% sentencias · 50.98% ramas · 10.71%
+      // funciones, con margen para que la suite siga siendo el detector de
+      // regresiones (el portal tiene cobertura E2E, no unitaria) sin bloquear
+      // crecimiento. Subir estos valores es el objetivo a medida que se añadan
+      // pruebas: borrar las existentes rompe el build.
+      thresholds: { lines: 1, statements: 1, functions: 8, branches: 45 },
     },
   }
 })
