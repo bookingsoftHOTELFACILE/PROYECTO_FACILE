@@ -7,6 +7,7 @@ Pruebas de integración para el módulo de reservas:
 - Concurrencia: EXCLUDE USING gist garantiza que dos reservas simultáneas para
   la misma habitación y fechas solapadas no puedan coexistir (RNF-009).
 """
+import os
 import uuid
 import concurrent.futures
 
@@ -83,7 +84,9 @@ def test_reserva_concurrencia_double_booking():
     import httpx
     from database import connection
 
-    BASE_URL = "http://localhost:4000"
+    # Puerto del backend: 4000 dentro de la red Docker, 4001 en el host.
+    # Configurable con API_BASE_URL para ejecutar la suite fuera del contenedor.
+    BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:4000")
 
     # ── Autenticación ─────────────────────────────────────────────────────────
     with httpx.Client(base_url=BASE_URL) as c:

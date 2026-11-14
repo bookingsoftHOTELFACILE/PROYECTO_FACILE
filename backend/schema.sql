@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS empleado (
     usuario           VARCHAR(50)  UNIQUE NOT NULL,
     contrasena        VARCHAR(255) NOT NULL,
     rol               VARCHAR(30)  NOT NULL
-        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento', 'Conserje')),
+        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento')),
     tipo_documento    VARCHAR(30)  NOT NULL DEFAULT 'Cédula de ciudadanía'
         CHECK (tipo_documento IN ('Cédula de ciudadanía', 'Pasaporte', 'Cédula de extranjería', 'Otro')),
     numero_documento  VARCHAR(30)  UNIQUE,
@@ -107,6 +107,12 @@ CREATE TABLE IF NOT EXISTS reserva_habitacion (
         daterange(fecha_entrada, fecha_salida) WITH &&
     ) WHERE (estado IN ('Confirmada', 'Check-In'))
 );
+
+-- HU-005 (CA-005.1 / CA-005.4): marca temporal física real del check-in y del check-out.
+-- Idempotente: las bases vivas ya tienen la tabla creada, por lo que la migración se
+-- ejecuta también en cada arranque (ver backend/database/connection.py::_MIGRACIONES).
+ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP;
+ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP;
 
 -- 3. SQL Extendido: Funciones y Triggers en PL/pgSQL
 

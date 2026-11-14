@@ -77,23 +77,27 @@ graph TD
 | **Web Server Frontend** | Nginx Alpine      | Nginx 1.25+                       | Servidor de estáticos y proxy reverso hacia el backend.                   |
 | **Administración DB**   | pgAdmin 4         | dpage/pgadmin4                    | Consola visual web para administración y auditoría de la base de datos.   |
 | **Contenedores**        | Docker Compose    | Compose v2.20+                    | Orquestación con volúmenes persistentes y dependencias con healthcheck.   |
-| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 15 pruebas de integración sobre PostgreSQL real sin mocks.                |
+| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 55 pruebas de integración sobre PostgreSQL real sin mocks.                |
 
 ---
 
 ## 📁 Estructura del Repositorio
 
 ```text
-bookingsoft_final/
+bookingsoft/
 ├── .env.example                     # Plantilla estandarizada de variables de entorno
+├── .github/                         # CI (pytest + pip-audit + pnpm audit) y plantilla de PR
 ├── docker-compose.yml               # Orquestación de 4 servicios: db, backend, frontend, pgadmin
 ├── README.md                        # Documentación maestra integral (este documento)
-├── test_persistence.sh             # Script Bash para prueba de fuego de persistencia
+├── test_persistence.sh              # Script Bash para prueba de fuego de persistencia
 ├── docs/                            # Documentación de ingeniería y requisitos
-│   ├── MATRIZ_ROLES_ENDPOINTS.md   # Matriz exhaustiva RBAC por endpoint y método
-│   ├── AUDITORIA_DEPENDENCIAS.md    # Reporte de seguridad pip-audit y pnpm audit
-│   ├── ROTACION_SECRETOS.md         # Procedimiento de rotación de credenciales
-│   ├── DESVIACION_NOMENCLATURA.md   # Justificación del estándar de código en español
+│   ├── matriz-rotacion.md           # Matriz de rotación de credenciales
+│   ├── auditorias_internas/
+│   │   ├── ANALISIS_ARQUITECTURA.md # Auditoría de arquitectura + plan de remediación (Fases 0–E)
+│   │   ├── MATRIZ_ROLES_ENDPOINTS.md# Matriz exhaustiva RBAC por endpoint y método
+│   │   ├── AUDITORIA_DEPENDENCIAS.md# Reporte de seguridad pip-audit y pnpm audit
+│   │   ├── ROTACION_SECRETOS.md     # Procedimiento de rotación de credenciales
+│   │   └── DESVIACION_NOMENCLATURA.md # Justificación del estándar de código en español
 │   └── requisitos/                  # Especificación detallada SENA
 │       ├── MATRIZ_TRAZABILIDAD.md   # Trazabilidad RF vs HU vs Endpoint vs Tests
 │       ├── restricciones.md         # Restricciones técnicas, de seguridad y metodológicas
@@ -107,29 +111,49 @@ bookingsoft_final/
 │   ├── dependencies.py              # Guardas de seguridad: autenticar, requiere_rol
 │   ├── schema.sql                   # Esquema DDL + Funciones + Triggers + Seed Data
 │   ├── database/
-│   │   └── connection.py            # Pool de conexiones PostgreSQL parametrizado
+│   │   └── connection.py            # Pool de conexiones PostgreSQL + migraciones idempotentes
 │   ├── models/
 │   │   └── schemas.py               # Contratos Pydantic v2 (Input validation)
+│   ├── repositories/                # Capa de acceso a datos (hallazgos M-05 / M-06)
+│   │   └── base.py                  # cursor_lectura / cursor_escritura con RealDictCursor
+│   ├── services/
+│   │   └── reservas_service.py      # Lógica de negocio pura (FIRST): sin BD ni HTTP
 │   ├── routes/                      # Controladores modulares por dominio
-│   │   ├── auth.py                  # Login, registro y validación de tokens
+│   │   ├── auth.py                  # Login, registro, logout y validación de tokens
 │   │   ├── empleados.py             # CRUD y gestión de estados de empleados
-│   │   ├── huespedes.py             # Directorio de huéspedes y auth cliente
-│   │   ├── habitaciones.py          # Gestión y cambio de estado de habitaciones
-│   │   ├── reservas.py              # Creación atómica y cancelación de reservas
+│   │   ├── huespedes.py             # Router PMS (/api/huespedes) + cuentas (/api/user)
+│   │   ├── habitaciones.py          # Catálogo, disponibilidad y cambio de estado
+│   │   ├── reservas.py              # Creación atómica, check-in/check-out y cancelación
 │   │   └── centro_negocios.py       # Salas de juntas y coworking por horas
-│   └── tests/                       # Suite automatizada de pruebas
+│   └── tests/                       # Suite de integración sobre PostgreSQL real (55 pruebas)
 │       ├── conftest.py              # Fixtures de Pytest (cliente HTTP, tokens seed)
-│       ├── test_auth.py             # Pruebas de login, registro, RBAC y firma JWT
-│       ├── test_consultas.py        # Pruebas de listados, filtros y estados
-│       └── test_reservas.py         # Pruebas de GiST double-booking y descuentos
+│       ├── test_auth.py             # Login, registro, RBAC y firma JWT
+│       ├── test_consultas.py        # Listados, filtros y estados
+│       ├── test_reservas.py         # GiST double-booking y descuentos
+│       ├── test_reservas_service.py # Unidad de la capa services/ (parametrizadas)
+│       ├── test_checkin_checkout.py # HU-005: máquina de estados Check-In/Completada
+│       ├── test_seguridad_acceso.py # H-01 / H-02: RBAC de reservas e inventario
+│       └── test_model_huesped.py    # Modelo de dominio de huésped
+├── E2E/                             # Pruebas extremo a extremo con Playwright
+│   ├── playwright.config.js         # Web server autoarrancable (Vite en :3000)
+│   └── tests/                       # 6 specs: login, registro, habitaciones, cancelación,
+│                                    # check-in/check-out y protección de doble clic
 └── frontend/                        # Cliente Web SPA en React
     ├── Dockerfile                   # Multi-stage build (Node build -> Nginx Alpine)
     ├── nginx.conf                   # Configuración de Nginx y proxy pass
+    ├── vite.config.js               # Proxy /api y /health hacia :4001 + umbrales de cobertura
     ├── package.json                 # Dependencias Node (React 18, Vite 5, Lucide)
     └── src/
         ├── main.jsx                 # Punto de entrada de React en el DOM
         ├── index.css                # Sistema de diseño con CSS tokens y estilos modernos
-        └── App.jsx                  # SPA completa (Portal Huésped + Suite PMS)
+        ├── App.jsx                  # Ensamblador ligero (83 líneas): providers + vistas
+        ├── api/client.js            # Cliente HTTP unificado `apiFetch` + manejo de errores
+        ├── context/AppContext.jsx   # Proveedor del estado global
+        ├── state/useAppState.js     # Hook con el estado y los flujos del PMS
+        ├── data/catalogo.js         # Catálogo inicial de unidades
+        ├── views/                   # 9 vistas (Portal, Reservar, PMS, Perfil, ...)
+        ├── components/              # 11 componentes reutilizables
+        └── *.test.js                # 6 pruebas unitarias (Vitest)
 ```
 
 ---
@@ -336,23 +360,26 @@ BookingSoft aplica el principio de mínimo privilegio mediante dependencias inye
 | Endpoint                             |  Método  | Acción Funcional                  | Público | Admin | Recepción 24h | Ama de Llaves | Mantenimiento |
 | :----------------------------------- | :------: | :-------------------------------- | :-----: | :---: | :-----------: | :-----------: | :-----------: |
 | `/api/auth/login`                    |  `POST`  | Iniciar sesión y obtener JWT      |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/auth/logout`                   |  `POST`  | Cerrar sesión (stateless)         |   ❌    |  ✅   |      ✅       |      ✅       |      ✅       |
 | `/api/auth/registro`                 |  `POST`  | Registrar nuevo empleado          |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
-| `/api/empleados`                     |  `GET`   | Listar nómina de empleados        |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
-| `/api/empleados/{id}`                |  `GET`   | Consultar empleado por ID         |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
-| `/api/empleados/{id}/rol`            | `PATCH`  | Reasignar rol a empleado          |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
-| `/api/empleados/{id}/estado`         | `PATCH`  | Activar/Desactivar empleado       |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
+| `/api/empleados`                     |  `GET`   | Listar nómina de empleados        |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
+| `/api/empleados/{id}`                |  `GET`   | Consultar empleado por ID         |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
+| `/api/empleados/{id}/rol`            | `PATCH`  | Reasignar rol a empleado          |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
+| `/api/empleados/{id}/estado`         | `PATCH`  | Activar/Desactivar empleado       |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
 | `/api/huespedes`                     |  `GET`   | Consultar directorio de huéspedes |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
-| `/api/user/registro`                 |  `POST`  | Registrar huésped (Público/PMS)   |   ✅    |  ✅   |      ✅       |      ❌       |      ❌       |
 | `/api/huespedes/{id}/estado`         | `PATCH`  | Modificar estado de huésped       |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
 | `/api/huespedes/{id}`                | `DELETE` | Baja lógica de huésped            |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
-| `/api/habitaciones`                  |  `GET`   | Consultar estado de habitaciones  |   ❌    |  ✅   |      ✅       |      ✅       |      ✅       |
-| `/api/habitaciones`                  |  `POST`  | Dar de alta nueva unidad          |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
-| `/api/habitaciones/{id}`             |  `PUT`   | Actualizar capacidad o tarifas    |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
+| `/api/user/registro`                 |  `POST`  | Registro de huésped (portal/PMS)  |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/user/login`                    |  `POST`  | Login de huésped (documento/correo)|  ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/user/recuperar-password`       |  `POST`  | Solicitud de recuperación de clave|   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/user/restablecer-password`     |  `POST`  | Restablecimiento de clave         |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/habitaciones`                  |  `GET`   | Inventario completo de unidades   |   ❌    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/habitaciones/publicas`         |  `GET`   | Catálogo público de habitaciones  |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/habitaciones/disponibilidad`   |  `GET`   | Disponibilidad por rango (RF-012) |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
 | `/api/habitaciones/{id}/estado`      | `PATCH`  | Cambiar estado de habitación      |   ❌    |  ✅   |      ✅       |      ✅       |      ✅       |
-| `/api/habitaciones/{id}`             | `DELETE` | Inactivar habitación              |   ❌    |  ✅   |      ❌       |      ❌       |      ❌       |
 | `/api/reservas`                      |  `GET`   | Listar reservas activas           |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
-| `/api/reservas`                      |  `POST`  | Crear reserva atómica (GiST)      |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
-| `/api/reservas/{id}/estado`          | `PATCH`  | Cambiar estado de reserva         |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
+| `/api/reservas`                      |  `POST`  | Crear reserva atómica (GiST) \*   |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
+| `/api/reservas/{id}/estado`          | `PATCH`  | Check-in / check-out de reserva   |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
 | `/api/reservas/{id}`                 | `DELETE` | Cancelar reserva (baja lógica)    |   ❌    |  ✅   |      ✅       |      ❌       |      ❌       |
 | `/api/centro-negocios/espacios`      |  `GET`   | Listar salas y coworking          |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
 | `/api/centro-negocios/reservas`      |  `GET`   | Listar reservas de negocio        |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
@@ -360,16 +387,20 @@ BookingSoft aplica el principio de mínimo privilegio mediante dependencias inye
 | `/api/centro-negocios/reservas/{id}` | `DELETE` | Cancelar reserva de negocio       |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
 | `/health`                            |  `GET`   | Diagnóstico de salud API y DB     |   ✅    |  ✅   |      ✅       |      ✅       |      ✅       |
 
+\* `POST /api/reservas` es público (autenticación opcional), pero el flag `checkin_inmediato`
+(HU-005) devuelve **403** a quien no tenga rol operativo.
+
 ---
 
 ## 🔌 Catálogo Completo de Endpoints REST (API)
 
-La API expone **24 endpoints REST** con serialización estricta mediante modelos Pydantic v2.
+La API expone **27 endpoints REST** con serialización estricta mediante modelos Pydantic v2.
 
 ### 1. Módulo de Autenticación (`/api/auth`)
 
 - `POST /api/auth/login`: Recibe `{usuario, contrasena}` y retorna `{access_token, token_type: "bearer"}`.
 - `POST /api/auth/registro`: Exclusivo de Administrador. Crea nuevos usuarios con validación de documentos y correos únicos.
+- `POST /api/auth/logout`: Cierre de sesión stateless (el cliente descarta el token).
 
 ### 2. Módulo de Empleados (`/api/empleados`)
 
@@ -380,21 +411,25 @@ La API expone **24 endpoints REST** con serialización estricta mediante modelos
 
 ### 3. Módulo de Huéspedes (`/api/huespedes` y `/api/user`)
 
-- `GET /api/huespedes`: Directorio con nivel de lealtad (`Silver`, `Gold`, `Platinum`).
-- `POST /api/user/registro`: Registro de huésped con documento de identidad y contacto.
-- `PATCH /api/huespedes/{id}/estado`: Habilita o inhabilita huéspedes.
-- `DELETE /api/huespedes/{id}`: Baja lógica (`estado = 'Inactivo'`).
-- `POST /api/user/guest-login`: Acceso simplificado para huéspedes recurrentes.
-- `POST /api/user/guest-recuperar`: Solicitud de recuperación de credenciales de huésped.
-- `POST /api/user/guest-restablecer`: Restablecimiento de contraseña de portal de huésped.
+- `GET /api/huespedes`: Directorio con nivel de lealtad (`Silver`, `Gold`, `Platinum`). Requiere rol operativo.
+- `PATCH /api/huespedes/{id}/estado`: Habilita o inhabilita huéspedes (Administrador / Recepción).
+- `DELETE /api/huespedes/{id}`: Baja lógica (`estado = 'Inactivo'`), exclusivo de Administrador.
+- `POST /api/user/registro`: Registro de huésped con documento de identidad y contacto (sin sesión).
+- `POST /api/user/login`: Login de huésped por documento o correo. Devuelve `{message, usuario}` **sin token**: el portal no usa JWT.
+- `POST /api/user/recuperar-password`: Solicitud de recuperación de credenciales (mascara el correo en la respuesta).
+- `POST /api/user/restablecer-password`: Restablecimiento de contraseña (mínimo 4 caracteres).
 
 ### 4. Módulo de Habitaciones (`/api/habitaciones`)
 
-- `GET /api/habitaciones`: Inventario físico con estado actual (`Disponible`, `Ocupada`, `En limpieza`, `Mantenimiento`).
-- `POST /api/habitaciones`: Alta de habitación con capacidad y tarifa por noche.
-- `PUT /api/habitaciones/{id}`: Actualización de metadatos de la unidad.
+- `GET /api/habitaciones`: Inventario físico con estado actual (`Disponible`, `Ocupada`, `En limpieza`, `Mantenimiento`). **Requiere rol operativo**: expone el detalle de mantenimiento y quién lo modificó.
+- `GET /api/habitaciones/publicas`: Catálogo mínimo **sin sesión** para el portal público (`numero`, `tipo`, `capacidad`, `precio_noche`, `estado`). No expone datos internos de operación.
+- `GET /api/habitaciones/disponibilidad`: Consulta por rango `fecha_entrada`/`fecha_salida` (RF-012) con estados `Disponible` / `Ocupada` / `Mantenimiento` calculados por solapamiento de fechas. Requiere Administrador o Recepción.
 - `PATCH /api/habitaciones/{id}/estado`: Cambio de estado operativo (usado por Ama de Llaves para liberar habitaciones y por Mantenimiento para registrar averías).
-- `DELETE /api/habitaciones/{id}`: Baja lógica de la unidad habitacional.
+
+> **Limitación conocida:** el alta, la edición de metadatos y la baja de unidades no
+> están expuestas como endpoint: el catálogo se siembra desde `schema.sql`. Queda
+> registrado como hallazgo `B-07` en
+> [`docs/auditorias_internas/ANALISIS_ARQUITECTURA.md`](docs/auditorias_internas/ANALISIS_ARQUITECTURA.md).
 
 ### 5. Módulo de Reservas de Habitaciones (`/api/reservas`)
 
@@ -462,6 +497,14 @@ Acceso mediante botón superior con validación JWT, organizado en sub-pestañas
 - 💼 **Coworking:** Calendario y control de reservas de espacios de trabajo y salas ejecutivas.
 - 📊 **Todos:** Vista global unificada para gerencia y auditoría general.
 
+### 3. Arquitectura del Código Frontend (Fase A)
+
+`App.jsx` es un ensamblador de **83 líneas** que monta el `AppContext` y renderiza la
+vista activa; toda la lógica vive en `state/useAppState.js`, el acceso HTTP se centraliza
+en `api/client.js` (cliente `apiFetch` con manejo uniforme de errores 401/403) y la UI se
+reparte en `views/` (9 vistas) y `components/` (11 componentes). El portal público y el
+PMS comparten el mismo estado; el token JWT solo se guarda para personal autenticado.
+
 ---
 
 ## 👥 Cuentas Semilla y Credenciales de Prueba
@@ -483,33 +526,62 @@ El archivo `schema.sql` aprovisiona credenciales cifradas con bcrypt para valida
 
 ### Suite de Integración con Pytest
 
-El sistema cuenta con **15 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
+El sistema cuenta con **55 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
 
 ```bash
 # Ejecutar la suite completa dentro del contenedor backend
 docker compose exec backend pytest -v
 ```
 
-#### Cobertura de las Pruebas:
+#### Cobertura de las Pruebas (55 en 7 archivos):
 
-1. `test_auth.py`:
-   - `test_registro_exitoso`: Creación de empleado y verificación de hash bcrypt.
-   - `test_registro_usuario_duplicado`: Rechazo por documento/correo duplicado.
-   - `test_login_valido`: Generación de token JWT válido.
-   - `test_login_credenciales_incorrectas`: Rechazo de credenciales erróneas.
-   - `test_login_usuario_inactivo`: Bloqueo de login para usuarios con `estado = 'Inactivo'`.
-   - `test_control_acceso_sin_token`: Denegación HTTP 401 en endpoints protegidos.
-   - `test_control_acceso_rol_sin_permiso`: Denegación HTTP 403 por rol insuficiente.
-   - `test_control_acceso_firma_manipulada`: Rechazo de tokens con firma inválida.
-2. `test_consultas.py`:
-   - `test_rf002_consulta_listado_empleados`: Listado de empleados por Admin.
-   - `test_rf003_consulta_empleado_especifico`: Consulta de perfil por ID.
-   - `test_recepcionista_gestion_rol_y_estado`: Validación de permisos de recepcionista.
-   - `test_rf012_consulta_disponibilidad`: Filtrado de habitaciones disponibles.
-3. `test_reservas.py`:
-   - `test_reserva_descuento`: Aplicación del 15% de descuento en estancias > 15 noches.
-   - `test_reserva_supera_capacidad`: Rechazo cuando el aforo supera la capacidad de la habitación.
-   - `test_reserva_concurrencia_double_booking`: Validación del constraint de exclusión GiST ante dos intentos concurrentes de reservar las mismas fechas.
+| Archivo | Pruebas | Qué valida |
+| :------ | :-----: | :--------- |
+| `test_auth.py` | 8 | Login, registro con hash bcrypt, rechazo de duplicados e inactivos, denegaciones 401/403 y firma JWT manipulada. |
+| `test_consultas.py` | 4 | Listado y detalle de empleados, permisos de Recepción y disponibilidad de habitaciones (RF-012). |
+| `test_reservas.py` | 3 | Descuento del 15 % en estancias > 15 noches, aforo sobre capacidad y constraint GiST de doble reserva. |
+| `test_reservas_service.py` | 19 | Unidad de `services/reservas_service.py` (sin BD ni HTTP): validación de fechas, disponibilidad de la unidad, cálculo de costo de estadía y errores de dominio. |
+| `test_checkin_checkout.py` | 7 | HU-005: máquina de estados `Pendiente → Confirmada → Check-in → Completada → En limpieza` y rechazos de transición inválida. |
+| `test_seguridad_acceso.py` | 6 | H-01 / H-02: RBAC de `DELETE /api/reservas/{id}` y protección del inventario de habitaciones (401/403 + endpoint público). |
+| `test_model_huesped.py` | 8 | Modelo de dominio de huésped: campos obligatorios, formato de correo rechazado y validación de mayoría de edad (límite exacto de 18 años). |
+
+### Pruebas Unitarias del Frontend (Vitest)
+
+Seis pruebas sobre utilidades puras del SPA (catálogo HU-009, `apiFetch` y manejo de errores):
+
+```bash
+cd frontend && npx vitest run
+```
+
+La cobertura se mide con `npx vitest run --coverage` y `frontend/vite.config.js` fija
+umbrales mínimos documentados (base medida: 1.25 % líneas) para que una regresión que
+borre las pruebas existentes rompa el build.
+
+### Pruebas E2E con Playwright
+
+Seis specs que arrancan Vite en `:3000` y ejercitan el flujo completo por localizadores
+accesibles (`getByRole`, `getByLabel`, `id="pms-..."`):
+
+```bash
+cd E2E && npx playwright test
+```
+
+| Spec | Flujo |
+| :--- | :---- |
+| `login.spec.js` | Acceso al PMS con credenciales seed. |
+| `registro.spec.js` | Alta de empleado por Administrador. |
+| `habitaciones.spec.js` | Inventario y cambio de estado de unidades. |
+| `cancelacion.spec.js` | Cancelación de reserva con confirmación. |
+| `checkin_checkout.spec.js` | HU-005: check-in inmediato y check-out desde la fila de reservas. |
+| `proteccion_doble_clic.spec.js` | Doble clic en el botón de reserva (**fallo preexistente conocido**, no regresión de la remediación). |
+
+### Auditoría interna de arquitectura
+
+El estado completo de la remediación (Fases A–E: descomposición del SPA, HU-005,
+seguridad, capa de repositorios e higiene de documentación) se encuentra en
+[`docs/auditorias_internas/ANALISIS_ARQUITECTURA.md`](docs/auditorias_internas/ANALISIS_ARQUITECTURA.md),
+junto con la matriz RBAC por endpoint
+[`docs/auditorias_internas/MATRIZ_ROLES_ENDPOINTS.md`](docs/auditorias_internas/MATRIZ_ROLES_ENDPOINTS.md).
 
 ### Prueba de Persistencia Física ante Reinicio de Contenedores
 
@@ -539,14 +611,17 @@ El script genera una reserva, apaga de forma abrupta el contenedor de backend (`
 | **RF-009** | Control de Acceso (RBAC)          | HU-002 | RNF-009 |   ✅ Probado    | Guardas `requiere_rol()`                          |
 | **RF-010** | Gestión de Estado Activo/Inactivo | HU-004 | RNF-010 |   ✅ Probado    | Bajas lógicas y validación en login               |
 | **RF-011** | Creación de Reserva Atómica       | HU-005 | RNF-009 |   ✅ Probado    | Constraint PostgreSQL `EXCLUDE USING gist`        |
-| **RF-012** | Consulta de Disponibilidad        | HU-005 | RNF-011 |   ✅ Probado    | `GET /api/habitaciones` con estados               |
+| **RF-012** | Consulta de Disponibilidad        | HU-005 | RNF-011 |   ✅ Probado    | `GET /api/habitaciones/disponibilidad` por rango  |
 | **RF-013** | Modificación de Reserva           | HU-005 | N/A     |    ⏳ Fase 2    | Por integridad GiST, se cancela y recrea          |
 | **RF-014** | Cancelación de Reserva            | HU-005 | RNF-010 |   ✅ Probado    | `DELETE /api/reservas/{id}` (Baja lógica)         |
 | **RF-015** | Coworking y Salas de Juntas       | HU-013 | N/A     | ✅ Implementado | `routes/centro_negocios.py` con tarifas por horas |
 
 ### Funcionalidades Diferidas a Fase 2 (Alcance Delimitado):
 
-- **HU-005 (Check-In / Check-Out Automatizado):** Integración con cerraduras inteligentes RFID/Bluetooth y entrega física de llaves.
+- **HU-005 (Check-In / Check-Out Automatizado):** el flujo operativo manual desde el PMS
+  (check-in inmediato, check-out y máquina de estados) está **implementado y probado**;
+  se difiere únicamente la integración con cerraduras inteligentes RFID/Bluetooth y la
+  entrega física de llaves.
 - **HU-010 (Gestión Financiera Avanzada):** Facturación electrónica con la DIAN y pasarela de pago online (Wompi/PayU).
 - **HU-012 (Notificaciones Automáticas):** Envío masivo de confirmaciones por SMS y WhatsApp Business API.
 
@@ -566,8 +641,8 @@ Si vas a abrir un nuevo chat o sesión con **Gemini**, puedes copiar y pegar el 
 - Regla Clave: Prevención de doble reserva a nivel DB mediante constraint GiST en reserva_habitacion (daterange &&), triggers de mantenimiento y cálculo automático de descuentos (15% para estancias >15 noches).
 - Tablas Principales: empleado, huesped, habitacion (38 unidades oficiales), espacio_negocio, reserva_negocio (coworking por horas), reserva_habitacion. Todas con baja lógica y auditoría (creado_por, modificado_por).
 - Frontend: Single Page Application con doble modo: Portal de Huéspedes público (Inicio, Apartamentos, Centro de Negocios, Servicios, Galería, Reservar) y Suite PMS para empleados (sub-pestañas: Personal, Recepción Walk-in, Huéspedes, Reservas, Planta, Coworking, Todos).
-- Tests: 15 tests en pytest con PostgreSQL real (no mocks) y test_persistence.sh para comprobar supervivencia ante caída de contenedores.
-- Estado: Fase 1 completa y probada. Listo para abordar nuevas funcionalidades de Fase 2.
+- Tests: 55 tests en pytest con PostgreSQL real (sin mocks), 6 tests unitarios en Vitest y 6 specs E2E en Playwright, más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
+- Estado: Fase 1 completa y probada (incluye HU-005 check-in/check-out y remediación de arquitectura Fases A–E). Listo para abordar nuevas funcionalidades de Fase 2.
 ```
 
 ---

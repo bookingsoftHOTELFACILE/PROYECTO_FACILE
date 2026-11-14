@@ -55,6 +55,23 @@ def liberar_conexion(conn: psycopg2.extensions.connection) -> None:
         _pool.putconn(conn)
 
 
+# Migraciones idempotentes que schema.sql no puede aplicar por sí solo:
+# schema.sql solo se ejecuta cuando las tablas no existen, por lo que las bases vivas
+# no recibirían columnas nuevas. Cada entrada debe ser segura de repetir (IF NOT EXISTS).
+# Ver también el bloque ALTER equivalente dentro de schema.sql.
+_MIGRACIONES = (
+    # HU-005 (CA-005.1 / CA-005.4): marca temporal física del check-in / check-out.
+    "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP",
+    "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP",
+)
+
+
+def _aplicar_migraciones(cursor):
+    """Ejecuta las migraciones idempotentes declaradas en _MIGRACIONES."""
+    for sql in _MIGRACIONES:
+        cursor.execute(sql)
+
+
 def inicializar_base_de_datos():
     """
     Conecta a PostgreSQL e inicializa tablas via schema.sql.
@@ -96,14 +113,18 @@ def inicializar_base_de_datos():
         else:
             print("[FastAPI] Conexión exitosa a PostgreSQL. Las tablas ya existen y están activas.")
 
+        # Aplica las columnas nuevas a bases vivas (idempotente).
+        _aplicar_migraciones(cursor)
+        conn.commit()
+
         cursor.close()
         liberar_conexion(conn)
 
     except Exception as e:
-        # Hallazgo 07: El detalle técnico va al log del servidor, nunca al cliente HTTP
-        logger.error(
-            "[ERROR CRÍTICO] Fallo de conexión con PostgreSQL. Host: %s:%s | Base: %s | Usuario: %s | Error: %s",
-            DB_HOST, DB_PORT, DB_NAME, DB_USER, e
+        # Hallazgo 07 / M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception(
+            "[ERROR CRÍTICO] Fallo de conexión con PostgreSQL. Host: %s:%s | Base: %s | Usuario: %s",
+            DB_HOST, DB_PORT, DB_NAME, DB_USER
         )
         print(f"\n❌ [ERROR CRÍTICO] Fallo de conexión con la base de datos PostgreSQL.")
         print(f"   Host: {DB_HOST}:{DB_PORT} | Base: {DB_NAME} | Usuario: {DB_USER}")
