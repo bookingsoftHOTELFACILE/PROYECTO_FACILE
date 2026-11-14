@@ -1,7 +1,6 @@
 import {
   Maximize2
 } from 'lucide-react';
-import BookingShowcase from '../components/BookingShowcase.jsx';
 import { useApp } from '../context/AppContext.jsx';
 
 const VistaGaleria = () => {
@@ -66,57 +65,67 @@ const VistaGaleria = () => {
               <p>Conoce las instalaciones reales de Apartamentos Facile Bogotá & Centro de Negocios</p>
             </div>
 
-            {/* SHOWCASE HIGHLIGHT TIPO BOOKING.COM AL INICIO DE LA GALERÍA */}
-            <BookingShowcase
-              photos={filteredList}
-              onOpenLightbox={(idx) => setAptoLightboxPhoto({ photos: filteredList, index: idx })}
-              title="Vistas Destacadas del Apartahotel & Centro de Negocios"
-            />
-
-            {/* BARRA DE FILTROS CATEGÓRICOS DE GALERÍA */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem', marginBottom: '2rem', flexWrap: 'wrap', padding: '0 1rem' }}>
+            {/* BARRA DE FILTROS CATEGÓRICOS DE GALERÍA (BOTONES REDONDEADOS TIPO PÍLDORA) */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.65rem', marginBottom: '2.5rem', flexWrap: 'wrap', padding: '0 1rem', marginTop: '1rem' }}>
               {[
                 { id: 'todas', label: '🌟 Ver Todas', count: galleryItems.length },
                 { id: 'zonas', label: '🏢 Zonas Comunes & Lobby', count: galleryItems.filter(i => i.categoria === 'zonas').length },
                 { id: 'apartamentos', label: '🛋️ Apartamentos & Dúplex', count: galleryItems.filter(i => i.categoria === 'apartamentos').length },
-                { id: 'oficinas', label: '💼 Centro de Negocios & Coworking (17 fotos)', count: galleryItems.filter(i => i.categoria === 'oficinas').length }
-              ].map(f => (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setGalleryFilter(f.id)}
-                  style={{
-                    padding: '0.65rem 1.25rem',
-                    borderRadius: '25px',
-                    border: galleryFilter === f.id ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
-                    background: galleryFilter === f.id ? '#e11d48' : '#ffffff',
-                    color: galleryFilter === f.id ? '#ffffff' : '#334155',
-                    fontSize: '0.86rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    boxShadow: galleryFilter === f.id ? '0 4px 12px rgba(225,29,72,0.25)' : '0 2px 6px rgba(0,0,0,0.03)',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <span>{f.label}</span>
-                  <span style={{
-                    background: galleryFilter === f.id ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
-                    color: galleryFilter === f.id ? '#ffffff' : '#64748b',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '12px',
-                    fontSize: '0.75rem',
-                    fontWeight: 800
-                  }}>
-                    {f.count}
-                  </span>
-                </button>
-              ))}
+                { id: 'oficinas', label: '💼 Centro de Negocios & Coworking', count: galleryItems.filter(i => i.categoria === 'oficinas').length }
+              ].map(f => {
+                const isActive = galleryFilter === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setGalleryFilter(f.id)}
+                    style={{
+                      padding: '0.65rem 1.25rem',
+                      borderRadius: 'var(--radius-pill, 9999px)',
+                      border: isActive ? '2px solid #d91a2a' : '1.5px solid #cbd5e1',
+                      background: isActive ? '#d91a2a' : '#ffffff',
+                      color: isActive ? '#ffffff' : '#334155',
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      boxShadow: isActive ? '0 4px 14px rgba(217, 26, 42, 0.28)' : '0 2px 6px rgba(0,0,0,0.03)',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={e => {
+                      if (!isActive) {
+                        e.currentTarget.style.borderColor = '#d91a2a';
+                        e.currentTarget.style.color = '#d91a2a';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isActive) {
+                        e.currentTarget.style.borderColor = '#cbd5e1';
+                        e.currentTarget.style.color = '#334155';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }
+                    }}
+                  >
+                    <span>{f.label}</span>
+                    <span style={{
+                      background: isActive ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+                      color: isActive ? '#ffffff' : '#64748b',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.75rem',
+                      fontWeight: 800
+                    }}>
+                      {f.count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* GRID DE GALERÍA FOTOGRÁFICA (PURA FOTOGRAFÍA CON ZOOM INTERACTIVO) */}
+            {/* GRID DE GALERÍA FOTOGRÁFICA (FOTOS INDIVIDUALES CON ZOOM INTERACTIVO) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.2rem', padding: '0 1rem 2rem' }}>
               {filteredList.map((item, idx) => (
                 <div
@@ -148,7 +157,7 @@ const VistaGaleria = () => {
                 >
                   <img
                     src={item.url}
-                    alt="Fotografía Facile"
+                    alt={item.titulo || 'Fotografía Facile'}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
                   />
 
@@ -161,7 +170,7 @@ const VistaGaleria = () => {
                       left: 0,
                       width: '100%',
                       height: '100%',
-                      background: 'rgba(225, 29, 72, 0.45)',
+                      background: 'rgba(15, 23, 42, 0.45)',
                       backdropFilter: 'blur(2px)',
                       display: 'flex',
                       alignItems: 'center',
@@ -171,8 +180,8 @@ const VistaGaleria = () => {
                       transition: 'opacity 0.25s ease'
                     }}
                   >
-                    <div style={{ background: '#ffffff', color: '#e11d48', padding: '0.6rem 1.2rem', borderRadius: '25px', fontWeight: 800, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 14px rgba(0,0,0,0.2)' }}>
-                      <Maximize2 size={16}/> Ampliar Fotografía (Zoom)
+                    <div style={{ background: '#ffffff', color: '#d91a2a', padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-pill, 9999px)', fontWeight: 800, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 14px rgba(0,0,0,0.2)' }}>
+                      <Maximize2 size={16}/> Ampliar Fotografía
                     </div>
                   </div>
                 </div>
