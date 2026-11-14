@@ -14,7 +14,7 @@ const VistaReservar = () => {
     loading, alert, reservaAlert, setReservaAlert,
     handleUserChange, handleReservaChange, handleUserSubmit, handleReservaSubmit,
     setShowGuestAuthModal, setGuestAuthTab, guestSearchQuery, setGuestSearchQuery,
-    guestSearchError, handleGuestSearchSubmit, handleGuestLogout
+    guestSearchError, handleGuestSearchSubmit
   } = useApp();
   return (
         <section className="facile-section">
@@ -200,20 +200,13 @@ const VistaReservar = () => {
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <div>
                     <button
                       type="button"
                       onClick={() => setActiveTab('perfil')}
-                      style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-pill)', padding: '0.3rem 0.7rem', fontSize: '0.75rem', fontWeight: 700, color: '#334155', cursor: 'pointer' }}
+                      style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-pill)', padding: '0.35rem 0.85rem', fontSize: '0.75rem', fontWeight: 700, color: '#334155', cursor: 'pointer', transition: 'all 0.2s ease' }}
                     >
                       Mi Perfil
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleGuestLogout()}
-                      style={{ background: '#fee2e2', border: '1px solid #fecdd3', borderRadius: 'var(--radius-pill)', padding: '0.3rem 0.7rem', fontSize: '0.75rem', fontWeight: 700, color: '#b91522', cursor: 'pointer' }}
-                    >
-                      Cambiar
                     </button>
                   </div>
                 </div>
