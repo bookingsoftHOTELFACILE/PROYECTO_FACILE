@@ -621,241 +621,203 @@ const VistaPerfil = () => {
                ===================================================================== */}
             {tabActiva === 'empresas' && (
               <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <form onSubmit={handleGuardarCambios}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                {/* Cabecera del Panel */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 mb-6 border-b border-slate-100">
                   <div>
-                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                       Facturación Electrónica DIAN para Empresas
                     </h2>
-                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                       Registro oficial de persona jurídica o natural con NIT para expedición de factura electrónica validada ante la DIAN.
                     </p>
                   </div>
-                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                  <span className="self-start sm:self-center text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
                     Validación DIAN / RUT
                   </span>
                 </div>
 
-                {/* Switch de modo corporativo */}
-                <div style={{ background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0f172a' }}>¿Facturar mis estadías a nombre de una Empresa?</div>
-                    <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Emitiremos la factura electrónica oficial directamente al NIT de tu compañía.</div>
-                  </div>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px' }}>
-                    <input
-                      type="checkbox"
-                      checked={datosPerfil.esEmpresa}
-                      onChange={(e) => handleChange('esEmpresa', e.target.checked)}
-                      style={{ opacity: 0, width: 0, height: 0 }}
-                    />
-                    <span style={{
-                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                      backgroundColor: datosPerfil.esEmpresa ? '#d91a2a' : '#cbd5e1',
-                      borderRadius: '34px', transition: '0.2s'
-                    }}>
+                <form onSubmit={handleGuardarCambios} className="space-y-6">
+                  {/* Switch de modo corporativo */}
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                    <div>
+                      <div className="text-sm font-bold text-slate-900">¿Facturar mis estadías a nombre de una Empresa?</div>
+                      <div className="text-xs text-slate-500 mt-0.5">Emitiremos la factura electrónica oficial directamente al NIT de tu compañía.</div>
+                    </div>
+                    <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px', cursor: 'pointer', flexShrink: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={datosPerfil.esEmpresa}
+                        onChange={(e) => handleChange('esEmpresa', e.target.checked)}
+                        style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                      />
                       <span style={{
-                        position: 'absolute', height: '20px', width: '20px', left: '3px', bottom: '3px',
-                        backgroundColor: '#ffffff', borderRadius: '50%', transition: '0.2s',
-                        transform: datosPerfil.esEmpresa ? 'translateX(22px)' : 'none'
-                      }} />
-                    </span>
-                  </label>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      RAZÓN SOCIAL DE LA EMPRESA <span style={{ color: '#d91a2a' }}>*</span>
+                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: datosPerfil.esEmpresa ? '#d91a2a' : '#cbd5e1',
+                        borderRadius: '9999px', transition: 'background-color 0.2s ease'
+                      }}>
+                        <span style={{
+                          position: 'absolute', height: '20px', width: '20px', left: '3px', bottom: '3px',
+                          backgroundColor: '#ffffff', borderRadius: '50%', transition: 'transform 0.2s ease',
+                          transform: datosPerfil.esEmpresa ? 'translateX(22px)' : 'none',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                        }} />
+                      </span>
                     </label>
-                    <div style={{ position: 'relative' }}>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Razón Social */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Razón Social de la Empresa <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
                         value={datosPerfil.razonSocial}
                         onChange={(e) => handleChange('razonSocial', e.target.value)}
                         placeholder="Ej: Soluciones Tecnológicas SAS"
                         required={datosPerfil.esEmpresa}
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Building2 size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Nombre legal completo registrado ante Cámara de Comercio.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Nombre legal completo registrado ante Cámara de Comercio.
-                    </span>
-                  </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      NIT DE LA COMPAÑÍA <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* NIT */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        NIT de la Compañía <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
                         value={datosPerfil.nit}
                         onChange={(e) => handleChange('nit', e.target.value)}
                         placeholder="Ej: 901.456.789-1"
                         required={datosPerfil.esEmpresa}
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Hash size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Incluye el dígito de verificación (Ej: 901.456.789-1).</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Incluye el dígito de verificación (Ej: 901.456.789-1).
-                    </span>
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      CORREO PARA FACTURACIÓN ELECTRÓNICA DIAN <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Correo Facturación */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Correo para Facturación Electrónica DIAN <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="email"
-                        className="input-airbnb"
                         value={datosPerfil.correoFacturacion}
                         onChange={(e) => handleChange('correoFacturacion', e.target.value)}
                         placeholder="facturacion@tuempresa.com"
                         required={datosPerfil.esEmpresa}
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Mail size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Buzón electrónico corporativo para envío del XML y PDF oficial.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Buzón electrónico corporativo para envío del XML y PDF oficial.
-                    </span>
-                  </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      TELÉFONO DE CONTACTO CORPORATIVO <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Teléfono Empresa */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Teléfono de Contacto Corporativo <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="tel"
-                        className="input-airbnb"
                         value={datosPerfil.telefonoEmpresa}
                         onChange={(e) => handleChange('telefonoEmpresa', e.target.value)}
                         placeholder="Ej: +57 601 7458900"
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Phone size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Línea directa del área contable o administrativa.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Línea directa del área contable o administrativa.
-                    </span>
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      DIRECCIÓN FISCAL REGISTRADA <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Dirección Fiscal */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Dirección Fiscal Registrada <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
                         value={datosPerfil.direccionFiscal}
                         onChange={(e) => handleChange('direccionFiscal', e.target.value)}
                         placeholder="Ej: Cra 11 # 93-45, Oficina 402"
                         required={datosPerfil.esEmpresa}
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Dirección fiscal según constancia en el RUT corporativo.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Dirección fiscal según constancia en el RUT corporativo.
-                    </span>
-                  </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      CIUDAD / MUNICIPIO FISCAL <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Ciudad Fiscal */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Ciudad / Municipio Fiscal <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
                         value={datosPerfil.ciudadFiscal}
                         onChange={(e) => handleChange('ciudadFiscal', e.target.value)}
                         placeholder="Ej: Bogotá D.C."
                         required={datosPerfil.esEmpresa}
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Municipio de domicilio fiscal de la compañía.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Municipio de domicilio fiscal de la compañía.
-                    </span>
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      RESPONSABILIDAD TRIBUTARIA <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.responsabilidadTributaria}
-                      onChange={(e) => handleChange('responsabilidadTributaria', e.target.value)}
-                    >
-                      <option value="IVA Común (Responsable de IVA)">IVA Común (Responsable de IVA)</option>
-                      <option value="No Responsable de IVA">No Responsable de IVA</option>
-                      <option value="Gran Contribuyente">Gran Contribuyente</option>
-                      <option value="Autorretenedor">Autorretenedor</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Régimen tributario aplicable para retenciones en la fuente.
-                    </span>
-                  </div>
+                    {/* Responsabilidad Tributaria */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Responsabilidad Tributaria <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={datosPerfil.responsabilidadTributaria}
+                        onChange={(e) => handleChange('responsabilidadTributaria', e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
+                      >
+                        <option value="IVA Común (Responsable de IVA)">IVA Común (Responsable de IVA)</option>
+                        <option value="No Responsable de IVA">No Responsable de IVA</option>
+                        <option value="Gran Contribuyente">Gran Contribuyente</option>
+                        <option value="Autorretenedor">Autorretenedor</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Régimen tributario aplicable para retenciones en la fuente.</span>
+                    </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      CÓDIGO DE ACTIVIDAD ECONÓMICA (CIIU)
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* CIIU */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Código de Actividad Económica (CIIU)
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
                         value={datosPerfil.ciiu}
                         onChange={(e) => handleChange('ciiu', e.target.value)}
                         placeholder="Ej: 6201 (Desarrollo de software)"
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Briefcase size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Código de 4 dígitos según casilla 46 del RUT corporativo.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Código de 4 dígitos según casilla 46 del RUT corporativo.
-                    </span>
                   </div>
-                </div>
 
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '14px', padding: '0.9rem 1.15rem', fontSize: '0.82rem', color: '#166534', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <Building2 size={20} color="#16a34a" style={{ flexShrink: 0 }} />
-                  <span>
-                    <strong>Convenio Corporativo Facile:</strong> Reservas acumuladas de más de 10 noches al mes obtienen 15% de descuento directo y acceso preferencial a Salas de Juntas del Centro de Negocios.
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
-                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
-                    <span>Emisión de factura electrónica validada en tiempo real ante la DIAN (Decreto 2242 / Ley 2010).</span>
+                  {/* Convenio Corporativo Facile */}
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs sm:text-sm">
+                    <span className="text-xl">🏢</span>
+                    <div>
+                      <strong className="font-extrabold text-emerald-950">Convenio Corporativo Facile:</strong> Reservas acumuladas de más de 10 noches al mes obtienen 15% de descuento directo y acceso preferencial a Salas de Juntas del Centro de Negocios.
+                    </div>
                   </div>
-                  <button
-                    type="submit"
-                    className="btn-airbnb-primary"
-                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem' }}
-                  >
-                    <CheckCircle2 size={16} /> Guardar Datos de Facturación
-                  </button>
-                </div>
-              </form>
+
+                  {/* Pie de Formulario */}
+                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="text-emerald-600 font-bold">🔒</span>
+                      <span>Emisión de factura electrónica validada en tiempo real ante la <strong>DIAN</strong> (Decreto 2242 / Ley 2010).</span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      Guardar Datos de Facturación
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 
@@ -864,220 +826,189 @@ const VistaPerfil = () => {
                ===================================================================== */}
             {tabActiva === 'extranjeros' && (
               <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <form onSubmit={handleGuardarCambios}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                {/* Cabecera del Panel */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 mb-6 border-b border-slate-100">
                   <div>
-                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                       Huéspedes Extranjeros & Exención de IVA
                     </h2>
-                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                       Registro migratorio internacional conforme a la plataforma SIRE y solicitud de exención del 19% de IVA (Decreto 297 de 2016).
                     </p>
                   </div>
-                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                  <span className="self-start sm:self-center text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
                     Decreto 297/2016 / SIRE
                   </span>
                 </div>
 
-                {/* Banner informativo de exención del 19% de IVA */}
-                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-                  <ShieldCheck size={22} color="#2563eb" style={{ flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#1e40af', marginBottom: '0.15rem' }}>
-                      Exención Legal de IVA (19%) para Turistas Extranjeros
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: '#3b82f6', lineHeight: 1.45 }}>
-                      Los ciudadanos extranjeros no residentes en Colombia que ingresen al país con sello de permiso de turismo (PT) están legalmente exentos del 19% de IVA en servicios de alojamiento hotelero.
+                <form onSubmit={handleGuardarCambios} className="space-y-6">
+                  {/* Banner Exención Legal de IVA (19%) */}
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-50 border border-blue-200/80 text-blue-900 text-xs sm:text-sm">
+                    <ShieldCheck size={20} className="text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-extrabold text-blue-950 mb-0.5">Exención Legal de IVA (19%) para Turistas Extranjeros</div>
+                      <div className="text-blue-700 leading-relaxed text-xs">
+                        Los ciudadanos extranjeros no residentes en Colombia que ingresen al país con sello de permiso de turismo (PT) están legalmente exentos del 19% de IVA en servicios de alojamiento hotelero.
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      NÚMERO DE PASAPORTE INTERNACIONAL <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Número de Pasaporte */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Número de Pasaporte Internacional <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
                         value={datosPerfil.numeroPasaporte}
                         onChange={(e) => handleChange('numeroPasaporte', e.target.value.toUpperCase())}
                         placeholder="Ej: A12345678"
-                        style={{ paddingRight: '2.5rem', textTransform: 'uppercase' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none uppercase"
                       />
-                      <Globe2 size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Número alfanumérico tal como figura en la libreta del pasaporte.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Número alfanumérico tal como figura en la libreta del pasaporte.
-                    </span>
-                  </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      PAÍS EMISOR DEL PASAPORTE <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* País Emisor */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        País Emisor del Pasaporte <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
                         value={datosPerfil.paisEmisorPasaporte}
                         onChange={(e) => handleChange('paisEmisorPasaporte', e.target.value)}
                         placeholder="Ej: United States, España, México..."
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">País que expidió el documento de viaje internacional.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      País que expidió el documento de viaje internacional.
-                    </span>
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      FECHA DE VENCIMIENTO DEL PASAPORTE <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Fecha de Vencimiento */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Fecha de Vencimiento del Pasaporte <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="date"
-                        className="input-airbnb"
                         value={datosPerfil.fechaVencimientoPasaporte}
                         onChange={(e) => handleChange('fechaVencimientoPasaporte', e.target.value)}
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Debe tener vigencia mínima de 6 meses para ingreso hotelero.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Debe tener vigencia mínima de 6 meses para ingreso hotelero.
-                    </span>
-                  </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      TIPO DE PERMISO MIGRATORIO <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.tipoPermisoMigratorio}
-                      onChange={(e) => handleChange('tipoPermisoMigratorio', e.target.value)}
-                    >
-                      <option value="Permiso de Turismo (PT - 19% Exento)">Permiso de Turismo (PT - 19% Exento)</option>
-                      <option value="Visa de Negocios (V)">Visa de Negocios (V)</option>
-                      <option value="Visa de Trabajo (M)">Visa de Trabajo (M)</option>
-                      <option value="Comunidad Andina (CAN)">Comunidad Andina (CAN)</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Tipo de sello o estatus otorgado por Migración Colombia.
-                    </span>
-                  </div>
-                </div>
+                    {/* Tipo de Permiso */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Tipo de Permiso Migratorio <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={datosPerfil.tipoPermisoMigratorio}
+                        onChange={(e) => handleChange('tipoPermisoMigratorio', e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
+                      >
+                        <option value="Permiso de Turismo (PT - 19% Exento)">Permiso de Turismo (PT - 19% Exento)</option>
+                        <option value="Visa de Negocios (V)">Visa de Negocios (V)</option>
+                        <option value="Visa de Trabajo (M)">Visa de Trabajo (M)</option>
+                        <option value="Comunidad Andina (CAN)">Comunidad Andina (CAN)</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Tipo de sello o estatus otorgado por Migración Colombia.</span>
+                    </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      IDIOMA PREFERIDO DE COMUNICACIÓN <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.idiomaPreferido}
-                      onChange={(e) => handleChange('idiomaPreferido', e.target.value)}
-                    >
-                      <option value="es">🇪🇸 Español (Colombia / Latam)</option>
-                      <option value="en">🇺🇸 English (US / Global)</option>
-                      <option value="fr">🇫🇷 Français (France)</option>
-                      <option value="pt">🇧🇷 Português (Brasil)</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Idioma para confirmaciones de reserva y atención del concierge.
-                    </span>
-                  </div>
+                    {/* Idioma Preferido */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Idioma Preferido de Comunicación <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={datosPerfil.idiomaPreferido}
+                        onChange={(e) => handleChange('idiomaPreferido', e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
+                      >
+                        <option value="es">🇪🇸 Español (Colombia / Latam)</option>
+                        <option value="en">🇺🇸 English (US / Global)</option>
+                        <option value="fr">🇫🇷 Français (France)</option>
+                        <option value="pt">🇧🇷 Português (Brasil)</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Idioma para confirmaciones de reserva y atención del concierge.</span>
+                    </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      MONEDA DE VISUALIZACIÓN & COBRO <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.monedaPreferida}
-                      onChange={(e) => handleChange('monedaPreferida', e.target.value)}
-                    >
-                      <option value="COP">🇨🇴 Pesos Colombianos (COP $)</option>
-                      <option value="USD">🇺🇸 Dólares Americanos (USD $)</option>
-                      <option value="EUR">🇪🇺 Euros (EUR €)</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Moneda preferida para cotizaciones y estados de cuenta.
-                    </span>
-                  </div>
-                </div>
+                    {/* Moneda Preferida */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Moneda de Visualización & Cobro <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={datosPerfil.monedaPreferida}
+                        onChange={(e) => handleChange('monedaPreferida', e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
+                      >
+                        <option value="COP">🇨🇴 Pesos Colombianos (COP $)</option>
+                        <option value="USD">🇺🇸 Dólares Americanos (USD $)</option>
+                        <option value="EUR">🇪🇺 Euros (EUR €)</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Moneda preferida para cotizaciones y estados de cuenta.</span>
+                    </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      PAÍS DE PROCEDENCIA DEL VUELO
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Procedencia Vuelo */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        País de Procedencia del Vuelo
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
                         value={datosPerfil.paisProcedenciaVuelo}
                         onChange={(e) => handleChange('paisProcedenciaVuelo', e.target.value)}
                         placeholder="Ej: Estados Unidos, España, México..."
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Globe2 size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Último país antes de tu llegada a Bogotá El Dorado.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Último país antes de tu llegada a Bogotá El Dorado.
-                    </span>
-                  </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      FECHA ESTIMADA DE ENTRADA AL PAÍS
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Fecha de Entrada */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Fecha Estimada de Entrada al País
+                      </label>
                       <input
                         type="date"
-                        className="input-airbnb"
                         value={datosPerfil.fechaIngresoPais}
                         onChange={(e) => handleChange('fechaIngresoPais', e.target.value)}
-                        style={{ paddingRight: '2.5rem' }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Fecha del sello migratorio de ingreso a Colombia.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Fecha del sello migratorio de ingreso a Colombia.
+                  </div>
+
+                  {/* Juramento de no residente */}
+                  <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={datosPerfil.solicitaExencionIva}
+                      onChange={(e) => handleChange('solicitaExencionIva', e.target.checked)}
+                      style={{ marginTop: '3px', accentColor: '#d91a2a', flexShrink: 0 }}
+                    />
+                    <span className="text-xs text-slate-700 leading-relaxed">
+                      <strong>Confirmo bajo gravedad de juramento que soy extranjero no residente</strong> y presentaré mi pasaporte con sello de turismo vigente al momento del check-in para acceder a la exención del 19% de IVA según el Decreto 297 de 2016.
                     </span>
-                  </div>
-                </div>
+                  </label>
 
-                <label style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', cursor: 'pointer', marginBottom: '1.5rem' }}>
-                  <input
-                    type="checkbox"
-                    checked={datosPerfil.solicitaExencionIva}
-                    onChange={(e) => handleChange('solicitaExencionIva', e.target.checked)}
-                    style={{ marginTop: '3px', accentColor: '#d91a2a', flexShrink: 0 }}
-                  />
-                  <span style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.45 }}>
-                    <strong>Confirmo bajo gravedad de juramento que soy extranjero no residente</strong> y presentaré mi pasaporte con sello de turismo vigente al momento del check-in para acceder a la exención del 19% de IVA según el Decreto 297 de 2016.
-                  </span>
-                </label>
+                  {/* Pie de Formulario */}
+                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="text-emerald-600 font-bold">🔒</span>
+                      <span>Reporte automático al Sistema de Información para el Reporte de Extranjeros (<strong>SIRE - Migración Colombia</strong>).</span>
+                    </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
-                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
-                    <span>Reporte automático al Sistema de Información para el Reporte de Extranjeros (SIRE - Migración Colombia).</span>
+                    <button
+                      type="submit"
+                      className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      Guardar Preferencias Internacionales
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    className="btn-airbnb-primary"
-                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem' }}
-                  >
-                    <CheckCircle2 size={16} /> Guardar Preferencias Internacionales
-                  </button>
-                </div>
-              </form>
+                </form>
               </div>
             )}
 
@@ -1086,171 +1017,175 @@ const VistaPerfil = () => {
                ===================================================================== */}
             {tabActiva === 'notificaciones' && (
               <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <form onSubmit={handleGuardarCambios}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                {/* Cabecera del Panel */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 mb-6 border-b border-slate-100">
                   <div>
-                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                       Novedades de Reserva & Alertas de Estadía
                     </h2>
-                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                       Elige cómo deseas recibir las confirmaciones de viaje, códigos de apertura de cerraduras digitales y avisos de estadía.
                     </p>
                   </div>
-                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                  <span className="self-start sm:self-center text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
                     Notificaciones 24/7
                   </span>
                 </div>
 
-                {/* Grilla 2x2 de Canales Ejecutivos */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                  {/* WhatsApp Check-in */}
-                  <div style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Phone size={18} />
+                <form onSubmit={handleGuardarCambios} className="space-y-6">
+                  {/* Grilla 2x2 de Canales Ejecutivos */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* WhatsApp Check-in */}
+                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                            <Phone size={18} />
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm text-slate-900">WhatsApp Concierge & Smart Key</div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Canal Instantáneo</span>
+                          </div>
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>WhatsApp Concierge & Smart Key</div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#166534', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)' }}>Canal Instantáneo</span>
-                        </div>
+                        <input
+                          type="checkbox"
+                          checked={datosPerfil.notifWhatsapp}
+                          onChange={(e) => handleChange('notifWhatsapp', e.target.checked)}
+                          className="h-5 w-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                          style={{ accentColor: '#d91a2a' }}
+                        />
                       </div>
-                      <input
-                        type="checkbox"
-                        checked={datosPerfil.notifWhatsapp}
-                        onChange={(e) => handleChange('notifWhatsapp', e.target.checked)}
-                        style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
-                      />
+                      <div className="text-xs text-slate-500 leading-relaxed">
+                        Envío automático del código PIN de la cerradura digital 2 horas antes de tu check-in (3:00 PM) al móvil registrado.
+                      </div>
                     </div>
-                    <div style={{ fontSize: '0.76rem', color: '#64748b', lineHeight: 1.4 }}>
-                      Envío automático del código PIN de la cerradura digital 2 horas antes de tu check-in (3:00 PM) al móvil registrado.
+
+                    {/* Correo Check-in / Comprobantes */}
+                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                            <Mail size={18} />
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm text-slate-900">Comprobantes Oficiales por Email</div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Documento Legal</span>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={datosPerfil.notifCorreoCheckin}
+                          onChange={(e) => handleChange('notifCorreoCheckin', e.target.checked)}
+                          className="h-5 w-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                          style={{ accentColor: '#d91a2a' }}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-500 leading-relaxed">
+                        Envío de voucher oficial en PDF, factura proforma, ubicación con Waze/Maps y código QR de confirmación.
+                      </div>
+                    </div>
+
+                    {/* Recordatorios de Horarios */}
+                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                            <Clock size={18} />
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm text-slate-900">Horarios (3:00 PM / 11:00 AM)</div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">Puntualidad</span>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={datosPerfil.notifNovedadesReserva}
+                          onChange={(e) => handleChange('notifNovedadesReserva', e.target.checked)}
+                          className="h-5 w-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                          style={{ accentColor: '#d91a2a' }}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-500 leading-relaxed">
+                        Instrucciones anticipadas de llegada, clave Wi-Fi 300 Mbps y protocolo ágil de salida sin filas ni esperas.
+                      </div>
+                    </div>
+
+                    {/* Tarifas Exclusivas y Promociones */}
+                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-rose-100 text-[#d91a2a] flex items-center justify-center shrink-0">
+                            <Sparkles size={18} />
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm text-slate-900">Club de Lealtad & Tarifas VIP</div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-[#b91522]">Beneficios Facile</span>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={datosPerfil.notifPromociones}
+                          onChange={(e) => handleChange('notifPromociones', e.target.checked)}
+                          className="h-5 w-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                          style={{ accentColor: '#d91a2a' }}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-500 leading-relaxed">
+                        Descuentos especiales de hasta el 20% en estancias medias y largas y tarifas preferenciales de fin de semana.
+                      </div>
                     </div>
                   </div>
 
-                  {/* Correo Check-in / Comprobantes */}
-                  <div style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Mail size={18} />
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Comprobantes Oficiales por Email</div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#1e40af', background: '#dbeafe', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)' }}>Documento Legal</span>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={datosPerfil.notifCorreoCheckin}
-                        onChange={(e) => handleChange('notifCorreoCheckin', e.target.checked)}
-                        style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Horario Preferido */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Horario Preferido para Contacto <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={datosPerfil.horarioContacto}
+                        onChange={(e) => handleChange('horarioContacto', e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
+                      >
+                        <option value="Cualquier hora (24/7)">Cualquier hora (Servicio Concierge 24/7)</option>
+                        <option value="Solo horario diurno (8:00 AM - 8:00 PM)">Solo horario diurno (8:00 AM - 8:00 PM)</option>
+                        <option value="Solo emergencias de reserva">Solo emergencias o cambios de reserva</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Respetamos tu descanso durante estadías de negocios y turismo.</span>
                     </div>
-                    <div style={{ fontSize: '0.76rem', color: '#64748b', lineHeight: 1.4 }}>
-                      Envío de voucher oficial en PDF, factura proforma, ubicación con Waze/Maps y código QR de confirmación.
+
+                    {/* Idioma Notificaciones */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Idioma de las Notificaciones <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={datosPerfil.idiomaNotificaciones}
+                        onChange={(e) => handleChange('idiomaNotificaciones', e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
+                      >
+                        <option value="Español">🇪🇸 Español (Latinoamérica)</option>
+                        <option value="English">🇺🇸 English (International)</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Idioma para mensajes de texto, WhatsApp y plantillas de correo.</span>
                     </div>
                   </div>
 
-                  {/* Recordatorios de Horarios */}
-                  <div style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Clock size={18} />
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Horarios (3:00 PM / 11:00 AM)</div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#6d28d9', background: '#ede9fe', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)' }}>Puntualidad</span>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={datosPerfil.notifNovedadesReserva}
-                        onChange={(e) => handleChange('notifNovedadesReserva', e.target.checked)}
-                        style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
-                      />
+                  {/* Pie de Formulario */}
+                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="text-emerald-600 font-bold">🔒</span>
+                      <span>Puedes pausar o modificar estas alertas en cualquier momento sin afectar tus reservas confirmadas.</span>
                     </div>
-                    <div style={{ fontSize: '0.76rem', color: '#64748b', lineHeight: 1.4 }}>
-                      Instrucciones anticipadas de llegada, clave Wi-Fi 300 Mbps y protocolo ágil de salida sin filas ni esperas.
-                    </div>
-                  </div>
 
-                  {/* Tarifas Exclusivas y Promociones */}
-                  <div style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fee2e2', color: '#d91a2a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Sparkles size={18} />
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Club de Lealtad & Tarifas VIP</div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#b91522', background: '#ffe4e6', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)' }}>Beneficios Facile</span>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={datosPerfil.notifPromociones}
-                        onChange={(e) => handleChange('notifPromociones', e.target.checked)}
-                        style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
-                      />
-                    </div>
-                    <div style={{ fontSize: '0.76rem', color: '#64748b', lineHeight: 1.4 }}>
-                      Descuentos especiales de hasta el 20% en estancias medias y largas y tarifas preferenciales de fin de semana.
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      HORARIO PREFERIDO PARA CONTACTO <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.horarioContacto}
-                      onChange={(e) => handleChange('horarioContacto', e.target.value)}
+                    <button
+                      type="submit"
+                      className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
                     >
-                      <option value="Cualquier hora (24/7)">Cualquier hora (Servicio Concierge 24/7)</option>
-                      <option value="Solo horario diurno (8:00 AM - 8:00 PM)">Solo horario diurno (8:00 AM - 8:00 PM)</option>
-                      <option value="Solo emergencias de reserva">Solo emergencias o cambios de reserva</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Respetamos tu descanso durante estadías de negocios y turismo.
-                    </span>
+                      Guardar Preferencias de Alertas
+                    </button>
                   </div>
-
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      IDIOMA DE LAS NOTIFICACIONES <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.idiomaNotificaciones}
-                      onChange={(e) => handleChange('idiomaNotificaciones', e.target.value)}
-                    >
-                      <option value="Español">🇪🇸 Español (Latinoamérica)</option>
-                      <option value="English">🇺🇸 English (International)</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Idioma para mensajes de texto, WhatsApp y plantillas de correo.
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
-                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
-                    <span>Puedes pausar o modificar estas alertas en cualquier momento sin afectar tus reservas confirmadas.</span>
-                  </div>
-                  <button
-                    type="submit"
-                    className="btn-airbnb-primary"
-                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem' }}
-                  >
-                    <CheckCircle2 size={16} /> Guardar Preferencias de Alertas
-                  </button>
-                </div>
-              </form>
+                </form>
               </div>
             )}
 
@@ -1259,177 +1194,164 @@ const VistaPerfil = () => {
                ===================================================================== */}
             {tabActiva === 'seguridad' && (
               <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                if (datosPerfil.nuevaClave && datosPerfil.nuevaClave.length < 6) {
-                  setAlert({ type: 'error', message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
-                  return;
-                }
-                if (datosPerfil.nuevaClave && datosPerfil.nuevaClave !== datosPerfil.confirmarClave) {
-                  setAlert({ type: 'error', message: 'Las contraseñas no coinciden.' });
-                  return;
-                }
-                handleGuardarCambios();
-                setAlert({ type: 'success', message: 'Credenciales de acceso actualizadas con éxito.' });
-                handleChange('claveActual', '');
-                handleChange('nuevaClave', '');
-                handleChange('confirmarClave', '');
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                {/* Cabecera del Panel */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 mb-6 border-b border-slate-100">
                   <div>
-                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                       Seguridad de la Cuenta & Control de Acceso
                     </h2>
-                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                       Administra tus credenciales de acceso seguro al portal, monitorea tus sesiones activas y actualiza tu clave.
                     </p>
                   </div>
-                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                  <span className="self-start sm:self-center text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
                     Cifrado SHA-256 / SSL
                   </span>
                 </div>
 
-                {/* Sesión Activa */}
-                <div style={{ background: '#f8fafc', padding: '1.15rem 1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '0.9rem', color: '#0f172a' }}>
-                      <MapPin size={16} color="#059669" />
-                      <span>Sesión Activa en Navegador Web Seguro</span>
-                    </div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#059669', background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-pill)' }}>
-                      ACTIVA AHORA
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    Bogotá D.C., Colombia • Almacenamiento local cifrado y token de sesión verificado para {datosPerfil.correo}.
-                  </div>
-                </div>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (datosPerfil.nuevaClave && datosPerfil.nuevaClave.length < 6) {
+                    setAlert({ type: 'error', message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+                    return;
+                  }
+                  if (datosPerfil.nuevaClave && datosPerfil.nuevaClave !== datosPerfil.confirmarClave) {
+                    setAlert({ type: 'error', message: 'Las contraseñas no coinciden.' });
+                    return;
+                  }
+                  handleGuardarCambios();
+                  setAlert({ type: 'success', message: 'Credenciales de acceso actualizadas con éxito.' });
+                  handleChange('claveActual', '');
+                  handleChange('nuevaClave', '');
+                  handleChange('confirmarClave', '');
+                }} className="space-y-6">
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      CONTRASEÑA ACTUAL (OPCIONAL)
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type={showClaveActual ? "text" : "password"}
-                        className="input-airbnb"
-                        value={datosPerfil.claveActual}
-                        onChange={(e) => handleChange('claveActual', e.target.value)}
-                        placeholder="Ingresa tu clave actual"
-                        style={{ paddingRight: '2.5rem' }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowClaveActual(!showClaveActual)}
-                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+                  {/* Sesión Activa */}
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2 font-bold text-sm text-slate-900">
+                        <MapPin size={16} className="text-emerald-600" />
+                        <span>Sesión Activa en Navegador Web Seguro</span>
+                      </div>
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        ACTIVA AHORA
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Bogotá D.C., Colombia • Almacenamiento local cifrado y token de sesión verificado para {datosPerfil.correo}.
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Contraseña Actual */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Contraseña Actual (Opcional)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showClaveActual ? "text" : "password"}
+                          value={datosPerfil.claveActual}
+                          onChange={(e) => handleChange('claveActual', e.target.value)}
+                          placeholder="Ingresa tu clave actual"
+                          className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowClaveActual(!showClaveActual)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-0 flex items-center"
+                        >
+                          {showClaveActual ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Para validar tu identidad antes de efectuar cambios.</span>
+                    </div>
+
+                    {/* Método de Recuperación */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Método de Recuperación de Cuenta <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={datosPerfil.metodoRecuperacion}
+                        onChange={(e) => handleChange('metodoRecuperacion', e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
                       >
-                        {showClaveActual ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+                        <option value="Correo Electrónico Registrado">Correo Electrónico Registrado ({datosPerfil.correo})</option>
+                        <option value="Mensaje SMS / WhatsApp">Mensaje WhatsApp ({datosPerfil.telefono || 'Teléfono'})</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Canal de respaldo en caso de olvidar tu clave de acceso.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Para validar tu identidad antes de efectuar cambios.
-                    </span>
+
+                    {/* Nueva Contraseña */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Nueva Contraseña de Acceso <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showNuevaClave ? "text" : "password"}
+                          value={datosPerfil.nuevaClave}
+                          onChange={(e) => handleChange('nuevaClave', e.target.value)}
+                          placeholder="Mínimo 6 caracteres"
+                          className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNuevaClave(!showNuevaClave)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-0 flex items-center"
+                        >
+                          {showNuevaClave ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Mínimo 6 caracteres, combina letras y números.</span>
+                    </div>
+
+                    {/* Confirmar Contraseña */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Confirmar Nueva Contraseña <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmarClave ? "text" : "password"}
+                          value={datosPerfil.confirmarClave}
+                          onChange={(e) => handleChange('confirmarClave', e.target.value)}
+                          placeholder="Repite la nueva contraseña"
+                          className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmarClave(!showConfirmarClave)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-0 flex items-center"
+                        >
+                          {showConfirmarClave ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Debe coincidir exactamente con la nueva clave.</span>
+                    </div>
                   </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      MÉTODO DE RECUPERACIÓN DE CUENTA <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.metodoRecuperacion}
-                      onChange={(e) => handleChange('metodoRecuperacion', e.target.value)}
+                  {/* Pie de Formulario */}
+                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="text-emerald-600 font-bold">🔒</span>
+                      <span>Tu contraseña se almacena con hash criptográfico bcrypt y nunca es compartida con terceros.</span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={!datosPerfil.nuevaClave}
+                      className={`px-8 py-3 rounded-xl text-white text-xs sm:text-sm font-extrabold shadow-md transition-all whitespace-nowrap ${
+                        datosPerfil.nuevaClave 
+                          ? 'bg-[#d91a2a] hover:bg-[#b91522] shadow-[#d91a2a]/20 hover:shadow-lg cursor-pointer' 
+                          : 'bg-slate-300 cursor-not-allowed opacity-60'
+                      }`}
                     >
-                      <option value="Correo Electrónico Registrado">Correo Electrónico Registrado ({datosPerfil.correo})</option>
-                      <option value="Mensaje SMS / WhatsApp">Mensaje WhatsApp ({datosPerfil.telefono || 'Teléfono'})</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Canal de respaldo en caso de olvidar tu clave de acceso.
-                    </span>
+                      Actualizar Contraseña y Seguridad
+                    </button>
                   </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      NUEVA CONTRASEÑA DE ACCESO <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type={showNuevaClave ? "text" : "password"}
-                        className="input-airbnb"
-                        value={datosPerfil.nuevaClave}
-                        onChange={(e) => handleChange('nuevaClave', e.target.value)}
-                        placeholder="Mínimo 6 caracteres"
-                        style={{ paddingRight: '2.5rem' }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNuevaClave(!showNuevaClave)}
-                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
-                      >
-                        {showNuevaClave ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Mínimo 6 caracteres, combina letras y números.
-                    </span>
-                  </div>
-
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      CONFIRMAR NUEVA CONTRASEÑA <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type={showConfirmarClave ? "text" : "password"}
-                        className="input-airbnb"
-                        value={datosPerfil.confirmarClave}
-                        onChange={(e) => handleChange('confirmarClave', e.target.value)}
-                        placeholder="Repite la nueva contraseña"
-                        style={{ paddingRight: '2.5rem' }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmarClave(!showConfirmarClave)}
-                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
-                      >
-                        {showConfirmarClave ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Debe coincidir exactamente con la nueva clave.
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
-                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
-                    <span>Tu contraseña se almacena con hash criptográfico bcrypt y nunca es compartida con terceros.</span>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={!datosPerfil.nuevaClave}
-                    className="btn-airbnb-primary"
-                    style={{
-                      width: 'auto',
-                      padding: '0.65rem 2rem',
-                      borderRadius: 'var(--radius-pill)',
-                      background: datosPerfil.nuevaClave ? 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' : '#cbd5e1',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.45rem',
-                      fontWeight: 800,
-                      fontSize: '0.88rem',
-                      cursor: datosPerfil.nuevaClave ? 'pointer' : 'not-allowed'
-                    }}
-                  >
-                    <CheckCircle2 size={16} /> Actualizar Contraseña y Seguridad
-                  </button>
-                </div>
-              </form>
+                </form>
               </div>
             )}
 
