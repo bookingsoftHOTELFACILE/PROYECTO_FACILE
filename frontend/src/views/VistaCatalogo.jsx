@@ -218,7 +218,7 @@ const VistaCatalogo = () => {
                       <div
                         style={{ position: 'relative', width: '100%', height: '195px', overflow: 'hidden', background: '#0f172a', cursor: 'pointer' }}
                         onClick={() => setSelectedAptoFigma(apto)}
-                        title="Haz clic para ver el detalle en el diseño de Figma"
+                        title="Haz clic para explorar fotos y amenidades de este alojamiento"
                       >
                         <img
                           src={currentPhoto.url}
@@ -228,9 +228,9 @@ const VistaCatalogo = () => {
                           onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                         />
 
-                        {/* INSIGNIA VER DETALLE FIGMA */}
-                        <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <Maximize2 size={13}/> Ver Detalle Figma
+                        {/* INSIGNIA PROFESIONAL: EXPLORAR SUITE */}
+                        <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
+                          <Maximize2 size={13}/> Explorar Suite
                         </div>
                       </div>
 
@@ -301,7 +301,7 @@ const VistaCatalogo = () => {
                                 e.currentTarget.style.transform = 'translateY(0)';
                               }}
                               onClick={() => setSelectedAptoFigma(apto)}
-                              title="Ver vista interactiva de Figma"
+                              title="Ver ficha técnica y disponibilidad de este alojamiento"
                             >
                               <Eye size={13} color="#d91a2a" />
                               <span>Detalle</span>
@@ -589,7 +589,7 @@ const VistaCatalogo = () => {
                                   e.currentTarget.style.transform = 'translateY(0)';
                                 }}
                                 onClick={() => setSelectedAptoFigma(apto)}
-                                title="Ver vista interactiva de Figma"
+                                title="Ver ficha técnica y disponibilidad de este alojamiento"
                               >
                                 <Eye size={15} color="#d91a2a" />
                                 <span>Detalle Completo</span>
