@@ -1229,6 +1229,51 @@ body {
   overflow: hidden;
   animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  transition: max-width 0.2s ease;
+}
+
+.modal-airbnb-dialog.modal-airbnb-wide {
+  max-width: 860px;
+}
+
+.modal-airbnb-dialog.modal-airbnb-wide .modal-airbnb-body {
+  padding: 1.2rem 2rem 1.4rem;
+}
+
+.grid-registro-auth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.registro-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.registro-section-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+@media (max-width: 768px) {
+  .modal-airbnb-dialog.modal-airbnb-wide {
+    max-width: 95%;
+  }
+  .grid-registro-auth {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
 @keyframes modalSlideUp {

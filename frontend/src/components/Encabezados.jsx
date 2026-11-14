@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Phone, Facebook, Instagram, Youtube, Calendar, User, 
-  LogOut, Luggage, MapPin
+  LogOut, Luggage, MapPin, Settings, Bell, Building2, Globe
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -168,31 +168,49 @@ export default function Encabezados() {
                     top: 'calc(100% + 8px)',
                     right: 0,
                     backgroundColor: '#ffffff',
-                    borderRadius: '12px',
-                    boxShadow: 'var(--shadow-float)',
+                    borderRadius: '16px',
+                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.12)',
                     border: '1px solid var(--color-border)',
-                    padding: '8px 0',
-                    minWidth: '180px',
+                    padding: '8px',
+                    minWidth: '220px',
                     zIndex: 100
                   }}>
+                    <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>{selectedHuesped.nombre}</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', wordBreak: 'break-all' }}>{selectedHuesped.correo}</div>
+                    </div>
+
                     <button 
                       onClick={() => { setActiveTab('viajes'); setShowGuestMenuDropdown(false); }} 
-                      style={{ width: '100%', padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      style={{ width: '100%', padding: '9px 12px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px' }}
                     >
-                      <Luggage size={14}/> Mis Viajes
+                      <Luggage size={15} color="#d91a2a" /> Mis Reservas / Viajes
                     </button>
                     <button 
                       onClick={() => { setActiveTab('perfil'); setShowGuestMenuDropdown(false); }} 
-                      style={{ width: '100%', padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      style={{ width: '100%', padding: '9px 12px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px' }}
                     >
-                      <User size={14}/> Mi Perfil
+                      <Settings size={15} color="#475569" /> Configuración de la Cuenta
                     </button>
-                    <div style={{ borderTop: '1px solid var(--color-border-subtle)', margin: '4px 0' }} />
+                    <button 
+                      onClick={() => { setActiveTab('perfil'); setShowGuestMenuDropdown(false); }} 
+                      style={{ width: '100%', padding: '9px 12px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px' }}
+                    >
+                      <Building2 size={15} color="#475569" /> Facturación Corporativa DIAN
+                    </button>
+                    <button 
+                      onClick={() => { setActiveTab('perfil'); setShowGuestMenuDropdown(false); }} 
+                      style={{ width: '100%', padding: '9px 12px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px' }}
+                    >
+                      <Globe size={15} color="#475569" /> Extranjeros (Exención IVA)
+                    </button>
+
+                    <div style={{ borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
                     <button 
                       onClick={() => { handleLogout(); setShowGuestMenuDropdown(false); }} 
-                      style={{ width: '100%', padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      style={{ width: '100%', padding: '9px 12px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px' }}
                     >
-                      <LogOut size={14}/> Cerrar Sesión
+                      <LogOut size={15} /> Cerrar Sesión
                     </button>
                   </div>
                 )}
