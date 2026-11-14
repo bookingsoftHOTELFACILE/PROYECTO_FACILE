@@ -47,6 +47,32 @@ const VistaPerfil = () => {
   // Pestaña activa dentro de la configuración de cuenta
   const [tabActiva, setTabActiva] = useState('personal'); // 'personal' | 'empresas' | 'extranjeros' | 'notificaciones' | 'seguridad'
 
+  // Estados solicitados para Información Personal Oficial
+  const [nombreCompleto, setNombreCompleto] = useState(selectedHuesped?.nombre || '');
+  const [correo, setCorreo] = useState(selectedHuesped?.correo || '');
+  const [tipoDocumento, setTipoDocumento] = useState(guestProfileExtras?.tipoDoc || 'CC');
+  const [numeroDocumento, setNumeroDocumento] = useState(selectedHuesped?.documento || '');
+  const [indicativo, setIndicativo] = useState(guestProfileExtras?.indicativo || '+57');
+  const [telefono, setTelefono] = useState(selectedHuesped?.telefono || '');
+  const [pais, setPais] = useState(guestProfileExtras?.paisOrigen || 'Colombia');
+  const [ciudad, setCiudad] = useState(guestProfileExtras?.ciudad || 'Bogotá');
+
+  // Sincronización si selectedHuesped o extras cambian
+  React.useEffect(() => {
+    if (selectedHuesped) {
+      setNombreCompleto(selectedHuesped.nombre || '');
+      setCorreo(selectedHuesped.correo || '');
+      setNumeroDocumento(selectedHuesped.documento || '');
+      setTelefono(selectedHuesped.telefono || '');
+    }
+    if (guestProfileExtras) {
+      if (guestProfileExtras.tipoDoc) setTipoDocumento(guestProfileExtras.tipoDoc);
+      if (guestProfileExtras.indicativo) setIndicativo(guestProfileExtras.indicativo);
+      if (guestProfileExtras.paisOrigen) setPais(guestProfileExtras.paisOrigen);
+      if (guestProfileExtras.ciudad) setCiudad(guestProfileExtras.ciudad);
+    }
+  }, [selectedHuesped, guestProfileExtras]);
+
   // Visibilidad de contraseñas
   const [showClaveActual, setShowClaveActual] = useState(false);
   const [showNuevaClave, setShowNuevaClave] = useState(false);
@@ -126,6 +152,50 @@ const VistaPerfil = () => {
       setTimeout(() => setProfileSavedMsg(false), 4000);
     } catch (err) {
       console.error('Error al guardar perfil:', err);
+    }
+  };
+
+  const handleGuardarInformacionPersonal = (e) => {
+    e?.preventDefault();
+    try {
+      const mergedExtras = {
+        ...guestProfileExtras,
+        tipoDoc: tipoDocumento,
+        indicativo: indicativo,
+        paisOrigen: pais,
+        ciudad: ciudad
+      };
+      setGuestProfileExtras(mergedExtras);
+      localStorage.setItem('bookingsoft_guest_profile_extras', JSON.stringify(mergedExtras));
+
+      if (selectedHuesped) {
+        const updated = {
+          ...selectedHuesped,
+          nombre: nombreCompleto,
+          telefono: telefono,
+          documento: numeroDocumento,
+          correo: correo
+        };
+        setSelectedHuesped(updated);
+        localStorage.setItem('bookingsoft_guest_user', JSON.stringify(updated));
+      }
+
+      setDatosPerfil(prev => ({
+        ...prev,
+        nombre: nombreCompleto,
+        correo: correo,
+        tipoDoc: tipoDocumento,
+        documento: numeroDocumento,
+        indicativo: indicativo,
+        telefono: telefono,
+        paisOrigen: pais,
+        ciudad: ciudad
+      }));
+
+      setProfileSavedMsg(true);
+      setTimeout(() => setProfileSavedMsg(false), 4000);
+    } catch (err) {
+      console.error('Error al guardar información personal:', err);
     }
   };
 
@@ -378,228 +448,179 @@ const VistaPerfil = () => {
           </div>
 
           {/* CONTENIDO DERECHO: PESTAÑA SELECCIONADA */}
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '24px',
-            border: '1px solid #e2e8f0',
-            padding: '2rem 2.2rem',
-            boxShadow: '0 4px 18px rgba(0,0,0,0.03)'
-          }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
 
-            {/* =====================================================================
-                1. INFORMACIÓN PERSONAL
-               ===================================================================== */}
+            {/* TARJETA CENTRAL: INFORMACIÓN PERSONAL OFICIAL */}
             {tabActiva === 'personal' && (
-              <form onSubmit={handleGuardarCambios}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
+                {/* Cabecera del Panel */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 mb-6 border-b border-slate-100">
                   <div>
-                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                       Información Personal Oficial
                     </h2>
-                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                       Datos requeridos por la legislación colombiana (MinCIT) para el registro de huéspedes y tarjeta de alojamiento en Apartamentos Facile.
                     </p>
                   </div>
-                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                  <span className="self-start sm:self-center text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
                     Registro Sire / MinCIT
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      NOMBRE COMPLETO LEGAL <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                {/* Formulario en Cuadrícula de 2 Columnas */}
+                <form onSubmit={handleGuardarInformacionPersonal} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Nombre Completo */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Nombre Completo Legal <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
-                        value={datosPerfil.nombre}
-                        onChange={(e) => handleChange('nombre', e.target.value)}
-                        placeholder="Nombres y Apellidos"
-                        required
-                        style={{ paddingRight: '2.5rem' }}
+                        value={nombreCompleto}
+                        onChange={(e) => setNombreCompleto(e.target.value)}
+                        placeholder="Como figura en tu documento oficial"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <User size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Como figura en su documento de identidad.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Como figura en su documento de identidad.
-                    </span>
-                  </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      CORREO ELECTRÓNICO PRINCIPAL <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Correo Electrónico */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Correo Electrónico Principal <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="email"
-                        className="input-airbnb"
-                        value={datosPerfil.correo}
-                        disabled
-                        style={{ backgroundColor: '#f8fafc', color: '#64748b', cursor: 'not-allowed', paddingRight: '2.5rem' }}
-                        title="El correo principal de la cuenta no se puede modificar directamente"
+                        value={correo}
+                        onChange={(e) => setCorreo(e.target.value)}
+                        placeholder="correo@ejemplo.com"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Mail size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Donde recibirás códigos de cerradura digital y confirmación.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Donde recibirás códigos de cerradura digital y confirmación.
-                    </span>
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      TIPO DE DOCUMENTO <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.tipoDoc}
-                      onChange={(e) => handleChange('tipoDoc', e.target.value)}
-                    >
-                      <option value="CC">Cédula de Ciudadanía (CC)</option>
-                      <option value="CE">Cédula de Extranjería (CE)</option>
-                      <option value="PASAPORTE">Pasaporte Internacional</option>
-                      <option value="DNI">DNI / Documento Nacional Extranjero</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Obligatorio para la tarjeta de registro hotelero.
-                    </span>
-                  </div>
+                    {/* Tipo de Documento */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Tipo de Documento <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={tipoDocumento}
+                        onChange={(e) => setTipoDocumento(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
+                      >
+                        <option value="CC">Cédula de Ciudadanía (CC)</option>
+                        <option value="CE">Cédula de Extranjería (CE)</option>
+                        <option value="PAS">Pasaporte Internacional</option>
+                        <option value="NIT">NIT / RUT Corporativo</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Obligatorio para la tarjeta de registro hotelero.</span>
+                    </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      NÚMERO DE DOCUMENTO <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Número de Documento */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Número de Documento <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
-                        value={datosPerfil.documento}
-                        onChange={(e) => handleChange('documento', e.target.value)}
-                        placeholder="Ej: 1017283944"
-                        required
-                        style={{ paddingRight: '2.5rem' }}
+                        value={numeroDocumento}
+                        onChange={(e) => setNumeroDocumento(e.target.value)}
+                        placeholder="Sin puntos ni guiones"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <FileText size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Sin puntos, espacios ni guiones.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Sin puntos, espacios ni guiones.
-                    </span>
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      INDICATIVO DE PAÍS <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <select
-                      className="input-airbnb"
-                      value={datosPerfil.indicativo}
-                      onChange={(e) => handleChange('indicativo', e.target.value)}
-                    >
-                      <option value="+57">🇨🇴 +57 (Colombia)</option>
-                      <option value="+1">🇺🇸 +1 (USA / Canadá)</option>
-                      <option value="+34">🇪🇸 +34 (España)</option>
-                      <option value="+52">🇲🇽 +52 (México)</option>
-                      <option value="+54">🇦🇷 +54 (Argentina)</option>
-                      <option value="+507">🇵🇦 +507 (Panamá)</option>
-                      <option value="+55">🇧🇷 +55 (Brasil)</option>
-                      <option value="+56">🇨🇱 +56 (Chile)</option>
-                    </select>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Para el envío de novedades vía WhatsApp.
-                    </span>
-                  </div>
+                    {/* Indicativo Telefónico */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Indicativo de País <span className="text-[#d91a2a]">*</span>
+                      </label>
+                      <select
+                        value={indicativo}
+                        onChange={(e) => setIndicativo(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none cursor-pointer"
+                      >
+                        <option value="+57">🇨🇴 +57 (Colombia)</option>
+                        <option value="+1">🇺🇸 +1 (Estados Unidos)</option>
+                        <option value="+34">🇪🇸 +34 (España)</option>
+                        <option value="+52">🇲🇽 +52 (México)</option>
+                      </select>
+                      <span className="text-[11px] text-slate-500 mt-1 block">Para el envío de novedades vía WhatsApp.</span>
+                    </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      TELÉFONO MÓVIL (WHATSAPP) <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Teléfono Móvil */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Teléfono Móvil (WhatsApp) <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="tel"
-                        className="input-airbnb"
-                        value={datosPerfil.telefono}
-                        onChange={(e) => handleChange('telefono', e.target.value)}
-                        placeholder="Ej: 3154449876"
-                        required
-                        style={{ paddingRight: '2.5rem' }}
+                        value={telefono}
+                        onChange={(e) => setTelefono(e.target.value)}
+                        placeholder="3116334957"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Phone size={16} color="#059669" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Canal para entrega de clave digital del apartamento.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Canal para entrega de clave digital del apartamento.
-                    </span>
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      PAÍS DE RESIDENCIA <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* País de Residencia */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        País de Residencia <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
-                        value={datosPerfil.paisOrigen}
-                        onChange={(e) => handleChange('paisOrigen', e.target.value)}
-                        placeholder="Ej: Colombia, Estados Unidos, España..."
-                        required
-                        style={{ paddingRight: '2.5rem' }}
+                        value={pais}
+                        onChange={(e) => setPais(e.target.value)}
+                        placeholder="Colombia"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <Globe2 size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Los no residentes en Colombia tienen exención de IVA (19%).</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Los no residentes en Colombia tienen exención de IVA (19%).
-                    </span>
-                  </div>
 
-                  <div className="form-field">
-                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                      CIUDAD DE ORIGEN / RESIDENCIA <span style={{ color: '#d91a2a' }}>*</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
+                    {/* Ciudad */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Ciudad de Origen / Residencia <span className="text-[#d91a2a]">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="input-airbnb"
-                        value={datosPerfil.ciudad}
-                        onChange={(e) => handleChange('ciudad', e.target.value)}
-                        placeholder="Ej: Bogotá, Medellín, Miami..."
-                        required
-                        style={{ paddingRight: '2.5rem' }}
+                        value={ciudad}
+                        onChange={(e) => setCiudad(e.target.value)}
+                        placeholder="Bogotá"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                       />
-                      <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <span className="text-[11px] text-slate-500 mt-1 block">Ciudad actual de residencia.</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
-                      Ciudad actual de residencia.
-                    </span>
                   </div>
-                </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
-                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
-                    <span>Tus datos están protegidos bajo la Ley 1581 de 2012 (Habeas Data) y encriptación SSL de 256 bits.</span>
+                  {/* Pie de Formulario: Privacidad y Botón Guardar */}
+                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="text-emerald-600 font-bold">🔒</span>
+                      <span>Tus datos están protegidos bajo la <strong>Ley 1581 de 2012 (Habeas Data)</strong> y encriptación SSL de 256 bits.</span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      Guardar Información Personal
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    className="btn-airbnb-primary"
-                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem' }}
-                  >
-                    <CheckCircle2 size={16} /> Guardar Información Personal
-                  </button>
-                </div>
-              </form>
+                </form>
+              </div>
             )}
 
             {/* =====================================================================
                 2. EMPRESAS Y FACTURACIÓN ELECTRÓNICA DIAN
                ===================================================================== */}
             {tabActiva === 'empresas' && (
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
               <form onSubmit={handleGuardarCambios}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
@@ -835,12 +856,14 @@ const VistaPerfil = () => {
                   </button>
                 </div>
               </form>
+              </div>
             )}
 
             {/* =====================================================================
                 3. HUÉSPEDES EXTRANJEROS & BENEFICIOS
                ===================================================================== */}
             {tabActiva === 'extranjeros' && (
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
               <form onSubmit={handleGuardarCambios}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
@@ -1055,12 +1078,14 @@ const VistaPerfil = () => {
                   </button>
                 </div>
               </form>
+              </div>
             )}
 
             {/* =====================================================================
                 4. NOTIFICACIONES Y NOVEDADES DE RESERVA
                ===================================================================== */}
             {tabActiva === 'notificaciones' && (
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
               <form onSubmit={handleGuardarCambios}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
@@ -1226,12 +1251,14 @@ const VistaPerfil = () => {
                   </button>
                 </div>
               </form>
+              </div>
             )}
 
             {/* =====================================================================
                 5. INICIO DE SESIÓN Y SEGURIDAD
                ===================================================================== */}
             {tabActiva === 'seguridad' && (
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-xs">
               <form onSubmit={(e) => {
                 e.preventDefault();
                 if (datosPerfil.nuevaClave && datosPerfil.nuevaClave.length < 6) {
@@ -1403,6 +1430,7 @@ const VistaPerfil = () => {
                   </button>
                 </div>
               </form>
+              </div>
             )}
 
           </div>
