@@ -598,13 +598,8 @@ const VistaPerfil = () => {
                     </div>
                   </div>
 
-                  {/* Pie de Formulario: Privacidad y Botón Guardar */}
-                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="text-emerald-600 font-bold">🔒</span>
-                      <span>Tus datos están protegidos bajo la <strong>Ley 1581 de 2012 (Habeas Data)</strong> y encriptación SSL de 256 bits.</span>
-                    </div>
-
+                  {/* Pie de Formulario */}
+                  <div className="pt-6 border-t border-slate-100 flex justify-end">
                     <button
                       type="submit"
                       className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
@@ -638,10 +633,10 @@ const VistaPerfil = () => {
 
                 <form onSubmit={handleGuardarCambios} className="space-y-6">
                   {/* Switch de modo corporativo */}
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-                    <div>
-                      <div className="text-sm font-bold text-slate-900">¿Facturar mis estadías a nombre de una Empresa?</div>
-                      <div className="text-xs text-slate-500 mt-0.5">Emitiremos la factura electrónica oficial directamente al NIT de tu compañía.</div>
+                  <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70">
+                    <div className="pr-4">
+                      <div className="text-sm font-extrabold text-slate-900 leading-snug">¿Facturar mis estadías a nombre de una Empresa?</div>
+                      <p className="text-xs text-slate-500 mt-1 m-0 leading-relaxed">Emitiremos la factura electrónica oficial directamente al NIT de tu compañía.</p>
                     </div>
                     <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px', cursor: 'pointer', flexShrink: 0 }}>
                       <input
@@ -796,20 +791,16 @@ const VistaPerfil = () => {
                   </div>
 
                   {/* Convenio Corporativo Facile */}
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs sm:text-sm">
-                    <span className="text-xl">🏢</span>
-                    <div>
-                      <strong className="font-extrabold text-emerald-950">Convenio Corporativo Facile:</strong> Reservas acumuladas de más de 10 noches al mes obtienen 15% de descuento directo y acceso preferencial a Salas de Juntas del Centro de Negocios.
+                  <div className="flex items-start gap-3.5 p-4 sm:p-5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-900 text-xs sm:text-sm">
+                    <span className="text-2xl shrink-0 leading-none">🏢</span>
+                    <div className="flex-1 min-w-0">
+                      <strong className="font-extrabold text-emerald-950 block mb-0.5">Convenio Corporativo Facile:</strong>
+                      <p className="text-emerald-800 leading-relaxed text-xs sm:text-sm m-0">Reservas acumuladas de más de 10 noches al mes obtienen 15% de descuento directo y acceso preferencial a Salas de Juntas del Centro de Negocios.</p>
                     </div>
                   </div>
 
                   {/* Pie de Formulario */}
-                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="text-emerald-600 font-bold">🔒</span>
-                      <span>Emisión de factura electrónica validada en tiempo real ante la <strong>DIAN</strong> (Decreto 2242 / Ley 2010).</span>
-                    </div>
-
+                  <div className="pt-6 border-t border-slate-100 flex justify-end">
                     <button
                       type="submit"
                       className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
@@ -843,13 +834,13 @@ const VistaPerfil = () => {
 
                 <form onSubmit={handleGuardarCambios} className="space-y-6">
                   {/* Banner Exención Legal de IVA (19%) */}
-                  <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-50 border border-blue-200/80 text-blue-900 text-xs sm:text-sm">
-                    <ShieldCheck size={20} className="text-blue-600 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-extrabold text-blue-950 mb-0.5">Exención Legal de IVA (19%) para Turistas Extranjeros</div>
-                      <div className="text-blue-700 leading-relaxed text-xs">
+                  <div className="flex items-start gap-3.5 p-4 sm:p-5 rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 text-xs sm:text-sm">
+                    <ShieldCheck size={22} className="text-blue-600 shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-extrabold text-blue-950 text-sm mb-1">Exención Legal de IVA (19%) para Turistas Extranjeros</div>
+                      <p className="text-blue-800 leading-relaxed text-xs sm:text-sm m-0">
                         Los ciudadanos extranjeros no residentes en Colombia que ingresen al país con sello de permiso de turismo (PT) están legalmente exentos del 19% de IVA en servicios de alojamiento hotelero.
-                      </div>
+                      </p>
                     </div>
                   </div>
 
@@ -982,25 +973,24 @@ const VistaPerfil = () => {
                   </div>
 
                   {/* Juramento de no residente */}
-                  <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer">
+                  <label className="flex items-start gap-3.5 p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={datosPerfil.solicitaExencionIva}
                       onChange={(e) => handleChange('solicitaExencionIva', e.target.checked)}
-                      style={{ marginTop: '3px', accentColor: '#d91a2a', flexShrink: 0 }}
+                      className="w-5 h-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                      style={{ accentColor: '#d91a2a' }}
                     />
-                    <span className="text-xs text-slate-700 leading-relaxed">
-                      <strong>Confirmo bajo gravedad de juramento que soy extranjero no residente</strong> y presentaré mi pasaporte con sello de turismo vigente al momento del check-in para acceder a la exención del 19% de IVA según el Decreto 297 de 2016.
-                    </span>
+                    <div className="flex-1 min-w-0 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                      <strong className="text-slate-900 font-bold block mb-0.5">Declaración Juramentada de Extranjero No Residente</strong>
+                      <p className="text-slate-600 m-0 leading-relaxed">
+                        Confirmo bajo gravedad de juramento que soy extranjero no residente en Colombia y presentaré mi pasaporte con sello de turismo vigente al momento del check-in para acceder a la exención legal del 19% de IVA según el Decreto 297 de 2016.
+                      </p>
+                    </div>
                   </label>
 
                   {/* Pie de Formulario */}
-                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="text-emerald-600 font-bold">🔒</span>
-                      <span>Reporte automático al Sistema de Información para el Reporte de Extranjeros (<strong>SIRE - Migración Colombia</strong>).</span>
-                    </div>
-
+                  <div className="pt-6 border-t border-slate-100 flex justify-end">
                     <button
                       type="submit"
                       className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
@@ -1036,107 +1026,115 @@ const VistaPerfil = () => {
                   {/* Grilla 2x2 de Canales Ejecutivos */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* WhatsApp Check-in */}
-                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                            <Phone size={18} />
+                    <label className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all cursor-pointer flex flex-col justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                            <Phone size={19} />
                           </div>
                           <div>
-                            <div className="font-bold text-sm text-slate-900">WhatsApp Concierge & Smart Key</div>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Canal Instantáneo</span>
+                            <div className="font-bold text-sm text-slate-900 leading-snug">WhatsApp Concierge & Smart Key</div>
+                            <span className="inline-block mt-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/60">
+                              Canal Instantáneo
+                            </span>
                           </div>
                         </div>
                         <input
                           type="checkbox"
                           checked={datosPerfil.notifWhatsapp}
                           onChange={(e) => handleChange('notifWhatsapp', e.target.checked)}
-                          className="h-5 w-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                          className="w-5 h-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
                           style={{ accentColor: '#d91a2a' }}
                         />
                       </div>
-                      <div className="text-xs text-slate-500 leading-relaxed">
+                      <p className="text-xs text-slate-600 leading-relaxed m-0">
                         Envío automático del código PIN de la cerradura digital 2 horas antes de tu check-in (3:00 PM) al móvil registrado.
-                      </div>
-                    </div>
+                      </p>
+                    </label>
 
                     {/* Correo Check-in / Comprobantes */}
-                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                            <Mail size={18} />
+                    <label className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all cursor-pointer flex flex-col justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                            <Mail size={19} />
                           </div>
                           <div>
-                            <div className="font-bold text-sm text-slate-900">Comprobantes Oficiales por Email</div>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Documento Legal</span>
+                            <div className="font-bold text-sm text-slate-900 leading-snug">Comprobantes Oficiales por Email</div>
+                            <span className="inline-block mt-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200/60">
+                              Documento Legal
+                            </span>
                           </div>
                         </div>
                         <input
                           type="checkbox"
                           checked={datosPerfil.notifCorreoCheckin}
                           onChange={(e) => handleChange('notifCorreoCheckin', e.target.checked)}
-                          className="h-5 w-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                          className="w-5 h-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
                           style={{ accentColor: '#d91a2a' }}
                         />
                       </div>
-                      <div className="text-xs text-slate-500 leading-relaxed">
+                      <p className="text-xs text-slate-600 leading-relaxed m-0">
                         Envío de voucher oficial en PDF, factura proforma, ubicación con Waze/Maps y código QR de confirmación.
-                      </div>
-                    </div>
+                      </p>
+                    </label>
 
                     {/* Recordatorios de Horarios */}
-                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
-                            <Clock size={18} />
+                    <label className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all cursor-pointer flex flex-col justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                            <Clock size={19} />
                           </div>
                           <div>
-                            <div className="font-bold text-sm text-slate-900">Horarios (3:00 PM / 11:00 AM)</div>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">Puntualidad</span>
+                            <div className="font-bold text-sm text-slate-900 leading-snug">Horarios (3:00 PM / 11:00 AM)</div>
+                            <span className="inline-block mt-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200/60">
+                              Puntualidad
+                            </span>
                           </div>
                         </div>
                         <input
                           type="checkbox"
                           checked={datosPerfil.notifNovedadesReserva}
                           onChange={(e) => handleChange('notifNovedadesReserva', e.target.checked)}
-                          className="h-5 w-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                          className="w-5 h-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
                           style={{ accentColor: '#d91a2a' }}
                         />
                       </div>
-                      <div className="text-xs text-slate-500 leading-relaxed">
+                      <p className="text-xs text-slate-600 leading-relaxed m-0">
                         Instrucciones anticipadas de llegada, clave Wi-Fi 300 Mbps y protocolo ágil de salida sin filas ni esperas.
-                      </div>
-                    </div>
+                      </p>
+                    </label>
 
                     {/* Tarifas Exclusivas y Promociones */}
-                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-rose-100 text-[#d91a2a] flex items-center justify-center shrink-0">
-                            <Sparkles size={18} />
+                    <label className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all cursor-pointer flex flex-col justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-rose-100 text-[#d91a2a] flex items-center justify-center shrink-0">
+                            <Sparkles size={19} />
                           </div>
                           <div>
-                            <div className="font-bold text-sm text-slate-900">Club de Lealtad & Tarifas VIP</div>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-[#b91522]">Beneficios Facile</span>
+                            <div className="font-bold text-sm text-slate-900 leading-snug">Club de Lealtad & Tarifas VIP</div>
+                            <span className="inline-block mt-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-[#b91522] border border-rose-200/60">
+                              Beneficios Facile
+                            </span>
                           </div>
                         </div>
                         <input
                           type="checkbox"
                           checked={datosPerfil.notifPromociones}
                           onChange={(e) => handleChange('notifPromociones', e.target.checked)}
-                          className="h-5 w-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
+                          className="w-5 h-5 rounded border-slate-300 text-[#d91a2a] focus:ring-[#d91a2a]/20 cursor-pointer shrink-0 mt-0.5"
                           style={{ accentColor: '#d91a2a' }}
                         />
                       </div>
-                      <div className="text-xs text-slate-500 leading-relaxed">
+                      <p className="text-xs text-slate-600 leading-relaxed m-0">
                         Descuentos especiales de hasta el 20% en estancias medias y largas y tarifas preferenciales de fin de semana.
-                      </div>
-                    </div>
+                      </p>
+                    </label>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
                     {/* Horario Preferido */}
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
@@ -1172,12 +1170,7 @@ const VistaPerfil = () => {
                   </div>
 
                   {/* Pie de Formulario */}
-                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="text-emerald-600 font-bold">🔒</span>
-                      <span>Puedes pausar o modificar estas alertas en cualquier momento sin afectar tus reservas confirmadas.</span>
-                    </div>
-
+                  <div className="pt-6 border-t border-slate-100 flex justify-end">
                     <button
                       type="submit"
                       className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-extrabold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
@@ -1227,19 +1220,19 @@ const VistaPerfil = () => {
                 }} className="space-y-6">
 
                   {/* Sesión Activa */}
-                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                  <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70">
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2 font-bold text-sm text-slate-900">
-                        <MapPin size={16} className="text-emerald-600" />
+                        <MapPin size={17} className="text-emerald-600 shrink-0" />
                         <span>Sesión Activa en Navegador Web Seguro</span>
                       </div>
                       <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                         ACTIVA AHORA
                       </span>
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 m-0 leading-relaxed">
                       Bogotá D.C., Colombia • Almacenamiento local cifrado y token de sesión verificado para {datosPerfil.correo}.
-                    </div>
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1248,18 +1241,19 @@ const VistaPerfil = () => {
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                         Contraseña Actual (Opcional)
                       </label>
-                      <div className="relative">
+                      <div className="relative w-full">
                         <input
                           type={showClaveActual ? "text" : "password"}
                           value={datosPerfil.claveActual}
                           onChange={(e) => handleChange('claveActual', e.target.value)}
                           placeholder="Ingresa tu clave actual"
-                          className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
+                          className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => setShowClaveActual(!showClaveActual)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-0 flex items-center"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-1 flex items-center justify-center"
+                          aria-label="Ver u ocultar clave actual"
                         >
                           {showClaveActual ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -1288,18 +1282,19 @@ const VistaPerfil = () => {
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                         Nueva Contraseña de Acceso <span className="text-[#d91a2a]">*</span>
                       </label>
-                      <div className="relative">
+                      <div className="relative w-full">
                         <input
                           type={showNuevaClave ? "text" : "password"}
                           value={datosPerfil.nuevaClave}
                           onChange={(e) => handleChange('nuevaClave', e.target.value)}
                           placeholder="Mínimo 6 caracteres"
-                          className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
+                          className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => setShowNuevaClave(!showNuevaClave)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-0 flex items-center"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-1 flex items-center justify-center"
+                          aria-label="Ver u ocultar nueva contraseña"
                         >
                           {showNuevaClave ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -1312,18 +1307,19 @@ const VistaPerfil = () => {
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                         Confirmar Nueva Contraseña <span className="text-[#d91a2a]">*</span>
                       </label>
-                      <div className="relative">
+                      <div className="relative w-full">
                         <input
                           type={showConfirmarClave ? "text" : "password"}
                           value={datosPerfil.confirmarClave}
                           onChange={(e) => handleChange('confirmarClave', e.target.value)}
                           placeholder="Repite la nueva contraseña"
-                          className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
+                          className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 transition-all outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmarClave(!showConfirmarClave)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-0 flex items-center"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none p-1 flex items-center justify-center"
+                          aria-label="Ver u ocultar confirmación de contraseña"
                         >
                           {showConfirmarClave ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -1333,12 +1329,7 @@ const VistaPerfil = () => {
                   </div>
 
                   {/* Pie de Formulario */}
-                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="text-emerald-600 font-bold">🔒</span>
-                      <span>Tu contraseña se almacena con hash criptográfico bcrypt y nunca es compartida con terceros.</span>
-                    </div>
-
+                  <div className="pt-6 border-t border-slate-100 flex justify-end">
                     <button
                       type="submit"
                       disabled={!datosPerfil.nuevaClave}
