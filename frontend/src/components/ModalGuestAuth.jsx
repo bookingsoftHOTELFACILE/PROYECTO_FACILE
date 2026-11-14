@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  UserPlus, ShieldCheck, Mail, Phone, FileText, Calendar,
-  Lock, User, CheckCircle2, Search, Eye, EyeOff,
+  ShieldCheck, Mail, Phone, FileText, Calendar,
+  Lock, User, CheckCircle2, Eye, EyeOff,
   KeyRound, ArrowLeft
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
@@ -205,10 +205,12 @@ const ModalGuestAuth = () => {
                   <User size={20} color="#d91a2a" />
                 </div>
                 <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#1e293b' }}>
-                  Te damos la bienvenida a Facile
+                  {guestAuthTab === 'registro' ? 'Crear cuenta de Huésped' : 'Te damos la bienvenida a Facile'}
                 </h4>
                 <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: '#64748b' }}>
-                  Inicia sesión o crea tu cuenta para reservar tu apartamento
+                  {guestAuthTab === 'registro' 
+                    ? 'Registro oficial para huéspedes nacionales y extranjeros' 
+                    : 'Inicia sesión para reservar tu apartamento y acceder a tarifas oficiales'}
                 </p>
               </div>
 
@@ -240,24 +242,6 @@ const ModalGuestAuth = () => {
                   </div>
                 </div>
               )}
-
-              {/* PESTAÑAS SWITCHER (YA TENGO REGISTRO / CREAR CUENTA NUEVA) */}
-              <div className="airbnb-tab-switcher" style={{ marginBottom: guestAuthTab === 'registro' ? '0.75rem' : '1.2rem' }}>
-                <button
-                  type="button"
-                  className={`airbnb-tab-btn ${guestAuthTab === 'login' ? 'active' : ''}`}
-                  onClick={() => { setGuestAuthTab('login'); setGuestSearchError(null); }}
-                >
-                  <Search size={14} /> Ya tengo registro
-                </button>
-                <button
-                  type="button"
-                  className={`airbnb-tab-btn ${guestAuthTab === 'registro' ? 'active' : ''}`}
-                  onClick={() => { setGuestAuthTab('registro'); setGuestSearchError(null); }}
-                >
-                  <UserPlus size={14} /> Crear cuenta nueva
-                </button>
-              </div>
 
               {/* CONTENIDO DE PESTAÑA: YA TENGO REGISTRO */}
               {guestAuthTab === 'login' ? (
@@ -709,6 +693,15 @@ const ModalGuestAuth = () => {
                     >
                       {loading ? 'Creando cuenta...' : 'Aceptar y continuar'}
                     </button>
+                    <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setGuestAuthTab('login'); setGuestSearchError(null); }}
+                        style={{ background: 'none', border: 'none', color: '#d91a2a', fontSize: '0.84rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        ¿Ya tienes cuenta registrada? Inicia sesión aquí
+                      </button>
+                    </div>
                   </div>
                 </form>
               )}

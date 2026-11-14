@@ -11,7 +11,6 @@ import {
   Clock, 
   Shirt, 
   Headphones, 
-  Plane, 
   ChevronRight, 
   CheckCircle2,
   CalendarCheck
@@ -113,16 +112,6 @@ const VistaServicios = () => {
       descripcion: 'Orientación turística de Bogotá, recomendaciones gastronómicas en la Zona T y Parque de la 93, y soporte continuo vía WhatsApp.',
       badge: 'Atención Bilingüe',
       destacado: false
-    },
-    {
-      id: 'transporte_aeropuerto',
-      categoria: 'servicios_adicionales',
-      icono: Plane,
-      titulo: 'Coordinación de Traslados Aeropuerto',
-      subtitulo: 'Aeropuerto El Dorado ↔ El Chicó',
-      descripcion: 'Servicio de transporte privado con conductor de confianza para tu llegada o salida hacia el Aeropuerto Internacional El Dorado (bajo solicitud).',
-      badge: 'Bajo Solicitud',
-      destacado: false
     }
   ];
 
@@ -187,7 +176,7 @@ const VistaServicios = () => {
               { id: 'confort', label: 'Confort & Estadía', count: servicios.filter(s => s.categoria === 'confort').length },
               { id: 'negocios', label: 'Trabajo & Conectividad', count: servicios.filter(s => s.categoria === 'negocios').length },
               { id: 'seguridad', label: 'Seguridad & Acceso', count: servicios.filter(s => s.categoria === 'seguridad').length },
-              { id: 'servicios_adicionales', label: 'Concierge & Traslados', count: servicios.filter(s => s.categoria === 'servicios_adicionales').length },
+              { id: 'servicios_adicionales', label: 'Concierge & Asistencia', count: servicios.filter(s => s.categoria === 'servicios_adicionales').length },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -238,6 +227,7 @@ const VistaServicios = () => {
             return (
               <div
                 key={srv.id}
+                className="facile-service-card"
                 style={{
                   backgroundColor: '#ffffff',
                   borderRadius: '20px',
@@ -247,24 +237,26 @@ const VistaServicios = () => {
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   boxShadow: srv.destacado ? '0 8px 24px rgba(217, 26, 42, 0.08)' : '0 2px 8px rgba(0, 0, 0, 0.04)',
-                  position: 'relative',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                  position: 'relative'
                 }}
               >
                 <div>
                   {/* Encabezado de la tarjeta: Icono y Badge */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.1rem' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '14px',
-                      backgroundColor: srv.destacado ? '#fee2e2' : '#f8fafc',
-                      color: srv.destacado ? '#d91a2a' : '#0f172a',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '1px solid #f1f5f9'
-                    }}>
+                    <div
+                      className="service-icon-box"
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '14px',
+                        backgroundColor: srv.destacado ? '#fee2e2' : '#f8fafc',
+                        color: srv.destacado ? '#d91a2a' : '#0f172a',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid #f1f5f9'
+                      }}
+                    >
                       <IconComponent size={24} />
                     </div>
 
@@ -336,7 +328,7 @@ const VistaServicios = () => {
           </h2>
 
           <p style={{ fontSize: '0.92rem', color: '#94a3b8', maxWidth: '640px', margin: '0 0 1.8rem', lineHeight: 1.6 }}>
-            Si requieres check-in tardío, cuna para bebés, reserva de sala de juntas para tu equipo o traslado corporativo desde el Aeropuerto El Dorado, nuestro equipo de concierge está a tu servicio.
+            Si requieres check-in tardío, cuna para bebés, reserva de sala de juntas para tu equipo o atención personalizada, nuestro equipo de concierge está a tu servicio.
           </p>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', justifyContent: 'center' }}>

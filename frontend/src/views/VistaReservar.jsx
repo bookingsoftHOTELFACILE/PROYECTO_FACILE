@@ -1,18 +1,20 @@
 import {
   UserPlus, ShieldCheck, Mail, Phone, FileText, Briefcase,
   Users, AlertCircle, Calendar, Home, User, CheckCircle2,
-  Check
+  Check, UserCheck, Sparkles, Search, Lock
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 
 const VistaReservar = () => {
   const {
-  habitaciones, reservas, espaciosNegocio, reservaNegocioForm,
-  setReservaNegocioForm, setActiveTab, formData, habeasData,
-  setHabeasData, selectedHuesped, setSelectedHuesped, reservaData,
-  setReservaData, cotizacion, calDate, setCalDate,
-  loading, alert, reservaAlert, setReservaAlert,
-  handleUserChange, handleReservaChange, handleUserSubmit, handleReservaSubmit
+    habitaciones, reservas, espaciosNegocio, reservaNegocioForm,
+    setReservaNegocioForm, setActiveTab, formData, habeasData,
+    setHabeasData, selectedHuesped, setSelectedHuesped, reservaData,
+    setReservaData, cotizacion, calDate, setCalDate,
+    loading, alert, reservaAlert, setReservaAlert,
+    handleUserChange, handleReservaChange, handleUserSubmit, handleReservaSubmit,
+    setShowGuestAuthModal, setGuestAuthTab, guestSearchQuery, setGuestSearchQuery,
+    guestSearchError, handleGuestSearchSubmit
   } = useApp();
   return (
         <section className="facile-section">
@@ -22,77 +24,129 @@ const VistaReservar = () => {
           </div>
 
           <div className="booking-grid" style={selectedHuesped ? { gridTemplateColumns: '1fr', maxWidth: '850px', margin: '0 auto' } : {}}>
-            {/* PASO 1: REGISTRO DE HUÉSPED (Solo se muestra a visitantes no autenticados) */}
+            {/* PASO 1: IDENTIFICACIÓN UNIFICADA DE HUÉSPED */}
             {!selectedHuesped && (
-              <div className="clean-card">
-                <div className="card-step-badge">Paso 1</div>
-                <div className="clean-card-header">
-                  <UserPlus size={20} color="var(--color-primary-red)"/>
-                  <h3>Registro de Huésped</h3>
+              <div className="clean-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div className="card-step-badge">Paso 1</div>
+                  <div className="clean-card-header">
+                    <UserCheck size={20} color="var(--color-primary-red)"/>
+                    <h3>Identificación del Huésped</h3>
+                  </div>
+                  <p className="clean-card-desc">
+                    Inicia sesión o regístrate para confirmar tu reserva con tarifas oficiales de Apartamentos Facile, facturación electrónica DIAN y soporte para huéspedes extranjeros.
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.2rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGuestAuthTab('login');
+                        setShowGuestAuthModal(true);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.85rem 1.2rem',
+                        backgroundColor: '#d91a2a',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: 'var(--radius-pill)',
+                        fontSize: '0.9rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        boxShadow: '0 4px 12px rgba(217, 26, 42, 0.25)',
+                        transition: 'transform 0.15s ease'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
+                    >
+                      <User size={16} /> Iniciar Sesión con mi Cuenta
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGuestAuthTab('registro');
+                        setShowGuestAuthModal(true);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.85rem 1.2rem',
+                        backgroundColor: '#ffffff',
+                        color: '#0f172a',
+                        border: '1.5px solid #cbd5e1',
+                        borderRadius: 'var(--radius-pill)',
+                        fontSize: '0.9rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#d91a2a'; e.currentTarget.style.color = '#d91a2a'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#0f172a'; }}
+                    >
+                      <Sparkles size={16} color="#d91a2a" /> Crear Cuenta Nueva (Nacional o Extranjero)
+                    </button>
+                  </div>
+
+                  {/* Acceso Rápido por Documento / Correo para huéspedes registrados */}
+                  <div style={{ marginTop: '1.6rem', paddingTop: '1.2rem', borderTop: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Search size={14} /> Acceso rápido con documento o correo:
+                    </div>
+                    <form onSubmit={handleGuestSearchSubmit}>
+                      <div className="form-field" style={{ marginBottom: '0.5rem' }}>
+                        <div className="field-input-wrap">
+                          <FileText className="field-icon" size={16} />
+                          <input
+                            type="text"
+                            placeholder="Ej: 1017283944 o correo@ejemplo.com"
+                            value={guestSearchQuery}
+                            onChange={(e) => setGuestSearchQuery(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          padding: '0.55rem',
+                          background: '#f1f5f9',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: 'var(--radius-pill)',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          color: '#334155',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s ease'
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#e2e8f0'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = '#f1f5f9'; }}
+                      >
+                        {loading ? 'Consultando...' : 'Identificarme en 1 Clic →'}
+                      </button>
+                    </form>
+                    {guestSearchError && (
+                      <div style={{ color: '#b91c1c', background: '#fee2e2', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.78rem', marginTop: '0.6rem' }}>
+                        ⚠️ {guestSearchError}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="clean-card-desc">
-                  Cree su perfil público para habilitar la reserva de su apartamento.
-                </p>
 
-                <form onSubmit={handleUserSubmit}>
-                  <div className="form-field">
-                    <label>Nombre Completo</label>
-                    <div className="field-input-wrap">
-                      <FileText className="field-icon" size={16}/>
-                      <input type="text" name="nombre" value={formData.nombre} onChange={handleUserChange} placeholder="Ej: Liliana Restrepo" required/>
-                    </div>
-                  </div>
-
-                  <div className="form-row-2">
-                    <div className="form-field">
-                      <label>Documento (Solo números)</label>
-                      <div className="field-input-wrap">
-                        <ShieldCheck className="field-icon" size={16}/>
-                        <input type="text" name="documento" value={formData.documento} onChange={handleUserChange} placeholder="Ej: 1017283944" maxLength={15} required/>
-                      </div>
-                    </div>
-                    <div className="form-field">
-                      <label>Teléfono de Contacto</label>
-                      <div className="field-input-wrap">
-                        <Phone className="field-icon" size={16}/>
-                        <input type="text" name="telefono" value={formData.telefono} onChange={handleUserChange} placeholder="Ej: 3154449876" maxLength={15} required/>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="form-row-2">
-                    <div className="form-field">
-                      <label>Correo Electrónico</label>
-                      <div className="field-input-wrap">
-                        <Mail className="field-icon" size={16}/>
-                        <input type="email" name="correo" value={formData.correo} onChange={handleUserChange} placeholder="Ej: correo@ejemplo.com" required/>
-                      </div>
-                    </div>
-                    <div className="form-field">
-                      <label>Empresa (Opcional)</label>
-                      <div className="field-input-wrap">
-                        <Briefcase className="field-icon" size={16}/>
-                        <input type="text" name="empresa" value={formData.empresa} onChange={handleUserChange} placeholder="Ej: Bancolombia"/>
-                      </div>
-                    </div>
-                  </div>
-
-                  <label className="checkbox-legal">
-                    <input type="checkbox" checked={habeasData} onChange={(e) => setHabeasData(e.target.checked)}/>
-                    <span>Autorizo el tratamiento de mis datos personales según la <strong>Ley de Habeas Data (Ley 1581 de 2012)</strong>.</span>
-                  </label>
-
-                  <button type="submit" className="btn-submit-red" disabled={loading}>
-                    <UserPlus size={16}/> {loading ? 'Registrando...' : 'Registrarme como Huésped'}
-                  </button>
-                </form>
-
-                {alert && (
-                  <div className={`msg-alert msg-${alert.type}`}>
-                    <AlertCircle size={18}/>
-                    <span>{alert.message}</span>
-                  </div>
-                )}
+                <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ShieldCheck size={18} color="#059669" />
+                  <span>Exención de IVA del 19% disponible para pasaportes extranjeros según Decreto 297 de 2016.</span>
+                </div>
               </div>
             )}
 
@@ -134,22 +188,41 @@ const VistaReservar = () => {
               </div>
 
               {selectedHuesped ? (
-                <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.75rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.75rem 1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-                    <div style={{ width: '32px', height: '32px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <User size={18} color="#e11d48"/>
+                    <div style={{ width: '36px', height: '36px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                      <CheckCircle2 size={20} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{selectedHuesped?.nombre || 'Huésped Registrado'}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Doc: {selectedHuesped?.documento || 'N/A'} {selectedHuesped?.correo ? `• ${selectedHuesped.correo}` : ''}</div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#14532d' }}>{selectedHuesped?.nombre || 'Huésped Registrado'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#15803d' }}>
+                        Doc: {selectedHuesped?.documento || 'N/A'} {selectedHuesped?.correo ? `• ${selectedHuesped.correo}` : ''}
+                      </div>
                     </div>
                   </div>
-                  <button type="button" className="btn-mini" onClick={() => setSelectedHuesped(null)}>Cambiar / Cerrar</button>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('perfil')}
+                      style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-pill)', padding: '0.3rem 0.7rem', fontSize: '0.75rem', fontWeight: 700, color: '#334155', cursor: 'pointer' }}
+                    >
+                      Mi Perfil
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedHuesped(null)}
+                      style={{ background: '#fee2e2', border: '1px solid #fecdd3', borderRadius: 'var(--radius-pill)', padding: '0.3rem 0.7rem', fontSize: '0.75rem', fontWeight: 700, color: '#b91522', cursor: 'pointer' }}
+                    >
+                      Cambiar
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <p className="clean-card-desc" style={{ color: '#b45309' }}>
-                  ⚠️ Regístrese en el <strong>Paso 1</strong> o seleccione un huésped existente para continuar.
-                </p>
+                <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', padding: '0.65rem 0.95rem', borderRadius: '10px', marginBottom: '1.2rem' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#92400e', fontWeight: 600 }}>
+                    💡 Selecciona tu alojamiento y fechas deseadas. Al finalizar, podrás identificarte para confirmar tu estadía.
+                  </span>
+                </div>
               )}
 
               <form onSubmit={handleReservaSubmit}>
@@ -161,7 +234,7 @@ const VistaReservar = () => {
                     ) : (
                       <Home className="field-icon" size={16}/>
                     )}
-                    <select name="id_habitacion" value={reservaData.id_habitacion} onChange={handleReservaChange} required disabled={!selectedHuesped}>
+                    <select name="id_habitacion" value={reservaData.id_habitacion} onChange={handleReservaChange} required>
                       <option value="">-- Elija un apartamento o espacio de coworking --</option>
                       <optgroup label="🏨 Apartamentos / Unidades">
                         {habitaciones.map(h => (
@@ -209,7 +282,6 @@ const VistaReservar = () => {
                               min={new Date().toISOString().split('T')[0]}
                               onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, fecha: e.target.value })}
                               required
-                              disabled={!selectedHuesped}
                             />
                           </div>
                         </div>
@@ -221,7 +293,6 @@ const VistaReservar = () => {
                               value={reservaNegocioForm.hora_inicio}
                               onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, hora_inicio: e.target.value })}
                               required
-                              disabled={!selectedHuesped}
                             />
                           </div>
                         </div>
@@ -233,7 +304,6 @@ const VistaReservar = () => {
                               value={reservaNegocioForm.hora_fin}
                               onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, hora_fin: e.target.value })}
                               required
-                              disabled={!selectedHuesped}
                             />
                           </div>
                         </div>
@@ -247,7 +317,6 @@ const VistaReservar = () => {
                             placeholder="Ej: Video beam, estación de café gourmet, tomas de corriente..."
                             value={reservaNegocioForm.observaciones}
                             onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, observaciones: e.target.value })}
-                            disabled={!selectedHuesped}
                           />
                         </div>
                       </div>
@@ -263,9 +332,23 @@ const VistaReservar = () => {
                         </div>
                       </div>
 
-                      <button type="submit" className="btn-submit-red" disabled={loading || !selectedHuesped}>
-                        <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : `Confirmar Reserva de ${espSel?.nombre || 'Espacio'}`}
-                      </button>
+                      {!selectedHuesped ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGuestAuthTab('login');
+                            setShowGuestAuthModal(true);
+                          }}
+                          className="btn-submit-red"
+                          style={{ background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' }}
+                        >
+                          <Lock size={16}/> Iniciar Sesión para Confirmar {espSel?.nombre || 'Espacio'}
+                        </button>
+                      ) : (
+                        <button type="submit" className="btn-submit-red" disabled={loading}>
+                          <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : `Confirmar Reserva de ${espSel?.nombre || 'Espacio'}`}
+                        </button>
+                      )}
                     </div>
                   );
                 })() : (
@@ -393,20 +476,20 @@ const VistaReservar = () => {
                       <div className="form-field">
                         <label>Check-In</label>
                         <div className="field-input-wrap">
-                          <input type="date" name="fecha_entrada" value={reservaData.fecha_entrada} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
+                          <input type="date" name="fecha_entrada" value={reservaData.fecha_entrada} onChange={handleReservaChange} required/>
                         </div>
                       </div>
                       <div className="form-field">
                         <label>Check-Out</label>
                         <div className="field-input-wrap">
-                          <input type="date" name="fecha_salida" value={reservaData.fecha_salida} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
+                          <input type="date" name="fecha_salida" value={reservaData.fecha_salida} onChange={handleReservaChange} required/>
                         </div>
                       </div>
                       <div className="form-field">
                         <label>Personas</label>
                         <div className="field-input-wrap">
                           <Users className="field-icon" size={16}/>
-                          <input type="number" name="numero_personas" min="1" max="10" value={reservaData.numero_personas} onChange={handleReservaChange} required disabled={!selectedHuesped}/>
+                          <input type="number" name="numero_personas" min="1" max="10" value={reservaData.numero_personas} onChange={handleReservaChange} required/>
                         </div>
                       </div>
                     </div>
@@ -430,9 +513,23 @@ const VistaReservar = () => {
                       </div>
                     )}
 
-                    <button type="submit" className="btn-submit-red" disabled={loading || !selectedHuesped}>
-                      <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : 'Confirmar Reserva'}
-                    </button>
+                    {!selectedHuesped ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGuestAuthTab('login');
+                          setShowGuestAuthModal(true);
+                        }}
+                        className="btn-submit-red"
+                        style={{ background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' }}
+                      >
+                        <Lock size={16}/> Iniciar Sesión / Registrarme para Confirmar
+                      </button>
+                    ) : (
+                      <button type="submit" className="btn-submit-red" disabled={loading}>
+                        <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : 'Confirmar Reserva'}
+                      </button>
+                    )}
                   </>
                 )}
               </form>

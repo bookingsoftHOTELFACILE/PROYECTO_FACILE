@@ -898,7 +898,7 @@ body {
   font-size: 0.92rem;
   font-weight: 700;
   padding: 0.8rem;
-  border-radius: 6px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1367,10 +1367,10 @@ body {
 .btn-airbnb-primary {
   width: 100%;
   height: 48px;
-  background: linear-gradient(135deg, #e11d48 0%, #c0392b 100%);
+  background: linear-gradient(135deg, #d91a2a 0%, #b91522 100%);
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -1380,12 +1380,12 @@ body {
   justify-content: center;
   gap: 0.5rem;
   margin-top: 0.8rem;
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+  box-shadow: 0 4px 14px rgba(217, 26, 42, 0.3);
 }
 
 .btn-airbnb-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.4);
+  box-shadow: 0 6px 18px rgba(217, 26, 42, 0.4);
 }
 
 .btn-airbnb-primary:disabled {
@@ -2428,4 +2428,29 @@ body {
   transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
 }
+
+/* ==========================================================================
+   TARJETAS DE SERVICIOS E INSTALACIONES (VISTASERVICIOS)
+   ========================================================================== */
+.facile-service-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: pointer;
+}
+
+.facile-service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(217, 26, 42, 0.06) !important;
+  border-color: #fca5a5 !important;
+}
+
+.facile-service-card .service-icon-box {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, color 0.25s ease;
+}
+
+.facile-service-card:hover .service-icon-box {
+  transform: scale(1.08);
+  background-color: #fee2e2 !important;
+  color: #d91a2a !important;
+}
+
 
