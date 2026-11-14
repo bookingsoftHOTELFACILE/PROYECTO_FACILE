@@ -113,7 +113,7 @@ const VistaCentroNegocios = () => {
             <BookingShowcase
               photos={oficina.fotos}
               onOpenLightbox={(idx) => setAptoLightboxPhoto({ photos: oficina.fotos, index: idx })}
-              title={`Álbum Fotográfico — ${oficina.tipo}`}
+              title={oficina.tipo}
             />
 
             {/* PIE DE ESPECIFICACIONES Y BOTÓN ACCIÓN */}

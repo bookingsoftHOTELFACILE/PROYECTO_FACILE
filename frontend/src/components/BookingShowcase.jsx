@@ -17,7 +17,7 @@ const BookingShowcase = ({ photos, onOpenLightbox, title }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.8rem' }}>
           <div>
             <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Camera size={22} color="#e11d48" /> {title}
+              <Camera size={22} color="#d91a2a" /> {title}
             </h3>
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: '#64748b' }}>
             
@@ -89,7 +89,7 @@ const BookingShowcase = ({ photos, onOpenLightbox, title }) => {
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           />
           <div style={{ position: 'absolute', bottom: '14px', left: '14px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(6px)', color: '#ffffff', padding: '0.45rem 0.9rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <Sparkles size={14} color="#e11d48" /> {heroPhoto.titulo || 'Instalaciones Destacadas'}
+            <Sparkles size={14} color="#d91a2a" /> {heroPhoto.titulo || 'Instalaciones Destacadas'}
           </div>
         </div>
 
