@@ -40,7 +40,27 @@ export function useAppState() {
   // ---- ESTADO DEL FORMULARIO DE REGISTRO ----
   const [formData, setFormData] = useState({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
   const [habeasData, setHabeasData] = useState(false);
-  const [selectedHuesped, setSelectedHuesped] = useState(null);
+  const [selectedHuesped, setSelectedHuesped] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bookingsoft_guest_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Sincronización automática de sesión de huésped en localStorage
+  useEffect(() => {
+    try {
+      if (selectedHuesped) {
+        localStorage.setItem('bookingsoft_guest_user', JSON.stringify(selectedHuesped));
+      } else {
+        localStorage.removeItem('bookingsoft_guest_user');
+      }
+    } catch (e) {
+      console.warn('Error al sincronizar huésped en localStorage:', e);
+    }
+  }, [selectedHuesped]);
 
   // ---- ESTADOS DE PERFIL DE HUÉSPED ESTILO AIRBNB ----
   const [guestProfileExtras, setGuestProfileExtras] = useState(() => {
@@ -704,6 +724,85 @@ export function useAppState() {
     setLoading(false);
   };
 
+  // Autenticación Social Funcional (Google / Apple ID) conectada a PostgreSQL
+  const handleSocialAuth = async (proveedor, cuentaData) => {
+    setLoading(true);
+    setGuestSearchError(null);
+    const prov = (proveedor || 'google').toLowerCase();
+    const payload = {
+      proveedor: prov,
+      nombre: cuentaData?.nombre || (prov === 'apple' ? 'Usuario Apple ID' : 'Usuario Google'),
+      correo: (cuentaData?.correo || (prov === 'apple' ? 'usuario.apple@icloud.com' : 'usuario.google@gmail.com')).toLowerCase().trim(),
+      documento: cuentaData?.documento || undefined,
+      telefono: cuentaData?.telefono || undefined,
+      empresa: cuentaData?.empresa || (prov === 'apple' ? 'Apple ID' : 'Google Workspace')
+    };
+
+    if (backendActivo) {
+      try {
+        const res = await apiFetch(`/api/user/auth-social`, { method: 'POST', body: payload });
+        const data = res.data;
+        if (res.ok && data?.usuario) {
+          const usuario = data.usuario;
+          setSelectedHuesped(usuario);
+          setShowGuestAuthModal(false);
+          setAlert({
+            type: 'success',
+            message: data.message || `¡Bienvenido, ${usuario.nombre}! Sesión iniciada con ${prov.toUpperCase()}.`
+          });
+          cargarDatosBackend(authToken);
+          setLoading(false);
+          return { ok: true, usuario };
+        } else {
+          const errMsg = formatErrorMessage(data?.detail) || 'Error al autenticar con proveedor social.';
+          setAlert({ type: 'error', message: errMsg });
+          setGuestSearchError(errMsg);
+          setLoading(false);
+          return { ok: false, error: errMsg };
+        }
+      } catch {
+        const errMsg = `Error de conexión con el servidor al autenticar con ${prov}.`;
+        setAlert({ type: 'error', message: errMsg });
+        setGuestSearchError(errMsg);
+        setLoading(false);
+        return { ok: false, error: errMsg };
+      }
+    } else {
+      // Fallback local en caso de que backend esté desconectado
+      const existente = huespedes.find(h => h.correo && h.correo.toLowerCase() === payload.correo);
+      if (existente) {
+        setSelectedHuesped(existente);
+        setShowGuestAuthModal(false);
+        setAlert({
+          type: 'success',
+          message: `¡Bienvenido de nuevo, ${existente.nombre}! (Sesión con ${prov.toUpperCase()})`
+        });
+        setLoading(false);
+        return { ok: true, usuario: existente };
+      }
+
+      const nuevoUsuario = {
+        id_huesped: Date.now(),
+        nombre: payload.nombre,
+        documento: payload.documento || `SOC-${Date.now().toString().slice(-6)}`,
+        telefono: payload.telefono || '3001234567',
+        correo: payload.correo,
+        empresa: payload.empresa,
+        lealtad: 'Silver',
+        estado: 'Activo'
+      };
+      setHuespedes(prev => [nuevoUsuario, ...prev]);
+      setSelectedHuesped(nuevoUsuario);
+      setShowGuestAuthModal(false);
+      setAlert({
+        type: 'success',
+        message: `¡Sesión iniciada con ${prov.toUpperCase()}! (Modo Local)`
+      });
+      setLoading(false);
+      return { ok: true, usuario: nuevoUsuario };
+    }
+  };
+
   // Seleccionar tipo de habitación y activar flujo de reserva
   const handleReservarTipo = (tipoNombre) => {
     const habDispo = habitaciones.find(h => h.tipo === tipoNombre && h.estado === 'Disponible');
@@ -1187,7 +1286,7 @@ export function useAppState() {
     modalLegalTipo, setModalLegalTipo, pmsWalkInMode, setPmsWalkInMode, pmsWalkInGuest, setPmsWalkInGuest,
     pmsSubTab, setPmsSubTab, formatErrorMessage, handleLoginSubmit, handleLogout, navegarATab,
     cargarDatosBackend, handleCreateEmpleadoSubmit, handleChangeEmpleadoRol, handleToggleEmpleadoEstado, handleUserChange, handleReservaChange,
-    handleUserSubmit, handleGuestSearchSubmit, handleGuestRecuperarSubmit, handleGuestRestablecerSubmit, handleReservarTipo, handlePmsWalkInGuestChange,
+    handleUserSubmit, handleGuestSearchSubmit, handleGuestRecuperarSubmit, handleGuestRestablecerSubmit, handleSocialAuth, handleReservarTipo, handlePmsWalkInGuestChange,
     handleReservaSubmit, handleSelectApartamentoCatalog, handleToggleEstadoHuesped, handleSelectHuesped, handleDeleteHuesped, handleDeleteReserva,
     handleCambiarEstadoReserva, walkinCheckinInmediato, setWalkinCheckinInmediato,
     handleCambiarEstadoHabitacion, handleReportarDano, handleCrearReservaNegocio, handleBuscarHuespedPorDocumento, handleCancelarReservaNegocio

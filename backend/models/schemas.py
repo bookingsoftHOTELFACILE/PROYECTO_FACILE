@@ -13,6 +13,14 @@ class UserRegistro(BaseModel):
     empresa: Optional[str] = None
     password: Optional[str] = None
 
+class UserSocialAuth(BaseModel):
+    proveedor: str = Field(..., description="google o apple")
+    nombre: str = Field(..., description="Nombre completo del usuario")
+    correo: str = Field(..., description="Correo electrónico del usuario")
+    documento: Optional[str] = Field(None, description="Documento o identificador social")
+    telefono: Optional[str] = Field(None, description="Teléfono de contacto")
+    empresa: Optional[str] = Field(None, description="Empresa u origen")
+
 class GuestLoginRequest(BaseModel):
     documento_o_correo: str
     password: Optional[str] = None

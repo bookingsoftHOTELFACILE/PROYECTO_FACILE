@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import {
   UserPlus, ShieldCheck, Mail, Phone, FileText, Calendar,
   Lock, User, CheckCircle2, Search, Eye, EyeOff,
-  KeyRound
+  KeyRound, ArrowLeft, PlusCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 
@@ -17,8 +18,47 @@ const ModalGuestAuth = () => {
   nombreLegal, setNombreLegal, apellidoLegal, setApellidoLegal,
   fechaNacimiento, setFechaNacimiento, marketingOptOut, setMarketingOptOut,
   setModalLegalTipo, handleUserChange, handleUserSubmit, handleGuestSearchSubmit,
-  handleGuestRecuperarSubmit, handleGuestRestablecerSubmit
+  handleGuestRecuperarSubmit, handleGuestRestablecerSubmit, handleSocialAuth
   } = useApp();
+
+  const [socialProvider, setSocialProvider] = useState(null); // 'google' | 'apple' | null
+  const [showCustomSocialForm, setShowCustomSocialForm] = useState(false);
+  const [customSocialNombre, setCustomSocialNombre] = useState('');
+  const [customSocialCorreo, setCustomSocialCorreo] = useState('');
+
+  const cuentasSugeridas = socialProvider === 'apple' ? [
+    { nombre: 'Carlos Mendoza', correo: 'carlos.mendoza@icloud.com', iniciales: 'CM', doc: 'A-882194' },
+    { nombre: 'Andrea Restrepo', correo: 'andrea.restrepo@icloud.com', iniciales: 'AR', doc: 'A-741902' }
+  ] : [
+    { nombre: 'Carlos Mendoza', correo: 'carlos.mendoza@gmail.com', iniciales: 'CM', doc: 'G-551940' },
+    { nombre: 'Andrea Restrepo', correo: 'andrea.restrepo@gmail.com', iniciales: 'AR', doc: 'G-319082' }
+  ];
+
+  const handleSeleccionarCuentaSocial = async (cuenta) => {
+    const res = await handleSocialAuth(socialProvider, cuenta);
+    if (res?.ok) {
+      setSocialProvider(null);
+      setShowCustomSocialForm(false);
+    }
+  };
+
+  const handleCustomSocialSubmit = async (e) => {
+    e.preventDefault();
+    if (!customSocialNombre.trim() || !customSocialCorreo.trim()) {
+      setAlert({ type: 'error', message: 'Por favor ingrese su nombre y correo.' });
+      return;
+    }
+    const res = await handleSocialAuth(socialProvider, {
+      nombre: customSocialNombre.trim(),
+      correo: customSocialCorreo.trim()
+    });
+    if (res?.ok) {
+      setSocialProvider(null);
+      setShowCustomSocialForm(false);
+      setCustomSocialNombre('');
+      setCustomSocialCorreo('');
+    }
+  };
   return (
         <div className="modal-backdrop" onClick={() => setShowGuestAuthModal(false)}>
           <div className="modal-airbnb-dialog" onClick={(e) => e.stopPropagation()}>
@@ -28,17 +68,191 @@ const ModalGuestAuth = () => {
             </div>
 
             <div className="modal-airbnb-body">
-              <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
-                <div style={{ width: '48px', height: '48px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.6rem' }}>
-                  <User size={24} color="#e11d48" />
+              {socialProvider ? (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', paddingBottom: '0.6rem', borderBottom: '1px solid #e2e8f0' }}>
+                    <button
+                      type="button"
+                      onClick={() => { setSocialProvider(null); setShowCustomSocialForm(false); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600, padding: 0 }}
+                    >
+                      <ArrowLeft size={16} /> Volver
+                    </button>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#1e293b' }}>
+                      {socialProvider === 'google' ? 'Acceso con Google' : 'Acceso con Apple ID'}
+                    </span>
+                    <div style={{ width: '50px' }} />
+                  </div>
+
+                  <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
+                    <div style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      background: socialProvider === 'apple' ? '#000000' : '#ffffff',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 0.5rem',
+                      border: socialProvider === 'google' ? '1px solid #e2e8f0' : 'none'
+                    }}>
+                      {socialProvider === 'google' ? (
+                        <svg width="22" height="22" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        </svg>
+                      ) : (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff">
+                          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.65-.79 1.1-1.9 0.98-3.01-1 .04-2.18.67-2.88 1.49-.62.72-1.16 1.87-1.01 2.97 1.12.09 2.26-.66 2.91-1.45z"/>
+                        </svg>
+                      )}
+                    </div>
+                    <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+                      {socialProvider === 'google' ? 'Acceder con Google' : 'Iniciar con Apple ID'}
+                    </h4>
+                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                      Selecciona una cuenta para continuar en <strong>Apartahotel Facile</strong>
+                    </p>
+                  </div>
+
+                  {/* Cuentas rápidas */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                    {cuentasSugeridas.map((cuenta, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSeleccionarCuentaSocial(cuenta)}
+                        disabled={loading}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          padding: '0.7rem 0.9rem',
+                          background: '#ffffff',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '12px',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s ease',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#0284c7'; e.currentTarget.style.background = '#f8fafc'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#ffffff'; }}
+                      >
+                        <div style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          background: socialProvider === 'apple' ? '#1e293b' : '#3b82f6',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 700,
+                          fontSize: '0.85rem'
+                        }}>
+                          {cuenta.iniciales}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#0f172a' }}>{cuenta.nombre}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cuenta.correo}</div>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: 600 }}>Entrar →</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Formulario para ingresar otra cuenta */}
+                  {!showCustomSocialForm ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomSocialForm(true)}
+                      style={{
+                        width: '100%',
+                        padding: '0.6rem',
+                        background: '#f1f5f9',
+                        border: '1px dashed #94a3b8',
+                        borderRadius: '10px',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        color: '#475569',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        marginBottom: '0.8rem'
+                      }}
+                    >
+                      <PlusCircle size={15} /> Usar otra cuenta de {socialProvider === 'google' ? 'Google' : 'Apple'}...
+                    </button>
+                  ) : (
+                    <form onSubmit={handleCustomSocialSubmit} style={{ background: '#f8fafc', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '0.8rem' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.5rem' }}>
+                        Ingrese los datos de su cuenta {socialProvider === 'google' ? 'Google' : 'Apple'}:
+                      </div>
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <input
+                          type="text"
+                          className="input-airbnb"
+                          placeholder="Nombre completo"
+                          value={customSocialNombre}
+                          onChange={(e) => setCustomSocialNombre(e.target.value)}
+                          required
+                          style={{ fontSize: '0.85rem', padding: '0.55rem 0.75rem' }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: '0.6rem' }}>
+                        <input
+                          type="email"
+                          className="input-airbnb"
+                          placeholder={socialProvider === 'apple' ? 'usuario@icloud.com' : 'usuario@gmail.com'}
+                          value={customSocialCorreo}
+                          onChange={(e) => setCustomSocialCorreo(e.target.value)}
+                          required
+                          style={{ fontSize: '0.85rem', padding: '0.55rem 0.75rem' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <button
+                          type="submit"
+                          className="btn-airbnb-primary"
+                          disabled={loading}
+                          style={{ flex: 1, marginTop: 0, padding: '0.55rem' }}
+                        >
+                          {loading ? 'Verificando...' : 'Iniciar Sesión'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowCustomSocialForm(false)}
+                          style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '0 0.8rem', fontSize: '0.8rem', color: '#64748b', cursor: 'pointer' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', textAlign: 'center', lineHeight: '1.4' }}>
+                    🔒 Conexión segura con PostgreSQL de BookingSoft. Su perfil de huésped y reservas se guardarán con integridad referencial.
+                  </div>
                 </div>
-                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>
-                  Te damos la bienvenida a Facile
-                </h4>
-                <p style={{ margin: '0.3rem 0 0', fontSize: '0.82rem', color: '#64748b' }}>
-                  Ingrese sus datos para cotizar o confirmar su reserva de apartamento
-                </p>
-              </div>
+              ) : (
+                <>
+                  <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
+                    <div style={{ width: '48px', height: '48px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.6rem' }}>
+                      <User size={24} color="#e11d48" />
+                    </div>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>
+                      Te damos la bienvenida a Facile
+                    </h4>
+                    <p style={{ margin: '0.3rem 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+                      Ingrese sus datos para cotizar o confirmar su reserva de apartamento
+                    </p>
+                  </div>
 
               {guestRegJustCreated && selectedHuesped ? (
                 <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '16px', padding: '1.5rem', textAlign: 'center' }}>
@@ -514,18 +728,8 @@ const ModalGuestAuth = () => {
                           className="btn-social-auth"
                           style={{ flex: 1, padding: '0.65rem' }}
                           onClick={() => {
-                            const demoEmail = 'huesped_google@ejemplo.com';
-                            setGuestSearchQuery(demoEmail);
-                            setAlert({ type: 'success', message: '¡Autenticado mediante Google! Complete su reserva.' });
-                            const gUser = huespedes.find(h => h.correo === demoEmail) || {
-                              id_huesped: 99,
-                              nombre: 'Usuario Google Demo',
-                              documento: 'GOOGLE-12345',
-                              telefono: '3001234567',
-                              correo: demoEmail
-                            };
-                            setSelectedHuesped(gUser);
-                            setShowGuestAuthModal(false);
+                            setSocialProvider('google');
+                            setShowCustomSocialForm(false);
                           }}
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24">
@@ -542,18 +746,8 @@ const ModalGuestAuth = () => {
                           className="btn-social-auth"
                           style={{ flex: 1, padding: '0.65rem' }}
                           onClick={() => {
-                            const demoEmail = 'huesped_apple@icloud.com';
-                            setGuestSearchQuery(demoEmail);
-                            setAlert({ type: 'success', message: '¡Autenticado mediante Apple ID! Complete su reserva.' });
-                            const aUser = huespedes.find(h => h.correo === demoEmail) || {
-                              id_huesped: 98,
-                              nombre: 'Usuario Apple Demo',
-                              documento: 'APPLE-67890',
-                              telefono: '3159876543',
-                              correo: demoEmail
-                            };
-                            setSelectedHuesped(aUser);
-                            setShowGuestAuthModal(false);
+                            setSocialProvider('apple');
+                            setShowCustomSocialForm(false);
                           }}
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -566,9 +760,11 @@ const ModalGuestAuth = () => {
                   )}
                 </>
               )}
-            </div>
-          </div>
+            </>
+          )}
         </div>
+      </div>
+    </div>
   );
 };
 

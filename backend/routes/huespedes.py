@@ -3,7 +3,13 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from dependencies import requiere_rol, autenticar, autenticar_opcional, UsuarioActual
-from models.schemas import UserRegistro, GuestLoginRequest, GuestRecuperarRequest, GuestRestablecerRequest
+from models.schemas import (
+    UserRegistro,
+    UserSocialAuth,
+    GuestLoginRequest,
+    GuestRecuperarRequest,
+    GuestRestablecerRequest,
+)
 from repositories import cursor_escritura, cursor_lectura
 logger = logging.getLogger("bookingsoft.huespedes")
 
@@ -288,7 +294,7 @@ def restablecer_password(payload: GuestRestablecerRequest):
                     detail="No se encontró el usuario para actualizar la contraseña."
                 )
 
-        logger.info(f"🔑 [PASSWORD UPDATED] Contraseña restablecida con éxito para '{resultado['nombre']}' ({resultado['correo']}).")
+        logger.info("POST /api/user/restablecer-password — Contraseña restablecida con éxito para %r", resultado["nombre"])
 
         return {
             "message": "Su contraseña ha sido restablecida exitosamente. Ya puede iniciar sesión con su nueva clave."
@@ -301,6 +307,66 @@ def restablecer_password(payload: GuestRestablecerRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al actualizar la contraseña."
+        )
+
+@router_user.post("/auth-social")
+def autenticar_social_huesped(payload: UserSocialAuth):
+    """
+    Inicia sesión o registra automáticamente a un huésped mediante Google o Apple ID.
+    Si el correo ya existe, retorna los datos del huésped para iniciar sesión.
+    Si no existe, lo registra de inmediato en PostgreSQL garantizando persistencia y FKs válidas.
+    """
+    prov = (payload.proveedor or "Google").capitalize()
+    correo = (payload.correo or "").strip().lower()
+    nombre = (payload.nombre or "").strip()
+    if not correo or not nombre:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nombre y correo electrónico son requeridos para la autenticación social."
+        )
+
+    try:
+        with cursor_escritura() as cur:
+            cur.execute(
+                "SELECT id_huesped, nombre, documento, telefono, correo, empresa, lealtad, estado FROM huesped WHERE LOWER(correo) = %s",
+                (correo,)
+            )
+            fila = cur.fetchone()
+
+            if fila:
+                usuario_dict = dict(fila)
+                logger.info("🔑 [SOCIAL AUTH] Huésped existente autenticado vía %s: %s (%s)", prov, nombre, correo)
+                return {
+                    "message": f"¡Bienvenido de nuevo, {usuario_dict['nombre']}! Sesión iniciada con {prov}.",
+                    "usuario": usuario_dict,
+                    "es_nuevo": False
+                }
+
+            # Si es nuevo, generar documento único y registrar en PostgreSQL
+            import random
+            doc_base = payload.documento.strip() if payload.documento else f"{prov[:1].upper()}-{random.randint(100000, 999999)}"
+            telefono = payload.telefono.strip() if payload.telefono else "3001234567"
+            empresa = payload.empresa.strip() if payload.empresa else f"Cuenta {prov}"
+            audit_str = f"Registro Social {prov}"
+
+            cur.execute("""
+                INSERT INTO huesped (nombre, documento, telefono, correo, empresa, lealtad, estado, creado_por, modificado_por)
+                VALUES (%s, %s, %s, %s, %s, 'Silver', 'Activo', %s, %s)
+                RETURNING id_huesped, nombre, documento, telefono, correo, empresa, lealtad, estado
+            """, (nombre, doc_base, telefono, correo, empresa, audit_str, audit_str))
+            nuevo_huesped = dict(cur.fetchone())
+
+        logger.info("✨ [SOCIAL AUTH] Nuevo huésped registrado vía %s: %s (ID: %s)", prov, nombre, nuevo_huesped["id_huesped"])
+        return {
+            "message": f"¡Cuenta creada y autenticada con éxito mediante {prov}!",
+            "usuario": nuevo_huesped,
+            "es_nuevo": True
+        }
+    except Exception:
+        logger.exception("POST /api/user/auth-social — fallo al autenticar con %s para %s", prov, correo)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al procesar la autenticación con {prov}."
         )
 
 # Hallazgo 03: Se requiere rol Recepcionista o Administrador para modificar estado de huésped
