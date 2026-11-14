@@ -9,7 +9,7 @@ export default function Encabezados() {
   const { 
     activeTab, setActiveTab, selectedHuesped, setShowGuestAuthModal, 
     setGuestAuthTab, showGuestMenuDropdown, setShowGuestMenuDropdown, 
-    handleLogout, usuarioSesion
+    handleLogout, handleGuestLogout, usuarioSesion
   } = useApp();
 
   const navLinks = [
@@ -207,7 +207,7 @@ export default function Encabezados() {
 
                     <div style={{ borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
                     <button 
-                      onClick={() => { handleLogout(); setShowGuestMenuDropdown(false); }} 
+                      onClick={() => { handleGuestLogout(); setShowGuestMenuDropdown(false); }} 
                       style={{ width: '100%', padding: '9px 12px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px' }}
                     >
                       <LogOut size={15} /> Cerrar Sesión

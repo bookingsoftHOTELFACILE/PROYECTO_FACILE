@@ -13,6 +13,7 @@ const ModalGuestAuth = () => {
     setAlert, setShowGuestAuthModal, guestAuthTab, setGuestAuthTab,
     guestSearchQuery, setGuestSearchQuery, guestLoginPassword, setGuestLoginPassword,
     showGuestPassword, setShowGuestPassword, guestSearchError, setGuestSearchError,
+    rememberGuest, setRememberGuest, handleGuestLogout,
     setGuestRegJustCreated, guestRecuperarQuery, setGuestRecuperarQuery,
     guestRecuperarSuccess, setGuestRecuperarSuccess, guestNuevaPassword, setGuestNuevaPassword,
     nombreLegal, setNombreLegal, apellidoLegal, setApellidoLegal,
@@ -235,7 +236,7 @@ const ModalGuestAuth = () => {
                     <button
                       type="button"
                       style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0.35rem 0.65rem', fontSize: '0.76rem', fontWeight: 600, color: '#dc2626', cursor: 'pointer' }}
-                      onClick={() => { setSelectedHuesped(null); setGuestRegJustCreated(false); }}
+                      onClick={() => handleGuestLogout()}
                     >
                       Cerrar sesión
                     </button>
@@ -271,7 +272,7 @@ const ModalGuestAuth = () => {
                       </label>
                       <button
                         type="button"
-                        style={{ background: 'none', border: 'none', color: '#e11d48', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                        style={{ background: 'none', border: 'none', color: '#d91a2a', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
                         onClick={() => {
                           setGuestRecuperarQuery(guestSearchQuery);
                           setGuestAuthTab('recuperar');
@@ -290,6 +291,7 @@ const ModalGuestAuth = () => {
                         placeholder="Ingrese su contraseña"
                         value={guestLoginPassword}
                         onChange={(e) => setGuestLoginPassword(e.target.value)}
+                        required
                       />
                       <button
                         type="button"
@@ -301,9 +303,48 @@ const ModalGuestAuth = () => {
                     </div>
                   </div>
 
+                  {/* Casilla Recordarme en este equipo */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.65rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.78rem', color: '#475569', cursor: 'pointer', margin: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={rememberGuest}
+                        onChange={(e) => setRememberGuest(e.target.checked)}
+                        style={{ accentColor: '#d91a2a', borderRadius: '4px', cursor: 'pointer' }}
+                      />
+                      <span>Recordar mis datos en este equipo</span>
+                    </label>
+                  </div>
+
                   {guestSearchError && (
-                    <div style={{ color: '#b91c1c', background: '#fee2e2', padding: '0.68rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', margin: '0.8rem 0' }}>
-                      ⚠️ {guestSearchError}
+                    <div style={{ color: '#991b1b', background: '#fee2e2', border: '1px solid #fecdd3', padding: '0.75rem 0.9rem', borderRadius: '10px', fontSize: '0.8rem', marginTop: '0.85rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, marginBottom: '0.35rem' }}>
+                        <span>⚠️ {guestSearchError}</span>
+                      </div>
+                      {guestSearchError.toLowerCase().includes('no encontramos') ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGuestAuthTab('registro');
+                            setGuestSearchError(null);
+                          }}
+                          style={{ background: '#ffffff', border: '1px solid #f87171', color: '#991b1b', borderRadius: 'var(--radius-pill)', padding: '0.25rem 0.75rem', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', marginTop: '0.2rem' }}
+                        >
+                          Crear cuenta con estos datos →
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGuestRecuperarQuery(guestSearchQuery);
+                            setGuestAuthTab('recuperar');
+                            setGuestSearchError(null);
+                          }}
+                          style={{ background: '#ffffff', border: '1px solid #f87171', color: '#991b1b', borderRadius: 'var(--radius-pill)', padding: '0.25rem 0.75rem', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', marginTop: '0.2rem' }}
+                        >
+                          Restablecer contraseña con 1 clic →
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -314,7 +355,7 @@ const ModalGuestAuth = () => {
                   <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                     <button
                       type="button"
-                      style={{ background: 'none', border: 'none', color: '#e11d48', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                      style={{ background: 'none', border: 'none', color: '#d91a2a', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
                       onClick={() => { setGuestAuthTab('registro'); setGuestSearchError(null); }}
                     >
                       ¿Es tu primera vez? Regístrate aquí

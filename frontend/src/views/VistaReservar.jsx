@@ -14,7 +14,7 @@ const VistaReservar = () => {
     loading, alert, reservaAlert, setReservaAlert,
     handleUserChange, handleReservaChange, handleUserSubmit, handleReservaSubmit,
     setShowGuestAuthModal, setGuestAuthTab, guestSearchQuery, setGuestSearchQuery,
-    guestSearchError, handleGuestSearchSubmit
+    guestSearchError, handleGuestSearchSubmit, handleGuestLogout
   } = useApp();
   return (
         <section className="facile-section">
@@ -210,7 +210,7 @@ const VistaReservar = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedHuesped(null)}
+                      onClick={() => handleGuestLogout()}
                       style={{ background: '#fee2e2', border: '1px solid #fecdd3', borderRadius: 'var(--radius-pill)', padding: '0.3rem 0.7rem', fontSize: '0.75rem', fontWeight: 700, color: '#b91522', cursor: 'pointer' }}
                     >
                       Cambiar

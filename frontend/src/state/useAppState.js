@@ -188,9 +188,16 @@ export function useAppState() {
   // ---- ESTADO DEL MODAL HUÉSPED TIPO AIRBNB ("Inicia sesión o regístrate") ----
   const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
   const [guestAuthTab, setGuestAuthTab] = useState('login'); // 'login' | 'registro' | 'recuperar'
-  const [guestSearchQuery, setGuestSearchQuery] = useState('');
+  const [guestSearchQuery, setGuestSearchQuery] = useState(() => {
+    try {
+      return localStorage.getItem('bookingsoft_remembered_guest_query') || '';
+    } catch {
+      return '';
+    }
+  });
   const [guestLoginPassword, setGuestLoginPassword] = useState('');
   const [showGuestPassword, setShowGuestPassword] = useState(false);
+  const [rememberGuest, setRememberGuest] = useState(true);
   const [guestSearchError, setGuestSearchError] = useState(null);
   const [guestRegJustCreated, setGuestRegJustCreated] = useState(false);
   const [guestRecuperarQuery, setGuestRecuperarQuery] = useState('');
@@ -317,12 +324,25 @@ export function useAppState() {
     setLoading(false);
   };
 
-  // Cerrar sesión
+  // Cerrar sesión empleado
   const handleLogout = () => {
     setAuthToken(null);
     setUsuarioSesion(null);
     setActiveTab('inicio');
     setAlert({ type: 'success', message: 'Sesión de empleado cerrada correctamente.' });
+  };
+
+  // Cerrar sesión de huésped
+  const handleGuestLogout = () => {
+    setSelectedHuesped(null);
+    setGuestRegJustCreated(false);
+    try {
+      localStorage.removeItem('bookingsoft_guest_user');
+    } catch {
+      // noop
+    }
+    setActiveTab('inicio');
+    setAlert({ type: 'info', message: 'Has cerrado tu sesión como huésped. ¡Esperamos verte pronto en Apartamentos Facile!' });
   };
 
   // Verificar backend al cargar
@@ -555,6 +575,14 @@ export function useAppState() {
           setShowGuestAuthModal(false);
           setShowCommunityCommitmentModal(true);
 
+          if (payload.documento || payload.correo) {
+            try {
+              localStorage.setItem('bookingsoft_remembered_guest_query', payload.correo || payload.documento);
+            } catch {
+              // noop
+            }
+          }
+
           const successMsg = data.message || `¡Bienvenido/a a Facile, ${nuevoUsuario.nombre}! Tu cuenta ha sido creada exitosamente.`;
           setAlert({ type: 'success', message: successMsg, data: nuevoUsuario });
 
@@ -604,7 +632,19 @@ export function useAppState() {
         if (res.ok) {
           setSelectedHuesped(data.usuario);
           setShowGuestAuthModal(false);
-          setGuestSearchQuery('');
+          if (rememberGuest) {
+            try {
+              localStorage.setItem('bookingsoft_remembered_guest_query', q);
+            } catch {
+              // noop
+            }
+          } else {
+            try {
+              localStorage.removeItem('bookingsoft_remembered_guest_query');
+            } catch {
+              // noop
+            }
+          }
           setGuestLoginPassword('');
           setAlert({ type: 'success', message: data.message || `¡Bienvenido de nuevo, ${data.usuario.nombre}!` });
         } else {
@@ -1277,6 +1317,7 @@ export function useAppState() {
     loginForm, setLoginForm, loginError, setLoginError, showGuestAuthModal, setShowGuestAuthModal,
     guestAuthTab, setGuestAuthTab, guestSearchQuery, setGuestSearchQuery, guestLoginPassword, setGuestLoginPassword,
     showGuestPassword, setShowGuestPassword, guestSearchError, setGuestSearchError, guestRegJustCreated, setGuestRegJustCreated,
+    rememberGuest, setRememberGuest, handleGuestLogout,
     guestRecuperarQuery, setGuestRecuperarQuery, guestRecuperarSuccess, setGuestRecuperarSuccess, guestNuevaPassword, setGuestNuevaPassword,
     showCommunityCommitmentModal, setShowCommunityCommitmentModal, nombreLegal, setNombreLegal, apellidoLegal, setApellidoLegal,
     fechaNacimiento, setFechaNacimiento, marketingOptOut, setMarketingOptOut, showGuestMenuDropdown, setShowGuestMenuDropdown,
