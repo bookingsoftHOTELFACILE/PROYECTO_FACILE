@@ -7,6 +7,13 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import HuespedesPicker from './HuespedesPicker.jsx';
+import { 
+  calcularNochesAgnostico, 
+  iterarFechasRango, 
+  rangoTieneOcupados, 
+  formatearFechaDisplay, 
+  formatearFechaCorta 
+} from '../utils/dateUtils.js';
 
 export default function ModalDetalle({ apartamento, onClose, onReservar }) {
   const { 
@@ -93,17 +100,6 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     }
   };
 
-  // Helper para parsear fechas YYYY-MM-DD sin desfase horario UTC
-  const parseLocalDate = (str) => {
-    if (!str) return new Date();
-    const clean = String(str).split('T')[0];
-    const parts = clean.split('-').map(Number);
-    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
-      return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
-    }
-    return new Date(str);
-  };
-
   // Matriz de ocupación real simulada + reservas del sistema visibles en todos los meses
   const diasOcupados = useMemo(() => {
     const setOcupados = new Set();
@@ -138,20 +134,15 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     setOcupados.add('2027-02-19');
     setOcupados.add('2027-02-20');
 
-    // Integración con reservas reales del contexto
+    // Integración con reservas reales del contexto (agnóstica de zona horaria)
     if (Array.isArray(reservas)) {
       reservas.forEach(res => {
-        if (res.fecha_inicio && res.fecha_fin) {
+        const inicio = res.fecha_entrada || res.fecha_inicio;
+        const fin = res.fecha_salida || res.fecha_fin;
+        if (inicio && fin) {
           try {
-            let curr = parseLocalDate(res.fecha_inicio);
-            const fin = parseLocalDate(res.fecha_fin);
-            while (curr <= fin) {
-              const y = curr.getFullYear();
-              const m = String(curr.getMonth() + 1).padStart(2, '0');
-              const d = String(curr.getDate()).padStart(2, '0');
-              setOcupados.add(`${y}-${m}-${d}`);
-              curr.setDate(curr.getDate() + 1);
-            }
+            const fechas = iterarFechasRango(inicio, fin);
+            fechas.forEach(f => setOcupados.add(f));
           } catch {
             // Ignorar formatos de fecha inválidos
           }
@@ -231,20 +222,9 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
         return;
       }
 
-      // Verificar si en el rango seleccionado existen días ocupados (con parseLocalDate local sin desfase UTC)
-      let tieneOcupadosEnRango = false;
-      let curr = parseLocalDate(fechaEntrada);
-      const fin = parseLocalDate(celda.fechaStr);
-      while (curr <= fin) {
-        const y = curr.getFullYear();
-        const m = String(curr.getMonth() + 1).padStart(2, '0');
-        const d = String(curr.getDate()).padStart(2, '0');
-        if (diasOcupados.has(`${y}-${m}-${d}`)) {
-          tieneOcupadosEnRango = true;
-          break;
-        }
-        curr.setDate(curr.getDate() + 1);
-      }
+      // Verificar si en el rango seleccionado existen días ocupados
+      // 100% agnóstico de zona horaria internacional (Australia UTC+11, Japón UTC+9, EE.UU., Europa, etc.)
+      const tieneOcupadosEnRango = rangoTieneOcupados(fechaEntrada, celda.fechaStr, diasOcupados);
 
       if (tieneOcupadosEnRango) {
         // Si hay días ocupados en el camino, en lugar de un error molesto que bloquee al usuario,
@@ -258,46 +238,16 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
 
       // Rango válido
       setFechaSalida(celda.fechaStr);
-      const noches = calcularNoches(fechaEntrada, celda.fechaStr);
+      const noches = calcularNochesAgnostico(fechaEntrada, celda.fechaStr);
       setMensajeInteraccion(`¡Excelente! Has seleccionado ${noches} ${noches === 1 ? 'noche' : 'noches'}.`);
       setTimeout(() => setMensajeInteraccion(null), 3500);
     }
   };
 
-  // Formateadores de fecha para la UI
-  const formatearFechaDisplay = (fechaStr) => {
-    if (!fechaStr) return 'Seleccionar fecha';
-    const partes = fechaStr.split('-');
-    if (partes.length === 3) {
-      return `${partes[2]} / ${partes[1]} / ${partes[0]}`;
-    }
-    return fechaStr;
-  };
-
-  const formatearFechaCorta = (fechaStr) => {
-    if (!fechaStr) return '';
-    const partes = fechaStr.split('-');
-    if (partes.length === 3) {
-      const dia = parseInt(partes[2], 10);
-      const mesNum = parseInt(partes[1], 10) - 1;
-      return `${dia} de ${nombresMeses[mesNum]}`;
-    }
-    return fechaStr;
-  };
-
-  // Cálculo de noches y precios
-  const calcularNoches = (inicio, fin) => {
-    if (!inicio || !fin) return 1;
-    const d1 = parseLocalDate(inicio);
-    const d2 = parseLocalDate(fin);
-    const diffTime = d2.getTime() - d1.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 1;
-  };
-
+  // Cálculo de noches de estancia de forma agnóstica de zona horaria
   const nochesEstancia = useMemo(() => {
     if (!fechaEntrada || !fechaSalida) return 1;
-    return calcularNoches(fechaEntrada, fechaSalida);
+    return calcularNochesAgnostico(fechaEntrada, fechaSalida);
   }, [fechaEntrada, fechaSalida]);
 
   // Precio numérico base
