@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import {
   UserPlus, ShieldCheck, Users, Calendar, ListOrdered, Trash2,
   Wrench, Check, Search, Tag, Mail, Shield, User, AlertTriangle,
-  CheckCircle2, X, Clock, KeyRound, RotateCcw, Sparkles, Ban, CheckCircle, Home
+  CheckCircle2, X, Clock, KeyRound, RotateCcw, Sparkles, Ban, CheckCircle, Home,
+  Building2, UserCheck, Download, Plus, Phone
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 
@@ -59,6 +60,71 @@ const VistaPms = () => {
     const start = (validCurrentPage - 1) * EMP_ITEMS_PER_PAGE;
     return filteredEmpleados.slice(start, start + EMP_ITEMS_PER_PAGE);
   }, [filteredEmpleados, validCurrentPage]);
+
+  // Estados de Búsqueda, Filtros y Paginación para Huéspedes Registrados
+  const [huespedSearch, setHuespedSearch] = useState('');
+  const [huespedTipoFilter, setHuespedTipoFilter] = useState('TODOS');
+  const [huespedEstadoFilter, setHuespedEstadoFilter] = useState('TODOS');
+  const [huespedCurrentPage, setHuespedCurrentPage] = useState(1);
+  const HUESPEDES_PER_PAGE = 6;
+
+  // Filtrado reactivo de huéspedes
+  const filteredHuespedes = useMemo(() => {
+    return (huespedes || []).filter(h => {
+      const q = huespedSearch.toLowerCase().trim();
+      const matchSearch = !q ||
+        (h.nombre && h.nombre.toLowerCase().includes(q)) ||
+        (h.documento && String(h.documento).toLowerCase().includes(q)) ||
+        (h.correo && h.correo.toLowerCase().includes(q)) ||
+        (h.telefono && String(h.telefono).includes(q));
+
+      const matchTipo =
+        huespedTipoFilter === 'TODOS' ||
+        (huespedTipoFilter === 'PARTICULAR' && !h.empresa) ||
+        (huespedTipoFilter === 'CORPORATIVO' && !!h.empresa) ||
+        (huespedTipoFilter === 'FRECUENTE' && (h.lealtad === 'Gold' || h.lealtad === 'Platinum'));
+
+      const matchEstado =
+        huespedEstadoFilter === 'TODOS' ||
+        (huespedEstadoFilter === 'ACTIVO' && h.estado === 'Activo') ||
+        (huespedEstadoFilter === 'INACTIVO' && h.estado === 'Inactivo');
+
+      return matchSearch && matchTipo && matchEstado;
+    });
+  }, [huespedes, huespedSearch, huespedTipoFilter, huespedEstadoFilter]);
+
+  const totalHuespedesPages = Math.max(1, Math.ceil(filteredHuespedes.length / HUESPEDES_PER_PAGE));
+  const validHuespedPage = Math.min(huespedCurrentPage, totalHuespedesPages);
+
+  const paginatedHuespedes = useMemo(() => {
+    const start = (validHuespedPage - 1) * HUESPEDES_PER_PAGE;
+    return filteredHuespedes.slice(start, start + HUESPEDES_PER_PAGE);
+  }, [filteredHuespedes, validHuespedPage]);
+
+  // Exportar huéspedes a CSV
+  const handleExportarHuespedesCSV = () => {
+    if (!huespedes || huespedes.length === 0) return;
+    const headers = ['ID', 'Nombre', 'Documento', 'Correo', 'Telefono', 'Empresa', 'Lealtad', 'Estado', 'Creado_Por'];
+    const rows = huespedes.map(h => [
+      h.id_huesped,
+      `"${(h.nombre || '').replace(/"/g, '""')}"`,
+      `"${h.documento || ''}"`,
+      `"${h.correo || ''}"`,
+      `"${h.telefono || ''}"`,
+      `"${h.empresa || 'Particular'}"`,
+      `"${h.lealtad || 'Silver'}"`,
+      `"${h.estado || 'Activo'}"`,
+      `"${h.creado_por || 'Sistema'}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `huespedes_hotel_facile_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Paletas de iniciales en tonos pastel según el diseño con valores HEX garantizados
   const getAvatarStyle = (index) => {
@@ -1430,66 +1496,369 @@ const VistaPms = () => {
           })()}
 
           {/* 2. SUB-PESTAÑA 2: HUÉSPEDES REGISTRADOS */}
-          {(pmsSubTab === 'huespedes' || pmsSubTab === 'todos') && (
-            <div id="pms-huespedes-table" className="clean-card" style={{ marginBottom: '1.5rem' }}>
-              <div className="clean-card-header" style={{ justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Users size={18} color="var(--color-primary-red)"/>
-                  <h3 style={{ fontSize: '1.1rem' }}>Huéspedes Registrados ({huespedes.length})</h3>
+          {(pmsSubTab === 'huespedes' || pmsSubTab === 'todos') && (() => {
+            const totalH = huespedes.length;
+            const activosH = huespedes.filter(h => h.estado === 'Activo').length;
+            const pctActivos = totalH > 0 ? ((activosH / totalH) * 100).toFixed(1) : 100;
+            const particularesH = huespedes.filter(h => !h.empresa).length;
+            const corporativosH = huespedes.filter(h => !!h.empresa).length || huespedes.filter(h => h.lealtad === 'Gold' || h.lealtad === 'Platinum').length;
+
+            const startIdx = filteredHuespedes.length > 0 ? (validHuespedPage - 1) * HUESPEDES_PER_PAGE + 1 : 0;
+            const endIdx = Math.min(validHuespedPage * HUESPEDES_PER_PAGE, filteredHuespedes.length);
+
+            return (
+              <div id="pms-huespedes-module" className="space-y-6 mb-6">
+                
+                {/* 1. TARJETAS DE MÉTRICAS RÁPIDAS (KPIs) */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Total Huéspedes</span>
+                      <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">{totalH}</div>
+                      <span className="text-[11px] font-semibold text-emerald-600 mt-1 inline-block">● 100% Sede Chicó</span>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+                      <Users className="w-6 h-6" />
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Activos en Sistema</span>
+                      <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">{activosH}</div>
+                      <span className="text-[11px] font-semibold text-emerald-600 mt-1 inline-block">● {pctActivos}% Habilitados</span>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Particulares</span>
+                      <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">{particularesH}</div>
+                      <span className="text-[11px] font-semibold text-slate-500 mt-1 inline-block">Cédula / Pasaporte</span>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+                      <UserCheck className="w-6 h-6" />
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Cuentas Corporativas</span>
+                      <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">{corporativosH}</div>
+                      <span className="text-[11px] font-semibold text-slate-500 mt-1 inline-block">Empresas & Convenios</span>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
+                      <Building2 className="w-6 h-6" />
+                    </div>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn-mini"
-                  style={{ background: '#e11d48', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', borderRadius: '6px' }}
-                  onClick={() => {
-                    setShowGuestAuthModal(true);
-                    setGuestAuthTab('registro');
-                  }}
-                >
-                  + Nuevo Huésped
-                </button>
+
+                {/* 2. CONTENEDOR PRINCIPAL: CABECERA, BÚSQUEDA Y TABLA */}
+                <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+                  
+                  {/* Cabecera del Módulo */}
+                  <div className="p-6 sm:p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-red-50 text-[#d91a2a] flex items-center justify-center shrink-0">
+                        <Users className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight m-0">
+                            Huéspedes Registrados
+                          </h2>
+                          <span className="px-2.5 py-0.5 rounded-full bg-[#d91a2a] text-white text-xs font-black">
+                            {totalH} Registros
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold hidden sm:inline">
+                            Sede Chicó • PMS Core
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1 mb-0">
+                          Control centralizado de perfiles de clientes, auditoría de trazabilidad de registro, estados de cuenta y emisión directa de reservas inmediatas.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start md:self-center shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleExportarHuespedesCSV}
+                        className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
+                        title="Exportar base de datos a archivo CSV"
+                      >
+                        <Download className="w-4 h-4 text-slate-500" />
+                        <span>Exportar CSV</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowGuestAuthModal(true);
+                          setGuestAuthTab('registro');
+                        }}
+                        className="px-5 py-2.5 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-black flex items-center gap-2 shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>+ Nuevo Huésped</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Barra de Filtros y Búsqueda */}
+                  <div className="p-4 sm:px-8 bg-slate-50/60 border-b border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="relative w-full md:w-96">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={huespedSearch}
+                        onChange={(e) => {
+                          setHuespedSearch(e.target.value);
+                          setHuespedCurrentPage(1);
+                        }}
+                        placeholder="Buscar por nombre completo, documento de identidad o correo..."
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-800 focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <label className="text-xs font-bold text-slate-500 shrink-0">Tipo:</label>
+                        <select
+                          value={huespedTipoFilter}
+                          onChange={(e) => {
+                            setHuespedTipoFilter(e.target.value);
+                            setHuespedCurrentPage(1);
+                          }}
+                          className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:border-[#d91a2a] outline-none cursor-pointer"
+                        >
+                          <option value="TODOS">Todos los registros</option>
+                          <option value="PARTICULAR">Solo Particulares</option>
+                          <option value="CORPORATIVO">Empresas & Corporativos</option>
+                          <option value="FRECUENTE">Huéspedes Frecuentes (Gold/Platinum)</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <label className="text-xs font-bold text-slate-500 shrink-0">Estado:</label>
+                        <select
+                          value={huespedEstadoFilter}
+                          onChange={(e) => {
+                            setHuespedEstadoFilter(e.target.value);
+                            setHuespedCurrentPage(1);
+                          }}
+                          className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:border-[#d91a2a] outline-none cursor-pointer"
+                        >
+                          <option value="TODOS">Todos</option>
+                          <option value="ACTIVO">Activos</option>
+                          <option value="INACTIVO">Inactivos</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tabla Operativa */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-600">
+                          <th className="px-6 sm:px-8 py-3.5">Huésped / Perfil</th>
+                          <th className="px-6 py-3.5">Documento</th>
+                          <th className="px-6 py-3.5">Contacto & Correo</th>
+                          <th className="px-6 py-3.5">Estado</th>
+                          <th className="px-6 sm:px-8 py-3.5 text-right">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
+                        {paginatedHuespedes.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center text-xs text-slate-500 font-medium">
+                              No se encontraron huéspedes con los filtros seleccionados.
+                            </td>
+                          </tr>
+                        ) : (
+                          paginatedHuespedes.map((h) => {
+                            const iniciales = h.nombre
+                              ? h.nombre.trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase()
+                              : 'HU';
+                            const tipoDocLabel = h.documento?.toUpperCase().startsWith('P')
+                              ? 'Pasaporte Internacional'
+                              : 'Cédula de Ciudadanía';
+
+                            return (
+                              <tr key={h.id_huesped} className="hover:bg-slate-50/80 transition-colors">
+                                {/* Huésped / Perfil */}
+                                <td className="px-6 sm:px-8 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-red-50 text-[#d91a2a] font-black text-xs flex items-center justify-center shrink-0 border border-red-100">
+                                      {iniciales}
+                                    </div>
+                                    <div>
+                                      <div className="font-extrabold text-slate-900 leading-tight">
+                                        {h.nombre}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-[11px] font-bold text-slate-600">
+                                          {h.empresa || 'Particular'}
+                                        </span>
+                                        <span className="text-[11px] text-red-700 font-semibold">
+                                          • Auditoría: {h.creado_por || h.modificado_por || 'Recepción Presencial Walk-in'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Documento */}
+                                <td className="px-6 py-4">
+                                  <div className="font-bold text-slate-800">{h.documento || 'No registrado'}</div>
+                                  <div className="text-[11px] text-slate-500">{tipoDocLabel}</div>
+                                </td>
+
+                                {/* Contacto & Correo */}
+                                <td className="px-6 py-4">
+                                  <a
+                                    href={`mailto:${h.correo}`}
+                                    className="text-slate-800 font-medium flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                                    style={{ textDecoration: 'none' }}
+                                  >
+                                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span>{h.correo}</span>
+                                  </a>
+                                  {h.telefono ? (
+                                    <a
+                                      href={`https://wa.me/${String(h.telefono).replace(/[^0-9]/g, '')}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-slate-600 text-xs mt-0.5 flex items-center gap-1.5 font-mono hover:text-emerald-600 transition-colors"
+                                      style={{ textDecoration: 'none' }}
+                                    >
+                                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <span>{h.telefono}</span>
+                                    </a>
+                                  ) : (
+                                    <span className="text-[11px] text-slate-400 italic block mt-0.5">Sin teléfono registrado</span>
+                                  )}
+                                </td>
+
+                                {/* Estado */}
+                                <td className="px-6 py-4">
+                                  {h.estado === 'Activo' ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                                      Activo
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
+                                      Inactivo
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* Acciones */}
+                                <td className="px-6 sm:px-8 py-4 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedHuesped(h);
+                                        setPmsWalkInGuest({
+                                          tipo_documento: h.documento?.toUpperCase().startsWith('P') ? 'Pasaporte' : 'Cédula de Ciudadanía',
+                                          documento: h.documento || '',
+                                          nombre: h.nombre || '',
+                                          telefono: h.telefono || '',
+                                          correo: h.correo || ''
+                                        });
+                                        setPmsSubTab('recepcion');
+                                      }}
+                                      className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+                                      title="Crear reserva directa para este huésped en Recepción Walk-in"
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                      <span>+ Reservar</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleEstadoHuesped(h)}
+                                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                                        h.estado === 'Activo'
+                                          ? 'border-slate-200 text-slate-600 hover:bg-slate-100'
+                                          : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                                      }`}
+                                    >
+                                      {h.estado === 'Activo' ? 'Desactivar' : 'Activar'}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteHuesped(h.id_huesped)}
+                                      className="p-1.5 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+                                      title="Eliminar registro de huésped"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Paginación al Pie */}
+                  <div className="p-4 sm:px-8 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-slate-500">
+                    <div>
+                      Mostrando <strong>{startIdx} - {endIdx}</strong> de <strong>{filteredHuespedes.length}</strong> huéspedes registrados en el PMS
+                    </div>
+                    {totalHuespedesPages > 1 && (
+                      <div className="flex items-center gap-1.5 self-center sm:self-auto">
+                        <button
+                          type="button"
+                          disabled={validHuespedPage === 1}
+                          onClick={() => setHuespedCurrentPage(p => Math.max(1, p - 1))}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                          Anterior
+                        </button>
+
+                        {Array.from({ length: totalHuespedesPages }, (_, i) => i + 1).map((pg) => (
+                          <button
+                            key={pg}
+                            type="button"
+                            onClick={() => setHuespedCurrentPage(pg)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              validHuespedPage === pg
+                                ? 'bg-[#d91a2a] text-white shadow-xs'
+                                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            {pg}
+                          </button>
+                        ))}
+
+                        <button
+                          type="button"
+                          disabled={validHuespedPage === totalHuespedesPages}
+                          onClick={() => setHuespedCurrentPage(p => Math.min(totalHuespedesPages, p + 1))}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                          Siguiente
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
               </div>
-              <div className="pms-table-wrap">
-                <table className="pms-table">
-                  <thead>
-                    <tr><th>Nombre</th><th>Documento</th><th>Acción</th></tr>
-                  </thead>
-                  <tbody>
-                    {huespedes.map(h => (
-                      <tr key={h.id_huesped}>
-                        <td>
-                          <strong>{h.nombre}</strong>
-                          <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>{h.empresa || 'Particular'}</span>
-                          {h.modificado_por && <span style={{ fontSize: '0.68rem', color: '#0284c7' }}>Auditoría: {h.modificado_por}</span>}
-                        </td>
-                        <td><code>{h.documento}</code></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '0.25rem' }}>
-                            <button
-                              className="btn-mini"
-                              style={{ background: '#f0fdf4', color: '#166534', borderColor: '#bbf7d0', fontWeight: 700 }}
-                              onClick={() => {
-                                setSelectedHuesped(h);
-                                setPmsSubTab('recepcion');
-                              }}
-                            >
-                              + Reservar
-                            </button>
-                            <button className="btn-mini" onClick={() => handleToggleEstadoHuesped(h)}>
-                              {h.estado === 'Activo' ? 'Desactivar' : 'Activar'}
-                            </button>
-                            <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteHuesped(h.id_huesped)}>
-                              <Trash2 size={11}/>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* 3. SUB-PESTAÑA 3: RESERVAS ACTIVAS DE APARTAMENTOS */}
           {(pmsSubTab === 'reservas' || pmsSubTab === 'todos') && (
