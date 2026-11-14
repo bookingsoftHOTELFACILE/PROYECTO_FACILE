@@ -85,83 +85,143 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
         </div>
       </div>
 
-      {/* CALENDARIO DE OCUPACIÓN Y DISPONIBILIDAD ESTILO RECEPCIÓN */}
-      <div style={{ marginTop: '0.8rem', background: '#f8fafc', padding: '0.85rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+      {/* CALENDARIO DE OCUPACIÓN Y DISPONIBILIDAD ESTILIZADO DE TRES ESTADOS */}
+      <div style={{ marginTop: '0.8rem', backgroundColor: '#ffffff', padding: '12px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        
+        {/* Header interactivo del Calendario */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
           <button
             type="button"
-            style={{ padding: '0.2rem 0.55rem', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '4px 8px', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, color: '#334155', transition: 'all 0.15s ease' }}
             onClick={() => setCalDate(new Date(year, month - 1, 1))}
           >
             ◀ Mes Ant.
           </button>
-          <strong style={{ color: '#0f172a', fontSize: '0.84rem' }}>
+          <span style={{ color: '#0f172a', fontSize: '0.84rem', fontWeight: 800 }}>
             🗓️ Disponibilidad: {monthNames[month]} {year}
-          </strong>
+          </span>
           <button
             type="button"
-            style={{ padding: '0.2rem 0.55rem', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '4px 8px', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, color: '#334155', transition: 'all 0.15s ease' }}
             onClick={() => setCalDate(new Date(year, month + 1, 1))}
           >
             Mes Sig. ▶
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.7rem', marginBottom: '0.5rem', fontSize: '0.72rem', justifyContent: 'center' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#991b1b', fontWeight: 700 }}>
-            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }}/> Ocupado
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#166534', fontWeight: 700 }}>
-            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/> Disponible
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#1d4ed8', fontWeight: 700 }}>
-            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#2563eb', display: 'inline-block' }}/> Tu Selección
-          </span>
+        {/* Leyenda Explicativa de Tres Estados */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '6px 8px', backgroundColor: '#f8fafc', borderRadius: '10px', margin: '8px 0', border: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 600, color: '#475569' }}>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', display: 'inline-block' }} />
+            <span>Disponible</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 600, color: '#ef4444' }}>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#94a3b8', textDecoration: 'line-through 2px #ef4444', fontSize: '8px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              ✕
+            </span>
+            <span>Ocupado</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 700, color: '#d91a2a' }}>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#d91a2a', color: '#ffffff', fontSize: '8px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              ✓
+            </span>
+            <span>Tu Selección</span>
+          </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+        {/* Encabezado Días Semanales */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>
           <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+        {/* Grilla Interactiva de Días */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
           {daysGrid.map((item, idx) => {
-            if (!item) return <div key={`empty-${idx}`}/>;
-            let bg = '#dcfce7';
-            let color = '#166534';
-            let borderColor = '#86efac';
+            if (!item) return <div key={`empty-${idx}`} style={{ height: '32px' }} />;
 
+            // 1. DÍA OCUPADO (No disponible)
             if (item.isOccupied) {
-              bg = '#fee2e2';
-              color = '#991b1b';
-              borderColor = '#fca5a5';
-            } else if (item.isSelectedIn || item.isSelectedOut) {
-              bg = '#2563eb';
-              color = '#ffffff';
-              borderColor = '#1d4ed8';
-            } else if (item.inRange) {
-              bg = '#dbeafe';
-              color = '#1e40af';
-              borderColor = '#93c5fd';
+              return (
+                <div
+                  key={item.dayStr}
+                  title={`Día ${item.d} Ocupado (No disponible)`}
+                  style={{
+                    height: '32px',
+                    borderRadius: '6px',
+                    backgroundColor: '#f1f5f9',
+                    border: '1px solid #e2e8f0',
+                    color: '#94a3b8',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    textDecoration: 'line-through 2px #ef4444',
+                    cursor: 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    userSelect: 'none'
+                  }}
+                >
+                  {item.d}
+                </div>
+              );
             }
 
+            // 2. DÍA EN SELECCIÓN (Entrada, Salida o en Rango)
+            const esExtremo = item.isSelectedIn || item.isSelectedOut;
+            if (esExtremo || item.inRange) {
+              return (
+                <button
+                  key={item.dayStr}
+                  type="button"
+                  onClick={() => handleDayClick(item)}
+                  title={`${item.isSelectedIn ? 'Llegada: ' : item.isSelectedOut ? 'Salida: ' : ''}${item.dayStr}`}
+                  style={{
+                    height: '32px',
+                    borderRadius: '6px',
+                    backgroundColor: esExtremo ? '#d91a2a' : '#fee2e2',
+                    color: esExtremo ? '#ffffff' : '#b91522',
+                    fontSize: '0.78rem',
+                    fontWeight: 800,
+                    border: esExtremo ? 'none' : '1px dashed #fca5a5',
+                    boxShadow: esExtremo ? '0 2px 6px rgba(217, 26, 42, 0.35)' : 'none',
+                    transform: esExtremo ? 'scale(1.05)' : 'scale(1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {item.d}
+                </button>
+              );
+            }
+
+            // 3. DÍA DISPONIBLE
             return (
               <button
                 key={item.dayStr}
                 type="button"
                 onClick={() => handleDayClick(item)}
-                disabled={item.isOccupied}
-                title={item.isOccupied ? `Día ${item.d} Ocupado` : `Seleccionar fecha ${item.dayStr}`}
+                title={`Seleccionar fecha ${item.dayStr}`}
                 style={{
-                  background: bg,
-                  color: color,
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '5px',
-                  padding: '0.3rem 0.1rem',
-                  fontSize: '0.76rem',
-                  cursor: item.isOccupied ? 'not-allowed' : 'pointer',
+                  height: '32px',
+                  borderRadius: '6px',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                  fontSize: '0.78rem',
                   fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   transition: 'all 0.15s ease'
                 }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.borderColor = '#d91a2a'; e.currentTarget.style.color = '#d91a2a'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#0f172a'; }}
               >
                 {item.d}
               </button>

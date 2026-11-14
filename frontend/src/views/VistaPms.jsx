@@ -708,75 +708,148 @@ const VistaPms = () => {
                 };
 
                 return (
-                  <div style={{ background: '#ffffff', padding: '1rem', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '1.2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                      <button type="button" className="btn-mini" onClick={() => setCalDate(new Date(year, month - 1, 1))}>◀ Mes Ant.</button>
-                      <strong style={{ color: '#0f172a', fontSize: '0.92rem', textTransform: 'capitalize' }}>🗓️ Disponibilidad en Calendario: {monthNames[month]} {year}</strong>
-                      <button className="btn-mini" type="button" onClick={() => setCalDate(new Date(year, month + 1, 1))}>Mes Sig. ▶</button>
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '14px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: '1.2rem' }}>
+                    
+                    {/* Header interactivo del Calendario */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.84rem', fontWeight: 700, color: '#0f172a', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
+                      <button 
+                        type="button" 
+                        onClick={() => setCalDate(new Date(year, month - 1, 1))}
+                        title="Mes Anterior"
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', cursor: 'pointer', fontSize: '0.75rem', padding: '5px 9px', borderRadius: '8px', fontWeight: 700, transition: 'all 0.15s ease' }}
+                      >
+                        <span>◀ Mes Ant.</span>
+                      </button>
+
+                      <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                        🗓️ Disponibilidad: {monthNames[month]} {year}
+                      </span>
+
+                      <button 
+                        type="button" 
+                        onClick={() => setCalDate(new Date(year, month + 1, 1))}
+                        title="Mes Siguiente"
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', cursor: 'pointer', fontSize: '0.75rem', padding: '5px 9px', borderRadius: '8px', fontWeight: 700, transition: 'all 0.15s ease' }}
+                      >
+                        <span>Mes Sig. ▶</span>
+                      </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1.2rem', marginBottom: '0.8rem', fontSize: '0.78rem', justifyContent: 'center' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#991b1b', fontWeight: 700 }}>
-                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#ef4444', display: 'inline-block' }}/> 🔴 Fechas Ocupadas
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#166534', fontWeight: 700 }}>
-                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#22c55e', display: 'inline-block' }}/> 🟢 Fechas Libres
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#1d4ed8', fontWeight: 700 }}>
-                        <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }}/> 🔵 Tu Selección
-                      </span>
+                    {/* Leyenda Explicativa de Tres Estados */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '8px 10px', backgroundColor: '#f8fafc', borderRadius: '12px', margin: '10px 0', border: '1px solid #f1f5f9' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
+                        <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', display: 'inline-block' }} />
+                        <span>Disponible</span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 600, color: '#ef4444' }}>
+                        <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#94a3b8', textDecoration: 'line-through 2px #ef4444', fontSize: '9px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          ✕
+                        </span>
+                        <span>Ocupado (No disponible)</span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#d91a2a' }}>
+                        <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#d91a2a', color: '#ffffff', fontSize: '9px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          ✓
+                        </span>
+                        <span>Tu Selección</span>
+                      </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
-                      <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                    {/* Encabezado Días Semanales */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '6px' }}>
+                      <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                    {/* Grilla Interactiva de Días */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
                       {daysGrid.map((item, idx) => {
-                        if (!item) return <div key={`empty-${idx}`}/>;
-                        let bg = '#dcfce7';
-                        let color = '#166534';
-                        let borderColor = '#86efac';
+                        if (!item) return <div key={`empty-${idx}`} style={{ height: '36px' }} />;
 
+                        // 1. DÍA OCUPADO (No disponible)
                         if (item.isOccupied) {
-                          bg = '#fee2e2';
-                          color = '#991b1b';
-                          borderColor = '#fca5a5';
-                        } else if (item.isSelectedIn || item.isSelectedOut) {
-                          bg = '#2563eb';
-                          color = '#ffffff';
-                          borderColor = '#1d4ed8';
-                        } else if (item.inRange) {
-                          bg = '#dbeafe';
-                          color = '#1e40af';
-                          borderColor = '#93c5fd';
+                          return (
+                            <div
+                              key={item.dayStr}
+                              title={`Fecha ${item.dayStr} ocupada (No disponible)`}
+                              style={{
+                                height: '36px',
+                                borderRadius: '8px',
+                                backgroundColor: '#f1f5f9',
+                                border: '1px solid #e2e8f0',
+                                color: '#94a3b8',
+                                fontSize: '0.82rem',
+                                fontWeight: 600,
+                                textDecoration: 'line-through 2px #ef4444',
+                                cursor: 'not-allowed',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                userSelect: 'none'
+                              }}
+                            >
+                              {item.d}
+                            </div>
+                          );
                         }
 
+                        // 2. DÍA EN SELECCIÓN (Entrada, Salida o en Rango)
+                        const esExtremo = item.isSelectedIn || item.isSelectedOut;
+                        if (esExtremo || item.inRange) {
+                          return (
+                            <button
+                              key={item.dayStr}
+                              type="button"
+                              onClick={() => handleDayClick(item)}
+                              title={`${item.isSelectedIn ? 'Llegada: ' : item.isSelectedOut ? 'Salida: ' : ''}${item.dayStr}`}
+                              style={{
+                                height: '36px',
+                                borderRadius: '8px',
+                                backgroundColor: esExtremo ? '#d91a2a' : '#fee2e2',
+                                color: esExtremo ? '#ffffff' : '#b91522',
+                                fontSize: '0.82rem',
+                                fontWeight: 800,
+                                border: esExtremo ? 'none' : '1px dashed #fca5a5',
+                                boxShadow: esExtremo ? '0 2px 8px rgba(217, 26, 42, 0.35)' : 'none',
+                                transform: esExtremo ? 'scale(1.05)' : 'scale(1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                              }}
+                            >
+                              {item.d}
+                            </button>
+                          );
+                        }
+
+                        // 3. DÍA DISPONIBLE
                         return (
                           <button
                             key={item.dayStr}
                             type="button"
                             onClick={() => handleDayClick(item)}
-                            disabled={item.isOccupied}
-                            title={item.isOccupied ? `Día ${item.d} Ocupado` : `Seleccionar fecha ${item.dayStr}`}
+                            title={`Seleccionar fecha ${item.dayStr}`}
                             style={{
-                              background: bg,
-                              color: color,
-                              border: `1px solid ${borderColor}`,
-                              borderRadius: '6px',
-                              padding: '0.45rem 0.2rem',
-                              fontSize: '0.8rem',
-                              cursor: item.isOccupied ? 'not-allowed' : 'pointer',
-                              fontWeight: 'bold',
+                              height: '36px',
+                              borderRadius: '8px',
+                              backgroundColor: '#ffffff',
+                              border: '1px solid #cbd5e1',
+                              color: '#0f172a',
+                              fontSize: '0.82rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
                               display: 'flex',
-                              flexDirection: 'column',
                               alignItems: 'center',
                               justifyContent: 'center',
                               transition: 'all 0.15s ease'
                             }}
+                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.borderColor = '#d91a2a'; e.currentTarget.style.color = '#d91a2a'; }}
+                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#0f172a'; }}
                           >
-                            <span>{item.d}</span>
-                            {item.isOccupied && <span style={{ fontSize: '0.55rem', textTransform: 'uppercase', marginTop: '1px' }}>Ocupado</span>}
+                            {item.d}
                           </button>
                         );
                       })}
