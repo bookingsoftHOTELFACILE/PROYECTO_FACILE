@@ -2,6 +2,7 @@ import {
   Users, Home, Wifi, Check, Maximize2
 } from 'lucide-react';
 import FigmaBookingBox from '../components/FigmaBookingBox.jsx';
+import UnidadesAsignablesDuplex from '../components/UnidadesAsignablesDuplex.jsx';
 import { useApp } from '../context/AppContext.jsx';
 
 const VistaCatalogo = () => {
@@ -93,6 +94,30 @@ const VistaCatalogo = () => {
         const alojamientosVisibles = filtroTipoApto === 'todas'
           ? alojamientosData
           : alojamientosData.filter(apto => apto.tipo === filtroTipoApto);
+
+        // Vista Panorámica Oficial de Unidades Asignables para la categoría Dúplex
+        if (filtroTipoApto === 'Dúplex' || filtroTipoApto === 'duplex') {
+          return (
+            <UnidadesAsignablesDuplex
+              categoriaActiva={filtroTipoApto}
+              onCambiarCategoria={(cat) => setFiltroTipoApto(cat)}
+              onSeleccionarUnidad={(unidad) => {
+                setReservaData(prev => ({ ...prev, id_habitacion: unidad.id }));
+                setActiveTab('reservar');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onVerDetalleCompleto={() => {
+                const duplexApto = alojamientosData.find(a => a.tipo === 'Dúplex') || alojamientosData[0];
+                setSelectedAptoFigma(duplexApto);
+              }}
+              onReservarDuplexGeneral={() => handleReservarTipo('Dúplex')}
+              onAbrirGaleria={() => {
+                const duplexApto = alojamientosData.find(a => a.tipo === 'Dúplex') || alojamientosData[0];
+                setAptoLightboxPhoto({ photos: duplexApto.fotos, index: 0 });
+              }}
+            />
+          );
+        }
 
         return (
           <section className="facile-section" style={{ borderTop: activeTab === 'inicio' ? '1px solid #e2e8f0' : 'none' }}>
