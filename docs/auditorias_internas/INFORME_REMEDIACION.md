@@ -62,9 +62,57 @@ git diff --stat origin/main...HEAD      # 58 ficheros, +9.792 / -7.677
 
 ### Estados de ramas (importante para el merge)
 
-- La rama está **sincronizada** con su upstream `origin/test/e2e-double-click-protection`: los 11 commits fueron **pushados** el 2026-11-14 por la IA verificadora (antes de esa fecha estaban solo en local).
+- La rama está **sincronizada** con su upstream `origin/test/e2e-double-click-protection`: los commits fueron **pushados** el 2026-11-14 (último: `43a4253`).
 - La rama está **adelante 13** de `origin/main` (los de remediación + 4 previos: `b9d365e` E2E doble clic, `8b81755` modelo huésped, `05fcd5d`/`05bed01` pruebas de `reservas_service`).
-- **Divergencia a resolver:** `origin/main` contiene `567c7db Revert "Merge pull request #53 … test/bd-model-huesped"`, es decir, **main revirtió** las validaciones del modelo huésped (`schemas.py` + `test_model_huesped.py`), mientras que **esta rama sí las conserva** (`8b81755`). Un merge a `main` reintroducirá lo que main revirtió: debe decidirse si se re-aplica o se descarta.
+
+### Divergencia real con `origin/main` (analizada el 2026-11-14)
+
+> **Hallazgo importante:** el problema no es solo el revert del PR#53. `main`
+> (tip `567c7db`, 2026-10-26) y esta rama han divergido hacia **dos realidades
+> incompatibles**. Un merge a ciegas rompería los gates.
+
+Merge-base: `d1445cc` (2026-10-23). Cambio neto de `main` desde entonces:
+**35 ficheros, +387 / −6.098**.
+
+**Lo que `main` elimina** (todo a la vez, por el revert del merge `8bebc0a`):
+
+| Elemento perdido en `main` | Impacto |
+| --- | --- |
+| `E2E/tests/{login,registro,habitaciones,cancelacion}.spec.js` | la suite E2E de `main` queda **vacía** |
+| `frontend/src/{catalogo_hu009,smoke}.test.js` | **toda** la unitaria de frontend (6 pruebas) |
+| `vitest`, `jsdom`, `@vitest/coverage-v8` + scripts `test`/`test:coverage` | `npm test` deja de existir en `main` |
+| bloque `test:` de `frontend/vite.config.js` | Vitest sin configuración (y proxy a `:4000` en vez de `:4001`) |
+| `[tool.pytest.ini_options]` y `[tool.coverage.*]` de `pyproject.toml`, `pytest-cov` del `Pipfile` | cobertura de backend sin configurar |
+| `coverage/`, `*.lcov`, `.pytest_cache/` de `.gitignore` | artefactos rastreables otra vez |
+| `frontend/package-lock.json`, `frontend/public/favicon.svg`, `.github/pull_request_template.md`, `docs/matriz-rotacion.md` | colateral |
+
+**Lo que `main` cambia de verdad** (trabajo de un compañero, no es colateral):
+
+- **`backend/schema.sql` → otro seed:** 10 empleados con usuarios
+  `bookingsoft_admin`, `carlos_recep`, `marta_limpieza`, `grupobookingsoft`,
+  `camila_recepcion`, `esperanza_amallaves`, `jhon_mantenimiento` + alias.
+- **Los tests de backend de `main`** (`conftest`, `test_auth`, `test_consultas`,
+  `test_reservas`) se reescribieron para encajar con ese seed.
+- **`frontend/src/App.jsx` −942 líneas:** refactor parcial del monolito (5.973 líneas);
+  nuestra rama lo llevó a 94 con `views/`+`components/`.
+- `frontend/index.html`: favicon → emoji 🏨 · `README.md`: tabla de credenciales.
+- **Docs movidos:** `docs/auditorias_internas/*.md` → `docs/*.md` (R100) y borrado
+  `docs/matriz-rotacion.md`.
+
+**Inconsistencia detectada en `main`:** su `README` documenta
+`admin` / `adminpassword123`, pero sus propios tests hacen login con
+`bookingsoft_admin` / `Admin2026!`. **El tip de `main` no es autoconsistente.**
+
+**Nuestra rama** mantiene el seed de 4 usuarios (`admin`, `recepcion`, `amallaves`,
+`mantenimiento` con `Admin2026!`…), documentado en el README y cubierto por
+**55 pytest + 6 E2E + 6 vitest**.
+
+**Consecuencia y recomendación:** el conflicto de merge real es el **seed** (4 vs 10
+usuarios) y la infraestructura de pruebas, no el PR#53. Un `git merge origin/main`
+automático pasaría el `schema.sql` de ellos y **rompería los 55 tests** (que entran
+como `admin`/`Admin2026!`), además de borrar la suite E2E y las unitarias.
+**Decisión: no fusionar a ciegas**; el seed es una decisión de negocio/demo del equipo
+y debe resolverse en el Pull Request, no escondida en un merge.
 
 ---
 
@@ -350,7 +398,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X DELETE http://localhost:4001/api/res
 - [ ] 0 ficheros de `coverage/`/`dist/` trackeados; `.gitignore` completo.
 - [ ] `/health` no filtra detalle de BD; `/api/habitaciones` exige rol; `/api/habitaciones/publicas` es público.
 - [ ] Contenedores `backend` y `frontend` reconstruidos con el código actual.
-- [ ] Decisión tomada sobre el revert del PR#53 en `main` antes del merge.
+- [ ] Decisión tomada sobre el **seed y la infraestructura de pruebas** antes del merge con `main` (ver §2, "Divergencia real con `origin/main`").
 
 ---
 
@@ -362,7 +410,8 @@ secciones 0 y 8 de este documento. Veredicto emitido: **aprobado con observacion
 | Observación | Severidad | Estado |
 | --- | :---: | --- |
 | **H-REV-01** — `NameError: name 'e' is not defined` en `backend/database/connection.py` | Media | ✅ **Confirmado y corregido** en `47a122c` |
-| **H-REV-02** — divergencia con `origin/main` por el revert del PR#53 | Media | ⏳ **Pendiente de decisión** (ver §2 y §13) |
+| **H-REV-02** — divergencia con `origin/main` por el revert del PR#53 | Media | ⏳ **Ampliada el 2026-11-14**: el alcance real es mayor (seed incompatible y `main` sin suite de pruebas); ver §2 |
+| **Nuevo (2026-11-14)** — `main` perdió la infraestructura de pruebas y usa un seed distinto | Media | ⏳ Decisión del equipo antes del PR; ver §2 "Divergencia real" |
 | **H-REV-03** — commits sin publicar | Baja | ✅ Resuelto: rama pushada el 2026-11-14 |
 | **Requisito de Node ≥ 20.19** para Vitest | Documentación | ✅ Documentado en §1/§8 y fijado en `frontend/.nvmrc` + `engines` |
 | **Imprecisión mía:** el desvío 401/403 no estaba en `api/client.js` | Precisión | ✅ Corregido en §4 (Fase C) |
