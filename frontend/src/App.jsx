@@ -8,7 +8,7 @@ import ModalGuestAuth from './components/ModalGuestAuth.jsx';
 import ModalCompromiso from './components/ModalCompromiso.jsx';
 import ModalLegal from './components/ModalLegal.jsx';
 import LightboxGlobal from './components/LightboxGlobal.jsx';
-import ModalDetalleApto from './components/ModalDetalleApto.jsx';
+import ModalDetalle from './components/ModalDetalle.jsx';
 
 import VistaInicio from './views/VistaInicio.jsx';
 import VistaCatalogo from './views/VistaCatalogo.jsx';
@@ -68,7 +68,7 @@ function AppLayout() {
       {showGuestAuthModal && <ModalGuestAuth />}
       {showCommunityCommitmentModal && <ModalCompromiso />}
       {aptoLightboxPhoto && <LightboxGlobal />}
-      {selectedAptoFigma && <ModalDetalleApto />}
+      {selectedAptoFigma && <ModalDetalle />}
       <ModalLegal />
     </div>
   );

@@ -114,3 +114,4 @@ export const ALOJAMIENTOS_FACILE = [
     ]
   }
 ];
+
