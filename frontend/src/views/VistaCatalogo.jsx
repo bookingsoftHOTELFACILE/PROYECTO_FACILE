@@ -1,8 +1,7 @@
 import {
-  Users, Home, Wifi, Check, Maximize2
+  Users, Home, Wifi, Check, Maximize2, Eye
 } from 'lucide-react';
 import FigmaBookingBox from '../components/FigmaBookingBox.jsx';
-import UnidadesAsignablesDuplex from '../components/UnidadesAsignablesDuplex.jsx';
 import { useApp } from '../context/AppContext.jsx';
 
 const VistaCatalogo = () => {
@@ -95,30 +94,6 @@ const VistaCatalogo = () => {
           ? alojamientosData
           : alojamientosData.filter(apto => apto.tipo === filtroTipoApto);
 
-        // Vista Panorámica Oficial de Unidades Asignables para la categoría Dúplex
-        if (filtroTipoApto === 'Dúplex' || filtroTipoApto === 'duplex') {
-          return (
-            <UnidadesAsignablesDuplex
-              categoriaActiva={filtroTipoApto}
-              onCambiarCategoria={(cat) => setFiltroTipoApto(cat)}
-              onSeleccionarUnidad={(unidad) => {
-                setReservaData(prev => ({ ...prev, id_habitacion: unidad.id }));
-                setActiveTab('reservar');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              onVerDetalleCompleto={() => {
-                const duplexApto = alojamientosData.find(a => a.tipo === 'Dúplex') || alojamientosData[0];
-                setSelectedAptoFigma(duplexApto);
-              }}
-              onReservarDuplexGeneral={() => handleReservarTipo('Dúplex')}
-              onAbrirGaleria={() => {
-                const duplexApto = alojamientosData.find(a => a.tipo === 'Dúplex') || alojamientosData[0];
-                setAptoLightboxPhoto({ photos: duplexApto.fotos, index: 0 });
-              }}
-            />
-          );
-        }
-
         return (
           <section className="facile-section" style={{ borderTop: activeTab === 'inicio' ? '1px solid #e2e8f0' : 'none' }}>
             <div className="section-title-wrap">
@@ -127,7 +102,7 @@ const VistaCatalogo = () => {
             </div>
 
             {/* BOTONES DE FILTRO POR CATEGORÍA SIN RECARGA */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem', marginBottom: '2rem', flexWrap: 'wrap', padding: '0 1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.65rem', marginBottom: '2.5rem', flexWrap: 'wrap', padding: '0 1rem' }}>
               {[
                 { id: 'todas', label: 'Ver Todos', count: 38 },
                 { id: 'Dúplex', label: 'Dúplex', count: 14 },
@@ -142,27 +117,41 @@ const VistaCatalogo = () => {
                     type="button"
                     onClick={() => setFiltroTipoApto(f.id)}
                     style={{
-                      padding: '0.6rem 1.15rem',
-                      borderRadius: '25px',
-                      border: isActive ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
-                      background: isActive ? '#e11d48' : '#ffffff',
+                      padding: '0.6rem 1.25rem',
+                      borderRadius: 'var(--radius-pill, 9999px)',
+                      border: isActive ? '2px solid #d91a2a' : '1.5px solid #cbd5e1',
+                      background: isActive ? '#d91a2a' : '#ffffff',
                       color: isActive ? '#ffffff' : '#334155',
                       fontSize: '0.84rem',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      boxShadow: isActive ? '0 4px 12px rgba(225,29,72,0.25)' : '0 2px 6px rgba(0,0,0,0.03)',
+                      boxShadow: isActive ? '0 4px 14px rgba(217, 26, 42, 0.28)' : '0 2px 6px rgba(0,0,0,0.03)',
                       transition: 'all 0.2s ease',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.45rem'
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={e => {
+                      if (!isActive) {
+                        e.currentTarget.style.borderColor = '#d91a2a';
+                        e.currentTarget.style.color = '#d91a2a';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isActive) {
+                        e.currentTarget.style.borderColor = '#cbd5e1';
+                        e.currentTarget.style.color = '#334155';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }
                     }}
                   >
                     <span>{f.label}</span>
                     <span style={{
                       background: isActive ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
                       color: isActive ? '#ffffff' : '#64748b',
-                      padding: '0.12rem 0.45rem',
-                      borderRadius: '12px',
+                      padding: '0.12rem 0.5rem',
+                      borderRadius: '9999px',
                       fontSize: '0.72rem',
                       fontWeight: 800
                     }}>
@@ -185,7 +174,7 @@ const VistaCatalogo = () => {
                       {/* ENCABEZADO ORIGINAL DE LA TARJETA CON NOMBRE VISIBLE */}
                       <div className="apto-header">
                         <h3>{apto.tipo}</h3>
-                        <span className="badge-red-num">{apto.unidades}</span>
+                        <span className="badge-red-num" style={{ background: '#fee2e2', color: '#d91a2a', borderRadius: 'var(--radius-pill, 9999px)', fontWeight: 800 }}>{apto.unidades}</span>
                       </div>
 
                       {/* IMAGEN DE BANNER PRINCIPAL DE LA TARJETA */}
@@ -203,7 +192,7 @@ const VistaCatalogo = () => {
                         />
 
                         {/* INSIGNIA VER DETALLE FIGMA */}
-                        <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: '15px', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                           <Maximize2 size={13}/> Ver Detalle Figma
                         </div>
                       </div>
@@ -220,7 +209,7 @@ const VistaCatalogo = () => {
                               borderRadius: '6px',
                               overflow: 'hidden',
                               cursor: 'pointer',
-                              border: activePhotoIndex === i ? '2px solid #e11d48' : '1.5px solid #cbd5e1',
+                              border: activePhotoIndex === i ? '2px solid #d91a2a' : '1.5px solid #cbd5e1',
                               opacity: activePhotoIndex === i ? 1 : 0.65,
                               transition: 'all 0.2s ease',
                               flexShrink: 0
@@ -245,16 +234,66 @@ const VistaCatalogo = () => {
                           <div className="price-text">
                             {apto.precio} <span>{apto.precioSub}</span>
                           </div>
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button
-                              className="btn-book-red"
-                              style={{ background: '#0f172a', color: '#fff', padding: '0.45rem 0.75rem', fontSize: '0.78rem' }}
+                              type="button"
+                              style={{
+                                borderRadius: 'var(--radius-pill, 9999px)',
+                                padding: '8px 16px',
+                                background: '#f8fafc',
+                                color: '#0f172a',
+                                fontWeight: 700,
+                                fontSize: '0.82rem',
+                                border: '1px solid #cbd5e1',
+                                transition: 'all 0.2s ease',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = '#ffffff';
+                                e.currentTarget.style.borderColor = '#d91a2a';
+                                e.currentTarget.style.color = '#d91a2a';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = '#f8fafc';
+                                e.currentTarget.style.borderColor = '#cbd5e1';
+                                e.currentTarget.style.color = '#0f172a';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                              }}
                               onClick={() => setSelectedAptoFigma(apto)}
                               title="Ver vista interactiva de Figma"
                             >
-                              Detalle
+                              <Eye size={13} color="#d91a2a" />
+                              <span>Detalle</span>
                             </button>
-                            <button className="btn-book-red" onClick={() => handleReservarTipo(apto.tipo)}>
+                            <button
+                              type="button"
+                              className="btn-book-red"
+                              style={{
+                                borderRadius: 'var(--radius-pill, 9999px)',
+                                padding: '8px 18px',
+                                background: '#d91a2a',
+                                color: '#ffffff',
+                                fontWeight: 700,
+                                fontSize: '0.82rem',
+                                border: 'none',
+                                boxShadow: '0 2px 8px rgba(217, 26, 42, 0.25)',
+                                transition: 'all 0.2s ease',
+                                cursor: 'pointer'
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = '#b91522';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = '#d91a2a';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                              }}
+                              onClick={() => handleReservarTipo(apto.tipo)}
+                            >
                               Reservar
                             </button>
                           </div>
@@ -341,7 +380,7 @@ const VistaCatalogo = () => {
                               onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
                               onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                             />
-                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.4rem 0.85rem', borderRadius: '15px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.4rem 0.85rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                               <Maximize2 size={14}/> Ver Detalle Figma
                             </div>
                           </div>
@@ -358,7 +397,7 @@ const VistaCatalogo = () => {
                                   borderRadius: '6px',
                                   overflow: 'hidden',
                                   cursor: 'pointer',
-                                  border: activePhotoIndex === i ? '2px solid #e11d48' : '1.5px solid #334155',
+                                  border: activePhotoIndex === i ? '2px solid #d91a2a' : '1.5px solid #334155',
                                   opacity: activePhotoIndex === i ? 1 : 0.65,
                                   transition: 'all 0.2s ease',
                                   flexShrink: 0
@@ -375,7 +414,7 @@ const VistaCatalogo = () => {
                           <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                               <h3 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>{apto.tipo}</h3>
-                              <span className="badge-red-num" style={{ fontSize: '0.85rem', padding: '0.35rem 0.85rem' }}>{apto.unidades}</span>
+                              <span className="badge-red-num" style={{ fontSize: '0.85rem', padding: '0.35rem 0.85rem', background: '#fee2e2', color: '#d91a2a', borderRadius: 'var(--radius-pill, 9999px)', fontWeight: 800 }}>{apto.unidades}</span>
                             </div>
 
                             <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: '1.65', marginBottom: '1.5rem' }}>
@@ -391,7 +430,7 @@ const VistaCatalogo = () => {
 
                           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                             <div>
-                              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#e11d48', lineHeight: 1 }}>
+                              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#d91a2a', lineHeight: 1 }}>
                                 {apto.precio}
                               </div>
                               <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{apto.precioSub}</span>
@@ -399,16 +438,58 @@ const VistaCatalogo = () => {
 
                             <div style={{ display: 'flex', gap: '0.6rem' }}>
                               <button
-                                className="btn-book-red"
-                                style={{ background: '#0f172a', color: '#fff', padding: '0.6rem 1.1rem', fontSize: '0.86rem' }}
+                                type="button"
+                                style={{
+                                  borderRadius: 'var(--radius-pill, 9999px)',
+                                  padding: '0.6rem 1.25rem',
+                                  background: '#0f172a',
+                                  color: '#ffffff',
+                                  fontSize: '0.86rem',
+                                  fontWeight: 700,
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px'
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = '#1e293b';
+                                  e.currentTarget.style.transform = 'translateY(-1px)';
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = '#0f172a';
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                }}
                                 onClick={() => setSelectedAptoFigma(apto)}
                                 title="Ver vista interactiva de Figma"
                               >
-                                Detalle Completo
+                                <Eye size={15} color="#ffffff" />
+                                <span>Detalle Completo</span>
                               </button>
                               <button
+                                type="button"
                                 className="btn-book-red"
-                                style={{ padding: '0.6rem 1.25rem', fontSize: '0.86rem' }}
+                                style={{
+                                  borderRadius: 'var(--radius-pill, 9999px)',
+                                  padding: '0.6rem 1.4rem',
+                                  background: '#d91a2a',
+                                  color: '#ffffff',
+                                  fontSize: '0.86rem',
+                                  fontWeight: 700,
+                                  border: 'none',
+                                  boxShadow: '0 4px 12px rgba(217, 26, 42, 0.28)',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = '#b91522';
+                                  e.currentTarget.style.transform = 'translateY(-1px)';
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = '#d91a2a';
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                }}
                                 onClick={() => handleReservarTipo(apto.tipo)}
                               >
                                 Reservar {apto.tipo}
@@ -429,7 +510,7 @@ const VistaCatalogo = () => {
                               Selecciona tu apartamento para asignarlo directamente a tu reserva
                             </p>
                           </div>
-                          <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.3rem 0.8rem', borderRadius: '15px', fontSize: '0.78rem', fontWeight: 700 }}>
+                          <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.3rem 0.8rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.78rem', fontWeight: 700 }}>
                             ● Todas las unidades disponibles
                           </span>
                         </div>
@@ -441,9 +522,9 @@ const VistaCatalogo = () => {
                               key={unidad.id}
                               style={{
                                 background: '#ffffff',
-                                borderRadius: '12px',
+                                borderRadius: '16px',
                                 border: '1px solid #e2e8f0',
-                                padding: '1rem',
+                                padding: '1.1rem',
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -453,7 +534,7 @@ const VistaCatalogo = () => {
                               onMouseEnter={e => {
                                 e.currentTarget.style.transform = 'translateY(-2px)';
                                 e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)';
-                                e.currentTarget.style.borderColor = '#e11d48';
+                                e.currentTarget.style.borderColor = '#d91a2a';
                               }}
                               onMouseLeave={e => {
                                 e.currentTarget.style.transform = 'translateY(0)';
@@ -463,7 +544,7 @@ const VistaCatalogo = () => {
                             >
                               <div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                  <span style={{ background: '#e11d48', color: '#ffffff', padding: '0.25rem 0.65rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 800 }}>
+                                  <span style={{ background: '#fee2e2', color: '#d91a2a', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.78rem', fontWeight: 800 }}>
                                     Apto {unidad.numero}
                                   </span>
                                   <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>
@@ -480,7 +561,7 @@ const VistaCatalogo = () => {
 
                               <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                  <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#e11d48' }}>
+                                  <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#d91a2a' }}>
                                     ${Number(unidad.precio).toLocaleString('es-CO')}
                                   </div>
                                   <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>COP / noche</div>
@@ -492,18 +573,25 @@ const VistaCatalogo = () => {
                                     navegarATab('reservar');
                                   }}
                                   style={{
-                                    background: '#0f172a',
+                                    background: '#d91a2a',
                                     color: '#ffffff',
                                     border: 'none',
-                                    padding: '0.4rem 0.75rem',
-                                    borderRadius: '6px',
-                                    fontSize: '0.75rem',
+                                    padding: '0.45rem 1rem',
+                                    borderRadius: 'var(--radius-pill, 9999px)',
+                                    fontSize: '0.78rem',
                                     fontWeight: 700,
                                     cursor: 'pointer',
+                                    boxShadow: '0 2px 6px rgba(217, 26, 42, 0.22)',
                                     transition: 'all 0.15s ease'
                                   }}
-                                  onMouseEnter={e => e.currentTarget.style.background = '#e11d48'}
-                                  onMouseLeave={e => e.currentTarget.style.background = '#0f172a'}
+                                  onMouseEnter={e => {
+                                    e.currentTarget.style.background = '#b91522';
+                                    e.currentTarget.style.transform = 'translateY(-1px)';
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.background = '#d91a2a';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                  }}
                                 >
                                   Reservar
                                 </button>

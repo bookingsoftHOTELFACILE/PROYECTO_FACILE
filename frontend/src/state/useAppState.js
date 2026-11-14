@@ -149,7 +149,7 @@ export function useAppState() {
   const [reservaAlert, setReservaAlert] = useState(null);
   const [filtroHabitaciones, setFiltroHabitaciones] = useState('todas'); // 'todas' | 'amas_llaves' | 'mantenimiento'
   const [galleryFilter, setGalleryFilter] = useState('todas'); // 'todas' | 'zonas' | 'apartamentos' | 'oficinas'
-  const [filtroTipoApto, setFiltroTipoApto] = useState('Dúplex'); // 'todas' | 'Dúplex' | 'Dobles' | 'Familiares' | 'Habitaciones'
+  const [filtroTipoApto, setFiltroTipoApto] = useState('todas'); // 'todas' | 'Dúplex' | 'Dobles' | 'Familiares' | 'Habitaciones'
   const [lightboxIdx, setLightboxIdx] = useState(null); // visor de imágenes de la galería
   const [aptoLightboxPhoto, setAptoLightboxPhoto] = useState(null); // { photos: [...], index: n } o photo object
   const [lightboxZoom, setLightboxZoom] = useState(false); // Estado de zoom 1.65x interactivo para imágenes en Lightbox
