@@ -45,7 +45,7 @@ def _crear_token(id_empleado: int, rol: str, nombre: str = "") -> str:
 
 
 # ── POST /api/auth/registro ───────────────────────────────────────────────────
-@router.post("/registro", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol("Administrador"))])
+@router.post("/registro", status_code=status.HTTP_201_CREATED, dependencies=[Depends(requiere_rol("Administrador", "Recepcionista 24h"))])
 def registrar_empleado(datos: EmpleadoRegistro, admin_actual: UsuarioActual = Depends(autenticar)):
     """
     RF-001 / HU-001 — Registra un nuevo empleado del sistema.

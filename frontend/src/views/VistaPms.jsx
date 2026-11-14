@@ -252,8 +252,8 @@ const VistaPms = () => {
 
           {/* BARRA DE NAVEGACIÓN RÁPIDA DE SUB-PESTAÑAS PMS */}
           <div className="flex flex-wrap items-center gap-2.5 mb-6">
-            {/* SUB-PESTAÑA ADMINISTRACIÓN DE PERSONAL — Solo para Administrador / Grupo BookingSoft */}
-            {(usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft') && (
+            {/* SUB-PESTAÑA ADMINISTRACIÓN DE PERSONAL — Administrador / Recepcionista 24h / Grupo BookingSoft */}
+            {(usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft' || usuarioSesion?.rol === 'Recepcionista 24h') && (
               <button
                 type="button"
                 onClick={() => setPmsSubTab('empleados')}
@@ -360,8 +360,8 @@ const VistaPms = () => {
             )}
           </div>
 
-          {/* 0. SUB-PESTAÑA 0: MÓDULO EXCLUSIVO DE GESTIÓN DE PERSONAL & ROLES (ADMINISTRADOR / GRUPO BOOKINGSOFT) */}
-          {(pmsSubTab === 'empleados' || pmsSubTab === 'todos') && (usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft') && (
+          {/* 0. SUB-PESTAÑA 0: MÓDULO DE GESTIÓN DE PERSONAL & ROLES (ADMINISTRACIÓN / RECEPCIÓN 24H / GRUPO BOOKINGSOFT) */}
+          {(pmsSubTab === 'empleados' || pmsSubTab === 'todos') && (usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft' || usuarioSesion?.rol === 'Recepcionista 24h') && (
             <div id="pms-empleados-module" className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden mb-6">
               {/* Encabezado interno de la tarjeta */}
               <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -371,10 +371,10 @@ const VistaPms = () => {
                   </div>
                   <div>
                     <h3 className="text-base sm:text-lg font-black text-slate-900 m-0">
-                      👑 Panel de Superusuario — Gestión de Personal & Roles (Grupo BookingSoft)
+                      👑 Gestión de Personal & Roles — Dirección Operativa y Front Desk
                     </h3>
                     <p className="text-xs text-slate-500 font-medium mt-0.5 mb-0">
-                      Control integral de empleados, asignación de roles operativos y estados del personal.
+                      Control integral de colaboradores, asignación de turnos, roles operativos y estados del personal del apartahotel.
                     </p>
                   </div>
                 </div>
