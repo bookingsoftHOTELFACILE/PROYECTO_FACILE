@@ -1,5 +1,7 @@
 import {
-  Users, Home, Wifi, Check, Maximize2, Eye
+  Users, Home, Wifi, Check, Maximize2, Eye, BedDouble,
+  Bath, UtensilsCrossed, Shirt, ShieldCheck, KeyRound,
+  Briefcase, CheckCircle2, Sparkles, Tv
 } from 'lucide-react';
 import FigmaBookingBox from '../components/FigmaBookingBox.jsx';
 import { useApp } from '../context/AppContext.jsx';
@@ -11,6 +13,41 @@ const VistaCatalogo = () => {
   aptoActivePhoto, setAptoActivePhoto, selectedAptoFigma, setSelectedAptoFigma,
   navegarATab, handleReservarTipo
   } = useApp();
+
+  const amenidadesPorTipo = {
+    'Dúplex': [
+      { icon: Users, label: 'Hasta 3 personas' },
+      { icon: Wifi, label: 'Wi-Fi 300 Mbps' },
+      { icon: Home, label: '1 Hab. + 1.5 Baños' },
+      { icon: Shirt, label: 'Lavadora-secadora' },
+      { icon: Sparkles, label: 'Balcón con vista' },
+      { icon: Tv, label: '2 Smart TV 4K' }
+    ],
+    'Dobles': [
+      { icon: Users, label: 'Hasta 4 personas' },
+      { icon: Wifi, label: 'Wi-Fi 300 Mbps' },
+      { icon: Home, label: '2 Hab. + 2 Baños' },
+      { icon: BedDouble, label: 'Cama King + Auxiliar' },
+      { icon: UtensilsCrossed, label: 'Cocina & Comedor' },
+      { icon: Tv, label: '3 Smart TV HD' }
+    ],
+    'Familiares': [
+      { icon: Users, label: 'Hasta 6 personas' },
+      { icon: Wifi, label: 'Wi-Fi 300 Mbps' },
+      { icon: Home, label: '3 Hab. + 2 Baños' },
+      { icon: BedDouble, label: '1 King + Camas Nido' },
+      { icon: UtensilsCrossed, label: 'Comedor 6 Puestos' },
+      { icon: Shirt, label: 'Zona Lavandería' }
+    ],
+    'Habitaciones': [
+      { icon: Users, label: 'Hasta 2 personas' },
+      { icon: Wifi, label: 'Wi-Fi 300 Mbps' },
+      { icon: Bath, label: 'Baño en Suite' },
+      { icon: BedDouble, label: 'Cama Queen Confort' },
+      { icon: Briefcase, label: 'Escritorio Ejecutivo' },
+      { icon: Tv, label: 'Smart TV & Frigobar' }
+    ]
+  };
         const alojamientosData = [
           {
             tipo: 'Dúplex',
@@ -412,44 +449,110 @@ const VistaCatalogo = () => {
                           </div>
                         </div>
 
-                        {/* COLUMNA DERECHA: INFORMACIÓN COMPLETA Y ESPECIFICACIONES */}
-                        <div style={{ padding: '2.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff' }}>
+                        {/* COLUMNA DERECHA: INFORMACIÓN COMPLETA Y ESPECIFICACIONES (BALANCEADA) */}
+                        <div style={{ padding: '2rem 2.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff' }}>
                           <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                              <div>
+                            {/* Badges superiores y Título */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#d91a2a', textTransform: 'uppercase', letterSpacing: '0.8px', background: '#fee2e2', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-pill)', border: '1px solid #fecaca' }}>
                                   Apartamento
                                 </span>
-                                <h3 style={{ margin: '0.5rem 0 0', fontSize: '1.85rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px' }}>
-                                  {apto.nombreModal || `Apartamento ${apto.tipo}`}
-                                </h3>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', background: '#f1f5f9', padding: '0.25rem 0.65rem', borderRadius: 'var(--radius-pill)' }}>
+                                  {apto.formato || apto.tipo}
+                                </span>
                               </div>
-                              <span style={{ fontSize: '0.82rem', padding: '0.4rem 0.95rem', background: '#ecfdf5', color: '#059669', borderRadius: 'var(--radius-pill)', fontWeight: 800, border: '1px solid #a7f3d0' }}>
-                                ● {apto.unidades}
+                              <span style={{ fontSize: '0.8rem', padding: '0.35rem 0.85rem', background: '#ecfdf5', color: '#059669', borderRadius: 'var(--radius-pill)', fontWeight: 800, border: '1px solid #a7f3d0', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <CheckCircle2 size={13} /> {apto.unidades} disponibles
                               </span>
                             </div>
 
-                            <p style={{ color: '#475569', fontSize: '0.92rem', lineHeight: '1.65', marginBottom: '1.5rem' }}>
+                            <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.85rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px' }}>
+                              {apto.nombreModal || `Apartamento ${apto.tipo}`}
+                            </h3>
+
+                            <p style={{ color: '#475569', fontSize: '0.9rem', lineHeight: '1.6', margin: '0 0 1.25rem' }}>
                               {apto.desc}
                             </p>
 
-                            <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', marginBottom: '1.75rem' }}>
-                              <span className="spec-pill" style={{ padding: '0.5rem 0.95rem', fontSize: '0.84rem', borderRadius: 'var(--radius-pill)', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                <Users size={14} color="#d91a2a"/> {apto.personas}
+                            {/* GRILLA EJECUTIVA DE 6 AMENIDADES CLAVE */}
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                              gap: '0.55rem',
+                              marginBottom: '1.2rem'
+                            }}>
+                              {(amenidadesPorTipo[apto.tipo] || amenidadesPorTipo['Dúplex']).map((am, idx) => {
+                                const AmIcon = am.icon;
+                                return (
+                                  <div
+                                    key={idx}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.45rem',
+                                      padding: '0.5rem 0.7rem',
+                                      backgroundColor: '#f8fafc',
+                                      border: '1px solid #e2e8f0',
+                                      borderRadius: '12px',
+                                      fontSize: '0.78rem',
+                                      color: '#334155',
+                                      fontWeight: 600
+                                    }}
+                                  >
+                                    <AmIcon size={14} color="#d91a2a" style={{ flexShrink: 0 }} />
+                                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{am.label}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* BARRA DE GARANTÍAS DEL APARTAHOTEL */}
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: '0.5rem',
+                              padding: '0.65rem 0.95rem',
+                              background: '#f8fafc',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '14px',
+                              fontSize: '0.76rem',
+                              color: '#475569',
+                              fontWeight: 600,
+                              marginBottom: '1.5rem',
+                              flexWrap: 'wrap'
+                            }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <KeyRound size={13} color="#059669" /> Check-in 24/7 digital
                               </span>
-                              <span className="spec-pill" style={{ padding: '0.5rem 0.95rem', fontSize: '0.84rem', borderRadius: 'var(--radius-pill)', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                <Wifi size={14} color="#d91a2a"/> Wi-Fi Alta Velocidad
+                              <span style={{ color: '#cbd5e1' }}>•</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <ShieldCheck size={13} color="#059669" /> Vigilancia 24h
                               </span>
-                              <span className="spec-pill" style={{ padding: '0.5rem 0.95rem', fontSize: '0.84rem', borderRadius: 'var(--radius-pill)', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                <Home size={14} color="#d91a2a"/> {apto.ambientes}
+                              <span style={{ color: '#cbd5e1' }}>•</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <Briefcase size={13} color="#059669" /> Acceso Centro Negocios
                               </span>
                             </div>
                           </div>
 
-                          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: '#f8fafc', margin: '0 -2.25rem -2.25rem -2.25rem', padding: '1.5rem 2.25rem' }}>
+                          {/* FOOTER: TARIFA GARANTIZADA Y BOTONES PÍLDORA */}
+                          <div style={{
+                            borderTop: '1px solid #f1f5f9',
+                            paddingTop: '1.25rem',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '1rem',
+                            background: '#f8fafc',
+                            margin: '0 -2.25rem -2rem -2.25rem',
+                            padding: '1.25rem 2.25rem'
+                          }}>
                             <div>
                               <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                Tarifa por noche
+                                Tarifa Directa Garantizada
                               </div>
                               <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>
                                 {apto.precio}
