@@ -1,6 +1,7 @@
+import { useState, useMemo } from 'react';
 import {
   UserPlus, ShieldCheck, Users, Calendar, ListOrdered, Trash2,
-  Wrench, Check, Search, Tag
+  Wrench, Check, Search, Tag, Mail, Shield, User
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 
@@ -20,45 +21,125 @@ const VistaPms = () => {
   handleCambiarEstadoReserva, walkinCheckinInmediato, setWalkinCheckinInmediato,
   handleCrearReservaNegocio, handleBuscarHuespedPorDocumento, handleCancelarReservaNegocio
   } = useApp();
+
+  // Estados de Búsqueda, Filtros y Paginación para Personal & Roles
+  const [empSearchQuery, setEmpSearchQuery] = useState('');
+  const [empRolFilter, setEmpRolFilter] = useState('todos');
+  const [empEstadoFilter, setEmpEstadoFilter] = useState('todos');
+  const [empCurrentPage, setEmpCurrentPage] = useState(1);
+  const EMP_ITEMS_PER_PAGE = 6;
+
+  // Filtrado reactivo de empleados
+  const filteredEmpleados = useMemo(() => {
+    return (empleadosList || []).filter(emp => {
+      const q = empSearchQuery.toLowerCase().trim();
+      const matchSearch = !q ||
+        (emp.nombre && emp.nombre.toLowerCase().includes(q)) ||
+        (emp.usuario && emp.usuario.toLowerCase().includes(q)) ||
+        (emp.numero_documento && String(emp.numero_documento).toLowerCase().includes(q)) ||
+        (emp.correo && emp.correo.toLowerCase().includes(q));
+
+      const matchRol = empRolFilter === 'todos' || emp.rol === empRolFilter;
+      const matchEstado = empEstadoFilter === 'todos' || emp.estado === empEstadoFilter;
+
+      return matchSearch && matchRol && matchEstado;
+    });
+  }, [empleadosList, empSearchQuery, empRolFilter, empEstadoFilter]);
+
+  // Paginación
+  const totalPages = Math.max(1, Math.ceil(filteredEmpleados.length / EMP_ITEMS_PER_PAGE));
+  const validCurrentPage = Math.min(empCurrentPage, totalPages);
+
+  const paginatedEmpleados = useMemo(() => {
+    const start = (validCurrentPage - 1) * EMP_ITEMS_PER_PAGE;
+    return filteredEmpleados.slice(start, start + EMP_ITEMS_PER_PAGE);
+  }, [filteredEmpleados, validCurrentPage]);
+
+  // Paletas de iniciales en tonos pastel según el diseño
+  const getAvatarStyle = (index) => {
+    const palettes = [
+      { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+      { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
+      { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+      { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+      { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+      { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' },
+    ];
+    return palettes[index % palettes.length];
+  };
+
+  const getSubinfo = (emp, index) => {
+    if (emp.rol === 'Ama de llaves') {
+      return index % 2 === 0 ? 'Piso 1-4 • Matutino' : 'Piso 5-8 • Vespertino';
+    }
+    if (emp.rol === 'Personal de mantenimiento') {
+      return 'Áreas comunes & Clima';
+    }
+    if (emp.rol === 'Recepcionista 24h') {
+      return index % 2 === 0 ? 'Front Desk • Diurno' : 'Front Desk • Nocturno';
+    }
+    if (emp.rol === 'Administrador' || emp.rol === 'Grupo BookingSoft') {
+      return 'Soporte Técnico PMS';
+    }
+    return 'Operativo Facile';
+  };
+
+  const getInitials = (nombre) => {
+    if (!nombre) return 'EM';
+    const parts = nombre.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  };
+
   return (
         <section className="facile-section">
-          <div className="pms-header">
-            <div>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Panel de Control Hotelero (PMS)</h2>
-              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-                Módulo interno de gestión por sub-pestañas independientes
-              </p>
+          {/* CABECERA PMS EJECUTIVA */}
+          <div className="bg-[#0f172a] rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <span className="w-1.5 h-7 bg-[#d91a2a] rounded-full inline-block"></span>
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white m-0">
+                    Panel de Control Hotelero
+                  </h2>
+                  <span className="bg-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded-md text-slate-300 border border-slate-700/60 uppercase tracking-wider">
+                    PMS
+                  </span>
+                </div>
+                <p className="text-slate-400 text-xs sm:text-sm mt-1 mb-0 font-medium">
+                  Módulo interno de gestión por sub-pestañas independientes
+                </p>
+              </div>
             </div>
             {usuarioSesion && (
-              <span className="pms-badge">
-                👤 {usuarioSesion.nombre} — <strong>{usuarioSesion.rol}</strong>
-              </span>
+              <div className="bg-slate-800/80 border border-slate-700/80 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 flex items-center gap-2.5 shadow-inner self-start md:self-auto">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>👤 {usuarioSesion.nombre} — <strong className="text-[#f87171]">{usuarioSesion.rol}</strong></span>
+              </div>
             )}
           </div>
 
-          {/* BARRA DE NAVEGACIÓN RÁPIDA DE SUB-PESTAÑAS PMS SEGÚN EL ROL DE EMPLEADO */}
-          <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', flexWrap: 'wrap', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.8rem' }}>
+          {/* BARRA DE NAVEGACIÓN RÁPIDA DE SUB-PESTAÑAS PMS */}
+          <div className="flex flex-wrap items-center gap-2.5 mb-6">
             {/* SUB-PESTAÑA ADMINISTRACIÓN DE PERSONAL — Solo para Administrador / Grupo BookingSoft */}
             {(usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft') && (
               <button
-                className="btn-mini"
+                type="button"
                 onClick={() => setPmsSubTab('empleados')}
-                style={{
-                  padding: '0.55rem 1.1rem',
-                  borderRadius: '8px',
-                  fontWeight: 700,
-                  fontSize: '0.84rem',
-                  background: pmsSubTab === 'empleados' ? '#e11d48' : '#334155',
-                  color: '#ffffff',
-                  border: '1px solid #1e293b',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-                }}
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+                  pmsSubTab === 'empleados'
+                    ? 'bg-[#d91a2a] text-white shadow-md shadow-[#d91a2a]/25'
+                    : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 shadow-xs'
+                }`}
               >
-                👑 Personal & Roles ({empleadosList.length})
+                <span>👑 Personal & Roles</span>
+                <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                  pmsSubTab === 'empleados' ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200/50'
+                }`}>
+                  {empleadosList.length}
+                </span>
               </button>
             )}
 
@@ -66,242 +147,193 @@ const VistaPms = () => {
             {(usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft' || usuarioSesion?.rol === 'Recepcionista 24h') && (
               <>
                 <button
-                  className="btn-mini"
+                  type="button"
                   onClick={() => setPmsSubTab('recepcion')}
-                  style={{
-                    padding: '0.55rem 1.1rem',
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '0.84rem',
-                    background: pmsSubTab === 'recepcion' ? '#e11d48' : '#ffffff',
-                    color: pmsSubTab === 'recepcion' ? '#ffffff' : '#475569',
-                    border: '1px solid #cbd5e1',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem'
-                  }}
+                  className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+                    pmsSubTab === 'recepcion'
+                      ? 'bg-[#d91a2a] text-white shadow-md shadow-[#d91a2a]/25'
+                      : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 shadow-xs'
+                  }`}
                 >
-                  🛎️ Recepción (Walk-in)
+                  <span>🛎️ Recepción (Walk-in)</span>
                 </button>
+
                 <button
-                  className="btn-mini"
+                  type="button"
                   onClick={() => setPmsSubTab('huespedes')}
-                  style={{
-                    padding: '0.55rem 1.1rem',
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '0.84rem',
-                    background: pmsSubTab === 'huespedes' ? '#e11d48' : '#ffffff',
-                    color: pmsSubTab === 'huespedes' ? '#ffffff' : '#475569',
-                    border: '1px solid #cbd5e1',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem'
-                  }}
+                  className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+                    pmsSubTab === 'huespedes'
+                      ? 'bg-[#d91a2a] text-white shadow-md shadow-[#d91a2a]/25'
+                      : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 shadow-xs'
+                  }`}
                 >
-                  👥 Huéspedes ({huespedes.length})
+                  <span>👥 Huéspedes</span>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                    pmsSubTab === 'huespedes' ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200/50'
+                  }`}>
+                    {huespedes.length}
+                  </span>
                 </button>
+
                 <button
-                  className="btn-mini"
+                  type="button"
                   onClick={() => setPmsSubTab('reservas')}
-                  style={{
-                    padding: '0.55rem 1.1rem',
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '0.84rem',
-                    background: pmsSubTab === 'reservas' ? '#e11d48' : '#ffffff',
-                    color: pmsSubTab === 'reservas' ? '#ffffff' : '#475569',
-                    border: '1px solid #cbd5e1',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem'
-                  }}
+                  className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+                    pmsSubTab === 'reservas'
+                      ? 'bg-[#d91a2a] text-white shadow-md shadow-[#d91a2a]/25'
+                      : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 shadow-xs'
+                  }`}
                 >
-                  📋 Reservas ({reservas.length})
+                  <span>📋 Reservas</span>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                    pmsSubTab === 'reservas' ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200/50'
+                  }`}>
+                    {reservas.length}
+                  </span>
                 </button>
               </>
             )}
 
             {/* MANTENIMIENTO Y ASEO — Acceso para todos los roles de planta */}
             <button
-              className="btn-mini"
+              type="button"
               onClick={() => {
                 setPmsSubTab('planta');
                 if (usuarioSesion?.rol === 'Ama de llaves') setFiltroHabitaciones('amas_llaves');
                 else if (usuarioSesion?.rol === 'Personal de mantenimiento') setFiltroHabitaciones('mantenimiento');
               }}
-              style={{
-                padding: '0.55rem 1.1rem',
-                borderRadius: '8px',
-                fontWeight: 700,
-                fontSize: '0.84rem',
-                background: pmsSubTab === 'planta' ? '#e11d48' : '#ffffff',
-                color: pmsSubTab === 'planta' ? '#ffffff' : '#475569',
-                border: '1px solid #cbd5e1',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem'
-              }}
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+                pmsSubTab === 'planta'
+                  ? 'bg-[#d91a2a] text-white shadow-md shadow-[#d91a2a]/25'
+                  : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 shadow-xs'
+              }`}
             >
-              🛠️ Mantenimiento y Aseo
+              <span>🛠️ Mantenimiento y Aseo</span>
             </button>
 
             {(usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft' || usuarioSesion?.rol === 'Recepcionista 24h') && (
               <button
-                className="btn-mini"
+                type="button"
                 onClick={() => setPmsSubTab('coworking')}
-                style={{
-                  padding: '0.55rem 1.1rem',
-                  borderRadius: '8px',
-                  fontWeight: 700,
-                  fontSize: '0.84rem',
-                  background: pmsSubTab === 'coworking' ? '#e11d48' : '#ffffff',
-                  color: pmsSubTab === 'coworking' ? '#ffffff' : '#475569',
-                  border: '1px solid #cbd5e1',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem'
-                }}
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+                  pmsSubTab === 'coworking'
+                    ? 'bg-[#d91a2a] text-white shadow-md shadow-[#d91a2a]/25'
+                    : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 shadow-xs'
+                }`}
               >
-                💼 Salas & Coworking
+                <span>💼 Salas & Coworking</span>
               </button>
             )}
 
             {(usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft') && (
               <button
-                className="btn-mini"
+                type="button"
                 onClick={() => setPmsSubTab('todos')}
-                style={{
-                  padding: '0.55rem 1.1rem',
-                  borderRadius: '8px',
-                  fontWeight: 700,
-                  fontSize: '0.84rem',
-                  background: pmsSubTab === 'todos' ? '#0f172a' : '#ffffff',
-                  color: pmsSubTab === 'todos' ? '#ffffff' : '#475569',
-                  border: '1px solid #cbd5e1',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem'
-                }}
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+                  pmsSubTab === 'todos'
+                    ? 'bg-[#0f172a] text-white shadow-md shadow-slate-900/25'
+                    : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 shadow-xs'
+                }`}
               >
-                📊 Ver Todo
+                <span>📊 Ver Todo</span>
               </button>
             )}
           </div>
 
           {/* 0. SUB-PESTAÑA 0: MÓDULO EXCLUSIVO DE GESTIÓN DE PERSONAL & ROLES (ADMINISTRADOR / GRUPO BOOKINGSOFT) */}
           {(pmsSubTab === 'empleados' || pmsSubTab === 'todos') && (usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft') && (
-            <div id="pms-empleados-module" className="clean-card" style={{ marginBottom: '1.5rem', border: '1.5px solid #0f172a', background: '#ffffff', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
-              <div className="clean-card-header" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <ShieldCheck size={22} color="#0f172a"/>
+            <div id="pms-empleados-module" className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden mb-6">
+              {/* Encabezado interno de la tarjeta */}
+              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-700 shrink-0">
+                    <ShieldCheck size={20} className="text-slate-800" />
+                  </div>
                   <div>
-                    <h3 style={{ fontSize: '1.2rem', color: '#0f172a', fontWeight: 800 }}>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 m-0">
                       👑 Panel de Superusuario — Gestión de Personal & Roles (Grupo BookingSoft)
                     </h3>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5 mb-0">
                       Control integral de empleados, asignación de roles operativos y estados del personal.
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  className="btn-mini"
-                  onClick={() => setShowCreateEmpleadoModal(true)}
-                  style={{
-                    background: '#0f172a',
-                    color: '#ffffff',
-                    padding: '0.6rem 1.2rem',
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    boxShadow: '0 4px 12px rgba(15,23,42,0.2)'
-                  }}
+                  onClick={() => setShowCreateEmpleadoModal(prev => !prev)}
+                  className="bg-[#0f172a] hover:bg-slate-800 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 self-start sm:self-auto shrink-0"
                 >
-                  <UserPlus size={16}/> + Registrar Nuevo Empleado
+                  <UserPlus size={15} />
+                  <span>+ Registrar Nuevo Empleado</span>
                 </button>
               </div>
 
               {empleadoAlert && (
-                <div style={{
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  marginBottom: '1rem',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  background: empleadoAlert.type === 'success' ? '#f0fdf4' : '#fef2f2',
-                  color: empleadoAlert.type === 'success' ? '#166534' : '#991b1b',
-                  border: `1px solid ${empleadoAlert.type === 'success' ? '#bbf7d0' : '#fecdd3'}`
-                }}>
-                  {empleadoAlert.message}
+                <div className={`mx-6 mt-4 p-3.5 rounded-xl text-xs font-bold border flex items-center gap-2 ${
+                  empleadoAlert.type === 'success'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-red-50 text-red-800 border-red-200'
+                }`}>
+                  <span>{empleadoAlert.type === 'success' ? '✅' : '⚠️'}</span>
+                  <span>{empleadoAlert.message}</span>
                 </div>
               )}
 
               {/* MODAL / FORMULARIO PARA REGISTRAR UN NUEVO EMPLEADO */}
               {showCreateEmpleadoModal && (
-                <div style={{
-                  background: '#f8fafc',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '12px',
-                  padding: '1.25rem',
-                  marginBottom: '1.5rem'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>➕ Registrar Nuevo Empleado del Apartahotel</h4>
-                    <button type="button" className="btn-mini" onClick={() => setShowCreateEmpleadoModal(false)} style={{ background: '#e2e8f0', color: '#334155' }}>
+                <div className="m-6 p-5 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-inner">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-sm font-extrabold text-slate-900 m-0 flex items-center gap-2">
+                      <span>➕ Registrar Nuevo Empleado del Apartahotel</span>
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateEmpleadoModal(false)}
+                      className="px-2.5 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
                       ✖️ Cerrar
                     </button>
                   </div>
-                  <form onSubmit={handleCreateEmpleadoSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.8rem' }}>
+                  <form onSubmit={handleCreateEmpleadoSubmit} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 text-xs">
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.2rem' }}>Nombre Completo *</label>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Nombre Completo *</label>
                       <input
                         type="text"
                         required
                         value={newEmpleadoForm.nombre}
                         onChange={e => setNewEmpleadoForm({ ...newEmpleadoForm, nombre: e.target.value })}
                         placeholder="Ej: Carlos Mendoza"
-                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#d91a2a]"
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.2rem' }}>Usuario de Acceso *</label>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Usuario de Acceso *</label>
                       <input
                         type="text"
                         required
                         value={newEmpleadoForm.usuario}
                         onChange={e => setNewEmpleadoForm({ ...newEmpleadoForm, usuario: e.target.value })}
                         placeholder="Ej: cmendoza"
-                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#d91a2a]"
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.2rem' }}>Contraseña Inicial *</label>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Contraseña Inicial *</label>
                       <input
                         type="password"
                         required
                         value={newEmpleadoForm.contrasena}
                         onChange={e => setNewEmpleadoForm({ ...newEmpleadoForm, contrasena: e.target.value })}
                         placeholder="••••••••"
-                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#d91a2a]"
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.2rem' }}>Tipo de Documento</label>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Documento</label>
                       <select
                         value={newEmpleadoForm.tipo_documento}
                         onChange={e => setNewEmpleadoForm({ ...newEmpleadoForm, tipo_documento: e.target.value })}
-                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#d91a2a] cursor-pointer"
                       >
                         <option value="Cédula de ciudadanía">Cédula de ciudadanía</option>
                         <option value="Pasaporte">Pasaporte</option>
@@ -309,136 +341,252 @@ const VistaPms = () => {
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.2rem' }}>Número de Documento *</label>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Número de Documento *</label>
                       <input
                         type="text"
                         required
                         value={newEmpleadoForm.numero_documento}
                         onChange={e => setNewEmpleadoForm({ ...newEmpleadoForm, numero_documento: e.target.value })}
                         placeholder="1018459201"
-                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#d91a2a]"
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.2rem' }}>Correo Electrónico *</label>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Correo Electrónico *</label>
                       <input
                         type="email"
                         required
                         value={newEmpleadoForm.correo}
                         onChange={e => setNewEmpleadoForm({ ...newEmpleadoForm, correo: e.target.value })}
                         placeholder="empleado@bookingsoft.com"
-                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#d91a2a]"
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.2rem' }}>Rol Operativo Asignado</label>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Rol Operativo Asignado</label>
                       <select
                         value={newEmpleadoForm.rol}
                         onChange={e => setNewEmpleadoForm({ ...newEmpleadoForm, rol: e.target.value })}
-                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', fontWeight: 700, color: '#e11d48' }}
+                        className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-[#d91a2a] focus:outline-none focus:border-[#d91a2a] cursor-pointer"
                       >
                         <option value="Recepcionista 24h">Recepcionista 24h</option>
                         <option value="Ama de llaves">Ama de llaves (Limpieza)</option>
                         <option value="Personal de mantenimiento">Personal de mantenimiento (Reparaciones)</option>
+                        <option value="Administrador">Administrador</option>
                       </select>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <div className="flex items-end">
                       <button
                         type="submit"
-                        className="btn-mini"
-                        style={{
-                          width: '100%',
-                          padding: '0.65rem',
-                          background: '#e11d48',
-                          color: '#ffffff',
-                          fontWeight: 700,
-                          borderRadius: '6px',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
+                        disabled={loading}
+                        className="w-full py-2.5 bg-[#d91a2a] hover:bg-[#b91522] text-white font-extrabold rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
                       >
-                        ✅ Crear Cuenta de Empleado
+                        <span>✅ Crear Cuenta de Empleado</span>
                       </button>
                     </div>
                   </form>
                 </div>
               )}
 
+              {/* BARRA DE BÚSQUEDA Y FILTROS OPERATIVOS */}
+              <div className="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/40">
+                <div className="flex flex-wrap items-center gap-2.5 flex-1">
+                  <div className="relative flex-1 min-w-[200px] max-w-sm">
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={empSearchQuery}
+                      onChange={e => {
+                        setEmpSearchQuery(e.target.value);
+                        setEmpCurrentPage(1);
+                      }}
+                      placeholder="Buscar por nombre, documento o usuario..."
+                      className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#d91a2a] shadow-xs"
+                    />
+                  </div>
+
+                  <select
+                    value={empRolFilter}
+                    onChange={e => {
+                      setEmpRolFilter(e.target.value);
+                      setEmpCurrentPage(1);
+                    }}
+                    className="px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
+                  >
+                    <option value="todos">Todos los roles</option>
+                    <option value="Ama de llaves">Ama de llaves</option>
+                    <option value="Personal de mantenimiento">Personal de mantenimiento</option>
+                    <option value="Recepcionista 24h">Recepcionista 24h</option>
+                    <option value="Administrador">Administrador</option>
+                  </select>
+
+                  <select
+                    value={empEstadoFilter}
+                    onChange={e => {
+                      setEmpEstadoFilter(e.target.value);
+                      setEmpCurrentPage(1);
+                    }}
+                    className="px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
+
+                <div className="text-xs text-slate-500 font-medium whitespace-nowrap self-end md:self-auto">
+                  Mostrando <strong className="text-slate-800">{paginatedEmpleados.length}</strong> de <strong className="text-slate-800">{filteredEmpleados.length}</strong> colaboradores registrados
+                </div>
+              </div>
+
               {/* TABLA DE EMPLEADOS DEL SISTEMA */}
-              <div className="pms-table-wrap">
-                <table className="pms-table">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr>
-                      <th>Empleado</th>
-                      <th>Usuario</th>
-                      <th>Rol en Sistema</th>
-                      <th>Estado</th>
-                      <th>Documento & Contacto</th>
-                      <th>Acción de Estado</th>
+                    <tr className="bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-600 border-b border-slate-200/80">
+                      <th className="py-4 px-6">Empleado</th>
+                      <th className="py-4 px-6">Usuario</th>
+                      <th className="py-4 px-6">Rol en Sistema</th>
+                      <th className="py-4 px-6">Estado</th>
+                      <th className="py-4 px-6">Documento & Contacto</th>
+                      <th className="py-4 px-6 text-right">Acción de Estado</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {empleadosList.map(emp => (
-                      <tr key={emp.id_empleado}>
-                        <td>
-                          <strong>{emp.nombre}</strong>
-                        </td>
-                        <td>
-                          <code style={{ fontSize: '0.78rem', background: '#f1f5f9', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>@{emp.usuario}</code>
-                        </td>
-                        <td>
-                          {emp.rol === 'Administrador' ? (
-                            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#9333ea', background: '#f3e8ff', padding: '0.25rem 0.6rem', borderRadius: '12px', border: '1px solid #d8b4fe' }}>
-                              👑 Administrador (Superusuario)
-                            </span>
-                          ) : (
-                            <select
-                              value={emp.rol}
-                              onChange={e => handleChangeEmpleadoRol(emp.id_empleado, e.target.value)}
-                              style={{
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '6px',
-                                fontSize: '0.78rem',
-                                fontWeight: 700,
-                                border: '1px solid #cbd5e1',
-                                background: '#ffffff',
-                                color: '#1e293b'
-                              }}
-                            >
-                              <option value="Recepcionista 24h">Recepcionista 24h</option>
-                              <option value="Ama de llaves">Ama de llaves</option>
-                              <option value="Personal de mantenimiento">Personal de mantenimiento</option>
-                            </select>
-                          )}
-                        </td>
-                        <td>
-                          <span className={`badge-tag ${emp.estado === 'Activo' ? 'badge-avail' : 'badge-maint'}`}>
-                            {emp.estado}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: '0.74rem', color: '#64748b' }}>
-                          {emp.tipo_documento}: {emp.numero_documento}<br/>
-                          ✉️ {emp.correo}
-                        </td>
-                        <td>
-                          <button
-                            className="btn-mini"
-                            onClick={() => handleToggleEmpleadoEstado(emp)}
-                            style={{
-                              background: emp.estado === 'Activo' ? '#fee2e2' : '#dcfce7',
-                              color: emp.estado === 'Activo' ? '#991b1b' : '#166534',
-                              border: `1px solid ${emp.estado === 'Activo' ? '#fecdd3' : '#bbf7d0'}`,
-                              fontWeight: 700
-                            }}
-                          >
-                            {emp.estado === 'Activo' ? '🚫 Desactivar' : '✅ Activar'}
-                          </button>
+                  <tbody className="divide-y divide-slate-100 text-sm">
+                    {paginatedEmpleados.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-xs text-slate-500 font-medium">
+                          No se encontraron colaboradores con los filtros seleccionados.
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      paginatedEmpleados.map((emp, idx) => {
+                        const avatar = getAvatarStyle(idx);
+                        const subinfo = getSubinfo(emp, idx);
+                        const initials = getInitials(emp.nombre);
+
+                        return (
+                          <tr key={emp.id_empleado} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="py-4 px-6">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-xl ${avatar.bg} ${avatar.text} font-bold flex items-center justify-center text-xs shrink-0 border ${avatar.border}`}>
+                                  {initials}
+                                </div>
+                                <div>
+                                  <span className="font-bold text-slate-900 block text-sm">{emp.nombre}</span>
+                                  <span className="text-xs text-slate-500 block font-medium mt-0.5">{subinfo}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className="font-mono text-xs text-slate-700 bg-slate-100 px-2 py-1 rounded-md border border-slate-200/60">
+                                @{emp.usuario}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <select
+                                value={emp.rol}
+                                onChange={e => handleChangeEmpleadoRol(emp.id_empleado, e.target.value)}
+                                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-[#d91a2a] outline-none cursor-pointer"
+                              >
+                                <option value="Ama de llaves">Ama de llaves</option>
+                                <option value="Personal de mantenimiento">Personal de mantenimiento</option>
+                                <option value="Recepcionista 24h">Recepcionista 24h</option>
+                                <option value="Administrador">Administrador</option>
+                              </select>
+                            </td>
+                            <td className="py-4 px-6">
+                              {emp.estado === 'Activo' ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Inactivo
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-4 px-6 text-xs text-slate-600 space-y-0.5">
+                              <div className="font-medium text-slate-700">
+                                {emp.tipo_documento || 'Cédula de ciudadanía'}: {emp.numero_documento}
+                              </div>
+                              <a href={`mailto:${emp.correo}`} className="text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
+                                <Mail size={12} className="text-slate-400 shrink-0" />
+                                <span>{emp.correo}</span>
+                              </a>
+                            </td>
+                            <td className="py-4 px-6 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleEmpleadoEstado(emp)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                                  emp.estado === 'Activo'
+                                    ? 'border-red-200 bg-red-50 hover:bg-red-100 text-[#d91a2a]'
+                                    : 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
+                                }`}
+                              >
+                                {emp.estado === 'Activo' ? '🚫 Desactivar' : '✓ Activar'}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
+
+              {/* PAGINACIÓN */}
+              {totalPages > 1 && (
+                <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 bg-slate-50/30">
+                  <div>
+                    Página <span className="font-bold text-slate-800">{validCurrentPage}</span> de <span className="font-bold text-slate-800">{totalPages}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={validCurrentPage === 1}
+                      onClick={() => setEmpCurrentPage(p => Math.max(1, p - 1))}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-slate-700 transition-colors cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        return page === 1 || page === totalPages || Math.abs(page - validCurrentPage) <= 1;
+                      })
+                      .map((page, idx, arr) => {
+                        const showEllipsisBefore = idx > 0 && page - arr[idx - 1] > 1;
+                        return (
+                          <div key={page} className="flex items-center">
+                            {showEllipsisBefore && <span className="px-1 text-slate-400">...</span>}
+                            <button
+                              type="button"
+                              onClick={() => setEmpCurrentPage(page)}
+                              className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                validCurrentPage === page
+                                  ? 'bg-[#0f172a] text-white shadow-xs'
+                                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                    <button
+                      type="button"
+                      disabled={validCurrentPage === totalPages}
+                      onClick={() => setEmpCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-slate-700 transition-colors cursor-pointer"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
