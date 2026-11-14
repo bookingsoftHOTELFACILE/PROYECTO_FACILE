@@ -8,6 +8,7 @@ import ModalGuestAuth from './components/ModalGuestAuth.jsx';
 import ModalCompromiso from './components/ModalCompromiso.jsx';
 import ModalLegal from './components/ModalLegal.jsx';
 import LightboxGlobal from './components/LightboxGlobal.jsx';
+import ModalDetalleApto from './components/ModalDetalleApto.jsx';
 
 import VistaInicio from './views/VistaInicio.jsx';
 import VistaCatalogo from './views/VistaCatalogo.jsx';
@@ -21,7 +22,8 @@ import VistaPms from './views/VistaPms.jsx';
 
 function AppLayout() {
   const {
-    activeTab, showLoginModal, showGuestAuthModal, showCommunityCommitmentModal, aptoLightboxPhoto,
+    activeTab, showLoginModal, showGuestAuthModal, showCommunityCommitmentModal, 
+    aptoLightboxPhoto, selectedAptoFigma
   } = useApp();
 
   return (
@@ -66,6 +68,7 @@ function AppLayout() {
       {showGuestAuthModal && <ModalGuestAuth />}
       {showCommunityCommitmentModal && <ModalCompromiso />}
       {aptoLightboxPhoto && <LightboxGlobal />}
+      {selectedAptoFigma && <ModalDetalleApto />}
       <ModalLegal />
     </div>
   );

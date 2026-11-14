@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* ==========================================================================
    BookingSoft — Apartamentos Facile (Design System Oficial Airbnb Vibe)
@@ -316,7 +316,7 @@ body {
    ========================================================================== */
 .facile-hero {
   background: linear-gradient(rgba(10, 15, 25, 0.5), rgba(10, 15, 25, 0.8)),
-              url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+              url('/images/zonas/IMG_9217-HDR.jpg') center/cover no-repeat;
   min-height: 480px;
   display: flex;
   align-items: center;

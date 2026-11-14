@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { 
   MapPin, Calendar, Users, Search, Building2, Briefcase, 
   ShieldCheck, Percent, Star, ArrowRight, CheckCircle2,
-  Wifi, Bath, User as UserIcon, MessageSquare
+  Wifi, Bath, User as UserIcon, MessageSquare, Eye
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { ALOJAMIENTOS_FACILE } from '../data/alojamientosData';
 
 export default function VistaInicio() {
-  const { setActiveTab, setShowLoginModal } = useApp();
+  const { setActiveTab, setShowLoginModal, setSelectedAptoFigma, handleReservarTipo } = useApp();
   const [categoriaActiva, setCategoriaActiva] = useState('todos');
-  const [sede, setSede] = useState('Bogotá – El Chicó');
 
   const categorias = [
     { id: 'todos', label: 'Ver Todos', count: 38 },
@@ -19,73 +19,18 @@ export default function VistaInicio() {
     { id: 'habitaciones', label: 'Habitaciones', count: 11 }
   ];
 
-  const todosApartamentos = [
-    {
-      id: 1,
-      cat: 'duplex',
-      tag: 'Dúplex',
-      titulo: 'Suite Dúplex Ejecutiva',
-      ubicacion: 'El Chicó • Calle 97 #21',
-      rating: '4.98',
-      capacidad: 'Hasta 3',
-      banos: '1.5 Baños',
-      wifi: '300 Mbps',
-      precio: '$290.000',
-      imagen: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      id: 2,
-      cat: 'dobles',
-      tag: 'Doble',
-      titulo: 'Suite Doble Superior',
-      ubicacion: 'El Chicó • Calle 97 #21',
-      rating: '4.95',
-      capacidad: '2 Huéspedes',
-      cama: 'Queen',
-      cocina: 'Cocina',
-      precio: '$230.000',
-      imagen: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      id: 3,
-      cat: 'familiares',
-      tag: 'Familiar',
-      titulo: 'Gran Suite Familiar Confort',
-      ubicacion: 'El Chicó • Calle 97 #21',
-      rating: '4.99',
-      capacidad: 'Hasta 5',
-      dorm: '2 Dorm.',
-      parking: 'Parking',
-      precio: '$380.000',
-      imagen: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      id: 4,
-      cat: 'habitaciones',
-      tag: 'Habitaciones',
-      titulo: 'Studio Confort Individual',
-      ubicacion: 'El Chicó • Calle 97 #21',
-      rating: '4.92',
-      capacidad: '1 Huésped',
-      extra: 'Escritorio',
-      tv: 'Smart TV',
-      precio: '$175.000',
-      imagen: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80'
-    }
-  ];
-
   const apartamentosFiltrados = categoriaActiva === 'todos'
-    ? todosApartamentos
-    : todosApartamentos.filter(a => a.cat === categoriaActiva);
+    ? ALOJAMIENTOS_FACILE
+    : ALOJAMIENTOS_FACILE.filter(a => a.cat === categoriaActiva);
 
   return (
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
       
-      {/* 1. HERO SECTION PANORÁMICO */}
+      {/* 1. HERO SECTION PANORÁMICO (Fachada Real Facile Chicó) */}
       <section style={{
         position: 'relative',
         height: '560px',
-        backgroundImage: `linear-gradient(to right, rgba(9, 14, 26, 0.92) 0%, rgba(9, 14, 26, 0.6) 60%, rgba(9, 14, 26, 0.3) 100%), url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1800&q=85')`,
+        backgroundImage: `linear-gradient(to right, rgba(9, 14, 26, 0.92) 0%, rgba(9, 14, 26, 0.65) 60%, rgba(9, 14, 26, 0.4) 100%), url('/images/zonas/IMG_9217-HDR.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         display: 'flex',
@@ -94,7 +39,7 @@ export default function VistaInicio() {
       }}>
         <div className="facile-container" style={{ width: '100%' }}>
           <div style={{ maxWidth: '680px' }}>
-            {/* Badge Ubicaciones */}
+            {/* Badge Ubicación Exclusiva Bogotá Chicó */}
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -112,7 +57,7 @@ export default function VistaInicio() {
               marginBottom: '20px'
             }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-primary)' }} />
-              El Chicó, Bogotá & Bucaramanga
+              El Chicó, Bogotá Norte • Calle 97 #21-62
             </div>
 
             <h1 style={{ fontSize: '3rem', fontWeight: '800', color: '#ffffff', lineHeight: 1.12, margin: '0 0 16px 0', letterSpacing: '-1px' }}>
@@ -120,11 +65,11 @@ export default function VistaInicio() {
             </h1>
 
             <p style={{ fontSize: '1.1rem', color: '#cbd5e1', lineHeight: 1.55, margin: '0 0 24px 0', maxWidth: '600px' }}>
-              El confort, amplitud e independencia de un hogar premium combinados con servicios de hotel 5 estrellas y un exclusivo centro de negocios corporativo.
+              El confort, amplitud e independencia de un hogar premium combinados con servicios de hotel 5 estrellas y un exclusivo centro de negocios corporativo en el norte de Bogotá.
             </p>
 
             {/* Checkmarks de Garantía */}
-            <div style={{ display: 'flex', gap: '20px', color: '#e2e8f0', fontSize: '0.875rem', fontWeight: '600', marginBottom: '36px' }}>
+            <div style={{ display: 'flex', gap: '20px', color: '#e2e8f0', fontSize: '0.875rem', fontWeight: '600', marginBottom: '36px', flexWrap: 'wrap' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CheckCircle2 size={16} color="var(--color-primary)" /> Sin contratos complicados
               </span>
@@ -149,21 +94,14 @@ export default function VistaInicio() {
             boxShadow: 'var(--shadow-float)',
             maxWidth: '960px'
           }}>
-            {/* Sede */}
+            {/* Sede / Ubicación */}
             <div style={{ borderRight: '1px solid var(--color-border)', paddingRight: '16px' }}>
               <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Destino / Sede
+                Destino / Ubicación
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
                 <MapPin size={16} color="var(--color-primary)" />
-                <select 
-                  value={sede} 
-                  onChange={(e) => setSede(e.target.value)}
-                  style={{ border: 'none', outline: 'none', background: 'transparent', fontWeight: '700', cursor: 'pointer', width: '100%' }}
-                >
-                  <option>Bogotá – El Chicó</option>
-                  <option>Bucaramanga</option>
-                </select>
+                <span>Bogotá – El Chicó (Calle 97 #21)</span>
               </div>
             </div>
 
@@ -172,7 +110,7 @@ export default function VistaInicio() {
               <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Fechas de Estadía
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
                 <Calendar size={16} color="var(--color-primary)" />
                 <span>Mar 18 – Abr 02 <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '500' }}>(15 noches)</span></span>
               </div>
@@ -183,7 +121,7 @@ export default function VistaInicio() {
               <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Huéspedes
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
                 <Users size={16} color="var(--color-primary)" />
                 <span>2 Adultos • 1 Dormitorio</span>
               </div>
@@ -332,7 +270,7 @@ export default function VistaInicio() {
               Nuestros <span style={{ textDecoration: 'underline', textDecorationColor: 'var(--color-primary)', textUnderlineOffset: '6px' }}>Alojamientos</span>
             </h2>
             <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted)', margin: 0 }}>
-              38 unidades disponibles en 4 categorías — Reserve directamente y obtenga la mejor tarifa sin comisiones.
+              38 unidades disponibles en 4 categorías en El Chicó, Bogotá — Consulta fotos, disponibilidad y reserva con tarifa directa.
             </p>
           </div>
 
@@ -375,8 +313,8 @@ export default function VistaInicio() {
             })}
           </div>
 
-          {/* Grid de Tarjetas */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '24px' }}>
+          {/* Grid de Tarjetas de Apartamentos con FOTOS REALES */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
             {apartamentosFiltrados.map((item) => (
               <div
                 key={item.id}
@@ -391,8 +329,12 @@ export default function VistaInicio() {
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease'
                 }}
               >
-                {/* Imagen con Badges */}
-                <div style={{ position: 'relative', height: '210px' }}>
+                {/* Imagen con Badges y clic para ver detalle */}
+                <div 
+                  style={{ position: 'relative', height: '220px', cursor: 'pointer' }}
+                  onClick={() => setSelectedAptoFigma(item)}
+                  title="Haz clic para ver las fotos y disponibilidad de este apartamento"
+                >
                   <img
                     src={item.imagen}
                     alt={item.titulo}
@@ -411,7 +353,7 @@ export default function VistaInicio() {
                     padding: '3px 10px',
                     borderRadius: 'var(--radius-pill)'
                   }}>
-                    {item.tag}
+                    {item.tipo}
                   </div>
                   {/* Calificación */}
                   <div style={{
@@ -436,7 +378,10 @@ export default function VistaInicio() {
 
                 {/* Contenido de la Tarjeta */}
                 <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--color-text-main)', margin: '0 0 4px 0' }}>
+                  <h3 
+                    onClick={() => setSelectedAptoFigma(item)}
+                    style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--color-text-main)', margin: '0 0 4px 0', cursor: 'pointer' }}
+                  >
                     {item.titulo}
                   </h3>
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '16px' }}>
@@ -446,7 +391,7 @@ export default function VistaInicio() {
                   {/* Chips de características con iconos */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px', fontSize: '0.75rem', color: '#475569' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <UserIcon size={14} color="#94a3b8" /> {item.capacidad}
+                      <UserIcon size={14} color="#94a3b8" /> {item.personas || item.capacidad}
                     </span>
                     {item.banos && (
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -458,21 +403,17 @@ export default function VistaInicio() {
                         <Wifi size={14} color="#94a3b8" /> {item.wifi}
                       </span>
                     )}
-                    {item.cama && (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        🛏️ {item.cama}
-                      </span>
-                    )}
                   </div>
 
-                  {/* Fila Inferior: Precio + Botón */}
+                  {/* Fila Inferior: Precio + BOTONES (Detalle y Reservar) */}
                   <div style={{
                     marginTop: 'auto',
                     paddingTop: '16px',
                     borderTop: '1px solid #f1f5f9',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    gap: '8px'
                   }}>
                     <div>
                       <span style={{ display: 'block', fontSize: '0.7rem', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>
@@ -483,30 +424,66 @@ export default function VistaInicio() {
                       </span>
                     </div>
 
-                    <button
-                      onClick={() => setActiveTab('reservar')}
-                      style={{
-                        backgroundColor: '#fff1f2',
-                        color: 'var(--color-primary)',
-                        border: '1px solid var(--color-primary-subtle)',
-                        borderRadius: 'var(--radius-pill)',
-                        padding: '8px 18px',
-                        fontWeight: '700',
-                        fontSize: '0.85rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                        e.currentTarget.style.color = '#ffffff';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#fff1f2';
-                        e.currentTarget.style.color = 'var(--color-primary)';
-                      }}
-                    >
-                      Reservar
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      {/* BOTÓN DETALLE (ABRE MODAL Y CONSULTA DISPONIBILIDAD SIN REGISTRO) */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAptoFigma(item)}
+                        style={{
+                          backgroundColor: '#f8fafc',
+                          color: '#0f172a',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-pill)',
+                          padding: '8px 14px',
+                          fontWeight: '700',
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          transition: 'all 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f1f5f9';
+                          e.currentTarget.style.borderColor = '#cbd5e1';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8fafc';
+                          e.currentTarget.style.borderColor = 'var(--color-border)';
+                        }}
+                        title="Ver fotos, especificaciones y consultar disponibilidad sin necesidad de registro"
+                      >
+                        <Eye size={14} color="var(--color-primary)" />
+                        <span>Detalle</span>
+                      </button>
+
+                      {/* BOTÓN RESERVAR (INICIA EL REGISTRO / RESERVA) */}
+                      <button
+                        type="button"
+                        onClick={() => handleReservarTipo(item.tipo)}
+                        style={{
+                          backgroundColor: 'var(--color-primary)',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: 'var(--radius-pill)',
+                          padding: '8px 16px',
+                          fontWeight: '700',
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          boxShadow: '0 2px 8px rgba(217, 26, 42, 0.25)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+                        }}
+                        title="Iniciar proceso de reserva"
+                      >
+                        Reservar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -537,7 +514,7 @@ export default function VistaInicio() {
                 Convenios Corporativos y Larga Estadía
               </h3>
               <p style={{ fontSize: '1rem', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
-                Ofrecemos facturación electrónica directa, tarifas corporativas preferenciales y atención ejecutiva personalizada.
+                Ofrecemos facturación electrónica directa, tarifas corporativas preferenciales y atención ejecutiva personalizada en Bogotá Chicó.
               </p>
             </div>
 
@@ -582,28 +559,33 @@ export default function VistaInicio() {
         </div>
       </section>
 
-      {/* 5. FOOTER CORPORATIVO LIMPIO */}
+      {/* 5. FOOTER CORPORATIVO CON LOGO OFICIAL REAL */}
       <footer style={{ backgroundColor: '#090e1a', color: '#94a3b8', paddingTop: '64px', borderTop: '1px solid #1e293b' }}>
         <div className="facile-container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '40px', paddingBottom: '48px', borderBottom: '1px solid #1e293b' }}>
-            {/* Columna Marca */}
+            {/* Columna Marca con Logo Oficial */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>F</div>
-                <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#ffffff' }}>FACILE</span>
+              <div 
+                style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', cursor: 'pointer' }}
+                onClick={() => setActiveTab('inicio')}
+              >
+                <img 
+                  src="/images/logo-facile-oficial.png" 
+                  alt="Apartamentos Facile" 
+                  style={{ height: '46px', width: 'auto', objectFit: 'contain' }}
+                />
               </div>
               <p style={{ fontSize: '0.85rem', lineHeight: 1.6, color: '#64748b' }}>
-                Hospedaje amoblado de alto perfil y centros de negocios estratégicamente ubicados en Bogotá y Bucaramanga.
+                Hospedaje amoblado de alto perfil y centro de negocios en el exclusivo sector de El Chicó, Bogotá.
               </p>
             </div>
 
-            {/* Ubicaciones */}
+            {/* Ubicación Exclusiva */}
             <div>
-              <h4 style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '16px' }}>Ubicaciones</h4>
+              <h4 style={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '16px' }}>Ubicación</h4>
               <p style={{ fontSize: '0.85rem', lineHeight: 1.8, margin: 0 }}>
                 <strong style={{ color: '#ffffff' }}>Bogotá:</strong> Calle 97 #21-62, El Chicó<br />
-                <strong style={{ color: '#ffffff' }}>Bucaramanga:</strong> Sector Cabecera<br />
-                <span style={{ color: 'var(--color-primary)' }}>Recepción 24 Horas</span>
+                <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Recepción & Seguridad 24 Horas</span>
               </p>
             </div>
 
@@ -639,8 +621,8 @@ export default function VistaInicio() {
           </div>
 
           <div style={{ padding: '24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#475569', flexWrap: 'wrap', gap: '12px' }}>
-            <span>© 2026 Facile Apartamentos. Todos los derechos reservados.</span>
-            <span>Diseñado para la máxima comodidad en estadías corporativas y turísticas.</span>
+            <span>© 2026 Apartamentos Facile. Todos los derechos reservados.</span>
+            <span>Diseñado para la máxima comodidad en estadías corporativas y turísticas en El Chicó, Bogotá.</span>
           </div>
         </div>
       </footer>

@@ -56,10 +56,10 @@ export default function Encabezados() {
       {/* 1. Top Bar sutil oscuro */}
       <div style={{ backgroundColor: '#090e1a', color: '#94a3b8', fontSize: '0.8rem', padding: '6px 0' }}>
         <div className="facile-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <span>📍 Calle 97 #21-62, El Chicó, Bogotá</span>
-            <span style={{ color: '#64748b' }}>|</span>
-            <span>🏢 También disponibles en Bucaramanga</span>
+            <span style={{ color: '#334155' }}>|</span>
+            <span style={{ color: '#cbd5e1' }}>🛡️ Recepción y Seguridad 24 Horas</span>
           </div>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <a href="tel:+573153512085" style={{ color: '#e2e8f0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -78,33 +78,17 @@ export default function Encabezados() {
       {/* 2. Barra de Navegación Principal Blanca */}
       <div style={{ backgroundColor: '#ffffff', boxShadow: 'var(--shadow-sm)' }}>
         <div className="facile-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '76px' }}>
-          {/* Logo Oficial Facile */}
+          {/* Logo Oficial Real Facile */}
           <div 
             onClick={() => setActiveTab('inicio')}
-            style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+            title="Apartamentos Facile — El Chicó, Bogotá"
           >
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
-              backgroundColor: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              fontWeight: '800',
-              fontSize: '1.25rem'
-            }}>
-              F
-            </div>
-            <div>
-              <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--color-text-main)', lineHeight: 1, letterSpacing: '-0.5px' }}>
-                FACILE<span style={{ color: 'var(--color-primary)' }}>•</span>
-              </div>
-              <div style={{ fontSize: '0.65rem', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', color: '#94a3b8', marginTop: '3px' }}>
-                APARTAMENTOS
-              </div>
-            </div>
+            <img 
+              src="/images/logo-facile-oficial.png" 
+              alt="Apartamentos Facile" 
+              style={{ height: '52px', width: 'auto', objectFit: 'contain' }}
+            />
           </div>
 
           {/* Enlaces de Navegación */}

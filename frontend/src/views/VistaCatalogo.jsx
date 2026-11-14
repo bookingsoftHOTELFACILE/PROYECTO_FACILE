@@ -493,8 +493,8 @@ const VistaCatalogo = () => {
               </div>
             )}
 
-            {/* MODAL DETALLE DE APARTAMENTO IDENTICO AL MOCKUP DE FIGMA */}
-            {selectedAptoFigma && (() => {
+            {/* MODAL DETALLE GLOBALIZADO EN App.jsx CON ModalDetalleApto */}
+            {false && selectedAptoFigma && (() => {
               const activeFigmaIdx = aptoActivePhoto[selectedAptoFigma.tipo] || 0;
               const mainPhoto = selectedAptoFigma.fotos[activeFigmaIdx] || selectedAptoFigma.fotos[0];
 
