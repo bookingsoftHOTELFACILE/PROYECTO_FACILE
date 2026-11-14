@@ -117,29 +117,6 @@ export default function Encabezados() {
 
           {/* Acciones Rápidas */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              onClick={() => setActiveTab('reservar')}
-              style={{
-                backgroundColor: 'var(--color-dark-surface)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: 'var(--radius-pill)',
-                padding: '10px 18px',
-                fontWeight: '600',
-                fontSize: '0.875rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                transition: 'background 0.2s ease'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1e293b'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-dark-surface)'; }}
-            >
-              <Calendar size={15} />
-              <span>Mi Reserva</span>
-            </button>
-
             {/* Menú de Huésped / Login */}
             {selectedHuesped ? (
               <div style={{ position: 'relative' }}>
