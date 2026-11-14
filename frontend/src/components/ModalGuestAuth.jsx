@@ -25,6 +25,11 @@ const ModalGuestAuth = () => {
   const [customSocialNombre, setCustomSocialNombre] = useState('');
   const [customSocialCorreo, setCustomSocialCorreo] = useState('');
 
+  // Selector internacional de documento e indicativo telefónico
+  const [docTipo, setDocTipo] = useState('PASAPORTE');
+  const [docPaisEmisor, setDocPaisEmisor] = useState('CO');
+  const [telIndicativo, setTelIndicativo] = useState('+57');
+
   // Purgar inmediatamente cualquier usuario demo residual (id 99 o 98)
   useEffect(() => {
     if (
@@ -423,8 +428,8 @@ const ModalGuestAuth = () => {
                   )}
                 </div>
               ) : (
-                /* CONTENIDO DE PESTAÑA: CREAR CUENTA NUEVA EN 2 COLUMNAS (SIN SCROLL EN WEB) */
-                <form onSubmit={handleUserSubmit} style={{ marginTop: '0.4rem' }}>
+                /* CONTENIDO DE PESTAÑA: CREAR CUENTA NUEVA (DISEÑO INTERNACIONAL SIMÉTRICO Y ELEGANTE) */
+                <form onSubmit={handleUserSubmit} style={{ marginTop: '0.2rem' }}>
                   {guestSearchError && (
                     <div style={{ color: '#991b1b', background: '#fee2e2', border: '1px solid #fca5a5', padding: '0.65rem 0.85rem', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '0.8rem' }}>
                       ⚠️ {guestSearchError}
@@ -444,224 +449,273 @@ const ModalGuestAuth = () => {
                     </div>
                   )}
 
-                  <div className="grid-registro-auth">
-                    {/* COLUMNA 1: IDENTIFICACIÓN Y DATOS PERSONALES */}
-                    <div className="registro-col">
-                      <div className="registro-section-tag">
-                        <span>👤 Datos del Huésped</span>
+                  <div className="grid-registro-auth" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', alignItems: 'start' }}>
+                    {/* =================================================================
+                        COLUMNA 1: IDENTIFICACIÓN Y DOCUMENTO INTERNACIONAL
+                       ================================================================= */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', paddingBottom: '0.25rem', borderBottom: '1px solid #f1f5f9' }}>
+                        1. Identificación y Documento Oficial
                       </div>
 
-                      {/* 1. NOMBRE LEGAL OFICIAL */}
-                      <div style={{ marginBottom: '0.6rem' }}>
-                        <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.2rem', display: 'block' }}>
-                          Nombre legal oficial
+                      {/* Nombre(s) y Apellido(s) */}
+                      <div>
+                        <label style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.2rem' }}>
+                          Nombre Legal Oficial
                         </label>
-                        <div className="form-row-2">
-                          <div className="form-field">
-                            <div className="field-input-wrap">
-                              <FileText className="field-icon" size={15}/>
-                              <input
-                                id="reg-nombre"
-                                type="text"
-                                aria-label="Nombre(s)"
-                                placeholder="Nombre(s)"
-                                value={nombreLegal}
-                                onChange={(e) => setNombreLegal(e.target.value)}
-                                required
-                              />
-                            </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
+                          <div className="field-input-wrap" style={{ height: '38px' }}>
+                            <FileText className="field-icon" size={14} />
+                            <input
+                              id="reg-nombre"
+                              type="text"
+                              placeholder="Nombre(s)"
+                              value={nombreLegal}
+                              onChange={(e) => setNombreLegal(e.target.value)}
+                              required
+                              style={{ fontSize: '0.82rem' }}
+                            />
                           </div>
-                          <div className="form-field">
-                            <div className="field-input-wrap">
-                              <FileText className="field-icon" size={15}/>
-                              <input
-                                id="reg-apellido"
-                                type="text"
-                                aria-label="Apellido(s)"
-                                placeholder="Apellido(s)"
-                                value={apellidoLegal}
-                                onChange={(e) => setApellidoLegal(e.target.value)}
-                                required
-                              />
-                            </div>
+                          <div className="field-input-wrap" style={{ height: '38px' }}>
+                            <FileText className="field-icon" size={14} />
+                            <input
+                              id="reg-apellido"
+                              type="text"
+                              placeholder="Apellido(s)"
+                              value={apellidoLegal}
+                              onChange={(e) => setApellidoLegal(e.target.value)}
+                              required
+                              style={{ fontSize: '0.82rem' }}
+                            />
                           </div>
-                        </div>
-                        <div className="airbnb-field-note" style={{ fontSize: '0.7rem' }}>
-                          Coincidente con tu documento oficial.
                         </div>
                       </div>
 
-                      {/* 2. DOCUMENTO DE IDENTIDAD Y TELÉFONO */}
-                      <div className="form-row-2" style={{ marginBottom: '0.6rem' }}>
-                        <div className="form-field">
-                          <label htmlFor="reg-documento" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>
-                            Documento (Cédula/Pasaporte)
-                          </label>
-                          <div className="field-input-wrap">
-                            <ShieldCheck className="field-icon" size={15}/>
+                      {/* Selector Internacional de Tipo de Documento */}
+                      <div>
+                        <label style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.2rem' }}>
+                          Tipo de Documento de Identidad
+                        </label>
+                        <select
+                          className="input-airbnb"
+                          value={docTipo}
+                          onChange={(e) => setDocTipo(e.target.value)}
+                          style={{ width: '100%', height: '38px', fontSize: '0.82rem', padding: '0 0.6rem', background: '#ffffff', borderRadius: '10px' }}
+                        >
+                          <option value="PASAPORTE">🛂 Pasaporte Internacional (Recomendado Extranjeros)</option>
+                          <option value="CC">🪪 Cédula de Ciudadanía (Colombia)</option>
+                          <option value="CE">🪪 Cédula de Extranjería (Colombia)</option>
+                          <option value="DNI">💳 DNI / Documento Nacional (Latam / España / UE)</option>
+                          <option value="LICENCIA">🪪 Licencia de Conducir / ID Oficial</option>
+                        </select>
+                      </div>
+
+                      {/* País Emisor & Número de Documento */}
+                      <div>
+                        <label style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.2rem' }}>
+                          País Emisor & Número de Documento
+                        </label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '125px 1fr', gap: '0.45rem' }}>
+                          <select
+                            className="input-airbnb"
+                            value={docPaisEmisor}
+                            onChange={(e) => setDocPaisEmisor(e.target.value)}
+                            style={{ height: '38px', fontSize: '0.8rem', padding: '0 0.4rem', background: '#ffffff', borderRadius: '10px' }}
+                          >
+                            <option value="CO">🇨🇴 Colombia</option>
+                            <option value="US">🇺🇸 USA</option>
+                            <option value="ES">🇪🇸 España</option>
+                            <option value="MX">🇲🇽 México</option>
+                            <option value="AR">🇦🇷 Argentina</option>
+                            <option value="CL">🇨🇱 Chile</option>
+                            <option value="PE">🇵🇪 Perú</option>
+                            <option value="BR">🇧🇷 Brasil</option>
+                            <option value="PA">🇵🇦 Panamá</option>
+                            <option value="CA">🇨🇦 Canadá</option>
+                            <option value="FR">🇫🇷 Francia</option>
+                            <option value="DE">🇩🇪 Alemania</option>
+                            <option value="GB">🇬🇧 UK</option>
+                            <option value="OTRO">🌎 Otro País</option>
+                          </select>
+                          <div className="field-input-wrap" style={{ height: '38px' }}>
+                            <ShieldCheck className="field-icon" size={14} />
                             <input
                               id="reg-documento"
                               type="text"
                               name="documento"
                               value={formData.documento}
                               onChange={handleUserChange}
-                              placeholder="Ej: 1017283944"
-                              maxLength={15}
+                              placeholder={docTipo === 'PASAPORTE' ? 'Ej: A12345678' : 'Ej: 1017283944'}
+                              maxLength={20}
                               required
-                            />
-                          </div>
-                        </div>
-                        <div className="form-field">
-                          <label htmlFor="reg-telefono" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>
-                            Teléfono de contacto
-                          </label>
-                          <div className="field-input-wrap">
-                            <Phone className="field-icon" size={15}/>
-                            <input
-                              id="reg-telefono"
-                              type="text"
-                              name="telefono"
-                              value={formData.telefono}
-                              onChange={handleUserChange}
-                              placeholder="Ej: 3154449876"
-                              maxLength={15}
-                              required
+                              style={{ fontSize: '0.82rem', textTransform: 'uppercase' }}
                             />
                           </div>
                         </div>
                       </div>
 
-                      {/* 3. FECHA DE NACIMIENTO */}
-                      <div className="form-field" style={{ marginBottom: '0.4rem' }}>
-                        <label htmlFor="reg-nacimiento" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.2rem', display: 'block' }}>
-                          Fecha de nacimiento
+                      {/* Fecha de Nacimiento */}
+                      <div>
+                        <label htmlFor="reg-nacimiento" style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.2rem' }}>
+                          Fecha de Nacimiento (Mayor de 18 años)
                         </label>
-                        <div className="field-input-wrap">
-                          <Calendar className="field-icon" size={15}/>
+                        <div className="field-input-wrap" style={{ height: '38px' }}>
+                          <Calendar className="field-icon" size={14} />
                           <input
                             id="reg-nacimiento"
                             type="date"
                             value={fechaNacimiento}
                             onChange={(e) => setFechaNacimiento(e.target.value)}
                             required
+                            style={{ fontSize: '0.82rem' }}
                           />
                         </div>
-                        <div className="airbnb-field-note" style={{ fontSize: '0.7rem' }}>
-                          Debes tener al menos 18 años para reservar.
-                        </div>
                       </div>
                     </div>
 
-                    {/* COLUMNA 2: ACCESO, PREFERENCIAS Y TÉRMINOS */}
-                    <div className="registro-col">
-                      <div className="registro-section-tag">
-                        <span>🔐 Acceso y Condiciones</span>
+                    {/* =================================================================
+                        COLUMNA 2: CONTACTO Y CREDENCIALES DE ACCESO
+                       ================================================================= */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', paddingBottom: '0.25rem', borderBottom: '1px solid #f1f5f9' }}>
+                        2. Contacto, Seguridad y Términos
                       </div>
 
-                      {/* 4. CORREO Y CONTRASEÑA */}
-                      <div className="form-row-2" style={{ marginBottom: '0.45rem' }}>
-                        <div className="form-field">
-                          <label htmlFor="reg-correo" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>
-                            Correo electrónico
-                          </label>
-                          <div className="field-input-wrap">
-                            <Mail className="field-icon" size={15}/>
+                      {/* Correo Electrónico */}
+                      <div>
+                        <label htmlFor="reg-correo" style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.2rem' }}>
+                          Correo Electrónico (Recibirás confirmación)
+                        </label>
+                        <div className="field-input-wrap" style={{ height: '38px' }}>
+                          <Mail className="field-icon" size={14} />
+                          <input
+                            id="reg-correo"
+                            type="email"
+                            name="correo"
+                            value={formData.correo}
+                            onChange={handleUserChange}
+                            placeholder="correo@ejemplo.com"
+                            required
+                            style={{ fontSize: '0.82rem' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Teléfono Móvil con Indicativo Internacional */}
+                      <div>
+                        <label htmlFor="reg-telefono" style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.2rem' }}>
+                          Teléfono Móvil (WhatsApp de Check-in)
+                        </label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '105px 1fr', gap: '0.45rem' }}>
+                          <select
+                            className="input-airbnb"
+                            value={telIndicativo}
+                            onChange={(e) => setTelIndicativo(e.target.value)}
+                            style={{ height: '38px', fontSize: '0.8rem', padding: '0 0.35rem', background: '#ffffff', borderRadius: '10px' }}
+                          >
+                            <option value="+57">🇨🇴 +57</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+34">🇪🇸 +34</option>
+                            <option value="+52">🇲🇽 +52</option>
+                            <option value="+54">🇦🇷 +54</option>
+                            <option value="+56">🇨🇱 +56</option>
+                            <option value="+55">🇧🇷 +55</option>
+                            <option value="+51">🇵🇪 +51</option>
+                            <option value="+593">🇪🇨 +593</option>
+                            <option value="+507">🇵🇦 +507</option>
+                            <option value="+33">🇫🇷 +33</option>
+                            <option value="+49">🇩🇪 +49</option>
+                            <option value="+44">🇬🇧 +44</option>
+                          </select>
+                          <div className="field-input-wrap" style={{ height: '38px' }}>
+                            <Phone className="field-icon" size={14} />
                             <input
-                              id="reg-correo"
-                              type="email"
-                              name="correo"
-                              value={formData.correo}
+                              id="reg-telefono"
+                              type="tel"
+                              name="telefono"
+                              value={formData.telefono}
                               onChange={handleUserChange}
-                              placeholder="correo@ejemplo.com"
+                              placeholder="Ej: 3154449876"
+                              maxLength={16}
                               required
+                              style={{ fontSize: '0.82rem' }}
                             />
                           </div>
                         </div>
-                        <div className="form-field">
-                          <label htmlFor="reg-password" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>
-                            Contraseña
-                          </label>
-                          <div className="field-input-wrap">
-                            <Lock className="field-icon" size={15}/>
-                            <input
-                              id="reg-password"
-                              type={showGuestPassword ? "text" : "password"}
-                              name="password"
-                              value={formData.password || ''}
-                              onChange={handleUserChange}
-                              placeholder="Crear contraseña"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowGuestPassword(!showGuestPassword)}
-                              style={{ background: 'none', border: 'none', padding: '0 0.4rem', color: '#64748b', cursor: 'pointer' }}
-                            >
-                              {showGuestPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                            </button>
-                          </div>
+                      </div>
+
+                      {/* Contraseña */}
+                      <div>
+                        <label htmlFor="reg-password" style={{ fontSize: '0.76rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.2rem' }}>
+                          Contraseña de la Cuenta
+                        </label>
+                        <div className="field-input-wrap" style={{ height: '38px' }}>
+                          <Lock className="field-icon" size={14} />
+                          <input
+                            id="reg-password"
+                            type={showGuestPassword ? "text" : "password"}
+                            name="password"
+                            value={formData.password || ''}
+                            onChange={handleUserChange}
+                            placeholder="Mínimo 6 caracteres"
+                            style={{ fontSize: '0.82rem' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowGuestPassword(!showGuestPassword)}
+                            style={{ background: 'none', border: 'none', padding: '0 0.35rem', color: '#64748b', cursor: 'pointer' }}
+                          >
+                            {showGuestPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
                         </div>
                       </div>
-                      <div className="airbnb-field-note" style={{ fontSize: '0.7rem', marginBottom: '0.5rem' }}>
-                        Confirmaciones de viaje enviadas a este correo.
+
+                      {/* Consentimiento Legal y Habeas Data Integrado */}
+                      <div style={{ paddingTop: '0.15rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.45rem', fontSize: '0.72rem', color: '#475569', cursor: 'pointer', lineHeight: 1.35 }}>
+                          <input
+                            type="checkbox"
+                            checked={habeasData}
+                            onChange={(e) => setHabeasData(e.target.checked)}
+                            style={{ marginTop: '2px', accentColor: '#d91a2a', flexShrink: 0 }}
+                          />
+                          <span>
+                            Acepto los <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('terminos')}>Términos</button>, la <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('privacidad')}>Privacidad</button> y autorizo el tratamiento de mis datos personales (Ley 1581 de 2012 / RNT Colombia).
+                          </span>
+                        </label>
                       </div>
-
-                      {/* 5. PREFERENCIAS MARKETING */}
-                      <label className="airbnb-checkbox-row" style={{ fontSize: '0.74rem', marginBottom: '0.35rem', display: 'flex', alignItems: 'flex-start', gap: '0.45rem', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={marketingOptOut}
-                          onChange={(e) => setMarketingOptOut(e.target.checked)}
-                          style={{ marginTop: '2px', accentColor: '#d91a2a' }}
-                        />
-                        <span style={{ color: '#475569' }}>No deseo recibir mensajes comerciales o promocionales.</span>
-                      </label>
-
-                      {/* 6. AUTORIZACIÓN HABEAS DATA LEY 1581 */}
-                      <label className="airbnb-checkbox-row" style={{ fontSize: '0.74rem', marginBottom: '0.45rem', display: 'flex', alignItems: 'flex-start', gap: '0.45rem', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={habeasData}
-                          onChange={(e) => setHabeasData(e.target.checked)}
-                          style={{ marginTop: '2px', accentColor: '#d91a2a' }}
-                        />
-                        <span style={{ color: '#334155' }}><strong>Autorizo expresamente</strong> el tratamiento de mis datos personales según Ley 1581 de 2012 de Colombia.</span>
-                      </label>
-
-                      {/* 7. ACEPTACIÓN LEGAL Y DISCLAIMER */}
-                      <div className="airbnb-legal-disclaimer" style={{ fontSize: '0.69rem', margin: '0.15rem 0 0.6rem', paddingTop: '0.35rem', borderTop: '1px solid #f1f5f9', lineHeight: '1.35', color: '#64748b' }}>
-                        Al seleccionar <strong>Aceptar y continuar</strong>, acepto los{' '}
-                        <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('terminos')}>Términos</button>, los{' '}
-                        <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('pagos')}>Términos de pago</button>, la{' '}
-                        <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('discriminacion')}>No discriminación</button>{' '}
-                        y la{' '}
-                        <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('privacidad')}>Privacidad</button>.
-                      </div>
-
-                      {/* BOTÓN SUBMIT PRINCIPAL */}
-                      <button
-                        type="submit"
-                        className="btn-airbnb-primary"
-                        disabled={loading}
-                        style={{
-                          height: '42px',
-                          marginTop: 0,
-                          borderRadius: 'var(--radius-pill)',
-                          background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)',
-                          boxShadow: '0 4px 14px rgba(217, 26, 42, 0.28)',
-                          fontSize: '0.9rem',
-                          fontWeight: 700
-                        }}
-                      >
-                        {loading ? 'Creando cuenta...' : 'Aceptar y continuar'}
-                      </button>
                     </div>
+                  </div>
+
+                  {/* =================================================================
+                      BOTÓN PRINCIPAL DE ANCHO COMPLETO AL PIE
+                     ================================================================= */}
+                  <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #f1f5f9' }}>
+                    <button
+                      type="submit"
+                      className="btn-airbnb-primary"
+                      disabled={loading}
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        marginTop: 0,
+                        borderRadius: 'var(--radius-pill)',
+                        background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)',
+                        boxShadow: '0 4px 14px rgba(217, 26, 42, 0.28)',
+                        fontSize: '0.92rem',
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {loading ? 'Creando cuenta...' : 'Aceptar y continuar'}
+                    </button>
                   </div>
                 </form>
               )}
 
               {/* SECCIÓN DE AUTENTICACIÓN SOCIAL (GOOGLE Y APPLE) AL FINAL */}
               {guestAuthTab !== 'recuperar' && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '0.75rem', paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '0.65rem', paddingTop: '0.55rem', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>o continúa con:</span>
                   <button
                     type="button"
