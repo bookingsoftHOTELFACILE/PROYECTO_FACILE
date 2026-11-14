@@ -61,8 +61,8 @@ const VistaGaleria = () => {
         return (
           <section className="facile-section">
             <div className="section-title-wrap">
-              <h2>Galería Fotográfica Real</h2>
-              <p>Conoce las instalaciones reales de Apartamentos Facile Bogotá & Centro de Negocios</p>
+              <h2>Nuestras Instalaciones</h2>
+              <p>Explora cada uno de los espacios de Apartamentos Facile Bogotá & Centro de Negocios</p>
             </div>
 
             {/* BARRA DE FILTROS CATEGÓRICOS DE GALERÍA (BOTONES REDONDEADOS TIPO PÍLDORA) */}
