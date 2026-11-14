@@ -358,46 +358,49 @@ const VistaCatalogo = () => {
                       {/* TARJETA DESTACADA HORIZONTAL (APROVECHA EL 100% DEL ESPACIO SUPERIOR) */}
                       <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
                         background: '#ffffff',
-                        borderRadius: '16px',
+                        borderRadius: '24px',
                         border: '1px solid #e2e8f0',
                         overflow: 'hidden',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                        marginBottom: '2.5rem'
+                        boxShadow: '0 8px 30px rgba(15,23,42,0.06)',
+                        marginBottom: '3rem'
                       }}>
                         {/* COLUMNA IZQUIERDA: FOTO PRINCIPAL Y MINIATURAS */}
-                        <div style={{ background: '#0f172a', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ background: '#f8fafc', display: 'flex', flexDirection: 'column', borderRight: '1px solid #f1f5f9' }}>
                           <div
-                            style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', cursor: 'pointer' }}
+                            style={{ position: 'relative', width: '100%', height: '340px', overflow: 'hidden', cursor: 'pointer' }}
                             onClick={() => setSelectedAptoFigma(apto)}
-                            title="Haz clic para ver el detalle en Figma"
+                            title="Haz clic para ver el detalle interactivo"
                           >
                             <img
                               src={currentPhoto.url}
                               alt={currentPhoto.titulo}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease' }}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
                               onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
                               onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                             />
-                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.4rem 0.85rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              <Maximize2 size={14}/> Ver Detalle Figma
+                            <div style={{ position: 'absolute', bottom: '14px', right: '14px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(6px)', color: '#ffffff', padding: '0.45rem 0.95rem', borderRadius: 'var(--radius-pill)', fontSize: '0.78rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.45rem', border: '1px solid rgba(255,255,255,0.15)' }}>
+                              <Maximize2 size={14}/> Ver Detalle / Fotos
+                            </div>
+                            <div style={{ position: 'absolute', top: '14px', left: '14px', background: 'rgba(217, 26, 42, 0.9)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.35rem 0.85rem', borderRadius: 'var(--radius-pill)', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              Categoría Destacada
                             </div>
                           </div>
 
                           {/* MINI CARRUSEL DE MINIATURAS FOTOGRÁFICAS */}
-                          <div style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem 1rem', background: '#090d16', overflowX: 'auto' }}>
+                          <div style={{ display: 'flex', gap: '0.6rem', padding: '0.85rem 1.25rem', background: '#ffffff', borderTop: '1px solid #f1f5f9', overflowX: 'auto' }}>
                             {apto.fotos.map((f, i) => (
                               <div
                                 key={i}
                                 onClick={() => setAptoActivePhoto(prev => ({ ...prev, [apto.tipo]: i }))}
                                 style={{
-                                  width: '64px',
-                                  height: '46px',
-                                  borderRadius: '6px',
+                                  width: '68px',
+                                  height: '48px',
+                                  borderRadius: '8px',
                                   overflow: 'hidden',
                                   cursor: 'pointer',
-                                  border: activePhotoIndex === i ? '2px solid #d91a2a' : '1.5px solid #334155',
+                                  border: activePhotoIndex === i ? '2.5px solid #d91a2a' : '1.5px solid #e2e8f0',
                                   opacity: activePhotoIndex === i ? 1 : 0.65,
                                   transition: 'all 0.2s ease',
                                   flexShrink: 0
@@ -410,75 +413,96 @@ const VistaCatalogo = () => {
                         </div>
 
                         {/* COLUMNA DERECHA: INFORMACIÓN COMPLETA Y ESPECIFICACIONES */}
-                        <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff' }}>
+                        <div style={{ padding: '2.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff' }}>
                           <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                              <h3 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>{apto.tipo}</h3>
-                              <span className="badge-red-num" style={{ fontSize: '0.85rem', padding: '0.35rem 0.85rem', background: '#fee2e2', color: '#d91a2a', borderRadius: 'var(--radius-pill, 9999px)', fontWeight: 800 }}>{apto.unidades}</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#d91a2a', textTransform: 'uppercase', letterSpacing: '0.8px', background: '#fee2e2', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-pill)', border: '1px solid #fecaca' }}>
+                                  Apartamento
+                                </span>
+                                <h3 style={{ margin: '0.5rem 0 0', fontSize: '1.85rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px' }}>
+                                  {apto.nombreModal || `Apartamento ${apto.tipo}`}
+                                </h3>
+                              </div>
+                              <span style={{ fontSize: '0.82rem', padding: '0.4rem 0.95rem', background: '#ecfdf5', color: '#059669', borderRadius: 'var(--radius-pill)', fontWeight: 800, border: '1px solid #a7f3d0' }}>
+                                ● {apto.unidades}
+                              </span>
                             </div>
 
-                            <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: '1.65', marginBottom: '1.5rem' }}>
+                            <p style={{ color: '#475569', fontSize: '0.92rem', lineHeight: '1.65', marginBottom: '1.5rem' }}>
                               {apto.desc}
                             </p>
 
-                            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Users size={14}/> {apto.personas}</span>
-                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Wifi size={14}/> Wi-Fi de alta velocidad</span>
-                              <span className="spec-pill" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}><Home size={14}/> {apto.ambientes}</span>
+                            <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', marginBottom: '1.75rem' }}>
+                              <span className="spec-pill" style={{ padding: '0.5rem 0.95rem', fontSize: '0.84rem', borderRadius: 'var(--radius-pill)', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Users size={14} color="#d91a2a"/> {apto.personas}
+                              </span>
+                              <span className="spec-pill" style={{ padding: '0.5rem 0.95rem', fontSize: '0.84rem', borderRadius: 'var(--radius-pill)', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Wifi size={14} color="#d91a2a"/> Wi-Fi Alta Velocidad
+                              </span>
+                              <span className="spec-pill" style={{ padding: '0.5rem 0.95rem', fontSize: '0.84rem', borderRadius: 'var(--radius-pill)', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Home size={14} color="#d91a2a"/> {apto.ambientes}
+                              </span>
                             </div>
                           </div>
 
-                          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: '#f8fafc', margin: '0 -2.25rem -2.25rem -2.25rem', padding: '1.5rem 2.25rem' }}>
                             <div>
-                              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#d91a2a', lineHeight: 1 }}>
+                              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Tarifa por noche
+                              </div>
+                              <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>
                                 {apto.precio}
                               </div>
-                              <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{apto.precioSub}</span>
+                              <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{apto.precioSub} • Impuestos incluidos</span>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '0.6rem' }}>
+                            <div style={{ display: 'flex', gap: '0.75rem' }}>
                               <button
                                 type="button"
                                 style={{
-                                  borderRadius: 'var(--radius-pill, 9999px)',
-                                  padding: '0.6rem 1.25rem',
-                                  background: '#0f172a',
-                                  color: '#ffffff',
+                                  borderRadius: 'var(--radius-pill)',
+                                  padding: '0.75rem 1.4rem',
+                                  background: '#ffffff',
+                                  border: '1.5px solid #cbd5e1',
+                                  color: '#0f172a',
                                   fontSize: '0.86rem',
-                                  fontWeight: 700,
-                                  border: 'none',
+                                  fontWeight: 800,
                                   cursor: 'pointer',
                                   transition: 'all 0.2s ease',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '6px'
+                                  gap: '7px',
+                                  boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                                 }}
                                 onMouseEnter={e => {
-                                  e.currentTarget.style.background = '#1e293b';
+                                  e.currentTarget.style.borderColor = '#d91a2a';
+                                  e.currentTarget.style.color = '#d91a2a';
                                   e.currentTarget.style.transform = 'translateY(-1px)';
                                 }}
                                 onMouseLeave={e => {
-                                  e.currentTarget.style.background = '#0f172a';
+                                  e.currentTarget.style.borderColor = '#cbd5e1';
+                                  e.currentTarget.style.color = '#0f172a';
                                   e.currentTarget.style.transform = 'translateY(0)';
                                 }}
                                 onClick={() => setSelectedAptoFigma(apto)}
                                 title="Ver vista interactiva de Figma"
                               >
-                                <Eye size={15} color="#ffffff" />
+                                <Eye size={15} color="#d91a2a" />
                                 <span>Detalle Completo</span>
                               </button>
                               <button
                                 type="button"
                                 className="btn-book-red"
                                 style={{
-                                  borderRadius: 'var(--radius-pill, 9999px)',
-                                  padding: '0.6rem 1.4rem',
+                                  borderRadius: 'var(--radius-pill)',
+                                  padding: '0.75rem 1.6rem',
                                   background: '#d91a2a',
                                   color: '#ffffff',
                                   fontSize: '0.86rem',
-                                  fontWeight: 700,
+                                  fontWeight: 800,
                                   border: 'none',
-                                  boxShadow: '0 4px 12px rgba(217, 26, 42, 0.28)',
+                                  boxShadow: '0 4px 14px rgba(217, 26, 42, 0.3)',
                                   cursor: 'pointer',
                                   transition: 'all 0.2s ease'
                                 }}
@@ -499,72 +523,83 @@ const VistaCatalogo = () => {
                         </div>
                       </div>
 
-                      {/* SUBSECCIÓN: TODAS LAS UNIDADES DISPONIBLES DE ESTA CATEGORÍA (LLENAN EL ANCHO DE LA PANTALLA) */}
-                      <div style={{ marginBottom: '1rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {/* SUBSECCIÓN: TODAS LAS UNIDADES DISPONIBLES DE ESTA CATEGORÍA */}
+                      <div style={{ marginBottom: '2.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
                           <div>
-                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
-                              Unidades asignables de {apto.tipo} ({unidadesFinales.length} disponibles)
-                            </h3>
-                            <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.84rem' }}>
-                              Selecciona tu apartamento para asignarlo directamente a tu reserva
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                              <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>
+                                Unidades asignables de {apto.tipo}
+                              </h3>
+                              <span style={{ background: '#fee2e2', color: '#d91a2a', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-pill)', fontSize: '0.8rem', fontWeight: 800, border: '1px solid #fecaca' }}>
+                                {unidadesFinales.length} disponibles
+                              </span>
+                            </div>
+                            <p style={{ margin: '0.35rem 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                              Selecciona tu apartamento para asignarlo directamente a tu reserva y asegurar piso de tu preferencia
                             </p>
                           </div>
-                          <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.3rem 0.8rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.78rem', fontWeight: 700 }}>
-                            ● Todas las unidades disponibles
+                          <span style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', padding: '0.4rem 0.95rem', borderRadius: 'var(--radius-pill)', fontSize: '0.8rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981' }} /> Todas las unidades disponibles para hoy
                           </span>
                         </div>
 
-                        {/* GRID DE UNIDADES ESPECÍFICAS DE ESTA CATEGORÍA */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '1rem' }}>
+                        {/* GRID DE UNIDADES ESPECÍFICAS DE ESTA CATEGORÍA (BALANCEADO Y ERGONÓMICO) */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1.25rem' }}>
                           {unidadesFinales.map((unidad) => (
                             <div
                               key={unidad.id}
                               style={{
                                 background: '#ffffff',
-                                borderRadius: '16px',
-                                border: '1px solid #e2e8f0',
-                                padding: '1.1rem',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                                borderRadius: '20px',
+                                border: '1.5px solid #e2e8f0',
+                                padding: '1.35rem',
+                                boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'space-between',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
                               }}
                               onMouseEnter={e => {
-                                e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)';
+                                e.currentTarget.style.transform = 'translateY(-4px)';
+                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(15,23,42,0.08)';
                                 e.currentTarget.style.borderColor = '#d91a2a';
                               }}
                               onMouseLeave={e => {
                                 e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+                                e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
                                 e.currentTarget.style.borderColor = '#e2e8f0';
                               }}
                             >
                               <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                  <span style={{ background: '#fee2e2', color: '#d91a2a', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-pill, 9999px)', fontSize: '0.78rem', fontWeight: 800 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                                  <span style={{ background: '#fee2e2', color: '#d91a2a', border: '1px solid #fecaca', padding: '0.35rem 0.85rem', borderRadius: 'var(--radius-pill)', fontSize: '0.85rem', fontWeight: 800 }}>
                                     Apto {unidad.numero}
                                   </span>
-                                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>
+                                  <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700, background: '#f8fafc', padding: '0.25rem 0.65rem', borderRadius: 'var(--radius-pill)', border: '1px solid #e2e8f0' }}>
                                     {unidad.piso}
                                   </span>
                                 </div>
-                                <div style={{ fontSize: '0.84rem', color: '#334155', fontWeight: 600, marginBottom: '0.3rem' }}>
+                                <div style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 800, marginBottom: '0.4rem', letterSpacing: '-0.2px' }}>
                                   {apto.formato || apto.tipo}
                                 </div>
-                                <div style={{ fontSize: '0.76rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.75rem' }}>
-                                  <Users size={12}/> Capacidad: {unidad.capacidad} pers.
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#059669', fontSize: '0.74rem', fontWeight: 700, marginBottom: '0.85rem' }}>
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                                  <span>Disponible para asignar</span>
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '1.1rem', background: '#f8fafc', padding: '0.55rem 0.85rem', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
+                                  <Users size={14} color="#d91a2a"/>
+                                  <span style={{ fontWeight: 600 }}>Capacidad: <strong>{unidad.capacidad} personas</strong></span>
                                 </div>
                               </div>
 
-                              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                  <div style={{ fontSize: '0.96rem', fontWeight: 800, color: '#d91a2a' }}>
+                                  <div style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tarifa noche</div>
+                                  <div style={{ fontSize: '1.18rem', fontWeight: 900, color: '#0f172a', lineHeight: 1.15 }}>
                                     ${Number(unidad.precio).toLocaleString('es-CO')}
                                   </div>
-                                  <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>COP / noche</div>
+                                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>COP / noche</div>
                                 </div>
                                 <button
                                   type="button"
@@ -576,12 +611,12 @@ const VistaCatalogo = () => {
                                     background: '#d91a2a',
                                     color: '#ffffff',
                                     border: 'none',
-                                    padding: '0.45rem 1rem',
-                                    borderRadius: 'var(--radius-pill, 9999px)',
-                                    fontSize: '0.78rem',
-                                    fontWeight: 700,
+                                    padding: '0.55rem 1.35rem',
+                                    borderRadius: 'var(--radius-pill)',
+                                    fontSize: '0.84rem',
+                                    fontWeight: 800,
                                     cursor: 'pointer',
-                                    boxShadow: '0 2px 6px rgba(217, 26, 42, 0.22)',
+                                    boxShadow: '0 3px 10px rgba(217, 26, 42, 0.25)',
                                     transition: 'all 0.15s ease'
                                   }}
                                   onMouseEnter={e => {
