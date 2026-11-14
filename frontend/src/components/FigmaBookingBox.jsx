@@ -6,11 +6,8 @@ import HuespedesPicker from './HuespedesPicker.jsx';
 
 // COMPONENTE DE RESERVA PARA EL MODAL DE FIGMA CON CALENDARIO VISUAL DE OCUPACIÓN (ROJO/VERDE)
 const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
-  const todayStr = new Date().toISOString().split('T')[0];
-  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
-  const [fechaEntrada, setFechaEntrada] = useState(todayStr);
-  const [fechaSalida, setFechaSalida] = useState(tomorrowStr);
+  const [fechaEntrada, setFechaEntrada] = useState('');
+  const [fechaSalida, setFechaSalida] = useState('');
   const [calDate, setCalDate] = useState(new Date());
 
   // Filtrar reservas activas para esta categoría de apartamento

@@ -71,9 +71,9 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
   const [calYear, setCalYear] = useState(2026);
   const [calMonth, setCalMonth] = useState(10); // 0-indexed: 10 = Noviembre
 
-  // Rango de fechas seleccionado (YYYY-MM-DD)
-  const [fechaEntrada, setFechaEntrada] = useState('2026-11-14');
-  const [fechaSalida, setFechaSalida] = useState('2026-11-17');
+  // Rango de fechas seleccionado (YYYY-MM-DD) - Inicialmente vacío sin preselección
+  const [fechaEntrada, setFechaEntrada] = useState(null);
+  const [fechaSalida, setFechaSalida] = useState(null);
   const [mensajeInteraccion, setMensajeInteraccion] = useState(null);
 
   const nombresMeses = [
@@ -244,9 +244,9 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     }
   };
 
-  // Cálculo de noches de estancia de forma agnóstica de zona horaria
+  // Cálculo de noches de estancia de forma agnóstica de zona horaria (0 si no hay rango completo)
   const nochesEstancia = useMemo(() => {
-    if (!fechaEntrada || !fechaSalida) return 1;
+    if (!fechaEntrada || !fechaSalida) return 0;
     return calcularNochesAgnostico(fechaEntrada, fechaSalida);
   }, [fechaEntrada, fechaSalida]);
 
@@ -267,24 +267,37 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
   }, [nochesEstancia]);
 
   const subtotalSinDescuento = useMemo(() => {
+    if (nochesEstancia === 0) return 0;
     return precioNumerico * nochesEstancia;
   }, [precioNumerico, nochesEstancia]);
 
   const montoDescuento = useMemo(() => {
-    if (porcentajeDescuento > 0) {
+    if (porcentajeDescuento > 0 && subtotalSinDescuento > 0) {
       return Math.round((subtotalSinDescuento * porcentajeDescuento) / 100);
     }
     return 0;
   }, [subtotalSinDescuento, porcentajeDescuento]);
 
   const totalCalculado = useMemo(() => {
+    if (nochesEstancia === 0) return 0;
     return subtotalSinDescuento - montoDescuento;
-  }, [subtotalSinDescuento, montoDescuento]);
+  }, [subtotalSinDescuento, montoDescuento, nochesEstancia]);
 
   // =========================================================================
   // ACCIÓN DE RESERVA (INTEGRACIÓN FLUIDA CON LOGIN / REGISTRO)
   // =========================================================================
   const handleActionReservar = () => {
+    if (!fechaEntrada) {
+      setMensajeInteraccion('Por favor selecciona tu fecha de llegada en el calendario.');
+      setTimeout(() => setMensajeInteraccion(null), 3500);
+      return;
+    }
+    if (!fechaSalida) {
+      setMensajeInteraccion('Por favor selecciona tu fecha de salida en el calendario.');
+      setTimeout(() => setMensajeInteraccion(null), 3500);
+      return;
+    }
+
     const datosReservaApto = {
       ...apto,
       fechaEntrada,
@@ -663,9 +676,9 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                     }}
                   >
                     <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '2px' }}>Llegada</label>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>
-                      <span>{formatearFechaDisplay(fechaEntrada)}</span>
-                      <CalendarIcon size={13} color="#d91a2a" />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, color: fechaEntrada ? '#0f172a' : '#d91a2a' }}>
+                      <span>{fechaEntrada ? formatearFechaDisplay(fechaEntrada) : 'Elige en calendario'}</span>
+                      <CalendarIcon size={13} color={fechaEntrada ? '#64748b' : '#d91a2a'} />
                     </div>
                   </div>
 
@@ -895,60 +908,98 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                   <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     Resumen de tu Estadía
                   </span>
-                  <span style={{
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    borderRadius: 'var(--radius-pill)',
-                    backgroundColor: porcentajeDescuento > 0 ? '#d1fae5' : '#fee2e2',
-                    color: porcentajeDescuento > 0 ? '#065f46' : '#d91a2a'
-                  }}>
-                    {nochesEstancia} {nochesEstancia === 1 ? 'noche' : 'noches'}
-                  </span>
+                  {nochesEstancia > 0 ? (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '3px 8px',
+                      borderRadius: 'var(--radius-pill)',
+                      backgroundColor: porcentajeDescuento > 0 ? '#d1fae5' : '#fee2e2',
+                      color: porcentajeDescuento > 0 ? '#065f46' : '#d91a2a'
+                    }}>
+                      {nochesEstancia} {nochesEstancia === 1 ? 'noche' : 'noches'}
+                    </span>
+                  ) : (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '3px 8px',
+                      borderRadius: 'var(--radius-pill)',
+                      backgroundColor: '#f1f5f9',
+                      color: '#64748b'
+                    }}>
+                      Elige tus fechas
+                    </span>
+                  )}
                 </div>
 
                 {/* Fechas seleccionadas */}
                 <div style={{ fontSize: '0.76rem', color: '#64748b', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <CalendarIcon size={13} color="#94a3b8" />
-                  <span>
-                    <strong>{formatearFechaDisplay(fechaEntrada)}</strong> al <strong>{fechaSalida ? formatearFechaDisplay(fechaSalida) : 'Elige salida'}</strong>
-                  </span>
+                  {fechaEntrada && fechaSalida ? (
+                    <span>
+                      <strong>{formatearFechaDisplay(fechaEntrada)}</strong> al <strong>{formatearFechaDisplay(fechaSalida)}</strong>
+                    </span>
+                  ) : fechaEntrada ? (
+                    <span>
+                      Llegada: <strong>{formatearFechaDisplay(fechaEntrada)}</strong> — <span style={{ color: '#d91a2a', fontWeight: 600 }}>Ahora elige fecha de salida en el calendario</span>
+                    </span>
+                  ) : (
+                    <span style={{ color: '#64748b', fontStyle: 'italic' }}>
+                      Selecciona fecha de llegada y salida en el calendario
+                    </span>
+                  )}
                 </div>
 
                 {/* Líneas de cálculo */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
-                    <span>{nochesEstancia} {nochesEstancia === 1 ? 'noche' : 'noches'} × ${precioNumerico.toLocaleString('es-CO')} COP</span>
-                    <span style={{ fontWeight: 600 }}>${subtotalSinDescuento.toLocaleString('es-CO')} COP</span>
-                  </div>
+                  {nochesEstancia > 0 ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
+                        <span>{nochesEstancia} {nochesEstancia === 1 ? 'noche' : 'noches'} × ${precioNumerico.toLocaleString('es-CO')} COP</span>
+                        <span style={{ fontWeight: 600 }}>${subtotalSinDescuento.toLocaleString('es-CO')} COP</span>
+                      </div>
 
-                  {/* Descuento si aplica */}
-                  {porcentajeDescuento > 0 ? (
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      backgroundColor: '#ecfdf5',
-                      padding: '6px 10px',
-                      borderRadius: '8px',
-                      color: '#065f46',
-                      fontWeight: 700
-                    }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span>🎉 Descuento Larga Estancia ({porcentajeDescuento}%)</span>
-                      </span>
-                      <span>-${montoDescuento.toLocaleString('es-CO')} COP</span>
-                    </div>
+                      {/* Descuento si aplica */}
+                      {porcentajeDescuento > 0 ? (
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          backgroundColor: '#ecfdf5',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          color: '#065f46',
+                          fontWeight: 700
+                        }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span>🎉 Descuento Larga Estancia ({porcentajeDescuento}%)</span>
+                          </span>
+                          <span>-${montoDescuento.toLocaleString('es-CO')} COP</span>
+                        </div>
+                      ) : (
+                        <div style={{
+                          backgroundColor: '#f8fafc',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          fontSize: '0.72rem',
+                          color: '#64748b',
+                          border: '1px dashed #cbd5e1'
+                        }}>
+                          💡 <strong>Ahorro disponible:</strong> Reserva 7 o más noches para obtener un <strong>10% de descuento automático</strong>.
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div style={{
                       backgroundColor: '#f8fafc',
-                      padding: '6px 10px',
+                      padding: '8px 12px',
                       borderRadius: '8px',
-                      fontSize: '0.72rem',
+                      fontSize: '0.74rem',
                       color: '#64748b',
                       border: '1px dashed #cbd5e1'
                     }}>
-                      💡 <strong>Ahorro disponible:</strong> Reserva 7 o más noches para obtener un <strong>10% de descuento automático</strong>.
+                      Tarifa base: <strong>${precioNumerico.toLocaleString('es-CO')} COP / noche</strong>. Elige tus fechas para cotizar.
                     </div>
                   )}
 
@@ -966,14 +1017,22 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                         Total a pagar
                       </span>
                       <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
-                        Impuestos incluidos • Sin cargos sorpresa
+                        {nochesEstancia > 0 ? 'Impuestos incluidos • Sin cargos sorpresa' : 'Tarifa calculada al elegir fechas'}
                       </span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
-                        ${totalCalculado.toLocaleString('es-CO')}
-                      </span>
-                      <span style={{ fontSize: '0.72rem', color: '#64748b', marginLeft: '4px' }}>COP</span>
+                      {nochesEstancia > 0 ? (
+                        <>
+                          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
+                            ${totalCalculado.toLocaleString('es-CO')}
+                          </span>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', marginLeft: '4px' }}>COP</span>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#94a3b8' }}>
+                          $— COP
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
