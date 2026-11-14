@@ -552,45 +552,11 @@ export function useAppState() {
           const nuevoUsuario = data.usuario;
           setSelectedHuesped(nuevoUsuario);
           setGuestRegJustCreated(true);
-          setShowGuestAuthModal(false); // Cierra modal de login/registro
-          setShowCommunityCommitmentModal(true); // Despliega el Compromiso de la Comunidad (Airbnb)
+          setShowGuestAuthModal(false);
+          setShowCommunityCommitmentModal(true);
 
-          // Si el usuario ya había seleccionado apartamento y fechas, crear la reserva automáticamente
-          if (reservaData.id_habitacion && reservaData.fecha_entrada && reservaData.fecha_salida) {
-            try {
-              const resReserva = await apiFetch(`/api/reservas`, {method: 'POST', token: authToken, body: {
-                  id_huesped: nuevoUsuario.id_huesped,
-                  id_habitacion: parseInt(reservaData.id_habitacion),
-                  fecha_entrada: reservaData.fecha_entrada,
-                  fecha_salida: reservaData.fecha_salida,
-                  numero_personas: parseInt(reservaData.numero_personas || 1)
-                }});
-              const dataReserva = resReserva.data;
-              if (resReserva.ok) {
-                if (dataReserva.reserva) {
-                  setReservas(prev => [dataReserva.reserva, ...prev]);
-                }
-                setAlert({
-                  type: 'success',
-                  message: `¡Registro y Reserva confirmados exitosamente para ${nuevoUsuario.nombre}! Verifique en el módulo de Reservas.`
-                });
-                setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
-              } else {
-                setAlert({
-                  type: 'success',
-                  message: `¡Usuario ${nuevoUsuario.nombre} registrado! (Atención: ${formatErrorMessage(dataReserva.detail)})`
-                });
-              }
-            } catch {
-              setAlert({
-                type: 'success',
-                message: `¡Usuario ${nuevoUsuario.nombre} registrado exitosamente!`
-              });
-            }
-          } else {
-            const successMsg = data.message || `¡Usuario registrado exitosamente! Notificación enviada a ${formData.correo}.`;
-            setAlert({ type: 'success', message: successMsg, data: nuevoUsuario });
-          }
+          const successMsg = data.message || `¡Bienvenido/a a Facile, ${nuevoUsuario.nombre}! Tu cuenta ha sido creada exitosamente.`;
+          setAlert({ type: 'success', message: successMsg, data: nuevoUsuario });
 
           setFormData({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
           setHabeasData(false);

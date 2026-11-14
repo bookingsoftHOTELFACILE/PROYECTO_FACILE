@@ -9,7 +9,7 @@ const Encabezados = () => {
   activeTab, setActiveTab, selectedHuesped, setSelectedHuesped,
   setAlert, usuarioSesion, setShowGuestAuthModal, setGuestRegJustCreated,
   setShowCommunityCommitmentModal, showGuestMenuDropdown, setShowGuestMenuDropdown, setModalLegalTipo,
-  handleLogout
+  setGuestAuthTab, handleLogout
   } = useApp();
   return (
 activeTab === 'pms' ? (
@@ -160,15 +160,70 @@ activeTab === 'pms' ? (
                     )}
                   </div>
                 ) : (
-                  <button
-                    className="btn-airbnb-user"
-                    onClick={() => setShowGuestAuthModal(true)}
-                    title="Inicia sesión o regístrate como Huésped"
-                    aria-label="Inicia sesión o regístrate como Huésped"
-                  >
-                    <Menu size={16}/>
-                    <User size={18}/>
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGuestAuthTab('login');
+                        setGuestRegJustCreated(false);
+                        setShowGuestAuthModal(true);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid #cbd5e1',
+                        color: '#1e293b',
+                        fontSize: '0.84rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '0.42rem 0.85rem',
+                        borderRadius: '20px',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      Iniciar sesión
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGuestAuthTab('registro');
+                        setGuestRegJustCreated(false);
+                        setShowGuestAuthModal(true);
+                      }}
+                      style={{
+                        background: '#e11d48',
+                        border: 'none',
+                        color: '#ffffff',
+                        fontSize: '0.84rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '0.42rem 1rem',
+                        borderRadius: '20px',
+                        boxShadow: '0 2px 6px rgba(225, 29, 72, 0.25)',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#be123c'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = '#e11d48'; }}
+                    >
+                      Registrarse
+                    </button>
+
+                    <button
+                      className="btn-airbnb-user"
+                      onClick={() => {
+                        setGuestAuthTab('login');
+                        setGuestRegJustCreated(false);
+                        setShowGuestAuthModal(true);
+                      }}
+                      title="Menú de huésped"
+                      aria-label="Menú de huésped"
+                    >
+                      <Menu size={16}/>
+                      <User size={18}/>
+                    </button>
+                  </div>
                 )}
               </nav>
             </div>
