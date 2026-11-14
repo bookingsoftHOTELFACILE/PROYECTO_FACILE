@@ -1,236 +1,260 @@
-import {
-  ShieldCheck, Phone, Calendar, LogOut, User, MapPin,
-  Menu, Heart, Luggage
+import React from 'react';
+import { 
+  Phone, Facebook, Instagram, Youtube, Calendar, User, 
+  LogOut, Luggage, MapPin
 } from 'lucide-react';
-import { useApp } from '../context/AppContext.jsx';
+import { useApp } from '../context/AppContext';
 
-const Encabezados = () => {
-  const {
-  activeTab, setActiveTab, selectedHuesped, setSelectedHuesped,
-  setAlert, usuarioSesion, setShowGuestAuthModal, setGuestRegJustCreated,
-  setShowCommunityCommitmentModal, showGuestMenuDropdown, setShowGuestMenuDropdown, setModalLegalTipo,
-  setGuestAuthTab, handleLogout
+export default function Encabezados() {
+  const { 
+    activeTab, setActiveTab, selectedHuesped, setShowGuestAuthModal, 
+    setGuestAuthTab, showGuestMenuDropdown, setShowGuestMenuDropdown, 
+    handleLogout, usuarioSesion
   } = useApp();
+
+  const navLinks = [
+    { id: 'inicio', label: 'Inicio' },
+    { id: 'apartamentos', label: 'Apartamentos' },
+    { id: 'centro_negocios_pub', label: 'Centro de Negocios' },
+    { id: 'servicios', label: 'Servicios' },
+    { id: 'galeria', label: 'Galería' }
+  ];
+
+  if (activeTab === 'pms') {
+    return (
+      <header className="pms-dedicated-header">
+        <div className="pms-dedicated-header-content">
+          <div className="pms-logo-brand" onClick={() => setActiveTab('pms')}>
+            <span className="pms-logo-title">BookingSoft</span>
+            <span className="pms-logo-badge">PMS HOTELERO</span>
+          </div>
+
+          <div className="pms-user-actions">
+            {usuarioSesion && (
+              <span style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600 }}>
+                👤 {usuarioSesion.nombre} <strong style={{ color: '#f43f5e' }}>({usuarioSesion.rol})</strong>
+              </span>
+            )}
+            <button
+              className="btn-pms-switch-web"
+              onClick={() => setActiveTab('inicio')}
+              title="Ir al sitio web comercial de huéspedes"
+            >
+              🌐 Ver Web Pública
+            </button>
+            <button className="btn-pms-logout" onClick={handleLogout} title="Cerrar Sesión">
+              <LogOut size={13}/> Salir
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
-activeTab === 'pms' ? (
-        /* HEADER DEDICADO PARA EMPLEADOS (PANEL DE CONTROL PMS) */
-        <header className="pms-dedicated-header">
-          <div className="pms-dedicated-header-content">
-            <div className="pms-logo-brand" onClick={() => setActiveTab('pms')}>
-              <span className="pms-logo-title">BookingSoft</span>
-              <span className="pms-logo-badge">PMS HOTELERO</span>
-            </div>
-
-
-
-            <div className="pms-user-actions">
-              {usuarioSesion && (
-                <span style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600 }}>
-                  👤 {usuarioSesion.nombre} <strong style={{ color: '#f43f5e' }}>({usuarioSesion.rol})</strong>
-                </span>
-              )}
-              <button
-                className="btn-pms-switch-web"
-                onClick={() => setActiveTab('inicio')}
-                title="Ir al sitio web comercial de huéspedes"
-              >
-                🌐 Ver Web Pública
-              </button>
-              <button className="btn-pms-logout" onClick={handleLogout} title="Cerrar Sesión">
-                <LogOut size={13}/> Salir
-              </button>
+    <header style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: '#ffffff', borderBottom: '1px solid var(--color-border)' }}>
+      {/* 1. Top Bar sutil oscuro */}
+      <div style={{ backgroundColor: '#090e1a', color: '#94a3b8', fontSize: '0.8rem', padding: '6px 0' }}>
+        <div className="facile-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <span>📍 Calle 97 #21-62, El Chicó, Bogotá</span>
+            <span style={{ color: '#64748b' }}>|</span>
+            <span>🏢 También disponibles en Bucaramanga</span>
+          </div>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <a href="tel:+573153512085" style={{ color: '#e2e8f0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Phone size={13} color="var(--color-primary)" />
+              <span style={{ fontWeight: '600' }}>+57 315 351 2085</span>
+            </a>
+            <div style={{ display: 'flex', gap: '10px', marginLeft: '12px' }}>
+              <Facebook size={14} style={{ cursor: 'pointer', color: '#94a3b8' }} />
+              <Instagram size={14} style={{ cursor: 'pointer', color: '#94a3b8' }} />
+              <Youtube size={14} style={{ cursor: 'pointer', color: '#94a3b8' }} />
             </div>
           </div>
-        </header>
-      ) : (
-        /* HEADER PÚBLICO OFICIAL PARA HUÉSPEDES */
-        <>
-          {/* 1. TOPBAR OFICIAL ROJA */}
-          <div className="facile-topbar">
-            <div className="facile-topbar-content">
-              <div className="topbar-left">
-                <MapPin size={14}/>
-                <span>Calle 97 #21-62</span>
+        </div>
+      </div>
+
+      {/* 2. Barra de Navegación Principal Blanca */}
+      <div style={{ backgroundColor: '#ffffff', boxShadow: 'var(--shadow-sm)' }}>
+        <div className="facile-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '76px' }}>
+          {/* Logo Oficial Facile */}
+          <div 
+            onClick={() => setActiveTab('inicio')}
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          >
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              backgroundColor: 'var(--color-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff',
+              fontWeight: '800',
+              fontSize: '1.25rem'
+            }}>
+              F
+            </div>
+            <div>
+              <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--color-text-main)', lineHeight: 1, letterSpacing: '-0.5px' }}>
+                FACILE<span style={{ color: 'var(--color-primary)' }}>•</span>
               </div>
-              <div className="topbar-right">
-                <a href="tel:3153512085" className="topbar-phone">
-                  <Phone size={14}/>
-                  <span>315 351 2085</span>
-                </a>
-                <div className="topbar-social">
-                  <a href="https://www.facebook.com/apartamentosfacile/" target="_blank" rel="noreferrer">Facebook</a>
-                  <a href="https://www.instagram.com/apartamentosfacile/" target="_blank" rel="noreferrer">Instagram</a>
-                  <a href="https://www.youtube.com/" target="_blank" rel="noreferrer">YouTube</a>
-                </div>
+              <div style={{ fontSize: '0.65rem', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', color: '#94a3b8', marginTop: '3px' }}>
+                APARTAMENTOS
               </div>
             </div>
           </div>
 
-          {/* 2. HEADER ROJO OFICIAL CON LOGO FACILE BLANCO EN CURSIVA */}
-          <header className="facile-header">
-            <div className="facile-header-content">
-              <div className="facile-logo" onClick={() => setActiveTab('inicio')}>
-                <span className="facile-logo-script">Facile</span>
-                <span className="facile-logo-sub">APARTAMENTOS</span>
-              </div>
+          {/* Enlaces de Navegación */}
+          <nav style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {navLinks.map((item) => {
+              const isActive = activeTab === item.id || (item.id === 'apartamentos' && activeTab === 'catalogo') || (item.id === 'centro_negocios_pub' && activeTab === 'negocios');
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: isActive ? '2px solid var(--color-primary)' : '2px solid transparent',
+                    padding: '8px 12px',
+                    fontWeight: isActive ? '700' : '500',
+                    fontSize: '0.9375rem',
+                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-main)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
 
-              <nav className="facile-nav">
-                <button className={`facile-nav-link ${activeTab === 'inicio' ? 'active' : ''}`} onClick={() => setActiveTab('inicio')}>
-                  Inicio
-                </button>
-                <button className={`facile-nav-link ${activeTab === 'apartamentos' ? 'active' : ''}`} onClick={() => setActiveTab('apartamentos')}>
-                  Apartamentos
-                </button>
-                <button className={`facile-nav-link ${activeTab === 'centro_negocios_pub' ? 'active' : ''}`} onClick={() => setActiveTab('centro_negocios_pub')}>
-                  Centro de Negocios
-                </button>
-                <button className={`facile-nav-link ${activeTab === 'servicios' ? 'active' : ''}`} onClick={() => setActiveTab('servicios')}>
-                  Servicios
-                </button>
-                <button className={`facile-nav-link ${activeTab === 'galeria' ? 'active' : ''}`} onClick={() => setActiveTab('galeria')}>
-                  Galería
-                </button>
+          {/* Acciones Rápidas */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#ecfdf5',
+              color: '#065f46',
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.8rem',
+              fontWeight: '600'
+            }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }} />
+              Atención Inmediata
+            </div>
 
-                {/* Botón de Empleado o Airbnb para huéspedes */}
-                {usuarioSesion && usuarioSesion.rol !== 'Huésped' ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginLeft: '0.5rem' }}>
-                    <button className="facile-nav-link" onClick={() => setActiveTab('pms')} style={{ background: '#0f172a', color: '#fff', borderRadius: '20px', padding: '0.35rem 0.85rem' }}>
-                      🏢 Ir a Panel PMS ({usuarioSesion.rol})
-                    </button>
-                  </div>
-                ) : selectedHuesped ? (
-                  <div className="guest-profile-container">
-                    <button
-                      className="btn-airbnb-user active-guest-pill"
-                      onClick={() => setShowGuestMenuDropdown(!showGuestMenuDropdown)}
-                      title="Menú de Perfil de Huésped"
+            <button
+              onClick={() => setActiveTab('reservar')}
+              style={{
+                backgroundColor: 'var(--color-dark-surface)',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 'var(--radius-pill)',
+                padding: '10px 18px',
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                transition: 'background 0.2s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1e293b'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-dark-surface)'; }}
+            >
+              <Calendar size={15} />
+              <span>Mi Reserva</span>
+            </button>
+
+            {/* Menú de Huésped / Login */}
+            {selectedHuesped ? (
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowGuestMenuDropdown(prev => !prev)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-pill)',
+                    padding: '8px 14px',
+                    fontSize: '0.84rem',
+                    fontWeight: '600',
+                    color: 'var(--color-text-main)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <User size={15} color="var(--color-primary)" />
+                  <span>{selectedHuesped.nombre ? selectedHuesped.nombre.split(' ')[0] : 'Huésped'}</span>
+                </button>
+                {showGuestMenuDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    boxShadow: 'var(--shadow-float)',
+                    border: '1px solid var(--color-border)',
+                    padding: '8px 0',
+                    minWidth: '180px',
+                    zIndex: 100
+                  }}>
+                    <button 
+                      onClick={() => { setActiveTab('viajes'); setShowGuestMenuDropdown(false); }} 
+                      style={{ width: '100%', padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
-                      <Menu size={16} />
-                      <div style={{ width: '26px', height: '26px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <User size={15} color="#e11d48"/>
-                      </div>
-                      <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.82rem' }}>
-                        {selectedHuesped.nombre ? selectedHuesped.nombre.split(' ')[0] : 'Huésped'}
-                      </span>
+                      <Luggage size={14}/> Mis Viajes
                     </button>
-
-                    {showGuestMenuDropdown && (
-                      <div className="guest-dropdown-menu" onClick={() => setShowGuestMenuDropdown(false)}>
-                        <div style={{ padding: '0.8rem 1.1rem', background: '#fafafa', borderBottom: '1px solid #f1f5f9' }}>
-                          <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
-                            {selectedHuesped.nombre}
-                          </p>
-                          <p style={{ margin: '0.1rem 0 0', fontSize: '0.75rem', color: '#64748b' }}>
-                            {selectedHuesped.correo}
-                          </p>
-                        </div>
-                        <button className="guest-dropdown-item" onClick={() => { setActiveTab('perfil'); setShowGuestMenuDropdown(false); }}>
-                          <User size={16} color="#0f172a" /> Mi Perfil
-                        </button>
-                        <button className="guest-dropdown-item" onClick={() => { setActiveTab('viajes'); setShowGuestMenuDropdown(false); }}>
-                          <Luggage size={16} color="#0f172a" /> Viajes / Mis Reservas
-                        </button>
-                        <button className="guest-dropdown-item" onClick={() => { setActiveTab('reservar'); setShowGuestMenuDropdown(false); }}>
-                          <Calendar size={16} color="#0f172a" /> Reservar Apartamento
-                        </button>
-                        <div className="guest-dropdown-divider"></div>
-                        <button className="guest-dropdown-item" onClick={() => { setShowCommunityCommitmentModal(true); setShowGuestMenuDropdown(false); }}>
-                          <Heart size={16} color="#e11d48" /> Compromiso de la Comunidad
-                        </button>
-                        <button
-                          className="guest-dropdown-item"
-                          onClick={() => { setModalLegalTipo('ley1581'); setShowGuestMenuDropdown(false); }}
-                        >
-                          <ShieldCheck size={16} color="#2563eb" /> Privacidad Colombia (Ley 1581)
-                        </button>
-                        <div className="guest-dropdown-divider"></div>
-                        <button
-                          className="guest-dropdown-item"
-                          style={{ color: '#dc2626' }}
-                          onClick={() => {
-                            setSelectedHuesped(null);
-                            setGuestRegJustCreated(false);
-                            setShowGuestMenuDropdown(false);
-                            setAlert({ type: 'success', message: 'Sesión de huésped cerrada.' });
-                          }}
-                        >
-                          <LogOut size={16} color="#dc2626" /> Cerrar Sesión
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setGuestAuthTab('login');
-                        setGuestRegJustCreated(false);
-                        setShowGuestAuthModal(true);
-                      }}
-                      style={{
-                        background: 'transparent',
-                        border: '1px solid #cbd5e1',
-                        color: '#1e293b',
-                        fontSize: '0.84rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        padding: '0.42rem 0.85rem',
-                        borderRadius: '20px',
-                        transition: 'all 0.15s ease'
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                    <button 
+                      onClick={() => { setActiveTab('perfil'); setShowGuestMenuDropdown(false); }} 
+                      style={{ width: '100%', padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
-                      Iniciar sesión
+                      <User size={14}/> Mi Perfil
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setGuestAuthTab('registro');
-                        setGuestRegJustCreated(false);
-                        setShowGuestAuthModal(true);
-                      }}
-                      style={{
-                        background: '#e11d48',
-                        border: 'none',
-                        color: '#ffffff',
-                        fontSize: '0.84rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        padding: '0.42rem 1rem',
-                        borderRadius: '20px',
-                        boxShadow: '0 2px 6px rgba(225, 29, 72, 0.25)',
-                        transition: 'all 0.15s ease'
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#be123c'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = '#e11d48'; }}
+                    <div style={{ borderTop: '1px solid var(--color-border-subtle)', margin: '4px 0' }} />
+                    <button 
+                      onClick={() => { handleLogout(); setShowGuestMenuDropdown(false); }} 
+                      style={{ width: '100%', padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
-                      Registrarse
-                    </button>
-
-                    <button
-                      className="btn-airbnb-user"
-                      onClick={() => {
-                        setGuestAuthTab('login');
-                        setGuestRegJustCreated(false);
-                        setShowGuestAuthModal(true);
-                      }}
-                      title="Menú de huésped"
-                      aria-label="Menú de huésped"
-                    >
-                      <Menu size={16}/>
-                      <User size={18}/>
+                      <LogOut size={14}/> Cerrar Sesión
                     </button>
                   </div>
                 )}
-              </nav>
-            </div>
-          </header>
-        </>
-      )
+              </div>
+            ) : (
+              <button
+                onClick={() => { setGuestAuthTab('login'); setShowGuestAuthModal(true); }}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-main)',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '8px 14px',
+                  fontSize: '0.84rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                title="Iniciar Sesión o Registrarse"
+              >
+                <User size={15} />
+                <span>Ingresar</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
   );
-};
-
-export default Encabezados;
+}

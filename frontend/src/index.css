@@ -7,6 +7,7 @@
 :root {
   /* Tipografía Oficial */
   --font-family-base: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family: var(--font-family-base);
   
   /* Escala de Tamaños */
   --font-size-caption: 0.75rem;     /* 12px */
@@ -30,18 +31,25 @@
   --line-height-snug: 1.3;
   --line-height-normal: 1.5;
 
-  /* Paleta de Colores Semántica */
-  --color-primary: #e11d48;
-  --color-primary-hover: #be123c;
-  --color-primary-light: #fff1f2;
+  /* Paleta Oficial Rediseño Facile (SCREEN_2) */
+  --color-primary: #d91a2a;
+  --color-primary-hover: #b91522;
+  --color-primary-light: #fef2f2;
+  --color-primary-subtle: #fee2e2;
+
+  --color-dark-bg: #090e1a;
+  --color-dark-surface: #0f172a;
+  --color-dark-card: #131d31;
 
   --color-surface-bg: #f8fafc;
   --color-surface-card: #ffffff;
   --color-surface-muted: #f1f5f9;
 
+  --color-text-main: #0f172a;
   --color-text-title: #0f172a;
   --color-text-body: #475569;
-  --color-text-muted: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
 
   --color-border: #e2e8f0;
   --color-border-subtle: #f1f5f9;
@@ -49,33 +57,41 @@
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
+  --color-star: #f59e0b;
 
   /* Geometría y Radios (Airbnb Standard) */
-  --radius-pill: 9999px;            /* Botones CTA, filtros */
-  --radius-card: 16px;              /* Tarjetas de alojamientos */
-  --radius-control: 8px;            /* Inputs, botones secundarios */
+  --radius-sm: 8px;
+  --radius-control: 8px;
+  --radius-card: 16px;
+  --radius-pill: 9999px;
 
   /* Sombras */
-  --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
   --shadow-hover: 0 10px 25px -4px rgba(15, 23, 42, 0.1);
-  --shadow-float: 0 12px 30px 0 rgba(0, 0, 0, 0.12);
+  --shadow-float: 0 20px 40px -10px rgba(15, 23, 42, 0.16);
 
   /* Aliases de compatibilidad previa */
   --color-primary-red: var(--color-primary);
   --color-primary-red-hover: var(--color-primary-hover);
-  --color-primary-red-dark: #be123c;
+  --color-primary-red-dark: var(--color-primary-hover);
   --color-blue-btn: #2563eb;
   --color-blue-btn-hover: #1d4ed8;
   --color-whatsapp: var(--color-success);
   --color-bg-light: var(--color-surface-bg);
   --color-card-light: var(--color-surface-card);
-  --color-dark-navy: var(--color-text-title);
-  --color-text-main: var(--color-text-title);
+  --color-dark-navy: var(--color-dark-surface);
   
   --font-logo: 'Caveat', cursive;
   --font-title: var(--font-family-base);
   --font-body: var(--font-family-base);
   --transition: all 0.25s ease-in-out;
+}
+
+.facile-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 * {

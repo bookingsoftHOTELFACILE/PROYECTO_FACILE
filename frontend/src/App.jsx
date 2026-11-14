@@ -33,17 +33,17 @@ function AppLayout() {
       {/* ============================================================
           VISTAS DEL PORTAL PÚBLICO Y DEL PMS INTERNO
           ========================================================== */}
-      {/* Hero oficial / pestaña Inicio */}
+      {/* Hero oficial / pestaña Inicio (SCREEN_2 completo) */}
       {activeTab === 'inicio' && <VistaInicio />}
 
       {/* Catálogo de apartamentos con galerías */}
-      {(activeTab === 'apartamentos' || activeTab === 'inicio') && <VistaCatalogo />}
+      {(activeTab === 'apartamentos' || activeTab === 'catalogo') && <VistaCatalogo />}
 
       {/* Servicios y amenidades */}
       {activeTab === 'servicios' && <VistaServicios />}
 
       {/* Centro de negocios público */}
-      {activeTab === 'centro_negocios_pub' && <VistaCentroNegocios />}
+      {(activeTab === 'centro_negocios_pub' || activeTab === 'negocios') && <VistaCentroNegocios />}
 
       {/* Galería fotográfica con lightbox */}
       {activeTab === 'galeria' && <VistaGaleria />}
@@ -61,7 +61,7 @@ function AppLayout() {
       {activeTab === 'pms' && <VistaPms />}
 
       {/* WHATSAPP, FOOTER Y MODALES GLOBALES */}
-      <Footer />
+      {activeTab !== 'inicio' && <Footer />}
       {showLoginModal && <ModalLogin />}
       {showGuestAuthModal && <ModalGuestAuth />}
       {showCommunityCommitmentModal && <ModalCompromiso />}
