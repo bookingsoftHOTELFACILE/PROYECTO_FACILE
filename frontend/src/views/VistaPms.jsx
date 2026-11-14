@@ -222,15 +222,15 @@ const VistaPms = () => {
   };
 
   return (
-        <section className="facile-section">
-          <div className="w-full max-w-[1380px] mx-auto">
+        <section className="facile-section" style={{ padding: '24px 0' }}>
+          <div className="pms-container-bounded">
           {/* CABECERA PMS EJECUTIVA */}
           <div className="bg-[#0f172a] rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <span className="w-1.5 h-7 bg-[#d91a2a] rounded-full inline-block"></span>
               <div>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white m-0">
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
                     Panel de Control Hotelero
                   </h2>
                   <span className="bg-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded-md text-slate-300 border border-slate-700/60 uppercase tracking-wider">
@@ -370,7 +370,7 @@ const VistaPms = () => {
                     <ShieldCheck size={20} className="text-slate-800" />
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 m-0">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 m-0">
                       👑 Gestión de Personal & Roles — Dirección Operativa y Front Desk
                     </h3>
                     <p className="text-xs text-slate-500 font-medium mt-0.5 mb-0">
@@ -565,7 +565,7 @@ const VistaPms = () => {
               <div className="overflow-x-auto" style={{ width: '100%' }}>
                 <table className="pms-table-executive" style={{ minWidth: '1000px' }}>
                   <thead>
-                    <tr className="bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-600 border-b border-slate-200/80">
+                    <tr className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-[0.06em] text-slate-500 border-b border-slate-200/80">
                       <th style={{ width: '25%' }}>Empleado</th>
                       <th style={{ width: '15%' }}>Usuario</th>
                       <th style={{ width: '18%' }}>Rol en Sistema</th>
@@ -934,7 +934,7 @@ const VistaPms = () => {
                 {/* 1. ENCABEZADO DEL MÓDULO OPERATIVO */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
                   <div>
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#d91a2a]">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#d91a2a]">
                       <span>📅</span>
                       <span>Módulo de Recepción</span>
                       <span className="text-slate-300">•</span>
@@ -1012,10 +1012,10 @@ const VistaPms = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center text-xs font-black">
+                        <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center text-xs font-bold">
                           👤
                         </div>
-                        <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 m-0">
+                        <h3 className="text-sm font-bold text-slate-900 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           1. Datos del Huésped Presencial (Walk-in)
                         </h3>
                       </div>
@@ -1031,15 +1031,15 @@ const VistaPms = () => {
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                       {/* Tipo de Documento */}
                       <div className="md:col-span-3">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           Tipo de Documento <span className="text-[#d91a2a]">*</span>
                         </label>
                         <select
                           name="tipo_documento"
                           value={pmsWalkInGuest.tipo_documento}
                           onChange={handlePmsWalkInGuestChange}
-                          style={{ height: '42px' }}
-                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '44px', borderRadius: '12px' }}
+                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         >
                           <option value="Cédula de Ciudadanía">Cédula de Ciudadanía (C.C.)</option>
                           <option value="Cédula de Extranjería">Cédula de Extranjería (C.E.)</option>
@@ -1050,10 +1050,10 @@ const VistaPms = () => {
                       {/* Número de Documento + Buscador */}
                       <div className="md:col-span-4">
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
+                          <label className="block text-xs font-bold text-slate-700 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                             Número de Documento <span className="text-[#d91a2a]">*</span>
                           </label>
-                          <span className="text-[11px] text-amber-600 font-bold flex items-center gap-1">
+                          <span className="text-xs text-amber-700 font-bold flex items-center gap-1">
                             💡 Presione Enter o Buscar
                           </span>
                         </div>
@@ -1091,14 +1091,14 @@ const VistaPms = () => {
                             placeholder={pmsWalkInGuest.tipo_documento === 'Pasaporte' ? 'Ej: AA1234567' : 'Ej: 1017283944'}
                             maxLength={20}
                             required
-                            style={{ height: '42px', flex: '1 1 auto' }}
-                            className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                            style={{ height: '44px', borderRadius: '12px', flex: '1 1 auto' }}
+                            className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
                           />
                           <button
                             type="button"
                             onClick={() => handleBuscarHuespedPorDocumento(pmsWalkInGuest.documento)}
-                            style={{ height: '42px' }}
-                            className="px-4 rounded-xl bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs"
+                            style={{ height: '44px', borderRadius: '12px' }}
+                            className="px-4 bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs"
                           >
                             <Search className="w-3.5 h-3.5" />
                             <span>Buscar</span>
@@ -1108,7 +1108,7 @@ const VistaPms = () => {
 
                       {/* Nombre Completo */}
                       <div className="md:col-span-5">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           Nombre Completo <span className="text-[#d91a2a]">*</span>
                         </label>
                         <input
@@ -1118,15 +1118,15 @@ const VistaPms = () => {
                           onChange={handlePmsWalkInGuestChange}
                           placeholder="Ej: Jose Miguel Chico"
                           required
-                          style={{ height: '42px' }}
-                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                          style={{ height: '44px', borderRadius: '12px' }}
+                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
                         />
                       </div>
 
                       {/* Celular / WhatsApp */}
                       <div className="md:col-span-6">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                          Celular / Teléfono (WhatsApp) <span className="text-[#d91a2a]">*</span>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                          Celular / WhatsApp <span className="text-[#d91a2a]">*</span>
                         </label>
                         <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
                           <div 
@@ -1152,16 +1152,16 @@ const VistaPms = () => {
                             placeholder="3154449876"
                             maxLength={15}
                             required
-                            style={{ paddingLeft: '72px', height: '42px' }}
-                            className="w-full pr-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                            style={{ paddingLeft: '84px', height: '44px', borderRadius: '12px' }}
+                            className="w-full pr-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
                           />
                         </div>
                       </div>
 
                       {/* Correo Electrónico */}
                       <div className="md:col-span-6">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                          Correo Electrónico (Envío de Factura y Llave Digital) <span className="text-[#d91a2a]">*</span>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                          Correo Electrónico (Factura & Llave Digital) <span className="text-[#d91a2a]">*</span>
                         </label>
                         <input
                           type="email"
@@ -1170,8 +1170,8 @@ const VistaPms = () => {
                           onChange={handlePmsWalkInGuestChange}
                           placeholder="jocmiguelcc@gmail.com"
                           required
-                          style={{ height: '42px' }}
-                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                          style={{ height: '44px', borderRadius: '12px' }}
+                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
                         />
                       </div>
                     </div>
@@ -1181,10 +1181,10 @@ const VistaPms = () => {
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-red-50 text-[#d91a2a] flex items-center justify-center text-xs font-black">
+                        <div className="w-6 h-6 rounded-lg bg-red-50 text-[#d91a2a] flex items-center justify-center text-xs font-bold">
                           🏠
                         </div>
-                        <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 m-0">
+                        <h3 className="text-sm font-bold text-slate-900 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           2. Asignación de Unidad y Calendario de Estadía
                         </h3>
                       </div>
@@ -1197,7 +1197,7 @@ const VistaPms = () => {
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                       {/* Apartamento / Habitación Disponible */}
                       <div className="md:col-span-8">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           Apartamento / Habitación Disponible <span className="text-[#d91a2a]">*</span>
                         </label>
                         <select
@@ -1205,8 +1205,8 @@ const VistaPms = () => {
                           value={reservaData.id_habitacion}
                           onChange={handleReservaChange}
                           required
-                          style={{ height: '42px' }}
-                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '44px', borderRadius: '12px' }}
+                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         >
                           <option value="">-- Seleccionar Unidad Disponible --</option>
                           {habitaciones.map(hab => (
@@ -1219,15 +1219,15 @@ const VistaPms = () => {
 
                       {/* Ocupantes */}
                       <div className="md:col-span-4">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           Número de Personas / Ocupantes <span className="text-[#d91a2a]">*</span>
                         </label>
                         <select
                           name="numero_personas"
                           value={reservaData.numero_personas}
                           onChange={handleReservaChange}
-                          style={{ height: '42px' }}
-                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '44px', borderRadius: '12px' }}
+                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         >
                           <option value={1}>1 huésped (Titular)</option>
                           <option value={2}>2 huéspedes</option>
@@ -1241,8 +1241,8 @@ const VistaPms = () => {
                       {/* Fecha Entrada */}
                       <div className="md:col-span-6">
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
-                            Fecha de Entrada (Check-in) <span className="text-[#d91a2a]">*</span>
+                          <label className="block text-xs font-bold text-slate-700 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                            Fecha de Entrada (Check-In) <span className="text-[#d91a2a]">*</span>
                           </label>
                           <span className="text-[11px] text-slate-400">Hora estándar: 15:00</span>
                         </div>
@@ -1252,16 +1252,16 @@ const VistaPms = () => {
                           value={reservaData.fecha_entrada}
                           onChange={handleReservaChange}
                           required
-                          style={{ height: '42px' }}
-                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '44px', borderRadius: '12px' }}
+                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         />
                       </div>
 
                       {/* Fecha Salida */}
                       <div className="md:col-span-6">
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
-                            Fecha de Salida (Check-out) <span className="text-[#d91a2a]">*</span>
+                          <label className="block text-xs font-bold text-slate-700 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                            Fecha de Salida (Check-Out) <span className="text-[#d91a2a]">*</span>
                           </label>
                           <span className="text-[11px] text-slate-400">Hora límite: 11:00</span>
                         </div>
@@ -1271,8 +1271,8 @@ const VistaPms = () => {
                           value={reservaData.fecha_salida}
                           onChange={handleReservaChange}
                           required
-                          style={{ height: '42px' }}
-                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '44px', borderRadius: '12px' }}
+                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         />
                       </div>
                     </div>
@@ -1417,7 +1417,7 @@ const VistaPms = () => {
                   {/* 3. RESUMEN DE COTIZACIÓN EN TIEMPO REAL (LIVE PRICING) */}
                   <div className="bg-slate-50/90 rounded-2xl border border-slate-200/90 p-6">
                     <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200/70">
-                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                         <span>💳</span>
                         <span>Resumen de Cotización en Tiempo Real</span>
                       </div>
@@ -1426,36 +1426,36 @@ const VistaPms = () => {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-center">
                       <div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                        <span className="text-xs font-semibold text-slate-500 block mb-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           Estadía Total
                         </span>
-                        <span className="text-lg font-black text-slate-900">{noches} {noches === 1 ? 'Noche' : 'Noches'}</span>
+                        <span className="text-xl font-bold text-slate-900">{noches} {noches === 1 ? 'Noche' : 'Noches'}</span>
                       </div>
 
                       <div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                        <span className="text-xs font-semibold text-slate-500 block mb-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           Tarifa por Noche
                         </span>
-                        <span className="text-lg font-black text-slate-900">
+                        <span className="text-xl font-bold text-slate-900">
                           ${tarifaNoche.toLocaleString('es-CO')} COP
                         </span>
                       </div>
 
                       <div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                        <span className="text-xs font-semibold text-slate-500 block mb-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
                           Depósito en Garantía
                         </span>
-                        <span className="text-lg font-black text-slate-900">
+                        <span className="text-xl font-bold text-slate-900">
                           ${depositoGarantia.toLocaleString('es-CO')} COP{' '}
-                          <span className="text-[11px] font-normal text-slate-500">(Reembolsable)</span>
+                          <span className="text-xs font-normal text-slate-500">(Reembolsable)</span>
                         </span>
                       </div>
 
                       <div className="text-left md:text-right border-t md:border-t-0 pt-4 md:pt-0 border-slate-200">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 block mb-1">
-                          TOTAL A FACTURAR PRESENCIAL
+                        <span className="text-xs font-bold text-slate-700 block mb-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                          Total a Facturar Presencial
                         </span>
-                        <span className="text-2xl sm:text-3xl font-black text-[#d91a2a] tracking-tight block">
+                        <span className="text-2xl sm:text-3xl font-extrabold text-[#d91a2a] block" style={{ letterSpacing: '-0.01em' }}>
                           ${totalFacturar.toLocaleString('es-CO')}{' '}
                           <span className="text-xs font-bold text-slate-600">COP</span>
                         </span>
@@ -1488,7 +1488,8 @@ const VistaPms = () => {
                         setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', telefono: '', correo: '' });
                         setWalkinCheckinInmediato(true);
                       }}
-                      className="px-6 py-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs sm:text-sm font-bold text-slate-700 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-2xs"
+                      style={{ height: '44px', borderRadius: '12px' }}
+                      className="px-6 border border-slate-300 bg-white hover:bg-slate-50 text-xs sm:text-sm font-bold text-slate-700 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-2xs"
                     >
                       <RotateCcw className="w-4 h-4 text-slate-400" />
                       <span>Limpiar Formulario</span>
@@ -1497,7 +1498,8 @@ const VistaPms = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-8 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-black shadow-md shadow-[#d91a2a]/25 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                      style={{ height: '44px', borderRadius: '12px' }}
+                      className="px-8 bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#d91a2a]/25 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Calendar className="w-4 h-4" />
                       <span>{loading ? 'Guardando Reserva...' : 'Confirmar Reserva Presencial (Check-in)'}</span>
@@ -1527,7 +1529,7 @@ const VistaPms = () => {
                   <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between">
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Total Huéspedes</span>
-                      <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">{totalH}</div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">{totalH}</div>
                       <span className="text-[11px] font-semibold text-emerald-600 mt-1 inline-block">● 100% Sede Chicó</span>
                     </div>
                     <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
@@ -1538,7 +1540,7 @@ const VistaPms = () => {
                   <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between">
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Activos en Sistema</span>
-                      <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">{activosH}</div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">{activosH}</div>
                       <span className="text-[11px] font-semibold text-emerald-600 mt-1 inline-block">● {pctActivos}% Habilitados</span>
                     </div>
                     <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
@@ -1549,7 +1551,7 @@ const VistaPms = () => {
                   <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between">
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Particulares</span>
-                      <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">{particularesH}</div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">{particularesH}</div>
                       <span className="text-[11px] font-semibold text-slate-500 mt-1 inline-block">Cédula / Pasaporte</span>
                     </div>
                     <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
@@ -1560,7 +1562,7 @@ const VistaPms = () => {
                   <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between">
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Cuentas Corporativas</span>
-                      <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">{corporativosH}</div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">{corporativosH}</div>
                       <span className="text-[11px] font-semibold text-slate-500 mt-1 inline-block">Empresas & Convenios</span>
                     </div>
                     <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
@@ -1580,10 +1582,10 @@ const VistaPms = () => {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight m-0">
+                          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 m-0">
                             Huéspedes Registrados
                           </h2>
-                          <span className="px-2.5 py-0.5 rounded-full bg-[#d91a2a] text-white text-xs font-black">
+                          <span className="px-2.5 py-0.5 rounded-full bg-[#d91a2a] text-white text-xs font-bold">
                             {totalH} Registros
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold hidden sm:inline">
@@ -1613,7 +1615,7 @@ const VistaPms = () => {
                           setShowGuestAuthModal(true);
                           setGuestAuthTab('registro');
                         }}
-                        className="px-5 py-2.5 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-black flex items-center gap-2 shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer"
+                        className="px-5 py-2.5 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer"
                       >
                         <Plus className="w-4 h-4" />
                         <span>+ Nuevo Huésped</span>
@@ -1677,7 +1679,7 @@ const VistaPms = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-600">
+                        <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold uppercase tracking-[0.06em] text-slate-500">
                           <th className="px-6 sm:px-8 py-3.5">Huésped / Perfil</th>
                           <th className="px-6 py-3.5">Documento</th>
                           <th className="px-6 py-3.5">Contacto & Correo</th>
