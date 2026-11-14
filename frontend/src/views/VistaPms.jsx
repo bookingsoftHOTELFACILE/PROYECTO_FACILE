@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   UserPlus, ShieldCheck, Users, Calendar, ListOrdered, Trash2,
-  Wrench, Check, Search, Tag, Mail, Shield, User
+  Wrench, Check, Search, Tag, Mail, Shield, User, AlertTriangle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 
@@ -28,6 +28,10 @@ const VistaPms = () => {
   const [empEstadoFilter, setEmpEstadoFilter] = useState('todos');
   const [empCurrentPage, setEmpCurrentPage] = useState(1);
   const EMP_ITEMS_PER_PAGE = 6;
+
+  // Modales de Confirmación de Seguridad antes de aplicar cambios
+  const [confirmRolModal, setConfirmRolModal] = useState(null);
+  const [confirmEstadoModal, setConfirmEstadoModal] = useState(null);
 
   // Filtrado reactivo de empleados
   const filteredEmpleados = useMemo(() => {
@@ -540,7 +544,17 @@ const VistaPms = () => {
                               ) : (
                                 <select
                                   value={emp.rol}
-                                  onChange={e => handleChangeEmpleadoRol(emp.id_empleado, e.target.value)}
+                                  onChange={e => {
+                                    const nuevoRol = e.target.value;
+                                    if (nuevoRol !== emp.rol) {
+                                      setConfirmRolModal({
+                                        id_empleado: emp.id_empleado,
+                                        nombre: emp.nombre,
+                                        rolActual: emp.rol,
+                                        nuevoRol
+                                      });
+                                    }
+                                  }}
                                   className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-[#d91a2a] outline-none cursor-pointer"
                                 >
                                   <option value="Ama de llaves">Ama de llaves</option>
@@ -590,7 +604,13 @@ const VistaPms = () => {
                               ) : (
                                 <button
                                   type="button"
-                                  onClick={() => handleToggleEmpleadoEstado(emp)}
+                                  onClick={() => {
+                                    const nuevoEstado = emp.estado === 'Activo' ? 'Inactivo' : 'Activo';
+                                    setConfirmEstadoModal({
+                                      emp,
+                                      nuevoEstado
+                                    });
+                                  }}
                                   className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
                                     emp.estado === 'Activo'
                                       ? 'border-red-200 bg-red-50 hover:bg-red-100 text-[#d91a2a]'
@@ -657,6 +677,132 @@ const VistaPms = () => {
                     >
                       Siguiente
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL DE SEGURIDAD: CONFIRMAR CAMBIO DE ROL */}
+              {confirmRolModal && (
+                <div className="modal-backdrop" onClick={() => setConfirmRolModal(null)}>
+                  <div className="modal-dialog" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px', borderRadius: '16px', padding: '1.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.25rem' }}>
+                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#fffbeb', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', flexShrink: 0 }}>
+                        <AlertTriangle size={24} />
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                          ¿Confirmar cambio de rol operativo?
+                        </h3>
+                        <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
+                          Estás a punto de modificar el rol y los permisos de acceso para <strong>{confirmRolModal.nombre}</strong>.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Comparativa visual del rol */}
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Rol Actual</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>{confirmRolModal.rolActual}</span>
+                      </div>
+                      <div style={{ color: '#d91a2a', fontWeight: 900, fontSize: '1.2rem' }}>
+                        ➔
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.7rem', color: '#d91a2a', textTransform: 'uppercase', fontWeight: 700 }}>Nuevo Rol</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>{confirmRolModal.nuevoRol}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecdd3', borderRadius: '10px', padding: '0.75rem 1rem', marginBottom: '1.5rem', fontSize: '0.78rem', color: '#991b1b', lineHeight: 1.4 }}>
+                      ⚠️ <strong>Advertencia de Seguridad:</strong> Los módulos visibles en el PMS y los permisos de este colaborador cambiarán en el momento en que guardes este cambio.
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmRolModal(null)}
+                        style={{ padding: '0.65rem 1.25rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await handleChangeEmpleadoRol(confirmRolModal.id_empleado, confirmRolModal.nuevoRol);
+                          setConfirmRolModal(null);
+                        }}
+                        style={{ padding: '0.65rem 1.35rem', borderRadius: '10px', border: 'none', background: '#d91a2a', color: '#ffffff', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(217, 26, 42, 0.25)' }}
+                      >
+                        Sí, Confirmar Cambio de Rol
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL DE SEGURIDAD: CONFIRMAR ACTIVACIÓN / DESACTIVACIÓN */}
+              {confirmEstadoModal && (
+                <div className="modal-backdrop" onClick={() => setConfirmEstadoModal(null)}>
+                  <div className="modal-dialog" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px', borderRadius: '16px', padding: '1.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.25rem' }}>
+                      <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        background: confirmEstadoModal.nuevoEstado === 'Inactivo' ? '#fee2e2' : '#ecfdf5',
+                        border: `1px solid ${confirmEstadoModal.nuevoEstado === 'Inactivo' ? '#fecdd3' : '#a7f3d0'}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: confirmEstadoModal.nuevoEstado === 'Inactivo' ? '#b91c1c' : '#059669',
+                        flexShrink: 0
+                      }}>
+                        <AlertTriangle size={24} />
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                          {confirmEstadoModal.nuevoEstado === 'Inactivo' ? '¿Confirmar desactivación?' : '¿Confirmar reactivación?'}
+                        </h3>
+                        <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
+                          {confirmEstadoModal.nuevoEstado === 'Inactivo' ? (
+                            <>¿Estás seguro de que deseas desactivar a <strong>{confirmEstadoModal.emp.nombre}</strong>? Esta persona perderá acceso inmediato para iniciar sesión en el PMS.</>
+                          ) : (
+                            <>¿Deseas restaurar y activar la cuenta de <strong>{confirmEstadoModal.emp.nombre}</strong> para que pueda ingresar al PMS?</>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmEstadoModal(null)}
+                        style={{ padding: '0.65rem 1.25rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#334155', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await handleToggleEmpleadoEstado(confirmEstadoModal.emp);
+                          setConfirmEstadoModal(null);
+                        }}
+                        style={{
+                          padding: '0.65rem 1.35rem',
+                          borderRadius: '10px',
+                          border: 'none',
+                          background: confirmEstadoModal.nuevoEstado === 'Inactivo' ? '#b91522' : '#059669',
+                          color: '#ffffff',
+                          fontWeight: 800,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                          boxShadow: confirmEstadoModal.nuevoEstado === 'Inactivo' ? '0 4px 12px rgba(185, 21, 34, 0.25)' : '0 4px 12px rgba(5, 150, 105, 0.25)'
+                        }}
+                      >
+                        {confirmEstadoModal.nuevoEstado === 'Inactivo' ? 'Sí, Desactivar Empleado' : 'Sí, Activar Empleado'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
