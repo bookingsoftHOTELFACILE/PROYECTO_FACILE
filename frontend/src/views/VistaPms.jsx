@@ -510,8 +510,8 @@ const VistaPms = () => {
 
               {/* BARRA DE BÚSQUEDA Y FILTROS OPERATIVOS */}
               <div className="px-6 py-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50/40">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="relative w-72 sm:w-80">
+                <div className="flex flex-wrap items-center gap-3" style={{ flex: '1 1 auto' }}>
+                  <div className="relative" style={{ minWidth: '280px', flex: '1 1 280px', maxWidth: '420px' }}>
                     <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
@@ -531,6 +531,7 @@ const VistaPms = () => {
                       setEmpRolFilter(e.target.value);
                       setEmpCurrentPage(1);
                     }}
+                    style={{ minWidth: '180px' }}
                     className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
                   >
                     <option value="todos">Todos los roles</option>
@@ -546,6 +547,7 @@ const VistaPms = () => {
                       setEmpEstadoFilter(e.target.value);
                       setEmpCurrentPage(1);
                     }}
+                    style={{ minWidth: '150px' }}
                     className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
                   >
                     <option value="todos">Todos los estados</option>
@@ -560,16 +562,16 @@ const VistaPms = () => {
               </div>
 
               {/* TABLA DE EMPLEADOS DEL SISTEMA */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto" style={{ width: '100%' }}>
+                <table className="pms-table-executive" style={{ minWidth: '1000px' }}>
                   <thead>
                     <tr className="bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-600 border-b border-slate-200/80">
-                      <th className="py-4 px-6">Empleado</th>
-                      <th className="py-4 px-6">Usuario</th>
-                      <th className="py-4 px-6">Rol en Sistema</th>
-                      <th className="py-4 px-6">Estado</th>
-                      <th className="py-4 px-6">Documento & Contacto</th>
-                      <th className="py-4 px-6 text-right">Acción de Estado</th>
+                      <th style={{ width: '25%' }}>Empleado</th>
+                      <th style={{ width: '15%' }}>Usuario</th>
+                      <th style={{ width: '18%' }}>Rol en Sistema</th>
+                      <th style={{ width: '12%' }}>Estado</th>
+                      <th style={{ width: '18%' }}>Documento & Contacto</th>
+                      <th style={{ width: '12%', textAlign: 'right' }}>Acción de Estado</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-sm">
@@ -588,7 +590,7 @@ const VistaPms = () => {
 
                         return (
                           <tr key={emp.id_empleado} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
+                            <td>
                               <div className="flex items-center gap-3.5">
                                 <div
                                   style={{
@@ -623,16 +625,16 @@ const VistaPms = () => {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
-                              <span className="font-mono text-xs text-slate-700 bg-slate-100/90 px-2.5 py-1 rounded-md border border-slate-200/60 inline-block font-medium">
+                            <td>
+                              <span className="pms-user-tag">
                                 @{emp.usuario}
                               </span>
                             </td>
-                            <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
+                            <td>
                               {isSelf ? (
                                 <span
                                   title="Tu cuenta actual (No puedes auto-degradar tu rol)"
-                                  className="px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-xs font-bold inline-flex items-center gap-1.5 shadow-xs"
+                                  className="px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-xs font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap"
                                 >
                                   <span>👑</span>
                                   <span>{emp.rol} (Tú)</span>
@@ -651,7 +653,7 @@ const VistaPms = () => {
                                       });
                                     }
                                   }}
-                                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50/80 text-xs font-medium text-slate-800 focus:bg-white focus:border-[#d91a2a] outline-none cursor-pointer shadow-xs transition-colors"
+                                  className="pms-select-role"
                                 >
                                   <option value="Ama de llaves">Ama de llaves</option>
                                   <option value="Personal de mantenimiento">Personal de mantenimiento</option>
@@ -660,40 +662,36 @@ const VistaPms = () => {
                                 </select>
                               )}
                             </td>
-                            <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
+                            <td>
                               {emp.estado === 'Activo' ? (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span className="pms-status-pill bg-emerald-50 text-emerald-700 border border-emerald-200">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
                                   <span>Activo</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                                <span className="pms-status-pill bg-red-50 text-red-700 border border-red-200">
                                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
                                   <span>Inactivo</span>
                                 </span>
                               )}
                             </td>
-                            <td className="py-4 px-6 text-xs text-slate-600 space-y-0.5" style={{ verticalAlign: 'middle' }}>
-                              <div className="font-medium text-slate-700 leading-tight">
+                            <td>
+                              <div className="font-medium text-slate-700 leading-tight text-xs">
                                 Cédula de ciudadanía: {emp.numero_documento || 'No registrada'}
                               </div>
                               <a
                                 href={`mailto:${emp.correo}`}
-                                className="text-blue-600 hover:underline flex items-center gap-1 mt-0.5 leading-tight"
+                                className="text-blue-600 hover:underline inline-flex items-center gap-1.5 mt-1 leading-tight text-xs"
                                 style={{ textDecoration: 'none' }}
                               >
-                                <Mail size={12} className="text-slate-400 shrink-0" />
+                                <Mail size={13} className="text-slate-400 shrink-0" />
                                 <span>{emp.correo}</span>
                               </a>
                             </td>
-                            <td className="py-4 px-6 text-right" style={{ verticalAlign: 'middle' }}>
+                            <td style={{ textAlign: 'right' }}>
                               {isSelf ? (
-                                <span
-                                  title="Esta es tu sesión activa conectada"
-                                  className="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-500 inline-flex items-center gap-1.5"
-                                >
-                                  <span>🔒</span>
-                                  <span>Sesión Activa</span>
+                                <span className="text-[11px] font-bold text-slate-400 italic whitespace-nowrap">
+                                  🔒 Sesión Activa
                                 </span>
                               ) : (
                                 <button
@@ -705,11 +703,8 @@ const VistaPms = () => {
                                       nuevoEstado
                                     });
                                   }}
-                                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer inline-flex items-center gap-1.5 ${
-                                    emp.estado === 'Activo'
-                                      ? 'border-red-200 bg-red-50 hover:bg-red-100 text-[#d91a2a]'
-                                      : 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
-                                  }`}
+                                  className={emp.estado === 'Activo' ? 'pms-action-btn-danger' : 'pms-action-btn-success'}
+                                  title={emp.estado === 'Activo' ? 'Desactivar acceso al sistema' : 'Activar colaborador'}
                                 >
                                   {emp.estado === 'Activo' ? (
                                     <>
@@ -1043,7 +1038,8 @@ const VistaPms = () => {
                           name="tipo_documento"
                           value={pmsWalkInGuest.tipo_documento}
                           onChange={handlePmsWalkInGuestChange}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '42px' }}
+                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         >
                           <option value="Cédula de Ciudadanía">Cédula de Ciudadanía (C.C.)</option>
                           <option value="Cédula de Extranjería">Cédula de Extranjería (C.E.)</option>
@@ -1054,18 +1050,14 @@ const VistaPms = () => {
                       {/* Número de Documento + Buscador */}
                       <div className="md:col-span-4">
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
                             Número de Documento <span className="text-[#d91a2a]">*</span>
                           </label>
-                          <button
-                            type="button"
-                            onClick={() => handleBuscarHuespedPorDocumento(pmsWalkInGuest.documento)}
-                            className="text-[11px] text-amber-600 font-bold hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
-                          >
+                          <span className="text-[11px] text-amber-600 font-bold flex items-center gap-1">
                             💡 Presione Enter o Buscar
-                          </button>
+                          </span>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2" style={{ alignItems: 'stretch' }}>
                           <input
                             type="text"
                             name="documento"
@@ -1099,12 +1091,14 @@ const VistaPms = () => {
                             placeholder={pmsWalkInGuest.tipo_documento === 'Pasaporte' ? 'Ej: AA1234567' : 'Ej: 1017283944'}
                             maxLength={20}
                             required
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                            style={{ height: '42px', flex: '1 1 auto' }}
+                            className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
                           />
                           <button
                             type="button"
                             onClick={() => handleBuscarHuespedPorDocumento(pmsWalkInGuest.documento)}
-                            className="px-4 py-2.5 rounded-xl bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs"
+                            style={{ height: '42px' }}
+                            className="px-4 rounded-xl bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs"
                           >
                             <Search className="w-3.5 h-3.5" />
                             <span>Buscar</span>
@@ -1124,7 +1118,8 @@ const VistaPms = () => {
                           onChange={handlePmsWalkInGuestChange}
                           placeholder="Ej: Jose Miguel Chico"
                           required
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                          style={{ height: '42px' }}
+                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
                         />
                       </div>
 
@@ -1133,8 +1128,20 @@ const VistaPms = () => {
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Celular / Teléfono (WhatsApp) <span className="text-[#d91a2a]">*</span>
                         </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 text-xs font-bold">
+                        <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
+                          <div 
+                            style={{ 
+                              position: 'absolute', 
+                              left: '12px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              pointerEvents: 'none', 
+                              color: '#475569', 
+                              fontSize: '0.8125rem', 
+                              fontWeight: 700,
+                              zIndex: 2
+                            }}
+                          >
                             🇨🇴 +57
                           </div>
                           <input
@@ -1145,7 +1152,8 @@ const VistaPms = () => {
                             placeholder="3154449876"
                             maxLength={15}
                             required
-                            className="w-full pl-16 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                            style={{ paddingLeft: '72px', height: '42px' }}
+                            className="w-full pr-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
                           />
                         </div>
                       </div>
@@ -1162,7 +1170,8 @@ const VistaPms = () => {
                           onChange={handlePmsWalkInGuestChange}
                           placeholder="jocmiguelcc@gmail.com"
                           required
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                          style={{ height: '42px' }}
+                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
                         />
                       </div>
                     </div>
@@ -1196,7 +1205,8 @@ const VistaPms = () => {
                           value={reservaData.id_habitacion}
                           onChange={handleReservaChange}
                           required
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '42px' }}
+                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         >
                           <option value="">-- Seleccionar Unidad Disponible --</option>
                           {habitaciones.map(hab => (
@@ -1216,7 +1226,8 @@ const VistaPms = () => {
                           name="numero_personas"
                           value={reservaData.numero_personas}
                           onChange={handleReservaChange}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '42px' }}
+                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         >
                           <option value={1}>1 huésped (Titular)</option>
                           <option value={2}>2 huéspedes</option>
@@ -1230,7 +1241,7 @@ const VistaPms = () => {
                       {/* Fecha Entrada */}
                       <div className="md:col-span-6">
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
                             Fecha de Entrada (Check-in) <span className="text-[#d91a2a]">*</span>
                           </label>
                           <span className="text-[11px] text-slate-400">Hora estándar: 15:00</span>
@@ -1241,14 +1252,15 @@ const VistaPms = () => {
                           value={reservaData.fecha_entrada}
                           onChange={handleReservaChange}
                           required
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '42px' }}
+                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         />
                       </div>
 
                       {/* Fecha Salida */}
                       <div className="md:col-span-6">
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
                             Fecha de Salida (Check-out) <span className="text-[#d91a2a]">*</span>
                           </label>
                           <span className="text-[11px] text-slate-400">Hora límite: 11:00</span>
@@ -1259,7 +1271,8 @@ const VistaPms = () => {
                           value={reservaData.fecha_salida}
                           onChange={handleReservaChange}
                           required
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          style={{ height: '42px' }}
+                          className="w-full px-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                         />
                       </div>
                     </div>
