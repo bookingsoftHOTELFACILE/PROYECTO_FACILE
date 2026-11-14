@@ -1,25 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 /* ==========================================================================
-   BookingSoft — Apartamentos Facile (Identidad Oficial con Rojo Corporativo)
-   Paleta extraída fielmente de https://apartamentosfacile.com/
+   BookingSoft — Apartamentos Facile (Design System Oficial Airbnb Vibe)
    ========================================================================== */
 
 :root {
-  --color-primary-red: #cc0000;
-  --color-primary-red-hover: #b30000;
-  --color-primary-red-dark: #990000;
-  --color-blue-btn: #4a90e2;
-  --color-blue-btn-hover: #357abd;
-  --color-whatsapp: #25d366;
-  --color-bg-light: #f4f6f9;
-  --color-card-light: #ffffff;
-  --color-dark-navy: #0f172a;
-  --color-text-main: #1e293b;
-  --color-text-muted: #64748b;
+  /* Tipografía Oficial */
+  --font-family-base: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* Escala de Tamaños */
+  --font-size-caption: 0.75rem;     /* 12px */
+  --font-size-meta: 0.8125rem;      /* 13px */
+  --font-size-body: 0.9375rem;      /* 15px */
+  --font-size-h3: 1.125rem;         /* 18px */
+  --font-size-h2: 1.25rem;          /* 20px */
+  --font-size-price: 1.375rem;      /* 22px */
+  --font-size-h1: 1.75rem;          /* 28px */
+  --font-size-display: 2.5rem;      /* 40px */
+
+  /* Pesos */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line Heights */
+  --line-height-tight: 1.15;
+  --line-height-snug: 1.3;
+  --line-height-normal: 1.5;
+
+  /* Paleta de Colores Semántica */
+  --color-primary: #e11d48;
+  --color-primary-hover: #be123c;
+  --color-primary-light: #fff1f2;
+
+  --color-surface-bg: #f8fafc;
+  --color-surface-card: #ffffff;
+  --color-surface-muted: #f1f5f9;
+
+  --color-text-title: #0f172a;
+  --color-text-body: #475569;
+  --color-text-muted: #94a3b8;
+
   --color-border: #e2e8f0;
+  --color-border-subtle: #f1f5f9;
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+
+  /* Geometría y Radios (Airbnb Standard) */
+  --radius-pill: 9999px;            /* Botones CTA, filtros */
+  --radius-card: 16px;              /* Tarjetas de alojamientos */
+  --radius-control: 8px;            /* Inputs, botones secundarios */
+
+  /* Sombras */
+  --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
+  --shadow-hover: 0 10px 25px -4px rgba(15, 23, 42, 0.1);
+  --shadow-float: 0 12px 30px 0 rgba(0, 0, 0, 0.12);
+
+  /* Aliases de compatibilidad previa */
+  --color-primary-red: var(--color-primary);
+  --color-primary-red-hover: var(--color-primary-hover);
+  --color-primary-red-dark: #be123c;
+  --color-blue-btn: #2563eb;
+  --color-blue-btn-hover: #1d4ed8;
+  --color-whatsapp: var(--color-success);
+  --color-bg-light: var(--color-surface-bg);
+  --color-card-light: var(--color-surface-card);
+  --color-dark-navy: var(--color-text-title);
+  --color-text-main: var(--color-text-title);
   
   --font-logo: 'Caveat', cursive;
-  --font-title: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-title: var(--font-family-base);
+  --font-body: var(--font-family-base);
   --transition: all 0.25s ease-in-out;
 }
 
@@ -30,10 +85,15 @@
 }
 
 body {
-  background-color: var(--color-bg-light);
-  color: var(--color-text-main);
-  font-family: var(--font-body);
-  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  color: var(--color-text-body);
+  background-color: var(--color-surface-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: var(--line-height-normal);
   overflow-x: hidden;
 }
 
