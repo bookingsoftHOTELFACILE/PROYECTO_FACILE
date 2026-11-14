@@ -107,8 +107,56 @@ const VistaPms = () => {
     return nombre.trim().slice(0, 2).toUpperCase();
   };
 
+  // Estilos y badges ejecutivos por rol (estándar Cloudbeds & Mews)
+  const getRoleBadgeStyle = (rol) => {
+    switch (rol) {
+      case 'Administrador':
+      case 'Grupo BookingSoft':
+        return {
+          bg: '#f5f3ff',
+          text: '#6b21a8',
+          border: '#ddd6fe',
+          icon: '👑',
+          label: 'Administrador'
+        };
+      case 'Recepcionista 24h':
+        return {
+          bg: '#eff6ff',
+          text: '#1d4ed8',
+          border: '#bfdbfe',
+          icon: '🛎️',
+          label: 'Recepción 24h'
+        };
+      case 'Ama de llaves':
+        return {
+          bg: '#f0fdf4',
+          text: '#15803d',
+          border: '#bbf7d0',
+          icon: '🧹',
+          label: 'Ama de llaves'
+        };
+      case 'Personal de mantenimiento':
+        return {
+          bg: '#fffbeb',
+          text: '#b45309',
+          border: '#fde68a',
+          icon: '🛠️',
+          label: 'Mantenimiento'
+        };
+      default:
+        return {
+          bg: '#f8fafc',
+          text: '#475569',
+          border: '#e2e8f0',
+          icon: '👤',
+          label: rol || 'Empleado'
+        };
+    }
+  };
+
   return (
         <section className="facile-section">
+          <div className="w-full max-w-[1380px] mx-auto">
           {/* CABECERA PMS EJECUTIVA */}
           <div className="bg-[#0f172a] rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
@@ -238,29 +286,15 @@ const VistaPms = () => {
                 <span>💼 Salas & Coworking</span>
               </button>
             )}
-
-            {(usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft') && (
-              <button
-                type="button"
-                onClick={() => setPmsSubTab('todos')}
-                className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-                  pmsSubTab === 'todos'
-                    ? 'bg-[#0f172a] text-white shadow-md shadow-slate-900/25'
-                    : 'bg-white text-slate-700 border border-slate-200/90 hover:bg-slate-50 shadow-xs'
-                }`}
-              >
-                <span>📊 Ver Todo</span>
-              </button>
-            )}
           </div>
 
           {/* 0. SUB-PESTAÑA 0: MÓDULO EXCLUSIVO DE GESTIÓN DE PERSONAL & ROLES (ADMINISTRADOR / GRUPO BOOKINGSOFT) */}
           {(pmsSubTab === 'empleados' || pmsSubTab === 'todos') && (usuarioSesion?.rol === 'Administrador' || usuarioSesion?.rol === 'Grupo BookingSoft') && (
             <div id="pms-empleados-module" className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden mb-6">
               {/* Encabezado interno de la tarjeta */}
-              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-700 shrink-0">
+                  <div className="w-10 h-10 rounded-xl border border-slate-200/90 bg-slate-50 flex items-center justify-center text-slate-700 shrink-0">
                     <ShieldCheck size={20} className="text-slate-800" />
                   </div>
                   <div>
@@ -275,7 +309,7 @@ const VistaPms = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateEmpleadoModal(prev => !prev)}
-                  className="bg-[#0f172a] hover:bg-slate-800 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 self-start sm:self-auto shrink-0"
+                  className="bg-[#0f172a] hover:bg-slate-800 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 self-start md:self-auto shrink-0"
                 >
                   <UserPlus size={15} />
                   <span>+ Registrar Nuevo Empleado</span>
@@ -403,10 +437,10 @@ const VistaPms = () => {
               )}
 
               {/* BARRA DE BÚSQUEDA Y FILTROS OPERATIVOS */}
-              <div className="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/40">
-                <div className="flex flex-wrap items-center gap-2.5 flex-1">
-                  <div className="relative flex-1 min-w-[200px] max-w-sm">
-                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <div className="px-6 py-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50/40">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="relative w-72 sm:w-80">
+                    <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
                       value={empSearchQuery}
@@ -415,7 +449,7 @@ const VistaPms = () => {
                         setEmpCurrentPage(1);
                       }}
                       placeholder="Buscar por nombre, documento o usuario..."
-                      className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#d91a2a] shadow-xs"
+                      className="w-full pl-9 pr-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#d91a2a] shadow-xs"
                     />
                   </div>
 
@@ -425,7 +459,7 @@ const VistaPms = () => {
                       setEmpRolFilter(e.target.value);
                       setEmpCurrentPage(1);
                     }}
-                    className="px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
+                    className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
                   >
                     <option value="todos">Todos los roles</option>
                     <option value="Ama de llaves">Ama de llaves</option>
@@ -440,7 +474,7 @@ const VistaPms = () => {
                       setEmpEstadoFilter(e.target.value);
                       setEmpCurrentPage(1);
                     }}
-                    className="px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
+                    className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
                   >
                     <option value="todos">Todos los estados</option>
                     <option value="Activo">Activo</option>
@@ -448,7 +482,7 @@ const VistaPms = () => {
                   </select>
                 </div>
 
-                <div className="text-xs text-slate-500 font-medium whitespace-nowrap self-end md:self-auto">
+                <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
                   Mostrando <strong className="text-slate-800">{paginatedEmpleados.length}</strong> de <strong className="text-slate-800">{filteredEmpleados.length}</strong> colaboradores registrados
                 </div>
               </div>
@@ -481,15 +515,15 @@ const VistaPms = () => {
                         const isSelf = usuarioSesion && (usuarioSesion.usuario === emp.usuario || usuarioSesion.nombre === emp.nombre);
 
                         return (
-                          <tr key={emp.id_empleado} className="hover:bg-slate-50/60 transition-colors">
+                          <tr key={emp.id_empleado} className="hover:bg-slate-50/50 transition-colors">
                             <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                              <div className="flex items-center gap-3.5">
                                 <div
                                   style={{
-                                    width: '40px',
-                                    height: '40px',
-                                    minWidth: '40px',
-                                    minHeight: '40px',
+                                    width: '38px',
+                                    height: '38px',
+                                    minWidth: '38px',
+                                    minHeight: '38px',
                                     borderRadius: '12px',
                                     backgroundColor: avatar.bgHex,
                                     color: avatar.textHex,
@@ -497,7 +531,7 @@ const VistaPms = () => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: '0.86rem',
+                                    fontSize: '0.84rem',
                                     fontWeight: 800,
                                     letterSpacing: '0.5px',
                                     lineHeight: 1,
@@ -507,18 +541,18 @@ const VistaPms = () => {
                                 >
                                   {initials}
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                  <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.88rem', lineHeight: 1.25 }}>
+                                <div>
+                                  <span className="font-bold text-slate-900 text-sm block leading-tight">
                                     {emp.nombre}
                                   </span>
-                                  <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600, marginTop: '2px', lineHeight: 1.2 }}>
+                                  <span className="text-xs text-slate-500 font-medium block mt-0.5 leading-tight">
                                     {subinfo}
                                   </span>
                                 </div>
                               </div>
                             </td>
                             <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
-                              <span className="font-mono text-xs text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/60 inline-block">
+                              <span className="font-mono text-xs text-slate-700 bg-slate-100/90 px-2.5 py-1 rounded-md border border-slate-200/60 inline-block font-medium">
                                 @{emp.usuario}
                               </span>
                             </td>
@@ -526,20 +560,10 @@ const VistaPms = () => {
                               {isSelf ? (
                                 <span
                                   title="Tu cuenta actual (No puedes auto-degradar tu rol)"
-                                  style={{
-                                    fontSize: '0.75rem',
-                                    fontWeight: 800,
-                                    color: '#9333ea',
-                                    background: '#f3e8ff',
-                                    padding: '0.35rem 0.65rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #d8b4fe',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
+                                  className="px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-xs font-bold inline-flex items-center gap-1.5 shadow-xs"
                                 >
-                                  👑 {emp.rol} (Tú)
+                                  <span>👑</span>
+                                  <span>{emp.rol} (Tú)</span>
                                 </span>
                               ) : (
                                 <select
@@ -555,7 +579,7 @@ const VistaPms = () => {
                                       });
                                     }
                                   }}
-                                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-[#d91a2a] outline-none cursor-pointer"
+                                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50/80 text-xs font-medium text-slate-800 focus:bg-white focus:border-[#d91a2a] outline-none cursor-pointer shadow-xs transition-colors"
                                 >
                                   <option value="Ama de llaves">Ama de llaves</option>
                                   <option value="Personal de mantenimiento">Personal de mantenimiento</option>
@@ -567,19 +591,25 @@ const VistaPms = () => {
                             <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
                               {emp.estado === 'Activo' ? (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                                  <span>Activo</span>
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Inactivo
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
+                                  <span>Inactivo</span>
                                 </span>
                               )}
                             </td>
                             <td className="py-4 px-6 text-xs text-slate-600 space-y-0.5" style={{ verticalAlign: 'middle' }}>
-                              <div className="font-medium text-slate-700">
-                                {emp.tipo_documento || 'Cédula de ciudadanía'}: {emp.numero_documento}
+                              <div className="font-medium text-slate-700 leading-tight">
+                                Cédula de ciudadanía: {emp.numero_documento || 'No registrada'}
                               </div>
-                              <a href={`mailto:${emp.correo}`} className="text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
+                              <a
+                                href={`mailto:${emp.correo}`}
+                                className="text-blue-600 hover:underline flex items-center gap-1 mt-0.5 leading-tight"
+                                style={{ textDecoration: 'none' }}
+                              >
                                 <Mail size={12} className="text-slate-400 shrink-0" />
                                 <span>{emp.correo}</span>
                               </a>
@@ -587,19 +617,11 @@ const VistaPms = () => {
                             <td className="py-4 px-6 text-right" style={{ verticalAlign: 'middle' }}>
                               {isSelf ? (
                                 <span
-                                  title="No puedes desactivar tu propia cuenta activa"
-                                  style={{
-                                    fontSize: '0.72rem',
-                                    fontWeight: 700,
-                                    color: '#94a3b8',
-                                    padding: '0.35rem 0.6rem',
-                                    background: '#f1f5f9',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e2e8f0',
-                                    display: 'inline-block'
-                                  }}
+                                  title="Esta es tu sesión activa conectada"
+                                  className="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-500 inline-flex items-center gap-1.5"
                                 >
-                                  Sesión Activa
+                                  <span>🔒</span>
+                                  <span>Sesión Activa</span>
                                 </span>
                               ) : (
                                 <button
@@ -611,13 +633,23 @@ const VistaPms = () => {
                                       nuevoEstado
                                     });
                                   }}
-                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                                     emp.estado === 'Activo'
                                       ? 'border-red-200 bg-red-50 hover:bg-red-100 text-[#d91a2a]'
                                       : 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
                                   }`}
                                 >
-                                  {emp.estado === 'Activo' ? '🚫 Desactivar' : '✓ Activar'}
+                                  {emp.estado === 'Activo' ? (
+                                    <>
+                                      <Ban size={13} />
+                                      <span>Desactivar</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle size={13} />
+                                      <span>Activar</span>
+                                    </>
+                                  )}
                                 </button>
                               )}
                             </td>
@@ -631,11 +663,11 @@ const VistaPms = () => {
 
               {/* PAGINACIÓN */}
               {totalPages > 1 && (
-                <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 bg-slate-50/30">
-                  <div>
-                    Página <span className="font-bold text-slate-800">{validCurrentPage}</span> de <span className="font-bold text-slate-800">{totalPages}</span>
+                <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600 bg-white">
+                  <div className="font-semibold text-slate-600">
+                    Página <strong className="text-slate-800">{validCurrentPage}</strong> de <strong className="text-slate-800">{totalPages}</strong>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       disabled={validCurrentPage === 1}
@@ -652,12 +684,12 @@ const VistaPms = () => {
                       .map((page, idx, arr) => {
                         const showEllipsisBefore = idx > 0 && page - arr[idx - 1] > 1;
                         return (
-                          <div key={page} className="flex items-center">
-                            {showEllipsisBefore && <span className="px-1 text-slate-400">...</span>}
+                          <div key={page} className="flex items-center gap-1">
+                            {showEllipsisBefore && <span className="px-1 text-slate-400 font-bold">...</span>}
                             <button
                               type="button"
                               onClick={() => setEmpCurrentPage(page)}
-                              className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                                 validCurrentPage === page
                                   ? 'bg-[#0f172a] text-white shadow-xs'
                                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -1892,6 +1924,7 @@ const VistaPms = () => {
             </div>
           </div>
           )}
+          </div>
         </section>
   );
 };
