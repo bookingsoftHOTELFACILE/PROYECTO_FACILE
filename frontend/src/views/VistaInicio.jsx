@@ -145,31 +145,14 @@ export default function VistaInicio() {
             ].map((card, i) => (
               <div 
                 key={i}
-                style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: 'var(--radius-card)',
-                  padding: '30px 24px',
-                  border: '1px solid var(--color-border)',
-                  boxShadow: 'var(--shadow-sm)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                }}
+                className="facile-feature-card"
+                onClick={() => setActiveTab(card.tab)}
+                title={`Ir a ${card.title}`}
               >
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  backgroundColor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '20px'
-                }}>
+                <div className="feature-icon-badge">
                   {card.icon}
                 </div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--color-text-main)', margin: '0 0 10px 0' }}>
+                <h3 className="feature-title">
                   {card.title}
                 </h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.55, margin: '0 0 24px 0', flexGrow: 1 }}>
@@ -177,23 +160,14 @@ export default function VistaInicio() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setActiveTab(card.tab)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '0.85rem',
-                    fontWeight: '700',
-                    color: 'var(--color-text-main)',
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    textAlign: 'left'
+                  className="feature-link"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab(card.tab);
                   }}
                 >
                   <span>{card.link}</span>
-                  <ArrowRight size={14} color="var(--color-primary)" />
+                  <ArrowRight size={14} className="feature-arrow" color="var(--color-primary)" />
                 </button>
               </div>
             ))}
@@ -224,6 +198,7 @@ export default function VistaInicio() {
                 <button
                   key={cat.id}
                   onClick={() => setCategoriaActiva(cat.id)}
+                  className="facile-filter-pill"
                   style={{
                     backgroundColor: isActive ? 'var(--color-primary)' : '#ffffff',
                     color: isActive ? '#ffffff' : 'var(--color-text-main)',
@@ -236,8 +211,7 @@ export default function VistaInicio() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    boxShadow: isActive ? '0 4px 12px rgba(217, 26, 42, 0.25)' : 'var(--shadow-sm)',
-                    transition: 'all 0.2s ease'
+                    boxShadow: isActive ? '0 4px 12px rgba(217, 26, 42, 0.25)' : 'var(--shadow-sm)'
                   }}
                 >
                   <span>{cat.label}</span>
@@ -260,27 +234,17 @@ export default function VistaInicio() {
             {apartamentosFiltrados.map((item) => (
               <div
                 key={item.id}
-                style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: 'var(--radius-card)',
-                  border: '1px solid var(--color-border)',
-                  overflow: 'hidden',
-                  boxShadow: 'var(--shadow-card)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                }}
+                className="facile-alojamiento-card"
               >
-                {/* Imagen con Badges y clic para ver detalle */}
+                {/* Imagen con Badges, Zoom Suave y clic para ver detalle */}
                 <div 
-                  style={{ position: 'relative', height: '220px', cursor: 'pointer' }}
+                  className="card-img-wrap"
                   onClick={() => setSelectedAptoFigma(item)}
                   title="Haz clic para ver las fotos y disponibilidad de este apartamento"
                 >
                   <img
                     src={item.imagen}
                     alt={item.titulo}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                   {/* Tag Categoría */}
                   <div style={{
@@ -321,8 +285,8 @@ export default function VistaInicio() {
                 {/* Contenido de la Tarjeta */}
                 <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                   <h3 
+                    className="card-title"
                     onClick={() => setSelectedAptoFigma(item)}
-                    style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--color-text-main)', margin: '0 0 4px 0', cursor: 'pointer' }}
                   >
                     {item.titulo}
                   </h3>
