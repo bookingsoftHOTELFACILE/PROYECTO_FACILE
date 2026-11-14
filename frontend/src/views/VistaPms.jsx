@@ -892,32 +892,86 @@ const VistaPms = () => {
 
               {/* TARJETA DE RESUMEN DE COTIZACIÓN EN TIEMPO REAL */}
               {cotizacion && (
-                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '1rem', marginBottom: '1rem', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
-                  <h4 style={{ margin: '0 0 0.8rem', fontSize: '0.92rem', color: '#0f172a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Tag size={16} color="#e11d48"/> Resumen de Cotización (Apto {cotizacion.habitacion?.numero})
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.85rem', color: '#334155' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Valor por Noche:</span>
-                      <strong>${cotizacion.precio_noche ? cotizacion.precio_noche.toLocaleString('es-CO') : '0'} COP / noche</strong>
+                <div style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '16px',
+                  padding: '1.25rem',
+                  border: '1px solid #e2e8f0',
+                  marginTop: '1rem',
+                  marginBottom: '1rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
+                }}>
+                  {/* Cabecera Tarifa y Noches */}
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a' }}>
+                        ${cotizacion.precio_noche ? cotizacion.precio_noche.toLocaleString('es-CO') : '0'}
+                      </span>
+                      <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600, marginLeft: '5px' }}>
+                        COP / noche (Apto {cotizacion.habitacion?.numero})
+                      </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Duración de Estadía:</span>
-                      <strong>{cotizacion.noches} {cotizacion.noches === 1 ? 'noche' : 'noches'}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      backgroundColor: '#f1f5f9',
+                      color: '#334155',
+                      padding: '0.3rem 0.75rem',
+                      borderRadius: '9999px',
+                      border: '1px solid #e2e8f0'
+                    }}>
+                      {cotizacion.noches} {cotizacion.noches === 1 ? 'noche' : 'noches'}
+                    </span>
+                  </div>
+
+                  {/* Desglose de Cálculo */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.84rem', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
                       <span>Subtotal Estadía:</span>
-                      <span>${cotizacion.subtotal.toLocaleString('es-CO')} COP</span>
+                      <span style={{ fontWeight: 600 }}>${cotizacion.subtotal.toLocaleString('es-CO')} COP</span>
                     </div>
+
                     {cotizacion.descuento > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a', fontWeight: 600 }}>
-                        <span>Descuento Larga Estadía ({cotizacion.noches >= 15 ? '15%' : '10%'}):</span>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        backgroundColor: '#ecfdf5',
+                        padding: '8px 12px',
+                        borderRadius: '10px',
+                        color: '#065f46',
+                        fontWeight: 700,
+                        border: '1px solid #a7f3d0'
+                      }}>
+                        <span>🎉 Descuento Larga Estadía ({cotizacion.noches >= 15 ? '15%' : '10%'})</span>
                         <span>-${cotizacion.descuento.toLocaleString('es-CO')} COP</span>
                       </div>
                     )}
-                    <div style={{ borderTop: '1.5px solid #cbd5e1', paddingTop: '0.6rem', marginTop: '0.3rem', display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', fontWeight: 800, color: '#e11d48' }}>
-                      <span>TOTAL ESTIMADO:</span>
-                      <span>${cotizacion.total.toLocaleString('es-CO')} COP</span>
+
+                    {/* Total final */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'baseline',
+                      borderTop: '1px solid #e2e8f0',
+                      paddingTop: '12px',
+                      marginTop: '6px'
+                    }}>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '0.92rem', fontWeight: 800, color: '#0f172a' }}>
+                          Total a Pagar
+                        </span>
+                        <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                          Tarifa calculada con impuestos incluidos
+                        </span>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '1.45rem', fontWeight: 900, color: '#d91a2a' }}>
+                          ${cotizacion.total.toLocaleString('es-CO')}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '4px', fontWeight: 700 }}>COP</span>
+                      </div>
                     </div>
                   </div>
                 </div>

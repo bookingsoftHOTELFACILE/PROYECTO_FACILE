@@ -321,14 +321,77 @@ const VistaReservar = () => {
                         </div>
                       </div>
 
-                      <div className="live-quote-box" style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '1.2rem', marginBottom: '1.2rem' }}>
-                        <h4 style={{ margin: '0 0 0.8rem', color: '#0f172a', fontSize: '0.95rem' }}>Resumen de Cotización — Centro de Negocios</h4>
-                        <div className="quote-row"><span>Espacio:</span><strong>{espSel?.nombre || 'Sala / Coworking'} ({espSel?.tipo})</strong></div>
-                        <div className="quote-row"><span>Tarifa por Hora:</span><span>${Number(espSel?.precio_hora || 0).toLocaleString('es-CO')} COP / hora</span></div>
-                        <div className="quote-row"><span>Horario:</span><span>{reservaNegocioForm.hora_inicio} a {reservaNegocioForm.hora_fin} ({duracion} {duracion === 1 ? 'hora' : 'horas'})</span></div>
-                        <div className="quote-row final-total" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.6rem', marginTop: '0.6rem', fontWeight: 800, color: '#e11d48', fontSize: '1.1rem' }}>
-                          <span>Total a Pagar:</span>
-                          <span>${Number(total).toLocaleString('es-CO')} COP</span>
+                      <div style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '16px',
+                        padding: '1.25rem',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                        marginBottom: '1.2rem'
+                      }}>
+                        {/* Cabecera Espacio y Tarifa */}
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div>
+                            <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
+                              ${Number(espSel?.precio_hora || 0).toLocaleString('es-CO')}
+                            </span>
+                            <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600, marginLeft: '5px' }}>
+                              COP / hora
+                            </span>
+                          </div>
+
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            backgroundColor: '#f1f5f9',
+                            color: '#334155',
+                            padding: '0.3rem 0.75rem',
+                            borderRadius: '9999px',
+                            border: '1px solid #e2e8f0'
+                          }}>
+                            {duracion} {duracion === 1 ? 'hora' : 'horas'} de reserva
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 700, marginBottom: '0.75rem' }}>
+                          {espSel?.nombre || 'Sala / Coworking'} ({espSel?.tipo})
+                        </div>
+
+                        {/* Desglose */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.84rem', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
+                            <span>Horario reservado:</span>
+                            <span style={{ fontWeight: 600 }}>{reservaNegocioForm.hora_inicio} a {reservaNegocioForm.hora_fin}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
+                            <span>Subtotal ({duracion}h × ${Number(espSel?.precio_hora || 0).toLocaleString('es-CO')}):</span>
+                            <span style={{ fontWeight: 600 }}>${Number(total).toLocaleString('es-CO')} COP</span>
+                          </div>
+
+                          {/* Total final */}
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'baseline',
+                            borderTop: '1px solid #e2e8f0',
+                            paddingTop: '12px',
+                            marginTop: '6px'
+                          }}>
+                            <div>
+                              <span style={{ display: 'block', fontSize: '0.92rem', fontWeight: 800, color: '#0f172a' }}>
+                                Total a pagar
+                              </span>
+                              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                                Acceso a internet de alta velocidad y café de cortesía
+                              </span>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <span style={{ fontSize: '1.45rem', fontWeight: 900, color: '#d91a2a' }}>
+                                ${Number(total).toLocaleString('es-CO')}
+                              </span>
+                              <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '4px', fontWeight: 700 }}>COP</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -568,20 +631,111 @@ const VistaReservar = () => {
                     </div>
 
                     {cotizacion && (
-                      <div className="live-quote-box">
-                        <h4>Resumen de Cotización</h4>
-                        <div className="quote-row"><span>Valor por Noche:</span><strong>${Number(cotizacion.precio_noche || 0).toLocaleString('es-CO')} COP / noche</strong></div>
-                        <div className="quote-row"><span>Duración de Estadía:</span><span>{cotizacion.noches || 1} {(cotizacion.noches || 1) === 1 ? 'noche' : 'noches'}</span></div>
-                        <div className="quote-row"><span>Subtotal Estadía:</span><span>${Number(cotizacion.subtotal || 0).toLocaleString('es-CO')} COP</span></div>
-                        {Number(cotizacion.descuento || 0) > 0 && (
-                          <div className="quote-row discount">
-                            <span>Descuento Larga Estadía ({(cotizacion.noches || 0) >= 15 ? '15%' : '10%'}):</span>
-                            <span>-${Number(cotizacion.descuento || 0).toLocaleString('es-CO')} COP</span>
+                      <div style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '16px',
+                        padding: '1.25rem',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                        marginBottom: '1.2rem',
+                        marginTop: '1.2rem'
+                      }}>
+                        {/* Cabecera con Tarifa por Noche y Badge de Noches */}
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div>
+                            <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a' }}>
+                              ${Number(cotizacion.precio_noche || 0).toLocaleString('es-CO')}
+                            </span>
+                            <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600, marginLeft: '5px' }}>
+                              COP / noche
+                            </span>
+                          </div>
+
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            backgroundColor: '#f1f5f9',
+                            color: '#334155',
+                            padding: '0.3rem 0.75rem',
+                            borderRadius: '9999px',
+                            border: '1px solid #e2e8f0'
+                          }}>
+                            {cotizacion.noches || 1} {(cotizacion.noches || 1) === 1 ? 'noche' : 'noches'} seleccionadas
+                          </span>
+                        </div>
+
+                        {/* Rango de Fechas */}
+                        {reservaData.fecha_entrada && reservaData.fecha_salida && (
+                          <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Calendar size={14} color="#94a3b8" />
+                            <span>
+                              <strong>{reservaData.fecha_entrada.split('-').reverse().join('/')}</strong> al <strong>{reservaData.fecha_salida.split('-').reverse().join('/')}</strong>
+                            </span>
                           </div>
                         )}
-                        <div className="quote-row final-total">
-                          <span>Total a Pagar:</span>
-                          <span>${Number(cotizacion.total || 0).toLocaleString('es-CO')} COP</span>
+
+                        {/* Desglose de Cálculo */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.84rem', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
+                            <span>{cotizacion.noches || 1} {(cotizacion.noches || 1) === 1 ? 'noche' : 'noches'} × ${Number(cotizacion.precio_noche || 0).toLocaleString('es-CO')} COP</span>
+                            <span style={{ fontWeight: 600 }}>${Number(cotizacion.subtotal || 0).toLocaleString('es-CO')} COP</span>
+                          </div>
+
+                          {/* Descuento si aplica */}
+                          {Number(cotizacion.descuento || 0) > 0 ? (
+                            <div style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              backgroundColor: '#ecfdf5',
+                              padding: '8px 12px',
+                              borderRadius: '10px',
+                              color: '#065f46',
+                              fontWeight: 700,
+                              border: '1px solid #a7f3d0'
+                            }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <span>🎉 Descuento Larga Estadía ({(cotizacion.noches || 0) >= 15 ? '15%' : '10%'})</span>
+                              </span>
+                              <span>-${Number(cotizacion.descuento || 0).toLocaleString('es-CO')} COP</span>
+                            </div>
+                          ) : (
+                            <div style={{
+                              backgroundColor: '#f8fafc',
+                              padding: '6px 10px',
+                              borderRadius: '8px',
+                              fontSize: '0.72rem',
+                              color: '#64748b',
+                              border: '1px dashed #cbd5e1'
+                            }}>
+                              💡 <strong>Ahorro disponible:</strong> Reserva 7 o más noches para obtener un <strong>10% de descuento automático</strong>.
+                            </div>
+                          )}
+
+                          {/* Total final destacado */}
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'baseline',
+                            borderTop: '1px solid #e2e8f0',
+                            paddingTop: '12px',
+                            marginTop: '6px'
+                          }}>
+                            <div>
+                              <span style={{ display: 'block', fontSize: '0.92rem', fontWeight: 800, color: '#0f172a' }}>
+                                Total a pagar
+                              </span>
+                              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                                Impuestos incluidos • Sin cargos sorpresa
+                              </span>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <span style={{ fontSize: '1.45rem', fontWeight: 900, color: '#d91a2a' }}>
+                                ${Number(cotizacion.total || 0).toLocaleString('es-CO')}
+                              </span>
+                              <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '4px', fontWeight: 700 }}>COP</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
