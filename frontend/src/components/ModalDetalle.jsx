@@ -261,14 +261,29 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     return isNaN(num) || num <= 0 ? 450000 : num;
   }, [apto.precio]);
 
-  const totalCalculado = useMemo(() => {
-    let subtotal = precioNumerico * nochesEstancia;
-    // Descuento por larga estancia (7+ noches: 10%)
-    if (nochesEstancia >= 7) {
-      subtotal = subtotal * 0.90;
-    }
-    return subtotal;
+  // Desglose de descuentos por duración de estancia:
+  // - 7 a 14 noches: 10% de descuento
+  // - 15+ noches: 15% de descuento
+  const porcentajeDescuento = useMemo(() => {
+    if (nochesEstancia >= 15) return 15;
+    if (nochesEstancia >= 7) return 10;
+    return 0;
+  }, [nochesEstancia]);
+
+  const subtotalSinDescuento = useMemo(() => {
+    return precioNumerico * nochesEstancia;
   }, [precioNumerico, nochesEstancia]);
+
+  const montoDescuento = useMemo(() => {
+    if (porcentajeDescuento > 0) {
+      return Math.round((subtotalSinDescuento * porcentajeDescuento) / 100);
+    }
+    return 0;
+  }, [subtotalSinDescuento, porcentajeDescuento]);
+
+  const totalCalculado = useMemo(() => {
+    return subtotalSinDescuento - montoDescuento;
+  }, [subtotalSinDescuento, montoDescuento]);
 
   // =========================================================================
   // ACCIÓN DE RESERVA (INTEGRACIÓN FLUIDA CON LOGIN / REGISTRO)
@@ -625,7 +640,7 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                 </p>
               </div>
 
-              {/* Tarifa por Noche y Resumen de Estancia */}
+              {/* Tarifa por Noche Base */}
               <div style={{ marginBottom: '16px' }}>
                 <span style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Tarifa por noche
@@ -636,21 +651,9 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                   </span>
                   <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>COP / noche</span>
                 </div>
-
-                {/* Subtotal dinámico de noches */}
-                <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '0.78rem', color: '#0f172a', fontWeight: 700 }}>
-                    Total: ${Math.round(totalCalculado).toLocaleString('es-CO')} COP
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#d91a2a', backgroundColor: '#fee2e2', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
-                    {nochesEstancia} {nochesEstancia === 1 ? 'noche' : 'noches'}
-                  </span>
-                  {nochesEstancia >= 7 && (
-                    <span style={{ fontSize: '0.68rem', color: '#047857', backgroundColor: '#d1fae5', padding: '2px 6px', borderRadius: '10px', fontWeight: 700 }}>
-                      -10% Larga Estancia
-                    </span>
-                  )}
-                </div>
+                <span style={{ display: 'block', fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>
+                  Impuestos incluidos • Tarifas transparentes sin cargos sorpresa
+                </span>
               </div>
 
               {/* Selectores Interactivos de Llegada / Salida / Huéspedes */}
@@ -887,6 +890,103 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                   })}
                 </div>
 
+              </div>
+
+              {/* TARJETA DE DESGLOSE DE PRECIOS Y DESCUENTOS EN TIEMPO REAL */}
+              <div style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '16px',
+                padding: '16px',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                marginBottom: '16px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                    Resumen de tu Estadía
+                  </span>
+                  <span style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                    borderRadius: 'var(--radius-pill)',
+                    backgroundColor: porcentajeDescuento > 0 ? '#d1fae5' : '#fee2e2',
+                    color: porcentajeDescuento > 0 ? '#065f46' : '#d91a2a'
+                  }}>
+                    {nochesEstancia} {nochesEstancia === 1 ? 'noche' : 'noches'}
+                  </span>
+                </div>
+
+                {/* Fechas seleccionadas */}
+                <div style={{ fontSize: '0.76rem', color: '#64748b', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CalendarIcon size={13} color="#94a3b8" />
+                  <span>
+                    <strong>{formatearFechaDisplay(fechaEntrada)}</strong> al <strong>{fechaSalida ? formatearFechaDisplay(fechaSalida) : 'Elige salida'}</strong>
+                  </span>
+                </div>
+
+                {/* Líneas de cálculo */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
+                    <span>{nochesEstancia} {nochesEstancia === 1 ? 'noche' : 'noches'} × ${precioNumerico.toLocaleString('es-CO')} COP</span>
+                    <span style={{ fontWeight: 600 }}>${subtotalSinDescuento.toLocaleString('es-CO')} COP</span>
+                  </div>
+
+                  {/* Descuento si aplica */}
+                  {porcentajeDescuento > 0 ? (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: '#ecfdf5',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      color: '#065f46',
+                      fontWeight: 700
+                    }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span>🎉 Descuento Larga Estancia ({porcentajeDescuento}%)</span>
+                      </span>
+                      <span>-${montoDescuento.toLocaleString('es-CO')} COP</span>
+                    </div>
+                  ) : (
+                    <div style={{
+                      backgroundColor: '#f8fafc',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      fontSize: '0.72rem',
+                      color: '#64748b',
+                      border: '1px dashed #cbd5e1'
+                    }}>
+                      💡 <strong>Ahorro disponible:</strong> Reserva 7 o más noches para obtener un <strong>10% de descuento automático</strong>.
+                    </div>
+                  )}
+
+                  {/* Total final destacado */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                    borderTop: '1px solid #e2e8f0',
+                    paddingTop: '10px',
+                    marginTop: '4px'
+                  }}>
+                    <div>
+                      <span style={{ display: 'block', fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>
+                        Total a pagar
+                      </span>
+                      <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                        Impuestos incluidos • Sin cargos sorpresa
+                      </span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
+                        ${totalCalculado.toLocaleString('es-CO')}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', marginLeft: '4px' }}>COP</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
