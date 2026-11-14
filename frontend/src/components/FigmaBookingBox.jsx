@@ -1,6 +1,3 @@
-/*
-  FigmaBookingBox — componente original de App.jsx, extraído en la Fase A.
-*/
 import { useState } from 'react';
 import {
   Check

@@ -1,6 +1,3 @@
-/*
-  ServiceAnimalModal — componente original de App.jsx, extraído en la Fase A.
-*/
 import { useState } from 'react';
 
 // COMPONENTE MODAL DE POLÍTICA DE ANIMALES DE SERVICIO Y ACCESIBILIDAD UNIVERSAL (FACILE BOGOTÁ)

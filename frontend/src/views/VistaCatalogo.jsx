@@ -1,7 +1,3 @@
-/*
-  VistaCatalogo — extraído de App.jsx durante la Fase A de descomposición.
-  El estado y los handlers se consumen desde AppContext vía useApp().
-*/
 import {
   Users, Home, Wifi, Check, Maximize2
 } from 'lucide-react';

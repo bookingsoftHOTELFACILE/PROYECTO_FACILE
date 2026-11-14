@@ -1,7 +1,3 @@
-/*
-  Encabezados — extraído de App.jsx durante la Fase A de descomposición.
-  El estado y los handlers se consumen desde AppContext vía useApp().
-*/
 import {
   ShieldCheck, Phone, Calendar, LogOut, User, MapPin,
   Menu, Heart, Luggage

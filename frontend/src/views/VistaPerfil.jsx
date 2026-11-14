@@ -1,7 +1,3 @@
-/*
-  VistaPerfil — extraído de App.jsx durante la Fase A de descomposición.
-  El estado y los handlers se consumen desde AppContext vía useApp().
-*/
 import {
   ShieldCheck, Mail, Phone, FileText, Briefcase, Calendar,
   User, CheckCircle2, Sparkles, Clock, Camera, Heart,

@@ -1,14 +1,3 @@
-/*
-  App.jsx — Orquestador de BookingSoft (Fase A de la descomposición).
-
-  Antes: 6.665 líneas con estado, handlers, portal público y PMS en un
-  solo componente. Ahora:
-    · state/useAppState.js   → 69 useState + 31 handlers
-    · context/AppContext.jsx → publicación del estado a las vistas
-    · views/                 → una vista por pestaña
-    · components/            → cabecera, footer, modales y lightbox
-    · api/client.js          → HTTP centralizado
-*/
 import { useAppState } from './state/useAppState.js';
 import { AppProvider, useApp } from './context/AppContext.jsx';
 

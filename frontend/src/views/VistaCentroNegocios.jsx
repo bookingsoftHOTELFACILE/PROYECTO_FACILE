@@ -1,7 +1,3 @@
-/*
-  VistaCentroNegocios — extraído de App.jsx durante la Fase A de descomposición.
-  El estado y los handlers se consumen desde AppContext vía useApp().
-*/
 import {
   Briefcase, Wifi, Clock
 } from 'lucide-react';

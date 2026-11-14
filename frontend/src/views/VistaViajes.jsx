@@ -1,7 +1,3 @@
-/*
-  VistaViajes — extraído de App.jsx durante la Fase A de descomposición.
-  El estado y los handlers se consumen desde AppContext vía useApp().
-*/
 import {
   Briefcase, Calendar, CheckCircle2, MapPin, ArrowRight, Check,
   Luggage

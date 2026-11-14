@@ -1,6 +1,3 @@
-/*
-  BookingShowcase — componente original de App.jsx, extraído en la Fase A.
-*/
 import {
   Sparkles, X, Maximize2, Camera
 } from 'lucide-react';

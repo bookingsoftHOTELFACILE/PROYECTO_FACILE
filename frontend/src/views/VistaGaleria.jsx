@@ -1,7 +1,3 @@
-/*
-  VistaGaleria — extraído de App.jsx durante la Fase A de descomposición.
-  El estado y los handlers se consumen desde AppContext vía useApp().
-*/
 import {
   Maximize2
 } from 'lucide-react';

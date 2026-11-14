@@ -1,8 +1,3 @@
-/*
-  ModalLegal — modal de términos y políticas (Fase A).
-  Antes: renderModalLegal(), una función con JSX definida dentro del
-  estado de App(); ahora es un componente que consume AppContext.
-*/
 import {
   Check
 } from 'lucide-react';

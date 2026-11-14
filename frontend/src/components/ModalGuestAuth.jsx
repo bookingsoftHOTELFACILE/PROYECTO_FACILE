@@ -1,7 +1,3 @@
-/*
-  ModalGuestAuth — extraído de App.jsx durante la Fase A de descomposición.
-  El estado y los handlers se consumen desde AppContext vía useApp().
-*/
 import {
   UserPlus, ShieldCheck, Mail, Phone, FileText, Calendar,
   Lock, User, CheckCircle2, Search, Eye, EyeOff,

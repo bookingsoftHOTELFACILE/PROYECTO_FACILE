@@ -1,11 +1,3 @@
-/*
-  api/client.js — Cliente HTTP central de BookingSoft (Fase A).
-
-  ¿Para qué? Concentrar URL base, encabezados de autenticación y lectura
-             de respuestas en un solo lugar, en lugar de repetir el patrón
-             de `fetch` en cada handler.
-*/
-
 // URL del backend FastAPI (vacía = mismo origen; usa el proxy de Vite/Nginx)
 export const API_URL = '';
 

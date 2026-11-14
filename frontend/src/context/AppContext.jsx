@@ -1,10 +1,3 @@
-/*
-  AppContext — puente entre useAppState() (dueño del estado) y las vistas.
-
-  ¿Para qué? Evitar el paso de props en cascada: App.jsx crea el estado y
-             lo publica; cada vista consume solo lo que necesita con
-             `const { ... } = useApp()`.
-*/
 import { createContext, useContext } from 'react';
 
 const AppContext = createContext(null);

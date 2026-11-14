@@ -1,7 +1,3 @@
-/*
-  Catálogo semilla de unidades habitacionales (Fase A).
-  Fuente de respaldo cuando el backend no responde.
-*/
 const CATALOGO_HABITACIONES_INICIAL = [
   ...Array.from({ length: 14 }, (_, i) => ({
     id_habitacion: i + 1,

@@ -1,9 +1,3 @@
-/*
-  useAppState — estado global y handlers de BookingSoft (Fase A).
-  Antes: líneas 836-2193 del interior de function App() en App.jsx.
-  Contiene los 69 useState y los 31 handlers, y los publica mediante
-  AppContext para que las vistas no reciban props en cascada.
-*/
 import { useState, useEffect } from 'react';
 import { apiFetch, formatErrorMessage } from '../api/client.js';
 import { CATALOGO_HABITACIONES_INICIAL } from '../data/catalogo.js';

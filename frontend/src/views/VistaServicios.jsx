@@ -1,7 +1,3 @@
-/*
-  VistaServicios — extraído de App.jsx durante la Fase A de descomposición.
-  El estado y los handlers se consumen desde AppContext vía useApp().
-*/
 import { useApp } from '../context/AppContext.jsx';
 
 const VistaServicios = () => {

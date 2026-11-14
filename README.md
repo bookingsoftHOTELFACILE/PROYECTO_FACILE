@@ -146,7 +146,7 @@ bookingsoft/
     └── src/
         ├── main.jsx                 # Punto de entrada de React en el DOM
         ├── index.css                # Sistema de diseño con CSS tokens y estilos modernos
-        ├── App.jsx                  # Ensamblador ligero (94 líneas): providers + vistas
+        ├── App.jsx                  # Ensamblador ligero (83 líneas): providers + vistas
         ├── api/client.js            # Cliente HTTP unificado `apiFetch` + manejo de errores
         ├── context/AppContext.jsx   # Proveedor del estado global
         ├── state/useAppState.js     # Hook con el estado y los flujos del PMS
@@ -499,7 +499,7 @@ Acceso mediante botón superior con validación JWT, organizado en sub-pestañas
 
 ### 3. Arquitectura del Código Frontend (Fase A)
 
-`App.jsx` es un ensamblador de **94 líneas** que monta el `AppContext` y renderiza la
+`App.jsx` es un ensamblador de **83 líneas** que monta el `AppContext` y renderiza la
 vista activa; toda la lógica vive en `state/useAppState.js`, el acceso HTTP se centraliza
 en `api/client.js` (cliente `apiFetch` con manejo uniforme de errores 401/403) y la UI se
 reparte en `views/` (9 vistas) y `components/` (11 componentes). El portal público y el

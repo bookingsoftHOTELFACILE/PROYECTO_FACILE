@@ -1,6 +1,3 @@
-/*
-  HuespedesPicker — componente original de App.jsx, extraído en la Fase A.
-*/
 import { useState } from 'react';
 import ServiceAnimalModal from './ServiceAnimalModal.jsx';
 

@@ -94,7 +94,7 @@ Merge-base: `d1445cc` (2026-10-23). Cambio neto de `main` desde entonces:
 - **Los tests de backend de `main`** (`conftest`, `test_auth`, `test_consultas`,
   `test_reservas`) se reescribieron para encajar con ese seed.
 - **`frontend/src/App.jsx` −942 líneas:** refactor parcial del monolito (5.973 líneas);
-  nuestra rama lo llevó a 94 con `views/`+`components/`.
+  nuestra rama lo llevó a 83 con `views/`+`components/` (94 en Fase A, 83 tras retirar comentarios de andamiaje).
 - `frontend/index.html`: favicon → emoji 🏨 · `README.md`: tabla de credenciales.
 - **Docs movidos:** `docs/auditorias_internas/*.md` → `docs/*.md` (R100) y borrado
   `docs/matriz-rotacion.md`.
@@ -140,7 +140,7 @@ y debe resolverse en el Pull Request, no escondida en un merge.
 ### Fase A — Descomposición del SPA (`1a93fc1`)
 
 - **Hallazgos:** M-01 (`App.jsx` monolítico de 6.665 líneas), M-02 (duplicación de JSX), M-03 (25 `fetch` sin centralizar).
-- **Resultado:** `frontend/src/App.jsx` de **6.665 → 94 líneas** (verificable con `wc -l`).
+- **Resultado:** `frontend/src/App.jsx` de **6.665 → 83 líneas** (94 en Fase A, 83 tras retirar comentarios de andamiaje; verificable con `wc -l`).
 - **Ficheros creados (25):**
 
 | Ruta | Contenido |
@@ -307,7 +307,7 @@ curl -s http://localhost:4001/health
 curl -s http://localhost:3001/ | grep -o 'index-[A-Za-z0-9_-]*\.js'   # debe ser index-DtsLOiUo.js
 
 # 5) Afirmaciones numéricas del informe
-wc -l frontend/src/App.jsx                                  # 94
+wc -l frontend/src/App.jsx                                  # 83 (94 con andamios de Fase A)
 grep -rn 'obtener_conexion' backend/routes | wc -l          # 0
 grep -rn 'logger.exception' backend --include=*.py | wc -l  # 28 (26 en routes/ + main.py + connection.py)
 grep -rn 'logger.error' backend --include=*.py | wc -l      # 0
@@ -394,7 +394,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X DELETE http://localhost:4001/api/res
 - [ ] `pytest` = 55, `vitest` = 6/6, build OK, cobertura dentro de umbrales.
 - [ ] Playwright = 5/6 y el único fallo es `proteccion_doble_clic` (preexistente).
 - [ ] `openapi.json` = 27 endpoints y README/matriz RBAC coinciden.
-- [ ] `App.jsx` = 94 líneas; 0 `obtener_conexion()` en `routes/`; 0 `logger.error`.
+- [ ] `App.jsx` = 83 líneas; 0 `obtener_conexion()` en `routes/`; 0 `logger.error`.
 - [ ] 0 ficheros de `coverage/`/`dist/` trackeados; `.gitignore` completo.
 - [ ] `/health` no filtra detalle de BD; `/api/habitaciones` exige rol; `/api/habitaciones/publicas` es público.
 - [ ] Contenedores `backend` y `frontend` reconstruidos con el código actual.
