@@ -34,8 +34,37 @@ export function useAppState() {
   });
   const [reservaNegocioAlert, setReservaNegocioAlert] = useState(null);
 
-  // ---- NAVEGACIÓN Y VISTAS ----
-  const [activeTab, setActiveTab] = useState('inicio'); // 'inicio' | 'apartamentos' | 'centro_negocios_pub' | 'servicios' | 'galeria' | 'reservar' | 'pms'
+  // Validador de expiración de token JWT
+  const isTokenExpired = (token) => {
+    try {
+      if (!token) return true;
+      const parts = token.split('.');
+      if (parts.length < 2) return true;
+      const payload = JSON.parse(atob(parts[1]));
+      if (!payload.exp) return false;
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      return true;
+    }
+  };
+
+  // ---- NAVEGACIÓN Y VISTAS (PERSISTENTES ANTE F5 / RECARGA) ----
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const savedTab = localStorage.getItem('bookingsoft_active_tab');
+      const savedToken = localStorage.getItem('bookingsoft_auth_token');
+      const savedSesion = localStorage.getItem('bookingsoft_usuario_sesion');
+      if (savedTab === 'pms' && savedToken && !isTokenExpired(savedToken) && savedSesion) {
+        return 'pms';
+      }
+      if (savedTab && savedTab !== 'pms') {
+        return savedTab;
+      }
+      return 'inicio';
+    } catch {
+      return 'inicio';
+    }
+  });
 
   // ---- ESTADO DEL FORMULARIO DE REGISTRO ----
   const [formData, setFormData] = useState({ nombre: '', documento: '', telefono: '', correo: '', empresa: '' });
@@ -178,9 +207,32 @@ export function useAppState() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [aptoLightboxPhoto]);
 
-  // ---- ESTADO DE AUTENTICACIÓN JWT Y SESIÓN ----
-  const [authToken, setAuthToken] = useState(null);
-  const [usuarioSesion, setUsuarioSesion] = useState(null);
+  // ---- ESTADO DE AUTENTICACIÓN JWT Y SESIÓN (PERSISTENTE EN LOCALSTORAGE) ----
+  const [authToken, setAuthToken] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bookingsoft_auth_token');
+      if (saved && !isTokenExpired(saved)) return saved;
+      localStorage.removeItem('bookingsoft_auth_token');
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [usuarioSesion, setUsuarioSesion] = useState(() => {
+    try {
+      const savedToken = localStorage.getItem('bookingsoft_auth_token');
+      const savedSesion = localStorage.getItem('bookingsoft_usuario_sesion');
+      if (savedToken && !isTokenExpired(savedToken) && savedSesion) {
+        return JSON.parse(savedSesion);
+      }
+      localStorage.removeItem('bookingsoft_usuario_sesion');
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginForm, setLoginForm] = useState({ usuario: '', contrasena: '' });
   const [loginError, setLoginError] = useState(null);
@@ -225,8 +277,59 @@ export function useAppState() {
   // HU-005 / CA-005.2: check-in directo al crear la reserva en recepción (walk-in).
   const [walkinCheckinInmediato, setWalkinCheckinInmediato] = useState(false);
 
-  // ---- ESTADO DE SUB-PESTAÑAS INDIVIDUALES EN EL PANEL PMS ----
-  const [pmsSubTab, setPmsSubTab] = useState('recepcion'); // 'recepcion' | 'huespedes' | 'reservas' | 'planta' | 'coworking' | 'todos'
+  // ---- ESTADO DE SUB-PESTAÑAS INDIVIDUALES EN EL PANEL PMS (PERSISTENTE) ----
+  const [pmsSubTab, setPmsSubTab] = useState(() => {
+    try {
+      return localStorage.getItem('bookingsoft_pms_subtab') || 'recepcion';
+    } catch {
+      return 'recepcion';
+    }
+  });
+
+  // Sincronización automática de sesión y navegación de empleado en localStorage
+  useEffect(() => {
+    try {
+      if (authToken) {
+        localStorage.setItem('bookingsoft_auth_token', authToken);
+      } else {
+        localStorage.removeItem('bookingsoft_auth_token');
+      }
+    } catch (e) {
+      console.warn('Error al guardar token en localStorage:', e);
+    }
+  }, [authToken]);
+
+  useEffect(() => {
+    try {
+      if (usuarioSesion) {
+        localStorage.setItem('bookingsoft_usuario_sesion', JSON.stringify(usuarioSesion));
+      } else {
+        localStorage.removeItem('bookingsoft_usuario_sesion');
+      }
+    } catch (e) {
+      console.warn('Error al guardar sesión en localStorage:', e);
+    }
+  }, [usuarioSesion]);
+
+  useEffect(() => {
+    try {
+      if (activeTab) {
+        localStorage.setItem('bookingsoft_active_tab', activeTab);
+      }
+    } catch (e) {
+      console.warn('Error al guardar activeTab en localStorage:', e);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    try {
+      if (pmsSubTab) {
+        localStorage.setItem('bookingsoft_pms_subtab', pmsSubTab);
+      }
+    } catch (e) {
+      console.warn('Error al guardar pmsSubTab en localStorage:', e);
+    }
+  }, [pmsSubTab]);
 
   // Formatear errores de FastAPI
 
@@ -328,6 +431,12 @@ export function useAppState() {
   const handleLogout = () => {
     setAuthToken(null);
     setUsuarioSesion(null);
+    try {
+      localStorage.removeItem('bookingsoft_auth_token');
+      localStorage.removeItem('bookingsoft_usuario_sesion');
+      localStorage.removeItem('bookingsoft_active_tab');
+      localStorage.removeItem('bookingsoft_pms_subtab');
+    } catch {}
     setActiveTab('inicio');
     setAlert({ type: 'success', message: 'Sesión de empleado cerrada correctamente.' });
   };
@@ -366,14 +475,13 @@ export function useAppState() {
   // Sincronizar navegación con el historial del navegador para evitar pantalla en blanco al dar Atrás
   useEffect(() => {
     try {
-      window.history.replaceState({ tab: 'apartamentos' }, '', window.location.href);
+      const savedTab = localStorage.getItem('bookingsoft_active_tab') || activeTab;
+      window.history.replaceState({ tab: savedTab }, '', window.location.href);
     } catch {}
 
     const handlePopState = (event) => {
       if (event.state && event.state.tab) {
         setActiveTab(event.state.tab);
-      } else {
-        setActiveTab('apartamentos');
       }
     };
     window.addEventListener('popstate', handlePopState);
