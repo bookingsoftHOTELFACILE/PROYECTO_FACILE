@@ -93,12 +93,23 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     }
   };
 
+  // Helper para parsear fechas YYYY-MM-DD sin desfase horario UTC
+  const parseLocalDate = (str) => {
+    if (!str) return new Date();
+    const clean = String(str).split('T')[0];
+    const parts = clean.split('-').map(Number);
+    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+    }
+    return new Date(str);
+  };
+
   // Matriz de ocupación real simulada + reservas del sistema visibles en todos los meses
   const diasOcupados = useMemo(() => {
     const setOcupados = new Set();
     
     // Fechas ocupadas estándar visibles para que el usuario nunca esté a ciegas en cualquier mes:
-    // Noviembre 2026
+    // Noviembre 2026: 7, 8, 21, 22
     setOcupados.add('2026-11-07');
     setOcupados.add('2026-11-08');
     setOcupados.add('2026-11-21');
@@ -132,8 +143,8 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
       reservas.forEach(res => {
         if (res.fecha_inicio && res.fecha_fin) {
           try {
-            let curr = new Date(res.fecha_inicio);
-            const fin = new Date(res.fecha_fin);
+            let curr = parseLocalDate(res.fecha_inicio);
+            const fin = parseLocalDate(res.fecha_fin);
             while (curr <= fin) {
               const y = curr.getFullYear();
               const m = String(curr.getMonth() + 1).padStart(2, '0');
@@ -220,10 +231,10 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
         return;
       }
 
-      // Verificar si en el rango seleccionado existen días ocupados
+      // Verificar si en el rango seleccionado existen días ocupados (con parseLocalDate local sin desfase UTC)
       let tieneOcupadosEnRango = false;
-      let curr = new Date(fechaEntrada);
-      const fin = new Date(celda.fechaStr);
+      let curr = parseLocalDate(fechaEntrada);
+      const fin = parseLocalDate(celda.fechaStr);
       while (curr <= fin) {
         const y = curr.getFullYear();
         const m = String(curr.getMonth() + 1).padStart(2, '0');
@@ -277,10 +288,10 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
   // Cálculo de noches y precios
   const calcularNoches = (inicio, fin) => {
     if (!inicio || !fin) return 1;
-    const d1 = new Date(inicio);
-    const d2 = new Date(fin);
+    const d1 = parseLocalDate(inicio);
+    const d2 = parseLocalDate(fin);
     const diffTime = d2.getTime() - d1.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 1;
   };
 
