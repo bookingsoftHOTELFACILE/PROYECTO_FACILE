@@ -30,11 +30,12 @@
 | Stack | FastAPI (Python 3.11) · PostgreSQL 15 con `btree_gist` · React 18 + Vite 5 · Docker Compose · Nginx |
 | Servicios (puertos host) | backend `:4001` · db `:5433` · frontend `:3001` · pgAdmin `:5050` |
 | Contenedores | `bookingsoft-backend`, `bookingsoft-db`, `bookingsoft-frontend`, `bookingsoft-pgadmin` |
-| Credenciales seed (PMS) | `admin` / `Admin2026!` (Administrador) · `recepcion` / `Recep2026!` · `amallaves` / `Amallaves2026!` | · `mantenimiento` / `Mantenimiento2026!` |
+| Credenciales seed (PMS) | `admin` / `Admin2026!` (Administrador) · `recepcion` / `Recep2026!` · `amallaves` / `Amallaves2026!` · `mantenimiento` / `Mantenimiento2026!` |
 | Roles válidos (JWT) | `Administrador`, `Recepcionista 24h`, `Ama de llaves`, `Personal de mantenimiento` (constante `ROLES_VALIDOS`, `backend/models/schemas.py`) |
 | Quinto rol del negocio | `Huésped` — **no** tiene JWT; opera sin sesión por `/api/user/*` y `/api/habitaciones/publicas` |
 | Archivo `.env` | presente, **no** trackeado (`.gitignore`) |
 | Imágenes Docker | backend reconstruida `2026-11-12 22:32`; **frontend reconstruida el 2026-11-13** (la anterior era del `2026-10-19` y no contenía las fases A–D) |
+| **Node.js para el frontend** | **≥ 20.19** (probado con `v24.13.1` vía nvm). `jsdom@30` → `html-encoding-sniffer@7` → `@exodus/bytes@1.16.0` es ESM puro (`"type": "module"`, `engines: ^20.19 \|\| ^22.12 \|\| ≥24`): con el `/usr/bin/node` del sistema (`v18.19.1`) Vitest muere con `ERR_REQUIRE_ESM`. Queda fijado en `frontend/.nvmrc` y en `engines` de `frontend/package.json`. |
 
 ---
 
@@ -56,11 +57,13 @@ git diff --stat origin/main...HEAD      # 58 ficheros, +9.792 / -7.677
 | `d704321` | 2026-11-12 | `refactor(backend)`: capa `repositories/`, cursor por nombre, logging con traza (Fase D) | 11 files, +1.062/−1.038 |
 | `cfd657c` | 2026-11-12 | `test(frontend)`: fijar umbrales de cobertura de vitest en vez de 0 (B-06) | 1 file, +8/−1 |
 | `8aec665` | 2026-11-12 | `docs(fase-e)`: alinear README y matriz RBAC con la API real y cerrar la auditoría | 3 files, +207/−116 |
+| `1d83454` | 2026-11-13 | `docs(auditoria)`: este informe, autocontenido para verificación externa | 1 file, +371 |
+| `47a122c` | 2026-11-14 | `fix(db)`: restaurar captura de variable `e` en `inicializar_base_de_datos` — **corrección aplicada por la IA verificadora** (ver §14) | 1 file, +1/−1 |
 
 ### Estados de ramas (importante para el merge)
 
-- La rama está **adelante 9** de su upstream `origin/test/e2e-double-click-protection` → **los commits de la remediación NO están pushados**.
-- La rama está **adelante 13** de `origin/main` (los 9 de remediación + 4 previos: `b9d365e` E2E doble clic, `8b81755` modelo huésped, `05fcd5d`/`05bed01` pruebas de `reservas_service`).
+- La rama está **sincronizada** con su upstream `origin/test/e2e-double-click-protection`: los 11 commits fueron **pushados** el 2026-11-14 por la IA verificadora (antes de esa fecha estaban solo en local).
+- La rama está **adelante 13** de `origin/main` (los de remediación + 4 previos: `b9d365e` E2E doble clic, `8b81755` modelo huésped, `05fcd5d`/`05bed01` pruebas de `reservas_service`).
 - **Divergencia a resolver:** `origin/main` contiene `567c7db Revert "Merge pull request #53 … test/bd-model-huesped"`, es decir, **main revirtió** las validaciones del modelo huésped (`schemas.py` + `test_model_huesped.py`), mientras que **esta rama sí las conserva** (`8b81755`). Un merge a `main` reintroducirá lo que main revirtió: debe decidirse si se re-aplica o se descarta.
 
 ---
@@ -119,7 +122,7 @@ git diff --stat origin/main...HEAD      # 58 ficheros, +9.792 / -7.677
 ### Fase C — Seguridad (`5e6ef71`) — hallazgos H-01 y H-02
 
 - **H-01:** `DELETE /api/reservas/{id}` exige rol operativo (`requiere_rol`); antes era invocable sin permiso adecuado.
-- **H-02 (decisión de diseño):** `GET /api/habitaciones` pasa a exigir rol operativo y se crea **`GET /api/habitaciones/publicas`** con el catálogo mínimo (`numero`, `tipo`, `capacidad`, `precio_noche`, `estado`) para el portal sin sesión. El frontend **cae al endpoint público ante 401/403** (en `apiFetch`), de modo que el portal sigue funcionando sin token.
+- **H-02 (decisión de diseño):** `GET /api/habitaciones` pasa a exigir rol operativo y se crea **`GET /api/habitaciones/publicas`** con el catálogo mínimo (`numero`, `tipo`, `capacidad`, `precio_noche`, `estado`) para el portal sin sesión. El frontend **cae al endpoint público ante 401/403** — el desvío vive en `frontend/src/state/useAppState.js` (función `fetchHabitaciones`, línea 331), **no** en `api/client.js`, que es un cliente HTTP agnóstico—, de modo que el portal sigue funcionando sin token.
 - La *health probe* que usaba el inventario sin sesión se reorientó a **`GET /health`**.
 - **Tests:** `backend/tests/test_seguridad_acceso.py` (103 líneas, **6 pruebas**).
 - **Docs:** README (matriz RBAC + endpoints), `MATRIZ_ROLES_ENDPOINTS.md`, HU-005.
@@ -240,6 +243,8 @@ cd backend && DB_HOST=localhost DB_PORT=5433 DB_USER=bookingsof4 \
 # Esperado: 55 passed
 
 # 2) Build + unitarias + cobertura con umbrales
+#    REQUISITO: Node >= 20.19 (nvm use para leer frontend/.nvmrc). Con el Node
+#    18 del sistema, vitest falla con ERR_REQUIRE_ESM desde jsdom/@exodus/bytes.
 cd frontend && npx vite build && npx vitest run && npx vitest run --coverage
 # Esperado: 6/6 y "All files | 1.25 | 50.98 | 10.71 | 1.25", exit 0
 
@@ -349,4 +354,53 @@ curl -s -o /dev/null -w '%{http_code}\n' -X DELETE http://localhost:4001/api/res
 
 ---
 
-_Informe generado el 2026-11-13 a partir de la rama `test/e2e-double-click-protection` (commits `3acd4c4`…`8aec665`). Toda cifra de este documento es verificable con los comandos de la sección 8._
+## 14. Resultado de la verificación externa (2026-11-14)
+
+Auditoría ejecutada por **Antigravity** (modelo local `deepseek-r1:7b`) siguiendo las
+secciones 0 y 8 de este documento. Veredicto emitido: **aprobado con observaciones**.
+
+| Observación | Severidad | Estado |
+| --- | :---: | --- |
+| **H-REV-01** — `NameError: name 'e' is not defined` en `backend/database/connection.py` | Media | ✅ **Confirmado y corregido** en `47a122c` |
+| **H-REV-02** — divergencia con `origin/main` por el revert del PR#53 | Media | ⏳ **Pendiente de decisión** (ver §2 y §13) |
+| **H-REV-03** — commits sin publicar | Baja | ✅ Resuelto: rama pushada el 2026-11-14 |
+| **Requisito de Node ≥ 20.19** para Vitest | Documentación | ✅ Documentado en §1/§8 y fijado en `frontend/.nvmrc` + `engines` |
+| **Imprecisión mía:** el desvío 401/403 no estaba en `api/client.js` | Precisión | ✅ Corregido en §4 (Fase C) |
+
+### Detalle de H-REV-01 (defecto real introducido por esta remediación)
+
+El refactor de logging de la Fase D (`d704321`) cambió
+`except Exception as e:` → `except Exception:` en `inicializar_base_de_datos()`
+**pero mantuvo** el `print(f"   Detalle: {e}")` (línea 131). Con PostgreSQL caído,
+el arranque moría con un `NameError` secundario en lugar de salir limpio con
+`sys.exit(1)`.
+
+- **Por qué no lo detectaron los gates:** el camino de fallo solo se ejercita si la BD
+  no está disponible; en todas las verificaciones la BD estaba arriba.
+- **Corrección:** commit `47a122c` (`except Exception as e:`), aplicado por la propia IA
+  verificadora.
+- **Revisión posterior tras el fix:** es el **único** `print`/`f-string` del backend que
+  referencia `e`; los otros **32** `except Exception:` (1 en `dependencies.py`, 1 en
+  `main.py`, 4 en `repositories/base.py`, 2 en `auth.py`, 4 en `centro_negocios.py`,
+  4 en `empleados.py`, 4 en `habitaciones.py`, 7 en `huespedes.py`, 4 en `reservas.py` y
+  1 en `tests/`) no usan la variable, así que no hay más casos latentes del mismo tipo.
+
+### Riesgos de la sección 11 con luz verde
+
+| Punto | Resultado de la revisión externa |
+| --- | --- |
+| Múltiples `cursor_escritura()` en un endpoint | **Ningún endpoint** abre más de un contexto de escritura en la misma petición |
+| `checkin_inmediato` en endpoint público | `reservas.py` exige `usuario.rol in _ROLES_RESERVAS` → **403** correcto |
+| Idempotencia de `_MIGRACIONES` | `ADD COLUMN IF NOT EXISTS` → re-ejecutable |
+| Errores 500 enmascarados como catálogo público | la condición es `401 \|\| 403` → los 500 **no** disparan el desvío |
+
+### No concluyente en la auditoría externa
+
+`pytest --collect-only` devolvió código 4 en su entorno (error de uso al recopilar sin
+`API_BASE_URL`); la suite completa sí pasó (55/55). No afecta al resultado.
+
+---
+
+_Informe generado el 2026-11-13 a partir de la rama `test/e2e-double-click-protection` y
+actualizado el 2026-11-14 con el resultado de la verificación externa (HEAD `47a122c`).
+Toda cifra de este documento es verificable con los comandos de la sección 8._
