@@ -43,11 +43,42 @@ export function useAppState() {
   const [selectedHuesped, setSelectedHuesped] = useState(() => {
     try {
       const saved = localStorage.getItem('bookingsoft_guest_user');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      // Purgar automáticamente registros demo de versiones de prueba previas (id 99 o 98)
+      if (
+        parsed?.id_huesped === 99 ||
+        parsed?.id_huesped === 98 ||
+        parsed?.nombre?.toLowerCase().includes('demo') ||
+        parsed?.documento === 'GOOGLE-12345' ||
+        parsed?.documento === 'APPLE-67890' ||
+        parsed?.correo === 'huesped_google@ejemplo.com' ||
+        parsed?.correo === 'huesped_apple@icloud.com'
+      ) {
+        localStorage.removeItem('bookingsoft_guest_user');
+        return null;
+      }
+      return parsed;
     } catch {
       return null;
     }
   });
+
+  // Purgar inmediatamente si en memoria todavía existiera un usuario demo de la versión previa
+  useEffect(() => {
+    if (
+      selectedHuesped?.id_huesped === 99 ||
+      selectedHuesped?.id_huesped === 98 ||
+      selectedHuesped?.nombre?.toLowerCase().includes('demo') ||
+      selectedHuesped?.documento === 'GOOGLE-12345' ||
+      selectedHuesped?.documento === 'APPLE-67890' ||
+      selectedHuesped?.correo === 'huesped_google@ejemplo.com' ||
+      selectedHuesped?.correo === 'huesped_apple@icloud.com'
+    ) {
+      setSelectedHuesped(null);
+      localStorage.removeItem('bookingsoft_guest_user');
+    }
+  }, [selectedHuesped]);
 
   // Sincronización automática de sesión de huésped en localStorage
   useEffect(() => {

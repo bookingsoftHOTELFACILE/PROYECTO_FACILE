@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   UserPlus, ShieldCheck, Mail, Phone, FileText, Calendar,
   Lock, User, CheckCircle2, Search, Eye, EyeOff,
@@ -22,9 +22,29 @@ const ModalGuestAuth = () => {
   } = useApp();
 
   const [socialProvider, setSocialProvider] = useState(null); // 'google' | 'apple' | null
-  const [showCustomSocialForm, setShowCustomSocialForm] = useState(false);
   const [customSocialNombre, setCustomSocialNombre] = useState('');
   const [customSocialCorreo, setCustomSocialCorreo] = useState('');
+
+  // Purgar inmediatamente cualquier usuario demo residual (id 99 o 98)
+  useEffect(() => {
+    if (selectedHuesped?.id_huesped === 99 || selectedHuesped?.id_huesped === 98 || selectedHuesped?.nombre?.toLowerCase().includes('demo')) {
+      setSelectedHuesped(null);
+    }
+  }, [selectedHuesped, setSelectedHuesped]);
+
+  // Pre-llenar datos reales si el usuario ya escribió en el formulario
+  useEffect(() => {
+    if (socialProvider) {
+      if (formData?.nombre && !customSocialNombre) {
+        setCustomSocialNombre(formData.nombre);
+      }
+      if (formData?.correo && !customSocialCorreo) {
+        setCustomSocialCorreo(formData.correo);
+      } else if (guestSearchQuery && guestSearchQuery.includes('@') && !customSocialCorreo) {
+        setCustomSocialCorreo(guestSearchQuery);
+      }
+    }
+  }, [socialProvider, formData, guestSearchQuery]);
 
   const cuentasSugeridas = socialProvider === 'apple' ? [
     { nombre: 'Carlos Mendoza', correo: 'carlos.mendoza@icloud.com', iniciales: 'CM', doc: 'A-882194' },
@@ -38,7 +58,8 @@ const ModalGuestAuth = () => {
     const res = await handleSocialAuth(socialProvider, cuenta);
     if (res?.ok) {
       setSocialProvider(null);
-      setShowCustomSocialForm(false);
+      setCustomSocialNombre('');
+      setCustomSocialCorreo('');
     }
   };
 
@@ -54,7 +75,6 @@ const ModalGuestAuth = () => {
     });
     if (res?.ok) {
       setSocialProvider(null);
-      setShowCustomSocialForm(false);
       setCustomSocialNombre('');
       setCustomSocialCorreo('');
     }
@@ -118,8 +138,65 @@ const ModalGuestAuth = () => {
                     </p>
                   </div>
 
+                  <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+                      {socialProvider === 'google' ? 'Acceder con Google' : 'Iniciar con Apple ID'}
+                    </h4>
+                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                      Ingresa tu nombre y correo real para conectar tu cuenta directamente
+                    </p>
+                  </div>
+
+                  {/* FORMULARIO DIRECTO PARA INGRESAR TU PROPIA CUENTA REAL */}
+                  <form onSubmit={handleCustomSocialSubmit} style={{ background: '#ffffff', padding: '1rem', borderRadius: '14px', border: '1.5px solid #0284c7', marginBottom: '1rem', boxShadow: '0 4px 12px rgba(2, 132, 199, 0.08)' }}>
+                    <div style={{ marginBottom: '0.65rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                        Nombre Completo:
+                      </label>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        placeholder="Tu nombre y apellido"
+                        value={customSocialNombre}
+                        onChange={(e) => setCustomSocialNombre(e.target.value)}
+                        required
+                        style={{ fontSize: '0.88rem', padding: '0.6rem 0.75rem', width: '100%', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '0.85rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                        Correo Electrónico ({socialProvider === 'google' ? 'Gmail / Google' : 'iCloud / Apple'}):
+                      </label>
+                      <input
+                        type="email"
+                        className="input-airbnb"
+                        placeholder={socialProvider === 'apple' ? 'ejemplo@icloud.com' : 'ejemplo@gmail.com'}
+                        value={customSocialCorreo}
+                        onChange={(e) => setCustomSocialCorreo(e.target.value)}
+                        required
+                        style={{ fontSize: '0.88rem', padding: '0.6rem 0.75rem', width: '100%', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="btn-airbnb-primary"
+                      disabled={loading}
+                      style={{ width: '100%', marginTop: 0, padding: '0.68rem', fontSize: '0.9rem', fontWeight: 700 }}
+                    >
+                      {loading ? 'Conectando con base de datos...' : `Continuar con ${socialProvider === 'google' ? 'Google' : 'Apple ID'} →`}
+                    </button>
+                  </form>
+
+                  <div style={{ display: 'flex', alignItems: 'center', margin: '0.8rem 0', gap: '0.6rem' }}>
+                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                    <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>o acceso con un solo clic</span>
+                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                  </div>
+
                   {/* Cuentas rápidas */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.9rem' }}>
                     {cuentasSugeridas.map((cuenta, idx) => (
                       <button
                         key={idx}
@@ -130,21 +207,20 @@ const ModalGuestAuth = () => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.75rem',
-                          padding: '0.7rem 0.9rem',
-                          background: '#ffffff',
+                          padding: '0.65rem 0.85rem',
+                          background: '#f8fafc',
                           border: '1px solid #cbd5e1',
                           borderRadius: '12px',
                           cursor: loading ? 'not-allowed' : 'pointer',
                           textAlign: 'left',
-                          transition: 'all 0.15s ease',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                          transition: 'all 0.15s ease'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#0284c7'; e.currentTarget.style.background = '#f8fafc'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#ffffff'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#0284c7'; e.currentTarget.style.background = '#ffffff'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; }}
                       >
                         <div style={{
-                          width: '36px',
-                          height: '36px',
+                          width: '32px',
+                          height: '32px',
                           borderRadius: '50%',
                           background: socialProvider === 'apple' ? '#1e293b' : '#3b82f6',
                           color: '#ffffff',
@@ -152,92 +228,21 @@ const ModalGuestAuth = () => {
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: 700,
-                          fontSize: '0.85rem'
+                          fontSize: '0.8rem'
                         }}>
                           {cuenta.iniciales}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#0f172a' }}>{cuenta.nombre}</div>
-                          <div style={{ fontSize: '0.78rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cuenta.correo}</div>
+                          <div style={{ fontWeight: 600, fontSize: '0.84rem', color: '#0f172a' }}>{cuenta.nombre}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cuenta.correo}</div>
                         </div>
-                        <span style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: 600 }}>Entrar →</span>
+                        <span style={{ fontSize: '0.74rem', color: '#0284c7', fontWeight: 600 }}>Entrar →</span>
                       </button>
                     ))}
                   </div>
 
-                  {/* Formulario para ingresar otra cuenta */}
-                  {!showCustomSocialForm ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowCustomSocialForm(true)}
-                      style={{
-                        width: '100%',
-                        padding: '0.6rem',
-                        background: '#f1f5f9',
-                        border: '1px dashed #94a3b8',
-                        borderRadius: '10px',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        color: '#475569',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.4rem',
-                        marginBottom: '0.8rem'
-                      }}
-                    >
-                      <PlusCircle size={15} /> Usar otra cuenta de {socialProvider === 'google' ? 'Google' : 'Apple'}...
-                    </button>
-                  ) : (
-                    <form onSubmit={handleCustomSocialSubmit} style={{ background: '#f8fafc', padding: '0.9rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '0.8rem' }}>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.5rem' }}>
-                        Ingrese los datos de su cuenta {socialProvider === 'google' ? 'Google' : 'Apple'}:
-                      </div>
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        <input
-                          type="text"
-                          className="input-airbnb"
-                          placeholder="Nombre completo"
-                          value={customSocialNombre}
-                          onChange={(e) => setCustomSocialNombre(e.target.value)}
-                          required
-                          style={{ fontSize: '0.85rem', padding: '0.55rem 0.75rem' }}
-                        />
-                      </div>
-                      <div style={{ marginBottom: '0.6rem' }}>
-                        <input
-                          type="email"
-                          className="input-airbnb"
-                          placeholder={socialProvider === 'apple' ? 'usuario@icloud.com' : 'usuario@gmail.com'}
-                          value={customSocialCorreo}
-                          onChange={(e) => setCustomSocialCorreo(e.target.value)}
-                          required
-                          style={{ fontSize: '0.85rem', padding: '0.55rem 0.75rem' }}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.4rem' }}>
-                        <button
-                          type="submit"
-                          className="btn-airbnb-primary"
-                          disabled={loading}
-                          style={{ flex: 1, marginTop: 0, padding: '0.55rem' }}
-                        >
-                          {loading ? 'Verificando...' : 'Iniciar Sesión'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowCustomSocialForm(false)}
-                          style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '0 0.8rem', fontSize: '0.8rem', color: '#64748b', cursor: 'pointer' }}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
-                  )}
-
                   <div style={{ fontSize: '0.72rem', color: '#94a3b8', textAlign: 'center', lineHeight: '1.4' }}>
-                    🔒 Conexión segura con PostgreSQL de BookingSoft. Su perfil de huésped y reservas se guardarán con integridad referencial.
+                    🔒 Conexión segura con PostgreSQL de BookingSoft. Tu perfil de huésped y reservas se guardarán con integridad referencial.
                   </div>
                 </div>
               ) : (
