@@ -17,73 +17,75 @@ export default function Footer() {
 
   return (
     <>
-      {/* 1. MÓDULO CONVENIOS CORPORATIVOS B2B (UNIFICADO EN TODAS LAS PESTAÑAS) */}
-      <section style={{ padding: '20px 24px 60px' }}>
-        <div className="facile-container">
-          <div style={{
-            backgroundColor: '#090e1a',
-            borderRadius: '24px',
-            padding: '48px 56px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            boxShadow: 'var(--shadow-card)',
-            flexWrap: 'wrap',
-            gap: '24px'
-          }}>
-            <div style={{ maxWidth: '640px' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f43f5e', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                ¿Estadía Empresarial o Mensual?
-              </span>
-              <h3 style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff', margin: '8px 0 12px' }}>
-                Convenios Corporativos y Larga Estadía
-              </h3>
-              <p style={{ fontSize: '1rem', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
-                Ofrecemos facturación electrónica directa, tarifas corporativas preferenciales y atención ejecutiva personalizada en Bogotá Chicó.
-              </p>
-            </div>
+      {/* 1. MÓDULO CONVENIOS CORPORATIVOS B2B (EXCLUSIVO DE LA PESTAÑA INICIO) */}
+      {activeTab === 'inicio' && (
+        <section style={{ padding: '20px 24px 60px' }}>
+          <div className="facile-container">
+            <div style={{
+              backgroundColor: '#090e1a',
+              borderRadius: '24px',
+              padding: '48px 56px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              boxShadow: 'var(--shadow-card)',
+              flexWrap: 'wrap',
+              gap: '24px'
+            }}>
+              <div style={{ maxWidth: '640px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f43f5e', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  ¿Estadía Empresarial o Mensual?
+                </span>
+                <h3 style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff', margin: '8px 0 12px' }}>
+                  Convenios Corporativos y Larga Estadía
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
+                  Ofrecemos facturación electrónica directa, tarifas corporativas preferenciales y atención ejecutiva personalizada en Bogotá Chicó.
+                </p>
+              </div>
 
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button 
-                onClick={() => setActiveTab('reservar')}
-                style={{
-                  backgroundColor: 'var(--color-primary)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '14px 28px',
-                  borderRadius: 'var(--radius-pill)',
-                  fontWeight: '700',
-                  fontSize: '0.9375rem',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s ease',
-                  boxShadow: '0 4px 14px rgba(217, 26, 42, 0.35)'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary)'; }}
-              >
-                Solicitar Cotización
-              </button>
-              <a
-                href="tel:+573153512085"
-                style={{
-                  backgroundColor: '#1e293b',
-                  color: '#ffffff',
-                  border: '1px solid #334155',
-                  padding: '14px 24px',
-                  borderRadius: 'var(--radius-pill)',
-                  fontWeight: '600',
-                  fontSize: '0.9375rem',
-                  cursor: 'pointer',
-                  textDecoration: 'none',
-                  display: 'inline-block'
-                }}
-              >
-                Llamar a Asesor
-              </a>
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => setActiveTab('reservar')}
+                  style={{
+                    backgroundColor: 'var(--color-primary)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '14px 28px',
+                    borderRadius: 'var(--radius-pill)',
+                    fontWeight: '700',
+                    fontSize: '0.9375rem',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease',
+                    boxShadow: '0 4px 14px rgba(217, 26, 42, 0.35)'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary)'; }}
+                >
+                  Solicitar Cotización
+                </button>
+                <a
+                  href="tel:+573153512085"
+                  style={{
+                    backgroundColor: '#1e293b',
+                    color: '#ffffff',
+                    border: '1px solid #334155',
+                    padding: '14px 24px',
+                    borderRadius: 'var(--radius-pill)',
+                    fontWeight: '600',
+                    fontSize: '0.9375rem',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    display: 'inline-block'
+                  }}
+                >
+                  Llamar a Asesor
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 2. FOOTER CORPORATIVO OFICIAL CON LOGO BLANCO SOBRE OSCURO */}
       <footer style={{ backgroundColor: '#090e1a', color: '#94a3b8', paddingTop: '64px', borderTop: '1px solid #1e293b' }}>
