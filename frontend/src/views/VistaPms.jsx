@@ -474,6 +474,7 @@ const VistaPms = () => {
                         const avatar = getAvatarStyle(idx);
                         const subinfo = getSubinfo(emp, idx);
                         const initials = getInitials(emp.nombre);
+                        const isSelf = usuarioSesion && (usuarioSesion.usuario === emp.usuario || usuarioSesion.nombre === emp.nombre);
 
                         return (
                           <tr key={emp.id_empleado} className="hover:bg-slate-50/60 transition-colors">
@@ -518,16 +519,36 @@ const VistaPms = () => {
                               </span>
                             </td>
                             <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
-                              <select
-                                value={emp.rol}
-                                onChange={e => handleChangeEmpleadoRol(emp.id_empleado, e.target.value)}
-                                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-[#d91a2a] outline-none cursor-pointer"
-                              >
-                                <option value="Ama de llaves">Ama de llaves</option>
-                                <option value="Personal de mantenimiento">Personal de mantenimiento</option>
-                                <option value="Recepcionista 24h">Recepcionista 24h</option>
-                                <option value="Administrador">Administrador</option>
-                              </select>
+                              {isSelf ? (
+                                <span
+                                  title="Tu cuenta actual (No puedes auto-degradar tu rol)"
+                                  style={{
+                                    fontSize: '0.75rem',
+                                    fontWeight: 800,
+                                    color: '#9333ea',
+                                    background: '#f3e8ff',
+                                    padding: '0.35rem 0.65rem',
+                                    borderRadius: '8px',
+                                    border: '1px solid #d8b4fe',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  👑 {emp.rol} (Tú)
+                                </span>
+                              ) : (
+                                <select
+                                  value={emp.rol}
+                                  onChange={e => handleChangeEmpleadoRol(emp.id_empleado, e.target.value)}
+                                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-[#d91a2a] outline-none cursor-pointer"
+                                >
+                                  <option value="Ama de llaves">Ama de llaves</option>
+                                  <option value="Personal de mantenimiento">Personal de mantenimiento</option>
+                                  <option value="Recepcionista 24h">Recepcionista 24h</option>
+                                  <option value="Administrador">Administrador</option>
+                                </select>
+                              )}
                             </td>
                             <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
                               {emp.estado === 'Activo' ? (
@@ -550,17 +571,35 @@ const VistaPms = () => {
                               </a>
                             </td>
                             <td className="py-4 px-6 text-right" style={{ verticalAlign: 'middle' }}>
-                              <button
-                                type="button"
-                                onClick={() => handleToggleEmpleadoEstado(emp)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                                  emp.estado === 'Activo'
-                                    ? 'border-red-200 bg-red-50 hover:bg-red-100 text-[#d91a2a]'
-                                    : 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
-                                }`}
-                              >
-                                {emp.estado === 'Activo' ? '🚫 Desactivar' : '✓ Activar'}
-                              </button>
+                              {isSelf ? (
+                                <span
+                                  title="No puedes desactivar tu propia cuenta activa"
+                                  style={{
+                                    fontSize: '0.72rem',
+                                    fontWeight: 700,
+                                    color: '#94a3b8',
+                                    padding: '0.35rem 0.6rem',
+                                    background: '#f1f5f9',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e2e8f0',
+                                    display: 'inline-block'
+                                  }}
+                                >
+                                  Sesión Activa
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleEmpleadoEstado(emp)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                                    emp.estado === 'Activo'
+                                      ? 'border-red-200 bg-red-50 hover:bg-red-100 text-[#d91a2a]'
+                                      : 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
+                                  }`}
+                                >
+                                  {emp.estado === 'Activo' ? '🚫 Desactivar' : '✓ Activar'}
+                                </button>
+                              )}
                             </td>
                           </tr>
                         );
