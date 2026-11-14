@@ -55,15 +55,15 @@ const VistaPms = () => {
     return filteredEmpleados.slice(start, start + EMP_ITEMS_PER_PAGE);
   }, [filteredEmpleados, validCurrentPage]);
 
-  // Paletas de iniciales en tonos pastel según el diseño
+  // Paletas de iniciales en tonos pastel según el diseño con valores HEX garantizados
   const getAvatarStyle = (index) => {
     const palettes = [
-      { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-      { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
-      { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-      { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-      { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-      { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' },
+      { bgHex: '#faf5ff', textHex: '#7e22ce', borderHex: '#e9d5ff' }, // Purple
+      { bgHex: '#fdf2f8', textHex: '#be185d', borderHex: '#fbcfe8' }, // Pink
+      { bgHex: '#fffbeb', textHex: '#b45309', borderHex: '#fde68a' }, // Amber
+      { bgHex: '#eff6ff', textHex: '#1d4ed8', borderHex: '#bfdbfe' }, // Blue
+      { bgHex: '#ecfdf5', textHex: '#047857', borderHex: '#a7f3d0' }, // Emerald
+      { bgHex: '#f1f5f9', textHex: '#334155', borderHex: '#cbd5e1' }, // Slate
     ];
     return palettes[index % palettes.length];
   };
@@ -86,11 +86,21 @@ const VistaPms = () => {
 
   const getInitials = (nombre) => {
     if (!nombre) return 'EM';
-    const parts = nombre.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+    // Omitir conectores comunes para evitar iniciales erróneas como "AD" en "Ama de Llaves"
+    const stopWords = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y']);
+    const meaningfulWords = nombre.trim().split(/\s+/).filter(w => !stopWords.has(w.toLowerCase()));
+    
+    if (meaningfulWords.length >= 2) {
+      return (meaningfulWords[0][0] + meaningfulWords[1][0]).toUpperCase();
     }
-    return parts[0].slice(0, 2).toUpperCase();
+    if (meaningfulWords.length === 1 && meaningfulWords[0].length >= 2) {
+      return meaningfulWords[0].slice(0, 2).toUpperCase();
+    }
+    const rawParts = nombre.trim().split(/\s+/);
+    if (rawParts.length >= 2) {
+      return (rawParts[0][0] + rawParts[1][0]).toUpperCase();
+    }
+    return nombre.trim().slice(0, 2).toUpperCase();
   };
 
   return (
@@ -467,23 +477,47 @@ const VistaPms = () => {
 
                         return (
                           <tr key={emp.id_empleado} className="hover:bg-slate-50/60 transition-colors">
-                            <td className="py-4 px-6">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-9 h-9 rounded-xl ${avatar.bg} ${avatar.text} font-bold flex items-center justify-center text-xs shrink-0 border ${avatar.border}`}>
+                            <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                <div
+                                  style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    minWidth: '40px',
+                                    minHeight: '40px',
+                                    borderRadius: '12px',
+                                    backgroundColor: avatar.bgHex,
+                                    color: avatar.textHex,
+                                    border: `1px solid ${avatar.borderHex}`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.86rem',
+                                    fontWeight: 800,
+                                    letterSpacing: '0.5px',
+                                    lineHeight: 1,
+                                    flexShrink: 0,
+                                    boxSizing: 'border-box'
+                                  }}
+                                >
                                   {initials}
                                 </div>
-                                <div>
-                                  <span className="font-bold text-slate-900 block text-sm">{emp.nombre}</span>
-                                  <span className="text-xs text-slate-500 block font-medium mt-0.5">{subinfo}</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                  <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.88rem', lineHeight: 1.25 }}>
+                                    {emp.nombre}
+                                  </span>
+                                  <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600, marginTop: '2px', lineHeight: 1.2 }}>
+                                    {subinfo}
+                                  </span>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4 px-6">
-                              <span className="font-mono text-xs text-slate-700 bg-slate-100 px-2 py-1 rounded-md border border-slate-200/60">
+                            <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
+                              <span className="font-mono text-xs text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/60 inline-block">
                                 @{emp.usuario}
                               </span>
                             </td>
-                            <td className="py-4 px-6">
+                            <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
                               <select
                                 value={emp.rol}
                                 onChange={e => handleChangeEmpleadoRol(emp.id_empleado, e.target.value)}
@@ -495,7 +529,7 @@ const VistaPms = () => {
                                 <option value="Administrador">Administrador</option>
                               </select>
                             </td>
-                            <td className="py-4 px-6">
+                            <td className="py-4 px-6" style={{ verticalAlign: 'middle' }}>
                               {emp.estado === 'Activo' ? (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Activo
@@ -506,7 +540,7 @@ const VistaPms = () => {
                                 </span>
                               )}
                             </td>
-                            <td className="py-4 px-6 text-xs text-slate-600 space-y-0.5">
+                            <td className="py-4 px-6 text-xs text-slate-600 space-y-0.5" style={{ verticalAlign: 'middle' }}>
                               <div className="font-medium text-slate-700">
                                 {emp.tipo_documento || 'Cédula de ciudadanía'}: {emp.numero_documento}
                               </div>
@@ -515,7 +549,7 @@ const VistaPms = () => {
                                 <span>{emp.correo}</span>
                               </a>
                             </td>
-                            <td className="py-4 px-6 text-right">
+                            <td className="py-4 px-6 text-right" style={{ verticalAlign: 'middle' }}>
                               <button
                                 type="button"
                                 onClick={() => handleToggleEmpleadoEstado(emp)}

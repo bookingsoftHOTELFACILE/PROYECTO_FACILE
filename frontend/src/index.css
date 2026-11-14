@@ -2483,6 +2483,7 @@ body {
 .items-center { align-items: center !important; }
 .justify-between { justify-content: space-between !important; }
 .justify-end { justify-content: flex-end !important; }
+.justify-center { justify-content: center !important; }
 
 .gap-2 { gap: 0.5rem !important; }
 .gap-2\.5 { gap: 0.625rem !important; }
