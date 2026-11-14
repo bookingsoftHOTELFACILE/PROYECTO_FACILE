@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ServiceAnimalModal from './ServiceAnimalModal.jsx';
 
 // COMPONENTE DESPLEGABLE SELECTOR DE HUÉSPEDES ESTILO AIRBNB (ADULTOS, NIÑOS, BEBÉS, MASCOTAS)
-const HuespedesPicker = ({ maxCapacidad = 4 }) => {
+const HuespedesPicker = ({ maxCapacidad = 4, onChange }) => {
   const [adultos, setAdultos] = useState(1);
   const [ninos, setNinos] = useState(0);
   const [bebes, setBebes] = useState(0);
@@ -22,6 +22,19 @@ const HuespedesPicker = ({ maxCapacidad = 4 }) => {
 
     return parts.join(', ');
   };
+
+  useEffect(() => {
+    if (onChange) {
+      onChange({
+        adultos,
+        ninos,
+        bebes,
+        mascotas,
+        total: totalHuespedes,
+        summary: getSummaryText()
+      });
+    }
+  }, [adultos, ninos, bebes, mascotas]);
 
   return (
     <div className="huespedes-trigger-box">

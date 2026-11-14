@@ -64,93 +64,35 @@ export default function VistaInicio() {
               Apartamentos amoblados para cortas y largas <span style={{ color: '#fca5a5' }}>estadías</span>
             </h1>
 
-            <p style={{ fontSize: '1.1rem', color: '#cbd5e1', lineHeight: 1.55, margin: '0 0 24px 0', maxWidth: '600px' }}>
+            <p style={{ fontSize: '1.15rem', color: '#cbd5e1', lineHeight: 1.6, margin: '0 0 28px 0', maxWidth: '680px' }}>
               El confort, amplitud e independencia de un hogar premium combinados con servicios de hotel 5 estrellas y un exclusivo centro de negocios corporativo en el norte de Bogotá.
             </p>
 
-            {/* Checkmarks de Garantía */}
-            <div style={{ display: 'flex', gap: '20px', color: '#e2e8f0', fontSize: '0.875rem', fontWeight: '600', marginBottom: '36px', flexWrap: 'wrap' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <CheckCircle2 size={16} color="var(--color-primary)" /> Sin contratos complicados
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <CheckCircle2 size={16} color="var(--color-primary)" /> Fibra simétrica 300 Mbps
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <CheckCircle2 size={16} color="var(--color-primary)" /> Vigilancia 24 Horas
-              </span>
-            </div>
-          </div>
-
-          {/* BARRA FLOTANTE DE RESERVAS ESTILO AIRBNB */}
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '20px',
-            padding: '14px 20px',
-            display: 'grid',
-            gridTemplateColumns: '1.2fr 1.3fr 1.2fr auto',
-            gap: '16px',
-            alignItems: 'center',
-            boxShadow: 'var(--shadow-float)',
-            maxWidth: '960px'
-          }}>
-            {/* Sede / Ubicación */}
-            <div style={{ borderRight: '1px solid var(--color-border)', paddingRight: '16px' }}>
-              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Destino / Ubicación
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
-                <MapPin size={16} color="var(--color-primary)" />
-                <span>Bogotá – El Chicó (Calle 97 #21)</span>
-              </div>
-            </div>
-
-            {/* Fechas */}
-            <div style={{ borderRight: '1px solid var(--color-border)', paddingRight: '16px' }}>
-              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Fechas de Estadía
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
-                <Calendar size={16} color="var(--color-primary)" />
-                <span>Mar 18 – Abr 02 <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '500' }}>(15 noches)</span></span>
-              </div>
-            </div>
-
-            {/* Huéspedes */}
             <div>
-              <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Huéspedes
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontWeight: '700', color: 'var(--color-text-main)', fontSize: '0.9375rem' }}>
-                <Users size={16} color="var(--color-primary)" />
-                <span>2 Adultos • 1 Dormitorio</span>
-              </div>
+              <button
+                onClick={() => setActiveTab('apartamentos')}
+                style={{
+                  backgroundColor: 'var(--color-primary)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '14px 28px',
+                  fontWeight: '700',
+                  fontSize: '0.95rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(217, 26, 42, 0.35)',
+                  transition: 'background 0.2s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary)'; }}
+              >
+                <span>Explorar Nuestros Apartamentos</span>
+                <ArrowRight size={16} />
+              </button>
             </div>
-
-            {/* Botón CTA Buscar */}
-            <button 
-              onClick={() => setActiveTab('apartamentos')}
-              style={{
-                backgroundColor: 'var(--color-primary)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: 'var(--radius-pill)',
-                padding: '14px 28px',
-                fontWeight: '700',
-                fontSize: '0.95rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                transition: 'background 0.2s ease',
-                boxShadow: '0 4px 14px rgba(217, 26, 42, 0.3)'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-primary)'; }}
-            >
-              <Search size={18} />
-              <span>Buscar Disponibilidad</span>
-            </button>
           </div>
         </div>
       </section>
@@ -314,7 +256,7 @@ export default function VistaInicio() {
           </div>
 
           {/* Grid de Tarjetas de Apartamentos con FOTOS REALES */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
             {apartamentosFiltrados.map((item) => (
               <div
                 key={item.id}

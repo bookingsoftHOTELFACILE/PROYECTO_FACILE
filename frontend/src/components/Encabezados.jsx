@@ -58,8 +58,6 @@ export default function Encabezados() {
         <div className="facile-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <span>📍 Calle 97 #21-62, El Chicó, Bogotá</span>
-            <span style={{ color: '#334155' }}>|</span>
-            <span style={{ color: '#cbd5e1' }}>🛡️ Recepción y Seguridad 24 Horas</span>
           </div>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <a href="tel:+573153512085" style={{ color: '#e2e8f0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -119,21 +117,6 @@ export default function Encabezados() {
 
           {/* Acciones Rápidas */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: '#ecfdf5',
-              color: '#065f46',
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-pill)',
-              fontSize: '0.8rem',
-              fontWeight: '600'
-            }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }} />
-              Atención Inmediata
-            </div>
-
             <button
               onClick={() => setActiveTab('reservar')}
               style={{

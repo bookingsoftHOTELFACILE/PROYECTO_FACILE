@@ -6,6 +6,7 @@ import {
   Maximize2, MessageSquare, ArrowRight, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import HuespedesPicker from './HuespedesPicker.jsx';
 
 export default function ModalDetalle({ apartamento, onClose, onReservar }) {
   const { 
@@ -47,7 +48,14 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
   const fotosRaw = apto.fotos || apto.imagenes || (apto.imagen ? [{ url: apto.imagen }] : []);
   const fotosReales = fotosRaw.map(f => typeof f === 'string' ? f : f.url);
   const [fotoActiva, setFotoActiva] = useState(0);
-  const [numHuespedes, setNumHuespedes] = useState(apto.personas || '2 huéspedes');
+  const [numHuespedes, setNumHuespedes] = useState(apto.personas || '1 huésped');
+
+  // Capacidad numérica máxima para el selector de huéspedes
+  const capacidadNum = useMemo(() => {
+    const raw = String(apto.personas || apto.capacidad || '6').replace(/\D/g, '');
+    const num = parseInt(raw, 10);
+    return isNaN(num) || num <= 0 ? 6 : num;
+  }, [apto.personas, apto.capacidad]);
 
   // =========================================================================
   // MOTOR DE CALENDARIO 100% INTERACTIVO Y DINÁMICO
@@ -85,16 +93,39 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     }
   };
 
-  // Matriz de ocupación real simulada + reservas del sistema
+  // Matriz de ocupación real simulada + reservas del sistema visibles en todos los meses
   const diasOcupados = useMemo(() => {
     const setOcupados = new Set();
     
-    // Fechas ocupadas estándar del diseño comercial para demostración visual clara
-    // Noviembre 2026: 7, 8, 21, 22
+    // Fechas ocupadas estándar visibles para que el usuario nunca esté a ciegas en cualquier mes:
+    // Noviembre 2026
     setOcupados.add('2026-11-07');
     setOcupados.add('2026-11-08');
     setOcupados.add('2026-11-21');
     setOcupados.add('2026-11-22');
+
+    // Diciembre 2026
+    setOcupados.add('2026-12-04');
+    setOcupados.add('2026-12-05');
+    setOcupados.add('2026-12-12');
+    setOcupados.add('2026-12-13');
+    setOcupados.add('2026-12-24');
+    setOcupados.add('2026-12-25');
+    setOcupados.add('2026-12-31');
+
+    // Enero 2027
+    setOcupados.add('2027-01-01');
+    setOcupados.add('2027-01-02');
+    setOcupados.add('2027-01-15');
+    setOcupados.add('2027-01-16');
+    setOcupados.add('2027-01-29');
+    setOcupados.add('2027-01-30');
+
+    // Febrero 2027
+    setOcupados.add('2027-02-05');
+    setOcupados.add('2027-02-06');
+    setOcupados.add('2027-02-19');
+    setOcupados.add('2027-02-20');
 
     // Integración con reservas reales del contexto
     if (Array.isArray(reservas)) {
@@ -163,10 +194,10 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     return celdas;
   }, [calYear, calMonth, diasOcupados, fechaEntrada, fechaSalida]);
 
-  // Manejador interactivo de clic en día
+  // Manejador interactivo e inteligente de clic en día (sin bloqueos frustrantes)
   const handleDiaClick = (celda) => {
     if (celda.esOcupado) {
-      setMensajeInteraccion('Esta fecha ya se encuentra reservada.');
+      setMensajeInteraccion(`La fecha ${celda.dia} de ${nombresMeses[calMonth]} está ocupada. Selecciona un día disponible.`);
       setTimeout(() => setMensajeInteraccion(null), 3000);
       return;
     }
@@ -175,7 +206,7 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     if (!fechaEntrada || (fechaEntrada && fechaSalida)) {
       setFechaEntrada(celda.fechaStr);
       setFechaSalida(null);
-      setMensajeInteraccion(`Llegada: ${formatearFechaCorta(celda.fechaStr)}. Ahora selecciona la fecha de salida.`);
+      setMensajeInteraccion(`Llegada: ${formatearFechaCorta(celda.fechaStr)}. Ahora selecciona tu fecha de salida.`);
       return;
     }
 
@@ -189,7 +220,7 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
         return;
       }
 
-      // Verificar que en el rango seleccionado no existan días ocupados
+      // Verificar si en el rango seleccionado existen días ocupados
       let tieneOcupadosEnRango = false;
       let curr = new Date(fechaEntrada);
       const fin = new Date(celda.fechaStr);
@@ -205,8 +236,12 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
       }
 
       if (tieneOcupadosEnRango) {
-        setMensajeInteraccion('No puedes seleccionar un rango que contenga días ocupados.');
-        setTimeout(() => setMensajeInteraccion(null), 3500);
+        // Si hay días ocupados en el camino, en lugar de un error molesto que bloquee al usuario,
+        // se fija amigablemente esta fecha como la nueva llegada:
+        setFechaEntrada(celda.fechaStr);
+        setFechaSalida(null);
+        setMensajeInteraccion(`Había fechas intermedias ocupadas. Tu nueva llegada es: ${formatearFechaCorta(celda.fechaStr)}. Ahora selecciona tu salida.`);
+        setTimeout(() => setMensajeInteraccion(null), 4000);
         return;
       }
 
@@ -355,9 +390,9 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'relative',
-          width: '100%',
-          maxWidth: '1080px',
-          maxHeight: '92vh',
+          width: '96%',
+          maxWidth: '1360px',
+          maxHeight: '94vh',
           backgroundColor: '#ffffff',
           borderRadius: '24px',
           overflowY: 'auto',
@@ -394,7 +429,7 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
           <X size={18} />
         </button>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))' }}>
           
           {/* ============================================================== */}
           {/* COLUMNA IZQUIERDA: GALERÍA + ESPECIFICACIONES + AMENIDADES     */}
@@ -406,7 +441,7 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
               <div 
                 style={{
                   position: 'relative',
-                  height: '280px',
+                  height: '340px',
                   borderRadius: '16px',
                   overflow: 'hidden',
                   backgroundColor: '#0f172a',
@@ -689,18 +724,11 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                 </div>
 
                 <div style={{ paddingTop: '8px' }}>
-                  <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '2px' }}>Huéspedes</label>
-                  <select 
-                    value={numHuespedes}
-                    onChange={(e) => setNumHuespedes(e.target.value)}
-                    style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', cursor: 'pointer' }}
-                  >
-                    <option value="1 huésped">1 huésped</option>
-                    <option value="2 huéspedes">2 huéspedes</option>
-                    <option value="3 huéspedes">3 huéspedes</option>
-                    <option value="Hasta 4 huéspedes">Hasta 4 huéspedes</option>
-                    <option value="Hasta 6 huéspedes">Hasta 6 huéspedes</option>
-                  </select>
+                  <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '6px' }}>Huéspedes</label>
+                  <HuespedesPicker 
+                    maxCapacidad={capacidadNum}
+                    onChange={(obj) => setNumHuespedes(obj.summary)}
+                  />
                 </div>
               </div>
 
@@ -759,21 +787,21 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                 </div>
 
                 {/* Leyenda Explicativa de Tres Estados */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', padding: '6px 8px', backgroundColor: '#f8fafc', borderRadius: '10px', margin: '8px 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', fontWeight: 500, color: '#475569' }}>
-                    <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', display: 'inline-block' }} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '8px 10px', backgroundColor: '#f8fafc', borderRadius: '12px', margin: '10px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 600, color: '#475569' }}>
+                    <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', display: 'inline-block' }} />
                     <span>Disponible</span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', fontWeight: 500, color: '#94a3b8' }}>
-                    <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#f1f5f9', color: '#94a3b8', textDecoration: 'line-through', fontSize: '8px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      x
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 600, color: '#ef4444' }}>
+                    <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#94a3b8', textDecoration: 'line-through 2px #ef4444', fontSize: '9px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      ✕
                     </span>
-                    <span>Ocupado</span>
+                    <span>Ocupado (No disponible)</span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', fontWeight: 700, color: '#d91a2a' }}>
-                    <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#d91a2a', color: '#ffffff', fontSize: '8px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 700, color: '#d91a2a' }}>
+                    <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#d91a2a', color: '#ffffff', fontSize: '9px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       ✓
                     </span>
                     <span>Tu Selección</span>
@@ -781,15 +809,15 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                 </div>
 
                 {/* Encabezado Días Semanales */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', fontSize: '0.68rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '6px' }}>
                   <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
                 </div>
 
                 {/* Grilla Interactiva de Días */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
                   {celdasCalendario.map((celda, idx) => {
                     if (celda.tipo === 'vacio') {
-                      return <div key={celda.id} style={{ height: '30px' }} />;
+                      return <div key={celda.id} style={{ height: '36px' }} />;
                     }
 
                     // 1. DÍA OCUPADO (Estado 2)
@@ -797,16 +825,17 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                       return (
                         <div
                           key={celda.fechaStr}
-                          title={`Fecha ${celda.fechaStr} ocupada`}
+                          title={`Fecha ${celda.fechaStr} ocupada (No disponible)`}
                           onClick={() => handleDiaClick(celda)}
                           style={{
-                            height: '30px',
-                            borderRadius: '6px',
+                            height: '36px',
+                            borderRadius: '8px',
                             backgroundColor: '#f1f5f9',
+                            border: '1px solid #e2e8f0',
                             color: '#94a3b8',
-                            fontSize: '0.78rem',
-                            fontWeight: 500,
-                            textDecoration: 'line-through',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            textDecoration: 'line-through 2px #ef4444',
                             cursor: 'not-allowed',
                             display: 'flex',
                             alignItems: 'center',
@@ -829,14 +858,14 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                           onClick={() => handleDiaClick(celda)}
                           title={`${celda.esEntrada ? 'Llegada: ' : celda.esSalida ? 'Salida: ' : ''}${celda.fechaStr}`}
                           style={{
-                            height: '30px',
-                            borderRadius: '6px',
+                            height: '36px',
+                            borderRadius: '8px',
                             backgroundColor: esExtremo ? '#d91a2a' : '#fee2e2',
                             color: esExtremo ? '#ffffff' : '#b91522',
-                            fontSize: '0.78rem',
+                            fontSize: '0.82rem',
                             fontWeight: 800,
                             border: esExtremo ? 'none' : '1px dashed #fca5a5',
-                            boxShadow: esExtremo ? '0 2px 6px rgba(217, 26, 42, 0.35)' : 'none',
+                            boxShadow: esExtremo ? '0 2px 8px rgba(217, 26, 42, 0.35)' : 'none',
                             transform: esExtremo ? 'scale(1.05)' : 'scale(1)',
                             display: 'flex',
                             alignItems: 'center',
@@ -858,12 +887,12 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                         onClick={() => handleDiaClick(celda)}
                         title={`Seleccionar ${celda.fechaStr}`}
                         style={{
-                          height: '30px',
-                          borderRadius: '6px',
+                          height: '36px',
+                          borderRadius: '8px',
                           backgroundColor: '#ffffff',
                           border: '1px solid #e2e8f0',
                           color: '#1e293b',
-                          fontSize: '0.78rem',
+                          fontSize: '0.82rem',
                           fontWeight: 600,
                           display: 'flex',
                           alignItems: 'center',
@@ -875,7 +904,7 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
                           e.currentTarget.style.backgroundColor = '#fff5f5';
                           e.currentTarget.style.borderColor = '#d91a2a';
                           e.currentTarget.style.color = '#d91a2a';
-                          e.currentTarget.style.transform = 'scale(1.08)';
+                          e.currentTarget.style.transform = 'scale(1.06)';
                         }}
                         onMouseLeave={e => {
                           e.currentTarget.style.backgroundColor = '#ffffff';
