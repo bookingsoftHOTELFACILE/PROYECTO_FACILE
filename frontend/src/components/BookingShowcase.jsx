@@ -27,22 +27,30 @@ const BookingShowcase = ({ photos, onOpenLightbox, title }) => {
             type="button"
             onClick={() => onOpenLightbox(0)}
             style={{
-              background: '#e11d48',
+              backgroundColor: '#d91a2a',
               border: 'none',
               color: '#ffffff',
-              padding: '0.6rem 1.2rem',
-              borderRadius: '25px',
+              padding: '0.65rem 1.4rem',
+              borderRadius: 'var(--radius-pill)',
               fontWeight: 800,
               fontSize: '0.85rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              boxShadow: '0 4px 14px rgba(225,29,72,0.3)',
+              boxShadow: '0 4px 14px rgba(217, 26, 42, 0.25)',
               transition: 'all 0.2s ease'
             }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = '#b91522';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 18px rgba(217, 26, 42, 0.35)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = '#d91a2a';
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = '0 4px 14px rgba(217, 26, 42, 0.25)';
+            }}
           >
             <Maximize2 size={15} /> Ver Álbum ({totalCount})
           </button>

@@ -1,7 +1,8 @@
 import React from 'react';
 import {
-  Briefcase, Wifi, Clock, Camera, Sparkles
+  Briefcase, Wifi, Clock
 } from 'lucide-react';
+import BookingShowcase from '../components/BookingShowcase.jsx';
 import { useApp } from '../context/AppContext.jsx';
 
 const VistaCentroNegocios = () => {
@@ -60,134 +61,76 @@ const VistaCentroNegocios = () => {
   ];
 
   return (
-    <section className="w-full max-w-[1540px] mx-auto px-4 sm:px-8 lg:px-12 py-8 space-y-8">
-      {/* Encabezado Principal */}
-      <div className="text-center max-w-3xl mx-auto mb-10">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Centro de Negocios & Salas de Juntas
-        </h1>
-        <div className="w-16 h-1 bg-[#d91a2a] mx-auto mt-3 mb-4 rounded-full"></div>
-        <p className="text-slate-600 text-sm sm:text-base">
-          Salas de reuniones ejecutivas y espacios de coworking con la mejor infraestructura en El Chicó
-        </p>
+    <section className="facile-section">
+      <div className="section-title-wrap">
+        <h2>Centro de Negocios & Salas de Juntas</h2>
+        <p>Salas de reuniones ejecutivas y espacios de coworking con la mejor infraestructura en El Chicó</p>
       </div>
 
-      <div className="space-y-8">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem', marginTop: '1rem' }}>
         {oficinasData.map((oficina) => (
           <div
             key={oficina.id}
-            className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
+            style={{
+              background: '#ffffff',
+              borderRadius: '24px',
+              padding: '1.8rem',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+              border: '1px solid #e2e8f0'
+            }}
           >
-            {/* Cabecera: Nombre, Capacidad, Descripción y Tarifa */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            {/* CABECERA DEL ESPACIO */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>
                     {oficina.tipo}
-                  </h2>
-                  <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#fee2e2] text-[#d91a2a]">
+                  </h3>
+                  <span style={{ 
+                    backgroundColor: '#fee2e2', 
+                    color: '#d91a2a', 
+                    padding: '0.35rem 0.9rem', 
+                    borderRadius: 'var(--radius-pill)', 
+                    fontSize: '0.82rem', 
+                    fontWeight: 800,
+                    border: '1px solid #fecaca'
+                  }}>
                     {oficina.capacidad}
                   </span>
                 </div>
-                <p className="text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
+                <p style={{ margin: '0.4rem 0 0', color: '#64748b', fontSize: '0.92rem' }}>
                   {oficina.desc}
                 </p>
               </div>
-
-              {/* Tarifa por hora */}
-              <div className="text-left md:text-right shrink-0">
-                <div className="text-3xl font-black text-[#d91a2a] tracking-tight">
-                  {oficina.precio}
-                  <span className="text-xs font-semibold text-slate-500 uppercase ml-1">
-                    {oficina.precioSub}
-                  </span>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#d91a2a' }}>
+                  {oficina.precio} <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{oficina.precioSub}</span>
                 </div>
               </div>
             </div>
 
-            {/* Barra del botón Ver Álbum */}
-            <div className="flex items-center justify-between mt-5 mb-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                <Camera size={16} className="text-[#d91a2a]" />
-                <span>Álbum Fotográfico — {oficina.tipo}</span>
-              </div>
-              
-              <button
-                type="button"
-                onClick={() => setAptoLightboxPhoto({ photos: oficina.fotos, index: 0 })}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
-              >
-                Ver Álbum ({oficina.fotos.length})
-              </button>
-            </div>
+            {/* COLLAGE ESTILO BOOKING.COM ESPECÍFICO DE ESTE ESPACIO */}
+            <BookingShowcase
+              photos={oficina.fotos}
+              onOpenLightbox={(idx) => setAptoLightboxPhoto({ photos: oficina.fotos, index: idx })}
+              title={`Álbum Fotográfico — ${oficina.tipo}`}
+            />
 
-            {/* Mosaico Fotográfico Panorámico con Zoom Interactivo Suave al Hover */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 my-4">
-              {/* Foto Grande Principal (Izquierda) */}
-              <div 
-                onClick={() => setAptoLightboxPhoto({ photos: oficina.fotos, index: 0 })}
-                className="md:col-span-6 relative h-72 sm:h-80 md:h-96 rounded-2xl overflow-hidden cursor-pointer group bg-slate-900"
-              >
-                <img
-                  src={oficina.fotos[0]?.url}
-                  alt={oficina.fotos[0]?.titulo || `${oficina.tipo} principal`}
-                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                />
-                <div className="absolute bottom-3 left-3 bg-slate-950/70 backdrop-blur-md text-white text-xs px-3.5 py-1.5 rounded-xl font-medium border border-white/10 flex items-center gap-2">
-                  <Sparkles size={13} className="text-[#d91a2a]" />
-                  <span>{oficina.fotos[0]?.titulo || `${oficina.tipo} — Vista Principal`}</span>
-                </div>
-              </div>
-
-              {/* Cuadrícula de fotos secundarias (Derecha) */}
-              <div className="md:col-span-6 grid grid-cols-2 gap-3 h-72 sm:h-80 md:h-96">
-                {oficina.fotos.slice(1, 4).map((foto, idx) => (
-                  <div 
-                    key={idx}
-                    onClick={() => setAptoLightboxPhoto({ photos: oficina.fotos, index: idx + 1 })}
-                    className="relative rounded-2xl overflow-hidden cursor-pointer group bg-slate-900"
-                  >
-                    <img
-                      src={foto.url}
-                      alt={foto.titulo || `${oficina.tipo} detalle ${idx + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    />
-                  </div>
-                ))}
-
-                {/* Botón celda +X fotos para abrir la galería */}
-                <div
-                  onClick={() => setAptoLightboxPhoto({ photos: oficina.fotos, index: 4 })}
-                  className="relative rounded-2xl overflow-hidden cursor-pointer group bg-slate-950"
-                >
-                  <img
-                    src={oficina.fotos[4]?.url || oficina.fotos[1]?.url}
-                    alt="Más fotos"
-                    className="w-full h-full object-cover opacity-40 transition-all duration-500 group-hover:scale-105 group-hover:opacity-30"
-                  />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center p-2 bg-slate-950/40 backdrop-blur-xs group-hover:bg-slate-950/60 transition-all">
-                    <Camera size={22} className="text-white mb-1" />
-                    <span className="text-base font-extrabold">+{oficina.fotos.length - 4} fotos</span>
-                    <span className="text-xs text-slate-200 font-medium">Ver Galería</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Barra Inferior: Chips de Servicios + Botón de Acción */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-5 border-t border-slate-100">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
-                  <Wifi size={14} className="text-[#d91a2a]" /> Fibra Óptica Dedicada
+            {/* PIE DE ESPECIFICACIONES Y BOTÓN ACCIÓN */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.2rem', paddingTop: '1.2rem', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <span className="spec-pill" style={{ borderRadius: 'var(--radius-pill)', padding: '0.4rem 0.85rem' }}>
+                  <Wifi size={13} color="#d91a2a" /> Fibra Óptica Dedicada
                 </span>
-                <span className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
-                  <Briefcase size={14} className="text-[#d91a2a]" /> Pantalla HD 65" / Proyector
+                <span className="spec-pill" style={{ borderRadius: 'var(--radius-pill)', padding: '0.4rem 0.85rem' }}>
+                  <Briefcase size={13} color="#d91a2a" /> Pantalla HD 65" / Proyector
                 </span>
-                <span className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
-                  <Clock size={14} className="text-[#d91a2a]" /> Alquiler Flexible por Horas
+                <span className="spec-pill" style={{ borderRadius: 'var(--radius-pill)', padding: '0.4rem 0.85rem' }}>
+                  <Clock size={13} color="#d91a2a" /> Alquiler Flexible por Horas
                 </span>
               </div>
 
+              {/* BOTÓN REDONDO CON HOVER Y COLOR OFICIAL */}
               <button
                 type="button"
                 onClick={() => {
@@ -197,7 +140,31 @@ const VistaCentroNegocios = () => {
                   setActiveTab('reservar');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="px-6 py-3 rounded-xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#d91a2a]/20 hover:shadow-lg transition-all cursor-pointer"
+                style={{ 
+                  backgroundColor: '#d91a2a',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.75rem 1.8rem', 
+                  borderRadius: 'var(--radius-pill)', 
+                  fontWeight: '700',
+                  fontSize: '0.92rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(217, 26, 42, 0.25)',
+                  transition: 'all 0.2s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#b91522';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 18px rgba(217, 26, 42, 0.35)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#d91a2a';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(217, 26, 42, 0.25)';
+                }}
               >
                 Consultar Disponibilidad / Reservar
               </button>
