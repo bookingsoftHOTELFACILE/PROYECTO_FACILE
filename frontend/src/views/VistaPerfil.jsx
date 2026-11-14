@@ -18,7 +18,14 @@ import {
   ChevronRight,
   Sparkles,
   CreditCard,
-  MapPin
+  MapPin,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Clock,
+  MessageSquare,
+  Briefcase,
+  Hash
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 
@@ -40,6 +47,11 @@ const VistaPerfil = () => {
   // Pestaña activa dentro de la configuración de cuenta
   const [tabActiva, setTabActiva] = useState('personal'); // 'personal' | 'empresas' | 'extranjeros' | 'notificaciones' | 'seguridad'
 
+  // Visibilidad de contraseñas
+  const [showClaveActual, setShowClaveActual] = useState(false);
+  const [showNuevaClave, setShowNuevaClave] = useState(false);
+  const [showConfirmarClave, setShowConfirmarClave] = useState(false);
+
   // Estados locales editables para información extendida
   const [datosPerfil, setDatosPerfil] = useState({
     nombre: selectedHuesped?.nombre || '',
@@ -51,25 +63,37 @@ const VistaPerfil = () => {
     paisOrigen: guestProfileExtras?.paisOrigen || 'Colombia',
     ciudad: guestProfileExtras?.ciudad || 'Bogotá',
     // Empresa / Facturación DIAN
-    esEmpresa: guestProfileExtras?.esEmpresa || false,
+    esEmpresa: guestProfileExtras?.esEmpresa ?? false,
     razonSocial: guestProfileExtras?.razonSocial || '',
     nit: guestProfileExtras?.nit || '',
     correoFacturacion: guestProfileExtras?.correoFacturacion || '',
+    telefonoEmpresa: guestProfileExtras?.telefonoEmpresa || '',
     direccionFiscal: guestProfileExtras?.direccionFiscal || '',
+    ciudadFiscal: guestProfileExtras?.ciudadFiscal || 'Bogotá D.C.',
+    responsabilidadTributaria: guestProfileExtras?.responsabilidadTributaria || 'IVA Común (Responsable de IVA)',
+    ciiu: guestProfileExtras?.ciiu || '',
     // Extranjería & Exención de IVA
     numeroPasaporte: guestProfileExtras?.numeroPasaporte || '',
     paisEmisorPasaporte: guestProfileExtras?.paisEmisorPasaporte || '',
-    solicitaExencionIva: guestProfileExtras?.solicitaExencionIva ?? true,
+    fechaVencimientoPasaporte: guestProfileExtras?.fechaVencimientoPasaporte || '',
+    tipoPermisoMigratorio: guestProfileExtras?.tipoPermisoMigratorio || 'Permiso de Turismo (PT - 19% Exento)',
     monedaPreferida: guestProfileExtras?.monedaPreferida || 'COP',
     idiomaPreferido: guestProfileExtras?.idiomaPreferido || 'es',
+    paisProcedenciaVuelo: guestProfileExtras?.paisProcedenciaVuelo || '',
+    fechaIngresoPais: guestProfileExtras?.fechaIngresoPais || '',
+    solicitaExencionIva: guestProfileExtras?.solicitaExencionIva ?? true,
     // Notificaciones de reserva
     notifWhatsapp: guestProfileExtras?.notifWhatsapp ?? true,
     notifCorreoCheckin: guestProfileExtras?.notifCorreoCheckin ?? true,
     notifNovedadesReserva: guestProfileExtras?.notifNovedadesReserva ?? true,
     notifPromociones: guestProfileExtras?.notifPromociones ?? false,
+    horarioContacto: guestProfileExtras?.horarioContacto || 'Cualquier hora (24/7)',
+    idiomaNotificaciones: guestProfileExtras?.idiomaNotificaciones || 'Español',
     // Seguridad
+    claveActual: '',
     nuevaClave: '',
-    confirmarClave: ''
+    confirmarClave: '',
+    metodoRecuperacion: guestProfileExtras?.metodoRecuperacion || 'Correo Electrónico Registrado'
   });
 
   const handleChange = (campo, valor) => {
@@ -367,82 +391,109 @@ const VistaPerfil = () => {
                ===================================================================== */}
             {tabActiva === 'personal' && (
               <form onSubmit={handleGuardarCambios}>
-                <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
-                    Información Personal Oficial
-                  </h2>
-                  <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-                    Datos requeridos por la legislación colombiana (MinCIT) para el registro de huéspedes en Apartamentos Facile.
-                  </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                      Información Personal Oficial
+                    </h2>
+                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                      Datos requeridos por la legislación colombiana (MinCIT) para el registro de huéspedes y tarjeta de alojamiento en Apartamentos Facile.
+                    </p>
+                  </div>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                    Registro Sire / MinCIT
+                  </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Nombre Completo Legal
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      NOMBRE COMPLETO LEGAL <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
-                    <input
-                      type="text"
-                      className="input-airbnb"
-                      value={datosPerfil.nombre}
-                      onChange={(e) => handleChange('nombre', e.target.value)}
-                      placeholder="Nombres y Apellidos"
-                      required
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.nombre}
+                        onChange={(e) => handleChange('nombre', e.target.value)}
+                        placeholder="Nombres y Apellidos"
+                        required
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <User size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Como figura en su documento de identidad.
+                    </span>
                   </div>
 
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Correo Electrónico Principal
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      CORREO ELECTRÓNICO PRINCIPAL <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
-                    <input
-                      type="email"
-                      className="input-airbnb"
-                      value={datosPerfil.correo}
-                      disabled
-                      style={{ backgroundColor: '#f8fafc', color: '#64748b', cursor: 'not-allowed' }}
-                      title="El correo principal de la cuenta no se puede modificar directamente"
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="email"
+                        className="input-airbnb"
+                        value={datosPerfil.correo}
+                        disabled
+                        style={{ backgroundColor: '#f8fafc', color: '#64748b', cursor: 'not-allowed', paddingRight: '2.5rem' }}
+                        title="El correo principal de la cuenta no se puede modificar directamente"
+                      />
+                      <Mail size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Donde recibirás códigos de cerradura digital y confirmación.
+                    </span>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Tipo Documento
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      TIPO DE DOCUMENTO <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
                     <select
                       className="input-airbnb"
                       value={datosPerfil.tipoDoc}
                       onChange={(e) => handleChange('tipoDoc', e.target.value)}
-                      style={{ padding: '0.65rem 0.5rem' }}
                     >
-                      <option value="CC">Cédula (CC)</option>
-                      <option value="CE">Cédula Ext. (CE)</option>
-                      <option value="PASAPORTE">Pasaporte</option>
-                      <option value="DNI">DNI Extranjero</option>
+                      <option value="CC">Cédula de Ciudadanía (CC)</option>
+                      <option value="CE">Cédula de Extranjería (CE)</option>
+                      <option value="PASAPORTE">Pasaporte Internacional</option>
+                      <option value="DNI">DNI / Documento Nacional Extranjero</option>
                     </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Obligatorio para la tarjeta de registro hotelero.
+                    </span>
                   </div>
 
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Número de Documento
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      NÚMERO DE DOCUMENTO <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
-                    <input
-                      type="text"
-                      className="input-airbnb"
-                      value={datosPerfil.documento}
-                      onChange={(e) => handleChange('documento', e.target.value)}
-                      placeholder="Ej: 1017283944"
-                      required
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.documento}
+                        onChange={(e) => handleChange('documento', e.target.value)}
+                        placeholder="Ej: 1017283944"
+                        required
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <FileText size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Sin puntos, espacios ni guiones.
+                    </span>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Indicativo
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      INDICATIVO DE PAÍS <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
                     <select
                       className="input-airbnb"
@@ -450,65 +501,96 @@ const VistaPerfil = () => {
                       onChange={(e) => handleChange('indicativo', e.target.value)}
                     >
                       <option value="+57">🇨🇴 +57 (Colombia)</option>
-                      <option value="+1">🇺🇸 +1 (USA/Canadá)</option>
+                      <option value="+1">🇺🇸 +1 (USA / Canadá)</option>
                       <option value="+34">🇪🇸 +34 (España)</option>
                       <option value="+52">🇲🇽 +52 (México)</option>
                       <option value="+54">🇦🇷 +54 (Argentina)</option>
                       <option value="+507">🇵🇦 +507 (Panamá)</option>
                       <option value="+55">🇧🇷 +55 (Brasil)</option>
+                      <option value="+56">🇨🇱 +56 (Chile)</option>
                     </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Para el envío de novedades vía WhatsApp.
+                    </span>
                   </div>
 
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Teléfono Móvil (WhatsApp)
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      TELÉFONO MÓVIL (WHATSAPP) <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
-                    <input
-                      type="tel"
-                      className="input-airbnb"
-                      value={datosPerfil.telefono}
-                      onChange={(e) => handleChange('telefono', e.target.value)}
-                      placeholder="Ej: 3154449876"
-                      required
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="tel"
+                        className="input-airbnb"
+                        value={datosPerfil.telefono}
+                        onChange={(e) => handleChange('telefono', e.target.value)}
+                        placeholder="Ej: 3154449876"
+                        required
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <Phone size={16} color="#059669" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Canal para entrega de clave digital del apartamento.
+                    </span>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      País de Residencia
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      PAÍS DE RESIDENCIA <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
-                    <input
-                      type="text"
-                      className="input-airbnb"
-                      value={datosPerfil.paisOrigen}
-                      onChange={(e) => handleChange('paisOrigen', e.target.value)}
-                      placeholder="Ej: Colombia, Estados Unidos, España..."
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.paisOrigen}
+                        onChange={(e) => handleChange('paisOrigen', e.target.value)}
+                        placeholder="Ej: Colombia, Estados Unidos, España..."
+                        required
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <Globe2 size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Los no residentes en Colombia tienen exención de IVA (19%).
+                    </span>
                   </div>
 
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Ciudad
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      CIUDAD DE ORIGEN / RESIDENCIA <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
-                    <input
-                      type="text"
-                      className="input-airbnb"
-                      value={datosPerfil.ciudad}
-                      onChange={(e) => handleChange('ciudad', e.target.value)}
-                      placeholder="Ej: Bogotá, Medellín, Miami..."
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.ciudad}
+                        onChange={(e) => handleChange('ciudad', e.target.value)}
+                        placeholder="Ej: Bogotá, Medellín, Miami..."
+                        required
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Ciudad actual de residencia.
+                    </span>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '1.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
+                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
+                    <span>Tus datos están protegidos bajo la Ley 1581 de 2012 (Habeas Data) y encriptación SSL de 256 bits.</span>
+                  </div>
                   <button
                     type="submit"
                     className="btn-airbnb-primary"
-                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' }}
+                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem' }}
                   >
-                    Guardar Información Personal
+                    <CheckCircle2 size={16} /> Guardar Información Personal
                   </button>
                 </div>
               </form>
@@ -519,20 +601,22 @@ const VistaPerfil = () => {
                ===================================================================== */}
             {tabActiva === 'empresas' && (
               <form onSubmit={handleGuardarCambios}>
-                <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#d91a2a', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    <Building2 size={14} /> Viajes Corporativos & Facturación
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                      Facturación Electrónica DIAN para Empresas
+                    </h2>
+                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                      Registro oficial de persona jurídica o natural con NIT para expedición de factura electrónica validada ante la DIAN.
+                    </p>
                   </div>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
-                    Facturación Electrónica DIAN para Empresas
-                  </h2>
-                  <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-                    Si viajas en representación de una empresa o requieres factura con NIT desglosado para deducción tributaria en Colombia.
-                  </p>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                    Validación DIAN / RUT
+                  </span>
                 </div>
 
                 {/* Switch de modo corporativo */}
-                <div style={{ background: '#f8fafc', padding: '1rem 1.2rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0f172a' }}>¿Facturar mis estadías a nombre de una Empresa?</div>
                     <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Emitiremos la factura electrónica oficial directamente al NIT de tu compañía.</div>
@@ -558,81 +642,196 @@ const VistaPerfil = () => {
                   </label>
                 </div>
 
-                {datosPerfil.esEmpresa && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-                      <div className="form-field">
-                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                          Razón Social de la Empresa
-                        </label>
-                        <input
-                          type="text"
-                          className="input-airbnb"
-                          value={datosPerfil.razonSocial}
-                          onChange={(e) => handleChange('razonSocial', e.target.value)}
-                          placeholder="Ej: Soluciones Tecnológicas SAS"
-                          required={datosPerfil.esEmpresa}
-                        />
-                      </div>
-
-                      <div className="form-field">
-                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                          NIT (con dígito de verificación)
-                        </label>
-                        <input
-                          type="text"
-                          className="input-airbnb"
-                          value={datosPerfil.nit}
-                          onChange={(e) => handleChange('nit', e.target.value)}
-                          placeholder="Ej: 901.456.789-1"
-                          required={datosPerfil.esEmpresa}
-                        />
-                      </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      RAZÓN SOCIAL DE LA EMPRESA <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.razonSocial}
+                        onChange={(e) => handleChange('razonSocial', e.target.value)}
+                        placeholder="Ej: Soluciones Tecnológicas SAS"
+                        required={datosPerfil.esEmpresa}
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <Building2 size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                     </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-                      <div className="form-field">
-                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                          Correo para Facturación Electrónica DIAN
-                        </label>
-                        <input
-                          type="email"
-                          className="input-airbnb"
-                          value={datosPerfil.correoFacturacion}
-                          onChange={(e) => handleChange('correoFacturacion', e.target.value)}
-                          placeholder="facturacion@tuempresa.com"
-                          required={datosPerfil.esEmpresa}
-                        />
-                      </div>
-
-                      <div className="form-field">
-                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                          Dirección Fiscal Registrada
-                        </label>
-                        <input
-                          type="text"
-                          className="input-airbnb"
-                          value={datosPerfil.direccionFiscal}
-                          onChange={(e) => handleChange('direccionFiscal', e.target.value)}
-                          placeholder="Ej: Cra 11 # 93-45, Bogotá"
-                          required={datosPerfil.esEmpresa}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '0.85rem 1rem', fontSize: '0.82rem', color: '#166534' }}>
-                      💼 <strong>Convenio Corporativo:</strong> Las reservas facturadas a empresas con más de 10 noches al mes tienen acceso preferencial a las Salas de Juntas del Centro de Negocios de Apartamentos Facile.
-                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Nombre legal completo registrado ante Cámara de Comercio.
+                    </span>
                   </div>
-                )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '1.2rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      NIT DE LA COMPAÑÍA <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.nit}
+                        onChange={(e) => handleChange('nit', e.target.value)}
+                        placeholder="Ej: 901.456.789-1"
+                        required={datosPerfil.esEmpresa}
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <Hash size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Incluye el dígito de verificación (Ej: 901.456.789-1).
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      CORREO PARA FACTURACIÓN ELECTRÓNICA DIAN <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="email"
+                        className="input-airbnb"
+                        value={datosPerfil.correoFacturacion}
+                        onChange={(e) => handleChange('correoFacturacion', e.target.value)}
+                        placeholder="facturacion@tuempresa.com"
+                        required={datosPerfil.esEmpresa}
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <Mail size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Buzón electrónico corporativo para envío del XML y PDF oficial.
+                    </span>
+                  </div>
+
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      TELÉFONO DE CONTACTO CORPORATIVO <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="tel"
+                        className="input-airbnb"
+                        value={datosPerfil.telefonoEmpresa}
+                        onChange={(e) => handleChange('telefonoEmpresa', e.target.value)}
+                        placeholder="Ej: +57 601 7458900"
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <Phone size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Línea directa del área contable o administrativa.
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      DIRECCIÓN FISCAL REGISTRADA <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.direccionFiscal}
+                        onChange={(e) => handleChange('direccionFiscal', e.target.value)}
+                        placeholder="Ej: Cra 11 # 93-45, Oficina 402"
+                        required={datosPerfil.esEmpresa}
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Dirección fiscal según constancia en el RUT corporativo.
+                    </span>
+                  </div>
+
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      CIUDAD / MUNICIPIO FISCAL <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.ciudadFiscal}
+                        onChange={(e) => handleChange('ciudadFiscal', e.target.value)}
+                        placeholder="Ej: Bogotá D.C."
+                        required={datosPerfil.esEmpresa}
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Municipio de domicilio fiscal de la compañía.
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      RESPONSABILIDAD TRIBUTARIA <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <select
+                      className="input-airbnb"
+                      value={datosPerfil.responsabilidadTributaria}
+                      onChange={(e) => handleChange('responsabilidadTributaria', e.target.value)}
+                    >
+                      <option value="IVA Común (Responsable de IVA)">IVA Común (Responsable de IVA)</option>
+                      <option value="No Responsable de IVA">No Responsable de IVA</option>
+                      <option value="Gran Contribuyente">Gran Contribuyente</option>
+                      <option value="Autorretenedor">Autorretenedor</option>
+                    </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Régimen tributario aplicable para retenciones en la fuente.
+                    </span>
+                  </div>
+
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      CÓDIGO DE ACTIVIDAD ECONÓMICA (CIIU)
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.ciiu}
+                        onChange={(e) => handleChange('ciiu', e.target.value)}
+                        placeholder="Ej: 6201 (Desarrollo de software)"
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <Briefcase size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Código de 4 dígitos según casilla 46 del RUT corporativo.
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '14px', padding: '0.9rem 1.15rem', fontSize: '0.82rem', color: '#166534', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Building2 size={20} color="#16a34a" style={{ flexShrink: 0 }} />
+                  <span>
+                    <strong>Convenio Corporativo Facile:</strong> Reservas acumuladas de más de 10 noches al mes obtienen 15% de descuento directo y acceso preferencial a Salas de Juntas del Centro de Negocios.
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
+                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
+                    <span>Emisión de factura electrónica validada en tiempo real ante la DIAN (Decreto 2242 / Ley 2010).</span>
+                  </div>
                   <button
                     type="submit"
                     className="btn-airbnb-primary"
-                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' }}
+                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem' }}
                   >
-                    Guardar Datos Corporativos
+                    <CheckCircle2 size={16} /> Guardar Datos de Facturación
                   </button>
                 </div>
               </form>
@@ -643,63 +842,118 @@ const VistaPerfil = () => {
                ===================================================================== */}
             {tabActiva === 'extranjeros' && (
               <form onSubmit={handleGuardarCambios}>
-                <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#d91a2a', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    <Globe2 size={14} /> International Guests & Exemption
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                      Huéspedes Extranjeros & Exención de IVA
+                    </h2>
+                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                      Registro migratorio internacional conforme a la plataforma SIRE y solicitud de exención del 19% de IVA (Decreto 297 de 2016).
+                    </p>
                   </div>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
-                    Huéspedes Extranjeros & Exención de IVA
-                  </h2>
-                  <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-                    Registro internacional conforme al sistema SIRE de Migración Colombia y beneficio de exención del 19% de IVA (Decreto 297 de 2016).
-                  </p>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                    Decreto 297/2016 / SIRE
+                  </span>
                 </div>
 
                 {/* Banner informativo de exención del 19% de IVA */}
-                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '1.1rem 1.3rem', marginBottom: '1.5rem', display: 'flex', gap: '0.8rem', alignItems: 'start' }}>
-                  <ShieldCheck size={22} color="#2563eb" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                  <ShieldCheck size={22} color="#2563eb" style={{ flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#1e40af', marginBottom: '0.2rem' }}>
-                      Exención de IVA (19%) para Turistas Extranjeros
+                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#1e40af', marginBottom: '0.15rem' }}>
+                      Exención Legal de IVA (19%) para Turistas Extranjeros
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#3b82f6', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: '0.8rem', color: '#3b82f6', lineHeight: 1.45 }}>
                       Los ciudadanos extranjeros no residentes en Colombia que ingresen al país con sello de permiso de turismo (PT) están legalmente exentos del 19% de IVA en servicios de alojamiento hotelero.
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Número de Pasaporte Internacional
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      NÚMERO DE PASAPORTE INTERNACIONAL <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
-                    <input
-                      type="text"
-                      className="input-airbnb"
-                      value={datosPerfil.numeroPasaporte}
-                      onChange={(e) => handleChange('numeroPasaporte', e.target.value)}
-                      placeholder="Ej: A12345678"
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.numeroPasaporte}
+                        onChange={(e) => handleChange('numeroPasaporte', e.target.value.toUpperCase())}
+                        placeholder="Ej: A12345678"
+                        style={{ paddingRight: '2.5rem', textTransform: 'uppercase' }}
+                      />
+                      <Globe2 size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Número alfanumérico tal como figura en la libreta del pasaporte.
+                    </span>
                   </div>
 
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      País Emisor del Pasaporte
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      PAÍS EMISOR DEL PASAPORTE <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
-                    <input
-                      type="text"
-                      className="input-airbnb"
-                      value={datosPerfil.paisEmisorPasaporte}
-                      onChange={(e) => handleChange('paisEmisorPasaporte', e.target.value)}
-                      placeholder="Ej: United States, España, México..."
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.paisEmisorPasaporte}
+                        onChange={(e) => handleChange('paisEmisorPasaporte', e.target.value)}
+                        placeholder="Ej: United States, España, México..."
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      País que expidió el documento de viaje internacional.
+                    </span>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Idioma Preferido de Comunicación
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      FECHA DE VENCIMIENTO DEL PASAPORTE <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="date"
+                        className="input-airbnb"
+                        value={datosPerfil.fechaVencimientoPasaporte}
+                        onChange={(e) => handleChange('fechaVencimientoPasaporte', e.target.value)}
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Debe tener vigencia mínima de 6 meses para ingreso hotelero.
+                    </span>
+                  </div>
+
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      TIPO DE PERMISO MIGRATORIO <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <select
+                      className="input-airbnb"
+                      value={datosPerfil.tipoPermisoMigratorio}
+                      onChange={(e) => handleChange('tipoPermisoMigratorio', e.target.value)}
+                    >
+                      <option value="Permiso de Turismo (PT - 19% Exento)">Permiso de Turismo (PT - 19% Exento)</option>
+                      <option value="Visa de Negocios (V)">Visa de Negocios (V)</option>
+                      <option value="Visa de Trabajo (M)">Visa de Trabajo (M)</option>
+                      <option value="Comunidad Andina (CAN)">Comunidad Andina (CAN)</option>
+                    </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Tipo de sello o estatus otorgado por Migración Colombia.
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      IDIOMA PREFERIDO DE COMUNICACIÓN <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
                     <select
                       className="input-airbnb"
@@ -707,13 +961,18 @@ const VistaPerfil = () => {
                       onChange={(e) => handleChange('idiomaPreferido', e.target.value)}
                     >
                       <option value="es">🇪🇸 Español (Colombia / Latam)</option>
-                      <option value="en">🇺🇸 English (US / International)</option>
+                      <option value="en">🇺🇸 English (US / Global)</option>
+                      <option value="fr">🇫🇷 Français (France)</option>
+                      <option value="pt">🇧🇷 Português (Brasil)</option>
                     </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Idioma para confirmaciones de reserva y atención del concierge.
+                    </span>
                   </div>
 
                   <div className="form-field">
-                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                      Moneda de Visualización
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      MONEDA DE VISUALIZACIÓN & COBRO <span style={{ color: '#d91a2a' }}>*</span>
                     </label>
                     <select
                       className="input-airbnb"
@@ -722,29 +981,77 @@ const VistaPerfil = () => {
                     >
                       <option value="COP">🇨🇴 Pesos Colombianos (COP $)</option>
                       <option value="USD">🇺🇸 Dólares Americanos (USD $)</option>
+                      <option value="EUR">🇪🇺 Euros (EUR €)</option>
                     </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Moneda preferida para cotizaciones y estados de cuenta.
+                    </span>
                   </div>
                 </div>
 
-                <label className="airbnb-checkbox-row" style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.6rem', alignItems: 'flex-start', cursor: 'pointer' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      PAÍS DE PROCEDENCIA DEL VUELO
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="input-airbnb"
+                        value={datosPerfil.paisProcedenciaVuelo}
+                        onChange={(e) => handleChange('paisProcedenciaVuelo', e.target.value)}
+                        placeholder="Ej: Estados Unidos, España, México..."
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <Globe2 size={16} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Último país antes de tu llegada a Bogotá El Dorado.
+                    </span>
+                  </div>
+
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      FECHA ESTIMADA DE ENTRADA AL PAÍS
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="date"
+                        className="input-airbnb"
+                        value={datosPerfil.fechaIngresoPais}
+                        onChange={(e) => handleChange('fechaIngresoPais', e.target.value)}
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Fecha del sello migratorio de ingreso a Colombia.
+                    </span>
+                  </div>
+                </div>
+
+                <label style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', cursor: 'pointer', marginBottom: '1.5rem' }}>
                   <input
                     type="checkbox"
                     checked={datosPerfil.solicitaExencionIva}
                     onChange={(e) => handleChange('solicitaExencionIva', e.target.checked)}
-                    style={{ marginTop: '3px', accentColor: '#d91a2a' }}
+                    style={{ marginTop: '3px', accentColor: '#d91a2a', flexShrink: 0 }}
                   />
-                  <span style={{ fontSize: '0.82rem', color: '#334155' }}>
-                    <strong>Confirmo que soy extranjero no residente</strong> y presentaré mi pasaporte con sello de entrada vigente al momento del check-in para acceder a la exención del 19% de IVA.
+                  <span style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.45 }}>
+                    <strong>Confirmo bajo gravedad de juramento que soy extranjero no residente</strong> y presentaré mi pasaporte con sello de turismo vigente al momento del check-in para acceder a la exención del 19% de IVA según el Decreto 297 de 2016.
                   </span>
                 </label>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '1.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
+                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
+                    <span>Reporte automático al Sistema de Información para el Reporte de Extranjeros (SIRE - Migración Colombia).</span>
+                  </div>
                   <button
                     type="submit"
                     className="btn-airbnb-primary"
-                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' }}
+                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem' }}
                   >
-                    Guardar Preferencias Internacionales
+                    <CheckCircle2 size={16} /> Guardar Preferencias Internacionales
                   </button>
                 </div>
               </form>
@@ -755,100 +1062,167 @@ const VistaPerfil = () => {
                ===================================================================== */}
             {tabActiva === 'notificaciones' && (
               <form onSubmit={handleGuardarCambios}>
-                <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#d91a2a', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    <Bell size={14} /> Alertas de Estadía
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                      Novedades de Reserva & Alertas de Estadía
+                    </h2>
+                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                      Elige cómo deseas recibir las confirmaciones de viaje, códigos de apertura de cerraduras digitales y avisos de estadía.
+                    </p>
                   </div>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
-                    Novedades de Reserva & Notificaciones
-                  </h2>
-                  <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-                    Elige cómo deseas recibir las confirmaciones de viaje, códigos de apertura de cerraduras digitales y avisos de estadía.
-                  </p>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                    Notificaciones 24/7
+                  </span>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                  
+                {/* Grilla 2x2 de Canales Ejecutivos */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
                   {/* WhatsApp Check-in */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>
-                        Notificaciones y Claves de Acceso por WhatsApp
+                  <div style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Phone size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>WhatsApp Concierge & Smart Key</div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#166534', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)' }}>Canal Instantáneo</span>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                        Recibe la confirmación inmediata y tu código de cerradura digital al móvil {datosPerfil.telefono || 'registrado'}.
-                      </div>
+                      <input
+                        type="checkbox"
+                        checked={datosPerfil.notifWhatsapp}
+                        onChange={(e) => handleChange('notifWhatsapp', e.target.checked)}
+                        style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={datosPerfil.notifWhatsapp}
-                      onChange={(e) => handleChange('notifWhatsapp', e.target.checked)}
-                      style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
-                    />
+                    <div style={{ fontSize: '0.76rem', color: '#64748b', lineHeight: 1.4 }}>
+                      Envío automático del código PIN de la cerradura digital 2 horas antes de tu check-in (3:00 PM) al móvil registrado.
+                    </div>
                   </div>
 
-                  {/* Correo Check-in / Check-out */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>
-                        Recordatorios de Check-in (3:00 PM) y Check-out (11:00 AM)
+                  {/* Correo Check-in / Comprobantes */}
+                  <div style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Mail size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Comprobantes Oficiales por Email</div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#1e40af', background: '#dbeafe', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)' }}>Documento Legal</span>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                        Te avisaremos con anticipación con instrucciones de llegada, conexión Wi-Fi y salida para que tu experiencia sea fluida.
-                      </div>
+                      <input
+                        type="checkbox"
+                        checked={datosPerfil.notifCorreoCheckin}
+                        onChange={(e) => handleChange('notifCorreoCheckin', e.target.checked)}
+                        style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={datosPerfil.notifCorreoCheckin}
-                      onChange={(e) => handleChange('notifCorreoCheckin', e.target.checked)}
-                      style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
-                    />
+                    <div style={{ fontSize: '0.76rem', color: '#64748b', lineHeight: 1.4 }}>
+                      Envío de voucher oficial en PDF, factura proforma, ubicación con Waze/Maps y código QR de confirmación.
+                    </div>
                   </div>
 
-                  {/* Novedades y Cambios en Reservas */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>
-                        Novedades y Actualizaciones del Apartahotel
+                  {/* Recordatorios de Horarios */}
+                  <div style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Clock size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Horarios (3:00 PM / 11:00 AM)</div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#6d28d9', background: '#ede9fe', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)' }}>Puntualidad</span>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                        Avisos importantes sobre mantenimiento programado, disponibilidad de salas de juntas o servicios en El Chicó.
-                      </div>
+                      <input
+                        type="checkbox"
+                        checked={datosPerfil.notifNovedadesReserva}
+                        onChange={(e) => handleChange('notifNovedadesReserva', e.target.checked)}
+                        style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={datosPerfil.notifNovedadesReserva}
-                      onChange={(e) => handleChange('notifNovedadesReserva', e.target.checked)}
-                      style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
-                    />
+                    <div style={{ fontSize: '0.76rem', color: '#64748b', lineHeight: 1.4 }}>
+                      Instrucciones anticipadas de llegada, clave Wi-Fi 300 Mbps y protocolo ágil de salida sin filas ni esperas.
+                    </div>
                   </div>
 
-                  {/* Ofertas y Promociones */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>
-                        Descuentos Exclusivos para Próximas Estadías
+                  {/* Tarifas Exclusivas y Promociones */}
+                  <div style={{ background: '#f8fafc', padding: '1.15rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fee2e2', color: '#d91a2a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Sparkles size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Club de Lealtad & Tarifas VIP</div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#b91522', background: '#ffe4e6', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-pill)' }}>Beneficios Facile</span>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                        Tarifas especiales para huéspedes frecuentes en temporadas de vacaciones o viajes de negocios.
-                      </div>
+                      <input
+                        type="checkbox"
+                        checked={datosPerfil.notifPromociones}
+                        onChange={(e) => handleChange('notifPromociones', e.target.checked)}
+                        style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={datosPerfil.notifPromociones}
-                      onChange={(e) => handleChange('notifPromociones', e.target.checked)}
-                      style={{ width: '20px', height: '20px', accentColor: '#d91a2a', cursor: 'pointer' }}
-                    />
+                    <div style={{ fontSize: '0.76rem', color: '#64748b', lineHeight: 1.4 }}>
+                      Descuentos especiales de hasta el 20% en estancias medias y largas y tarifas preferenciales de fin de semana.
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '1.2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      HORARIO PREFERIDO PARA CONTACTO <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <select
+                      className="input-airbnb"
+                      value={datosPerfil.horarioContacto}
+                      onChange={(e) => handleChange('horarioContacto', e.target.value)}
+                    >
+                      <option value="Cualquier hora (24/7)">Cualquier hora (Servicio Concierge 24/7)</option>
+                      <option value="Solo horario diurno (8:00 AM - 8:00 PM)">Solo horario diurno (8:00 AM - 8:00 PM)</option>
+                      <option value="Solo emergencias de reserva">Solo emergencias o cambios de reserva</option>
+                    </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Respetamos tu descanso durante estadías de negocios y turismo.
+                    </span>
+                  </div>
+
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      IDIOMA DE LAS NOTIFICACIONES <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <select
+                      className="input-airbnb"
+                      value={datosPerfil.idiomaNotificaciones}
+                      onChange={(e) => handleChange('idiomaNotificaciones', e.target.value)}
+                    >
+                      <option value="Español">🇪🇸 Español (Latinoamérica)</option>
+                      <option value="English">🇺🇸 English (International)</option>
+                    </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Idioma para mensajes de texto, WhatsApp y plantillas de correo.
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
+                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
+                    <span>Puedes pausar o modificar estas alertas en cualquier momento sin afectar tus reservas confirmadas.</span>
+                  </div>
                   <button
                     type="submit"
                     className="btn-airbnb-primary"
-                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' }}
+                    style={{ width: 'auto', padding: '0.65rem 2rem', borderRadius: 'var(--radius-pill)', background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem' }}
                   >
-                    Guardar Preferencias de Notificación
+                    <CheckCircle2 size={16} /> Guardar Preferencias de Alertas
                   </button>
                 </div>
               </form>
@@ -858,97 +1232,177 @@ const VistaPerfil = () => {
                 5. INICIO DE SESIÓN Y SEGURIDAD
                ===================================================================== */}
             {tabActiva === 'seguridad' && (
-              <div>
-                <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#d91a2a', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    <Lock size={14} /> Acceso Seguro
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (datosPerfil.nuevaClave && datosPerfil.nuevaClave.length < 6) {
+                  setAlert({ type: 'error', message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+                  return;
+                }
+                if (datosPerfil.nuevaClave && datosPerfil.nuevaClave !== datosPerfil.confirmarClave) {
+                  setAlert({ type: 'error', message: 'Las contraseñas no coinciden.' });
+                  return;
+                }
+                handleGuardarCambios();
+                setAlert({ type: 'success', message: 'Credenciales de acceso actualizadas con éxito.' });
+                handleChange('claveActual', '');
+                handleChange('nuevaClave', '');
+                handleChange('confirmarClave', '');
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
+                      Seguridad de la Cuenta & Control de Acceso
+                    </h2>
+                    <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                      Administra tus credenciales de acceso seguro al portal, monitorea tus sesiones activas y actualiza tu clave.
+                    </p>
                   </div>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem' }}>
-                    Inicio de Sesión y Seguridad
-                  </h2>
-                  <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-                    Administra tus credenciales de acceso al portal y revisa tu sesión activa.
-                  </p>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.35rem 0.8rem', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                    Cifrado SHA-256 / SSL
+                  </span>
                 </div>
 
                 {/* Sesión Activa */}
-                <div style={{ background: '#f8fafc', padding: '1.2rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                <div style={{ background: '#f8fafc', padding: '1.15rem 1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '0.9rem', color: '#0f172a' }}>
                       <MapPin size={16} color="#059669" />
-                      <span>Sesión Activa en Portal Web</span>
+                      <span>Sesión Activa en Navegador Web Seguro</span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', background: '#ecfdf5', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-pill)' }}>
-                      ACTUAL
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#059669', background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-pill)' }}>
+                      ACTIVA AHORA
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
-                    Bogotá D.C., Colombia • Navegador web seguro con almacenamiento local cifrado.
+                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                    Bogotá D.C., Colombia • Almacenamiento local cifrado y token de sesión verificado para {datosPerfil.correo}.
                   </div>
                 </div>
 
-                {/* Formulario de actualización de contraseña */}
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  if (datosPerfil.nuevaClave && datosPerfil.nuevaClave !== datosPerfil.confirmarClave) {
-                    setAlert({ type: 'error', message: 'Las contraseñas no coinciden.' });
-                    return;
-                  }
-                  handleGuardarCambios();
-                  setAlert({ type: 'success', message: 'Contraseña actualizada con éxito.' });
-                  handleChange('nuevaClave', '');
-                  handleChange('confirmarClave', '');
-                }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '1rem' }}>
-                    Actualizar Contraseña de Acceso
-                  </h3>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
-                    <div className="form-field">
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                        Nueva Contraseña
-                      </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      CONTRASEÑA ACTUAL (OPCIONAL)
+                    </label>
+                    <div style={{ position: 'relative' }}>
                       <input
-                        type="password"
+                        type={showClaveActual ? "text" : "password"}
+                        className="input-airbnb"
+                        value={datosPerfil.claveActual}
+                        onChange={(e) => handleChange('claveActual', e.target.value)}
+                        placeholder="Ingresa tu clave actual"
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowClaveActual(!showClaveActual)}
+                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+                      >
+                        {showClaveActual ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Para validar tu identidad antes de efectuar cambios.
+                    </span>
+                  </div>
+
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      MÉTODO DE RECUPERACIÓN DE CUENTA <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <select
+                      className="input-airbnb"
+                      value={datosPerfil.metodoRecuperacion}
+                      onChange={(e) => handleChange('metodoRecuperacion', e.target.value)}
+                    >
+                      <option value="Correo Electrónico Registrado">Correo Electrónico Registrado ({datosPerfil.correo})</option>
+                      <option value="Mensaje SMS / WhatsApp">Mensaje WhatsApp ({datosPerfil.telefono || 'Teléfono'})</option>
+                    </select>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Canal de respaldo en caso de olvidar tu clave de acceso.
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      NUEVA CONTRASEÑA DE ACCESO <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showNuevaClave ? "text" : "password"}
                         className="input-airbnb"
                         value={datosPerfil.nuevaClave}
                         onChange={(e) => handleChange('nuevaClave', e.target.value)}
                         placeholder="Mínimo 6 caracteres"
+                        style={{ paddingRight: '2.5rem' }}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowNuevaClave(!showNuevaClave)}
+                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+                      >
+                        {showNuevaClave ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
                     </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Mínimo 6 caracteres, combina letras y números.
+                    </span>
+                  </div>
 
-                    <div className="form-field">
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'block' }}>
-                        Confirmar Nueva Contraseña
-                      </label>
+                  <div className="form-field">
+                    <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      CONFIRMAR NUEVA CONTRASEÑA <span style={{ color: '#d91a2a' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
                       <input
-                        type="password"
+                        type={showConfirmarClave ? "text" : "password"}
                         className="input-airbnb"
                         value={datosPerfil.confirmarClave}
                         onChange={(e) => handleChange('confirmarClave', e.target.value)}
-                        placeholder="Repite la contraseña"
+                        placeholder="Repite la nueva contraseña"
+                        style={{ paddingRight: '2.5rem' }}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmarClave(!showConfirmarClave)}
+                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+                      >
+                        {showConfirmarClave ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
                     </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Debe coincidir exactamente con la nueva clave.
+                    </span>
                   </div>
+                </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '1.2rem' }}>
-                    <button
-                      type="submit"
-                      disabled={!datosPerfil.nuevaClave}
-                      className="btn-airbnb-primary"
-                      style={{
-                        width: 'auto',
-                        padding: '0.65rem 2rem',
-                        borderRadius: 'var(--radius-pill)',
-                        background: datosPerfil.nuevaClave ? 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' : '#cbd5e1',
-                        cursor: datosPerfil.nuevaClave ? 'pointer' : 'not-allowed'
-                      }}
-                    >
-                      Actualizar Contraseña
-                    </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.76rem', color: '#64748b', maxWidth: '440px', lineHeight: 1.4 }}>
+                    <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
+                    <span>Tu contraseña se almacena con hash criptográfico bcrypt y nunca es compartida con terceros.</span>
                   </div>
-                </form>
-              </div>
+                  <button
+                    type="submit"
+                    disabled={!datosPerfil.nuevaClave}
+                    className="btn-airbnb-primary"
+                    style={{
+                      width: 'auto',
+                      padding: '0.65rem 2rem',
+                      borderRadius: 'var(--radius-pill)',
+                      background: datosPerfil.nuevaClave ? 'linear-gradient(135deg, #d91a2a 0%, #b91522 100%)' : '#cbd5e1',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      fontWeight: 800,
+                      fontSize: '0.88rem',
+                      cursor: datosPerfil.nuevaClave ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    <CheckCircle2 size={16} /> Actualizar Contraseña y Seguridad
+                  </button>
+                </div>
+              </form>
             )}
 
           </div>
