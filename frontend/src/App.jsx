@@ -63,7 +63,7 @@ function AppLayout() {
       {activeTab === 'pms' && <VistaPms />}
 
       {/* WHATSAPP, FOOTER Y MODALES GLOBALES */}
-      {activeTab !== 'inicio' && <Footer />}
+      {activeTab !== 'pms' && <Footer />}
       {showLoginModal && <ModalLogin />}
       {showGuestAuthModal && <ModalGuestAuth />}
       {showCommunityCommitmentModal && <ModalCompromiso />}
