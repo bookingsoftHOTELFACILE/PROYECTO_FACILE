@@ -78,14 +78,14 @@ export default function Encabezados() {
       {/* 2. Barra de Navegación Principal Blanca */}
       <div style={{ backgroundColor: '#ffffff', boxShadow: 'var(--shadow-sm)' }}>
         <div className="facile-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '76px' }}>
-          {/* Logo Oficial Real Facile en Rojo Corporativo */}
+          {/* Logo Oficial Real Facile en Negro Grafito Alta Legibilidad */}
           <div 
             onClick={() => setActiveTab('inicio')}
             style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
             title="Apartamentos Facile — El Chicó, Bogotá"
           >
             <img 
-              src="/images/logo-facile-rojo.png" 
+              src="/images/logo-facile-negro.png" 
               alt="Apartamentos Facile" 
               style={{ height: '52px', width: 'auto', objectFit: 'contain' }}
             />
