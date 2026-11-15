@@ -168,7 +168,7 @@ export function useAppState() {
   const [empleadoAlert, setEmpleadoAlert] = useState(null);
 
   // ---- ESTADO DEL FORMULARIO DE RESERVA ----
-  const [reservaData, setReservaData] = useState({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
+  const [reservaData, setReservaData] = useState({ id_habitacion: '', fecha_entrada: '2026-11-14', fecha_salida: '2026-11-16', numero_personas: 1 });
   const [cotizacion, setCotizacion] = useState(null);
   const [calDate, setCalDate] = useState(new Date(2026, 7, 1));
 

@@ -40,8 +40,11 @@ const HuespedesPicker = ({
 
   const getSummaryText = () => {
     let parts = [];
-    if (totalHuespedes === 1) parts.push('1 huésped');
-    else parts.push(`${totalHuespedes} huéspedes`);
+    if (totalHuespedes === 1) {
+      parts.push(variant === 'pms' ? '1 huésped (Titular)' : '1 huésped');
+    } else {
+      parts.push(`${totalHuespedes} huéspedes`);
+    }
 
     if (bebes > 0) parts.push(`${bebes} bebé${bebes > 1 ? 's' : ''}`);
     if (mascotas > 0) parts.push(`${mascotas} mascota${mascotas > 1 ? 's' : ''}`);
@@ -73,15 +76,8 @@ const HuespedesPicker = ({
           }`}
           onClick={() => setIsOpen(!isOpen)}
         >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Users className="w-4 h-4 text-slate-400 shrink-0" />
-            <span className="truncate">{getSummaryText()}</span>
-          </div>
-          <ChevronDown
-            className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-              isOpen ? 'rotate-180 text-[#d91a2a]' : ''
-            }`}
-          />
+          <span className="truncate">{getSummaryText()}</span>
+          <Users className="w-4 h-4 text-slate-400 shrink-0" />
         </div>
       ) : (
         <div

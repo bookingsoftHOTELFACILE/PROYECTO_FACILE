@@ -3,7 +3,8 @@ import {
   UserPlus, ShieldCheck, Users, Calendar, ListOrdered, Trash2,
   Wrench, Check, Search, Tag, Mail, Shield, User, AlertTriangle,
   CheckCircle2, X, Clock, KeyRound, RotateCcw, Sparkles, Ban, CheckCircle, Home,
-  Building2, UserCheck, Download, Plus, Phone, Key, Building, CreditCard, ArrowRight
+  Building2, UserCheck, Download, Plus, Phone, Key, Building, CreditCard, ArrowRight,
+  CalendarCheck, Bed
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 import HuespedesPicker from '../components/HuespedesPicker.jsx';
@@ -1366,7 +1367,7 @@ const VistaPms = () => {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-2xl bg-red-50 text-[#d91a2a] flex items-center justify-center font-bold">
-                            <Building className="w-5 h-5" />
+                            <Bed className="w-5 h-5" />
                           </div>
                           <div>
                             <h3 className="text-sm sm:text-base font-extrabold text-slate-900 m-0 tracking-tight">
@@ -1451,16 +1452,23 @@ const VistaPms = () => {
                             <label className="block text-xs font-bold text-slate-700 m-0">
                               Fecha de Entrada (Check-In) <span className="text-[#d91a2a]">*</span>
                             </label>
-                            <span className="text-[11px] text-slate-400 font-medium">Hora estándar: 15:00</span>
+                            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 text-[11px] font-semibold text-slate-500">
+                              Hora estándar: 15:00
+                            </span>
                           </div>
-                          <input
-                            type="date"
-                            name="fecha_entrada"
-                            value={reservaData.fecha_entrada}
-                            onChange={handleReservaChange}
-                            required
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
-                          />
+                          <div className="relative">
+                            <input
+                              type="date"
+                              name="fecha_entrada"
+                              value={reservaData.fecha_entrada || '2026-11-14'}
+                              onChange={handleReservaChange}
+                              required
+                              className="pms-date-input w-full pl-4 pr-11 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                            />
+                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center text-slate-400">
+                              <Calendar className="w-4 h-4" />
+                            </div>
+                          </div>
                         </div>
 
                         {/* Fecha Salida */}
@@ -1469,16 +1477,23 @@ const VistaPms = () => {
                             <label className="block text-xs font-bold text-slate-700 m-0">
                               Fecha de Salida (Check-Out) <span className="text-[#d91a2a]">*</span>
                             </label>
-                            <span className="text-[11px] text-slate-400 font-medium">Hora límite: 11:00</span>
+                            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 text-[11px] font-semibold text-slate-500">
+                              Hora límite: 11:00
+                            </span>
                           </div>
-                          <input
-                            type="date"
-                            name="fecha_salida"
-                            value={reservaData.fecha_salida}
-                            onChange={handleReservaChange}
-                            required
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
-                          />
+                          <div className="relative">
+                            <input
+                              type="date"
+                              name="fecha_salida"
+                              value={reservaData.fecha_salida || '2026-11-16'}
+                              onChange={handleReservaChange}
+                              required
+                              className="pms-date-input w-full pl-4 pr-11 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                            />
+                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center text-emerald-600">
+                              <CalendarCheck className="w-4 h-4" />
+                            </div>
+                          </div>
                         </div>
                       </div>
 

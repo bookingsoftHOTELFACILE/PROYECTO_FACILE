@@ -2991,6 +2991,22 @@ body {
   white-space: nowrap !important;
 }
 
+/* Selector de Fechas PMS Walk-in con Iconos Personalizados (Exacto a Imagen 2) */
+.pms-date-input {
+  position: relative !important;
+  color-scheme: light !important;
+}
+
+.pms-date-input::-webkit-calendar-picker-indicator {
+  opacity: 0 !important;
+  cursor: pointer !important;
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 /* Botón PMS Buscar Huésped - Sólido Negro con Icono Blanco como la Maqueta */
 .btn-pms-search-dark {
   background-color: #0f172a !important;
