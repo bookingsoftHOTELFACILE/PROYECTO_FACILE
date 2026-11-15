@@ -2991,20 +2991,33 @@ body {
   white-space: nowrap !important;
 }
 
-/* Selector de Fechas PMS Walk-in con Iconos Personalizados (Exacto a Imagen 2) */
+/* Selector de Fechas PMS Walk-in con Iconos Personalizados (Exacto a Imagen 1) */
 .pms-date-input {
   position: relative !important;
   color-scheme: light !important;
+  font-family: var(--font-family-base) !important;
+  font-weight: 500 !important;
+  color: #334155 !important;
 }
 
-.pms-date-input::-webkit-calendar-picker-indicator {
+.pms-date-input::-webkit-calendar-picker-indicator,
+input[type="date"].pms-date-input::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
   opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: transparent !important;
   cursor: pointer !important;
-  position: absolute !important;
-  top: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+}
+
+.pms-date-input::-webkit-inner-spin-button,
+.pms-date-input::-webkit-clear-button {
+  display: none !important;
+  -webkit-appearance: none !important;
 }
 
 /* Botón PMS Buscar Huésped - Sólido Negro con Icono Blanco como la Maqueta */

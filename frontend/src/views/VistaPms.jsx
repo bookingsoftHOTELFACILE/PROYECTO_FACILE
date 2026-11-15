@@ -1453,21 +1453,45 @@ const VistaPms = () => {
                             <label className="block text-xs font-bold text-slate-700 m-0">
                               Fecha de Entrada (Check-In) <span className="text-[#d91a2a]">*</span>
                             </label>
-                            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 text-[11px] font-semibold text-slate-500">
+                            <span
+                              style={{
+                                backgroundColor: '#f1f5f9',
+                                color: '#64748b',
+                                fontSize: '11px',
+                                fontWeight: 500,
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                border: 'none'
+                              }}
+                            >
                               Hora estándar: 15:00
                             </span>
                           </div>
-                          <div className="relative">
+                          <div
+                            className="relative cursor-pointer"
+                            onClick={() => {
+                              const el = document.getElementById('pms-input-checkin');
+                              if (el && typeof el.showPicker === 'function') el.showPicker();
+                            }}
+                          >
                             <input
+                              id="pms-input-checkin"
                               type="date"
                               name="fecha_entrada"
                               value={reservaData.fecha_entrada || '2026-11-14'}
                               onChange={handleReservaChange}
+                              onClick={(e) => e.target.showPicker && e.target.showPicker()}
                               required
-                              className="pms-date-input w-full pl-4 pr-11 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                              className="pms-date-input w-full pl-4 pr-11 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm outline-none transition-all cursor-pointer focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10"
+                              style={{
+                                color: '#334155',
+                                fontWeight: 500,
+                                fontSize: '0.88rem',
+                                letterSpacing: 'normal'
+                              }}
                             />
                             <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center text-slate-400">
-                              <Calendar className="w-4 h-4" />
+                              <Calendar className="w-4 h-4 text-slate-400" />
                             </div>
                           </div>
                         </div>
@@ -1478,21 +1502,45 @@ const VistaPms = () => {
                             <label className="block text-xs font-bold text-slate-700 m-0">
                               Fecha de Salida (Check-Out) <span className="text-[#d91a2a]">*</span>
                             </label>
-                            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 text-[11px] font-semibold text-slate-500">
+                            <span
+                              style={{
+                                backgroundColor: '#f1f5f9',
+                                color: '#64748b',
+                                fontSize: '11px',
+                                fontWeight: 500,
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                border: 'none'
+                              }}
+                            >
                               Hora límite: 11:00
                             </span>
                           </div>
-                          <div className="relative">
+                          <div
+                            className="relative cursor-pointer"
+                            onClick={() => {
+                              const el = document.getElementById('pms-input-checkout');
+                              if (el && typeof el.showPicker === 'function') el.showPicker();
+                            }}
+                          >
                             <input
+                              id="pms-input-checkout"
                               type="date"
                               name="fecha_salida"
                               value={reservaData.fecha_salida || '2026-11-16'}
                               onChange={handleReservaChange}
+                              onClick={(e) => e.target.showPicker && e.target.showPicker()}
                               required
-                              className="pms-date-input w-full pl-4 pr-11 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                              className="pms-date-input w-full pl-4 pr-11 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm outline-none transition-all cursor-pointer focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10"
+                              style={{
+                                color: '#334155',
+                                fontWeight: 500,
+                                fontSize: '0.88rem',
+                                letterSpacing: 'normal'
+                              }}
                             />
                             <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center text-emerald-600">
-                              <CalendarCheck className="w-4 h-4" />
+                              <CalendarCheck className="w-4 h-4 text-emerald-600" />
                             </div>
                           </div>
                         </div>
