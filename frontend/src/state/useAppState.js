@@ -167,10 +167,32 @@ export function useAppState() {
   const [showCreateEmpleadoModal, setShowCreateEmpleadoModal] = useState(false);
   const [empleadoAlert, setEmpleadoAlert] = useState(null);
 
+  const getTodayLocal = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const getFutureLocal = (days = 2) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
   // ---- ESTADO DEL FORMULARIO DE RESERVA ----
-  const [reservaData, setReservaData] = useState({ id_habitacion: '', fecha_entrada: '2026-11-14', fecha_salida: '2026-11-16', numero_personas: 1 });
+  const [reservaData, setReservaData] = useState(() => ({
+    id_habitacion: '',
+    fecha_entrada: getTodayLocal(),
+    fecha_salida: getFutureLocal(2),
+    numero_personas: 1
+  }));
   const [cotizacion, setCotizacion] = useState(null);
-  const [calDate, setCalDate] = useState(new Date(2026, 7, 1));
+  const [calDate, setCalDate] = useState(() => new Date());
 
   // ---- ESTADOS UI ----
   const [loading, setLoading] = useState(false);
@@ -623,7 +645,37 @@ export function useAppState() {
     }
   };
 
-  const handleReservaChange = (e) => setReservaData({ ...reservaData, [e.target.name]: e.target.value });
+  const handleReservaChange = (e) => {
+    const { name, value } = e.target;
+    const todayStr = getTodayLocal();
+
+    if (name === 'fecha_entrada') {
+      if (value && value < todayStr) {
+        setReservaAlert({ type: 'error', message: 'No se puede reservar antes del día de hoy.' });
+        return;
+      }
+      setReservaAlert(null);
+      setReservaData(prev => {
+        const next = { ...prev, fecha_entrada: value };
+        if (prev.fecha_salida && prev.fecha_salida <= value) {
+          next.fecha_salida = '';
+        }
+        return next;
+      });
+      return;
+    }
+
+    if (name === 'fecha_salida') {
+      const minSalida = reservaData.fecha_entrada || todayStr;
+      if (value && value <= minSalida) {
+        setReservaAlert({ type: 'error', message: 'La fecha de salida debe ser posterior a la fecha de entrada.' });
+        return;
+      }
+      setReservaAlert(null);
+    }
+
+    setReservaData(prev => ({ ...prev, [name]: value }));
+  };
 
   // Registrar Huésped (PÚBLICO)
   const handleUserSubmit = async (e) => {
@@ -1038,6 +1090,12 @@ export function useAppState() {
         setReservaAlert({ type: 'error', message: 'Error de conexión al reservar espacio de coworking.' });
       }
       setLoading(false);
+      return;
+    }
+
+    const todayStr = getTodayLocal();
+    if (reservaData.fecha_entrada && reservaData.fecha_entrada < todayStr) {
+      setReservaAlert({ type: 'error', message: 'No se puede reservar antes del día de hoy.' });
       return;
     }
 

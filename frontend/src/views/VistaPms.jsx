@@ -1478,6 +1478,7 @@ const VistaPms = () => {
                               id="pms-input-checkin"
                               type="date"
                               name="fecha_entrada"
+                              min={new Date().toLocaleDateString('en-CA')}
                               value={reservaData.fecha_entrada || '2026-11-14'}
                               onChange={handleReservaChange}
                               onClick={(e) => e.target.showPicker && e.target.showPicker()}
@@ -1528,6 +1529,7 @@ const VistaPms = () => {
                               id="pms-input-checkout"
                               type="date"
                               name="fecha_salida"
+                              min={reservaData.fecha_entrada || new Date().toLocaleDateString('en-CA')}
                               value={reservaData.fecha_salida || '2026-11-16'}
                               onChange={handleReservaChange}
                               onClick={(e) => e.target.showPicker && e.target.showPicker()}
@@ -1550,6 +1552,11 @@ const VistaPms = () => {
 
                       {/* CALENDARIO DE OCUPACIÓN INTERACTIVO */}
                       {reservaData.id_habitacion && (() => {
+                        const todayObj = new Date();
+                        const todayStr = todayObj.toLocaleDateString('en-CA');
+                        const todayYear = todayObj.getFullYear();
+                        const todayMonth = todayObj.getMonth();
+
                         const year = calDate.getFullYear();
                         const month = calDate.getMonth();
                         const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -1564,15 +1571,16 @@ const VistaPms = () => {
                         for (let i = 0; i < startDay; i++) daysGrid.push(null);
                         for (let d = 1; d <= daysInMonth; d++) {
                           const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                          const isPast = dayStr < todayStr;
                           const isOccupied = habReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
                           const isSelectedIn = reservaData.fecha_entrada === dayStr;
                           const isSelectedOut = reservaData.fecha_salida === dayStr;
                           const inRange = reservaData.fecha_entrada && reservaData.fecha_salida && dayStr >= reservaData.fecha_entrada && dayStr <= reservaData.fecha_salida;
-                          daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
+                          daysGrid.push({ d, dayStr, isPast, isOccupied, isSelectedIn, isSelectedOut, inRange });
                         }
 
                         const handleDayClick = (item) => {
-                          if (!item || item.isOccupied) return;
+                          if (!item || item.isOccupied || item.isPast) return;
                           if (!reservaData.fecha_entrada || (reservaData.fecha_entrada && reservaData.fecha_salida)) {
                             setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
                           } else if (reservaData.fecha_entrada && !reservaData.fecha_salida) {
@@ -1589,13 +1597,20 @@ const VistaPms = () => {
                           }
                         };
 
+                        const isPrevMonthDisabled = year < todayYear || (year === todayYear && month <= todayMonth);
+
                         return (
                           <div className="bg-slate-50/50 rounded-2xl border border-slate-200/90 p-4 mt-2">
                             <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
                               <button
                                 type="button"
+                                disabled={isPrevMonthDisabled}
                                 onClick={() => setCalDate(new Date(year, month - 1, 1))}
-                                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                                className={`px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold transition-colors ${
+                                  isPrevMonthDisabled
+                                    ? 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 cursor-pointer'
+                                }`}
                               >
                                 ◀ Mes Ant.
                               </button>
@@ -1628,6 +1643,12 @@ const VistaPms = () => {
                                 </span>
                                 <span>Tu Selección</span>
                               </div>
+                              <div className="flex items-center gap-1.5 text-slate-400">
+                                <span className="w-3.5 h-3.5 rounded bg-slate-100 border border-slate-200 text-slate-300 flex items-center justify-center text-[9px] font-black opacity-60">
+                                  —
+                                </span>
+                                <span>Pasado</span>
+                              </div>
                             </div>
 
                             <div className="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 uppercase mb-1">
@@ -1644,6 +1665,18 @@ const VistaPms = () => {
                                       key={item.dayStr}
                                       title={`Fecha ${item.dayStr} ocupada`}
                                       className="h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold line-through flex items-center justify-center cursor-not-allowed select-none"
+                                    >
+                                      {item.d}
+                                    </div>
+                                  );
+                                }
+
+                                if (item.isPast) {
+                                  return (
+                                    <div
+                                      key={item.dayStr}
+                                      title={`Fecha pasada (${item.dayStr}) no permitida`}
+                                      className="h-9 rounded-lg bg-slate-100/50 border border-slate-200/50 text-slate-300 text-xs font-medium flex items-center justify-center cursor-not-allowed select-none opacity-50"
                                     >
                                       {item.d}
                                     </div>
@@ -2611,7 +2644,7 @@ const VistaPms = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
                     <div className="form-field">
                       <label>Fecha</label>
-                      <input type="date" style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
+                      <input type="date" min={new Date().toLocaleDateString('en-CA')} style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
                         value={reservaNegocioForm.fecha}
                         onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, fecha: e.target.value })} required />
                     </div>

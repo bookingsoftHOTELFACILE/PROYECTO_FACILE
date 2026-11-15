@@ -411,6 +411,11 @@ const VistaReservar = () => {
                   <>
                     {/* CALENDARIO DE OCUPACIÓN */}
                     {reservaData.id_habitacion && (() => {
+                      const todayObj = new Date();
+                      const todayStr = todayObj.toLocaleDateString('en-CA');
+                      const todayYear = todayObj.getFullYear();
+                      const todayMonth = todayObj.getMonth();
+
                       const year = calDate.getFullYear();
                       const month = calDate.getMonth();
                       const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -425,15 +430,16 @@ const VistaReservar = () => {
                       for (let i = 0; i < startDay; i++) daysGrid.push(null);
                       for (let d = 1; d <= daysInMonth; d++) {
                         const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const isPast = dayStr < todayStr;
                         const isOccupied = habReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
                         const isSelectedIn = reservaData.fecha_entrada === dayStr;
                         const isSelectedOut = reservaData.fecha_salida === dayStr;
                         const inRange = reservaData.fecha_entrada && reservaData.fecha_salida && dayStr >= reservaData.fecha_entrada && dayStr <= reservaData.fecha_salida;
-                        daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
+                        daysGrid.push({ d, dayStr, isPast, isOccupied, isSelectedIn, isSelectedOut, inRange });
                       }
 
                       const handleDayClick = (item) => {
-                        if (!item || item.isOccupied) return;
+                        if (!item || item.isOccupied || item.isPast) return;
                         if (!reservaData.fecha_entrada || (reservaData.fecha_entrada && reservaData.fecha_salida)) {
                           setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
                         } else if (reservaData.fecha_entrada && !reservaData.fecha_salida) {
@@ -450,6 +456,8 @@ const VistaReservar = () => {
                         }
                       };
 
+                      const isPrevMonthDisabled = year < todayYear || (year === todayYear && month <= todayMonth);
+
                       return (
                         <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '14px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: '1.2rem' }}>
                           
@@ -457,9 +465,10 @@ const VistaReservar = () => {
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.84rem', fontWeight: 700, color: '#0f172a', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
                             <button 
                               type="button" 
+                              disabled={isPrevMonthDisabled}
                               onClick={() => setCalDate(new Date(year, month - 1, 1))}
                               title="Mes Anterior"
-                              style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', cursor: 'pointer', fontSize: '0.75rem', padding: '5px 9px', borderRadius: '8px', fontWeight: 700, transition: 'all 0.15s ease' }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '4px', background: isPrevMonthDisabled ? '#f1f5f9' : '#ffffff', border: '1px solid #cbd5e1', color: isPrevMonthDisabled ? '#94a3b8' : '#334155', cursor: isPrevMonthDisabled ? 'not-allowed' : 'pointer', fontSize: '0.75rem', padding: '5px 9px', borderRadius: '8px', fontWeight: 700, opacity: isPrevMonthDisabled ? 0.5 : 1, transition: 'all 0.15s ease' }}
                             >
                               <span>◀ Mes Ant.</span>
                             </button>
@@ -537,6 +546,33 @@ const VistaReservar = () => {
                                 );
                               }
 
+                              // 1.1 DÍA EN EL PASADO (No permitido reservar antes de hoy)
+                              if (item.isPast) {
+                                return (
+                                  <div
+                                    key={item.dayStr}
+                                    title={`Fecha pasada (${item.dayStr}) no permitida`}
+                                    style={{
+                                      height: '36px',
+                                      borderRadius: '8px',
+                                      backgroundColor: '#f8fafc',
+                                      border: '1px solid #f1f5f9',
+                                      color: '#cbd5e1',
+                                      fontSize: '0.82rem',
+                                      fontWeight: 500,
+                                      cursor: 'not-allowed',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      userSelect: 'none',
+                                      opacity: 0.5
+                                    }}
+                                  >
+                                    {item.d}
+                                  </div>
+                                );
+                              }
+
                               // 2. DÍA EN SELECCIÓN (Entrada, Salida o en Rango)
                               const esExtremo = item.isSelectedIn || item.isSelectedOut;
                               if (esExtremo || item.inRange) {
@@ -605,13 +641,13 @@ const VistaReservar = () => {
                       <div className="form-field">
                         <label>Check-In</label>
                         <div className="field-input-wrap">
-                          <input type="date" name="fecha_entrada" value={reservaData.fecha_entrada} onChange={handleReservaChange} required/>
+                          <input type="date" name="fecha_entrada" min={new Date().toLocaleDateString('en-CA')} value={reservaData.fecha_entrada} onChange={handleReservaChange} required/>
                         </div>
                       </div>
                       <div className="form-field">
                         <label>Check-Out</label>
                         <div className="field-input-wrap">
-                          <input type="date" name="fecha_salida" value={reservaData.fecha_salida} onChange={handleReservaChange} required/>
+                          <input type="date" name="fecha_salida" min={reservaData.fecha_entrada || new Date().toLocaleDateString('en-CA')} value={reservaData.fecha_salida} onChange={handleReservaChange} required/>
                         </div>
                       </div>
                       <div className="form-field">

@@ -41,7 +41,7 @@ const HuespedesPicker = ({
   const getSummaryText = () => {
     let parts = [];
     if (totalHuespedes === 1) {
-      parts.push(variant === 'pms' ? '1 huésped (Titular)' : '1 huésped');
+      parts.push('1 huésped');
     } else {
       parts.push(`${totalHuespedes} huéspedes`);
     }

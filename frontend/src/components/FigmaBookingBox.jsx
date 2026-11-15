@@ -16,6 +16,11 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
     (r.estado === 'Confirmada' || r.estado === 'Check-In' || r.estado === 'Ocupada')
   );
 
+  const todayObj = new Date();
+  const todayStr = todayObj.toLocaleDateString('en-CA');
+  const todayYear = todayObj.getFullYear();
+  const todayMonth = todayObj.getMonth();
+
   const year = calDate.getFullYear();
   const month = calDate.getMonth();
   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -29,15 +34,16 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
   for (let i = 0; i < startDay; i++) daysGrid.push(null);
   for (let d = 1; d <= daysInMonth; d++) {
     const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const isPast = dayStr < todayStr;
     const isOccupied = catReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
     const isSelectedIn = fechaEntrada === dayStr;
     const isSelectedOut = fechaSalida === dayStr;
     const inRange = fechaEntrada && fechaSalida && dayStr >= fechaEntrada && dayStr <= fechaSalida;
-    daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
+    daysGrid.push({ d, dayStr, isPast, isOccupied, isSelectedIn, isSelectedOut, inRange });
   }
 
   const handleDayClick = (item) => {
-    if (!item || item.isOccupied) return;
+    if (!item || item.isOccupied || item.isPast) return;
     if (!fechaEntrada || (fechaEntrada && fechaSalida)) {
       setFechaEntrada(item.dayStr);
       setFechaSalida('');
@@ -56,6 +62,8 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
     }
   };
 
+  const isPrevMonthDisabled = year < todayYear || (year === todayYear && month <= todayMonth);
+
   return (
     <>
       <div className="figma-dates-box">
@@ -65,8 +73,14 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
             <input
               type="date"
               className="figma-date-input"
+              min={todayStr}
               value={fechaEntrada}
-              onChange={e => setFechaEntrada(e.target.value)}
+              onChange={e => {
+                const val = e.target.value;
+                if (val && val < todayStr) return;
+                setFechaEntrada(val);
+                if (fechaSalida && fechaSalida <= val) setFechaSalida('');
+              }}
             />
           </div>
           <div className="figma-date-field">
@@ -74,8 +88,13 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
             <input
               type="date"
               className="figma-date-input"
+              min={fechaEntrada || todayStr}
               value={fechaSalida}
-              onChange={e => setFechaSalida(e.target.value)}
+              onChange={e => {
+                const val = e.target.value;
+                if (val && val <= (fechaEntrada || todayStr)) return;
+                setFechaSalida(val);
+              }}
             />
           </div>
         </div>
@@ -92,7 +111,22 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
           <button
             type="button"
-            style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '4px 8px', fontSize: '0.74rem', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, color: '#334155', transition: 'all 0.15s ease' }}
+            disabled={isPrevMonthDisabled}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '4px 8px',
+              fontSize: '0.74rem',
+              background: isPrevMonthDisabled ? '#f1f5f9' : '#ffffff',
+              border: '1px solid #cbd5e1',
+              borderRadius: '6px',
+              cursor: isPrevMonthDisabled ? 'not-allowed' : 'pointer',
+              fontWeight: 700,
+              color: isPrevMonthDisabled ? '#94a3b8' : '#334155',
+              opacity: isPrevMonthDisabled ? 0.5 : 1,
+              transition: 'all 0.15s ease'
+            }}
             onClick={() => setCalDate(new Date(year, month - 1, 1))}
           >
             ◀ Mes Ant.
@@ -161,6 +195,33 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     userSelect: 'none'
+                  }}
+                >
+                  {item.d}
+                </div>
+              );
+            }
+
+            // 1.1 DÍA EN EL PASADO (No permitido reservar antes de hoy)
+            if (item.isPast) {
+              return (
+                <div
+                  key={item.dayStr}
+                  title={`Día ${item.d} pasado (No disponible)`}
+                  style={{
+                    height: '32px',
+                    borderRadius: '6px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #f1f5f9',
+                    color: '#cbd5e1',
+                    fontSize: '0.78rem',
+                    fontWeight: 500,
+                    cursor: 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    userSelect: 'none',
+                    opacity: 0.5
                   }}
                 >
                   {item.d}
