@@ -2443,8 +2443,10 @@ const VistaPms = () => {
           {/* 4. SUB-PESTAÑA 4: GESTIÓN DE PLANTAS (AMAS DE LLAVES & MANTENIMIENTO) */}
           {(pmsSubTab === 'planta' || pmsSubTab === 'todos') && (
             <ModuloMantenimientoAseoPMS
+              habitaciones={habitaciones}
+              usuarioSesion={usuarioSesion}
+              onCambiarEstado={(id, est, det) => handleCambiarEstadoHabitacion(id, est, det)}
               onReportarNovedad={(apto) => handleReportarDano(apto)}
-              onCambiarEstado={(id, est) => handleCambiarEstadoHabitacion(id, est === 'DISPONIBLE' ? 'Disponible' : est === 'LIMPIEZA' ? 'En limpieza' : 'Mantenimiento')}
             />
           )}
 

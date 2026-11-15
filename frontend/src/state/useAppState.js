@@ -1356,12 +1356,31 @@ export function useAppState() {
     setLoading(false);
   };
 
-  // Cambiar Estado Habitación
+  // Cambiar Estado Habitación (Estándar OPERA PMS - Amas de Llaves y Mantenimiento)
   const handleCambiarEstadoHabitacion = async (id_habitacion, nuevoEstado, detalleMantenimiento = null) => {
     setLoading(true);
+
+    // Actualización optimista local reactiva en la flota de habitaciones
+    setHabitaciones(prev => (prev || []).map(h => {
+      if (h.id_habitacion === id_habitacion || String(h.id_habitacion) === String(id_habitacion)) {
+        const auditor = `${usuarioSesion?.nombre || 'Empleado'} (${usuarioSesion?.rol || 'Operativo'})`;
+        return {
+          ...h,
+          estado: nuevoEstado,
+          detalle_mantenimiento: detalleMantenimiento !== null ? detalleMantenimiento : (nuevoEstado === 'Disponible' ? '' : h.detalle_mantenimiento),
+          modificado_por: auditor
+        };
+      }
+      return h;
+    }));
+
     if (backendActivo) {
       try {
-        const res = await apiFetch(`/api/habitaciones/${id_habitacion}/estado`, {method: 'PATCH', token: authToken, body: { estado: nuevoEstado, detalle_mantenimiento: detalleMantenimiento }});
+        const res = await apiFetch(`/api/habitaciones/${id_habitacion}/estado`, {
+          method: 'PATCH', 
+          token: authToken, 
+          body: { estado: nuevoEstado, detalle_mantenimiento: detalleMantenimiento }
+        });
         const data = res.data;
         if (res.ok) {
           setAlert({ type: 'success', message: data.message });
@@ -1372,6 +1391,8 @@ export function useAppState() {
       } catch {
         setAlert({ type: 'error', message: 'Error de conexión con el servidor.' });
       }
+    } else {
+      setAlert({ type: 'success', message: `Apartamento actualizado a estado '${nuevoEstado}'.` });
     }
     setLoading(false);
   };
