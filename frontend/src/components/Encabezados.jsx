@@ -45,7 +45,10 @@ export default function Encabezados() {
               <div style={{ lineHeight: 1.15 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontWeight: 900, color: '#ffffff', fontSize: '1rem', letterSpacing: '-0.3px' }}>FACILE</span>
-                  <span style={{ color: '#f87171', fontWeight: 800, fontSize: '0.78rem' }}>PMS V4.8</span>
+                  <span style={{ color: '#f87171', fontWeight: 800, fontSize: '0.78rem' }}>
+                    PMS V4.8
+                    <span className="sr-only">PMS HOTELERO</span>
+                  </span>
                 </div>
                 <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, display: 'block', marginTop: '2px' }}>
                   Apartamentos & Suites de Lujo
@@ -92,8 +95,10 @@ export default function Encabezados() {
               onClick={handleLogout}
               style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: '#1e293b', border: '1px solid #334155', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
               title="Cerrar Sesión"
+              aria-label="Salir del sistema"
             >
               <LogOut size={14} />
+              <span className="sr-only">Salir</span>
             </button>
           </div>
 
@@ -259,7 +264,8 @@ export default function Encabezados() {
                   alignItems: 'center',
                   gap: '6px'
                 }}
-                title="Iniciar Sesión o Registrarse"
+                title="Inicia sesión o regístrate como Huésped"
+                aria-label="Inicia sesión o regístrate como Huésped"
               >
                 <User size={15} />
                 <span>Ingresar</span>

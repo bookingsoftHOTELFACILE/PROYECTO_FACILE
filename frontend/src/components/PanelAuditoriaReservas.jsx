@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CalendarCheck, 
   Search, 
@@ -19,8 +19,27 @@ import {
   ArrowRight
 } from 'lucide-react';
 
+const normalizarReserva = (r) => ({
+  id: r.id_reserva || r.id,
+  id_reserva: r.id_reserva || r.id,
+  huesped: r.huesped_nombre || r.huesped || 'Huésped',
+  doc: r.huesped_documento || r.doc || '',
+  apartamento: r.habitacion_numero ? `Apto ${r.habitacion_numero}` : (r.apartamento || 'Apto'),
+  checkIn: r.fecha_entrada || r.checkIn,
+  checkOut: r.fecha_salida || r.checkOut,
+  estado: r.estado || 'Confirmada',
+  origen: r.creado_por || r.origen || 'Sistema',
+  tipoOrigen: (r.creado_por || r.origen || '').toLowerCase().includes('recep') ? 'recepcion' : (r.creado_por || r.origen || '').toLowerCase().includes('admin') ? 'admin' : 'sistema',
+  checkin_at: r.checkin_at || null,
+  checkout_at: r.checkout_at || null,
+  avatarBg: r.avatarBg || '#fdf2f8',
+  avatarText: r.avatarText || '#be185d',
+  avatarBorder: r.avatarBorder || '#fbcfe8'
+});
+
 export default function PanelAuditoriaReservas({ 
   reservas = [], 
+  reservaAlert,
   onNuevaReserva, 
   onCheckIn, 
   onCheckOut,
@@ -33,7 +52,7 @@ export default function PanelAuditoriaReservas({
 
   // Lista base con los registros idénticos a SCREEN_1 / SCREEN_2 / Imagen 2
   const [listaReservas, setListaReservas] = useState(
-    reservas.length > 0 ? reservas : [
+    reservas.length > 0 ? reservas.map(normalizarReserva) : [
       {
         id: 'res-01',
         huesped: 'John Doe',
@@ -149,6 +168,12 @@ export default function PanelAuditoriaReservas({
     ]
   );
 
+  useEffect(() => {
+    if (reservas && reservas.length > 0) {
+      setListaReservas(reservas.map(normalizarReserva));
+    }
+  }, [reservas]);
+
   const handleCheckInInterno = (id) => {
     if (onCheckIn) {
       onCheckIn(id);
@@ -199,6 +224,24 @@ export default function PanelAuditoriaReservas({
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-sans mb-8">
+      {reservaAlert && (
+        <div style={{
+          padding: '12px 18px',
+          borderRadius: '12px',
+          fontSize: '13px',
+          fontWeight: 700,
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          backgroundColor: reservaAlert.type === 'success' ? '#f0fdf4' : reservaAlert.type === 'info' ? '#eff6ff' : '#fef2f2',
+          color: reservaAlert.type === 'success' ? '#166534' : reservaAlert.type === 'info' ? '#1e40af' : '#991b1b',
+          border: `1px solid ${reservaAlert.type === 'success' ? '#bbf7d0' : reservaAlert.type === 'info' ? '#bfdbfe' : '#fecaca'}`
+        }}>
+          <span>{reservaAlert.type === 'success' ? '✓' : '⚠️'}</span>
+          <span>{reservaAlert.message}</span>
+        </div>
+      )}
       
       {/* 1. KPIS SUPERIORES OPERATIVOS (IDÉNTICO A IMAGEN 2) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
@@ -648,6 +691,16 @@ export default function PanelAuditoriaReservas({
                       <div style={{ fontSize: '11px', color: '#334155', fontWeight: 600 }}>
                         <div><span style={{ color: '#94a3b8', fontWeight: 500 }}>In:</span> {r.checkIn}</div>
                         <div style={{ marginTop: '2px' }}><span style={{ color: '#94a3b8', fontWeight: 500 }}>Out:</span> {r.checkOut}</div>
+                        {r.checkin_at && (
+                          <div style={{ marginTop: '3px', color: '#047857', fontWeight: 700, fontSize: '10px' }}>
+                            Entrada: {new Date(r.checkin_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
+                        {r.checkout_at && (
+                          <div style={{ marginTop: '2px', color: '#2563eb', fontWeight: 700, fontSize: '10px' }}>
+                            Salida: {new Date(r.checkout_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
                       </div>
                     </td>
 
@@ -799,6 +852,7 @@ export default function PanelAuditoriaReservas({
                             return (
                               <button
                                 type="button"
+                                id={`pms-checkout-${r.id_reserva || r.id}`}
                                 onClick={() => handleCheckOutInterno(r.id || r.id_reserva)}
                                 style={{
                                   display: 'inline-flex',
@@ -846,15 +900,15 @@ export default function PanelAuditoriaReservas({
                                   borderRadius: '6px',
                                   backgroundColor: '#f8fafc',
                                   border: '1px solid #e2e8f0',
-                                  color: '#64748b',
-                                  fontWeight: 600,
+                                  color: '#166534',
+                                  fontWeight: 700,
                                   fontSize: '11px',
                                   whiteSpace: 'nowrap'
                                 }}
                                 title="Estancia completada y liquidada"
                               >
                                 <Check size={12} strokeWidth={2.5} color="#059669" />
-                                <span>Liquidada</span>
+                                <span>✓ Estadía finalizada</span>
                               </span>
                             );
                           }
@@ -886,6 +940,7 @@ export default function PanelAuditoriaReservas({
                             <>
                               <button
                                 type="button"
+                                id={`pms-checkin-${r.id_reserva || r.id}`}
                                 onClick={() => handleCheckInInterno(r.id || r.id_reserva)}
                                 style={{
                                   display: 'inline-flex',

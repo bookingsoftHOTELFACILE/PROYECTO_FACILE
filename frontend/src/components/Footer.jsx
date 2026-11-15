@@ -141,6 +141,7 @@ export default function Footer() {
                     onClick={() => setShowLoginModal(true)}
                     style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.7rem', cursor: 'pointer', textDecoration: 'underline' }}
                     title="Acceso exclusivo al sistema interno PMS"
+                    aria-label="Acceso Personal Autorizado"
                   >
                     🔒 Acceso PMS
                   </button>

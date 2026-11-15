@@ -215,6 +215,46 @@ const ModalGuestAuth = () => {
                 </p>
               </div>
 
+              {/* SELECTOR DE PESTAÑAS: YA TENGO REGISTRO / CREAR CUENTA NUEVA */}
+              {guestAuthTab !== 'recuperar' && !selectedHuesped && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '1.1rem', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setGuestAuthTab('login'); setGuestSearchError(null); }}
+                    style={{
+                      padding: '7px 18px',
+                      borderRadius: '9999px',
+                      border: guestAuthTab === 'login' ? '2px solid #d91a2a' : '1px solid #cbd5e1',
+                      backgroundColor: guestAuthTab === 'login' ? '#fee2e2' : '#ffffff',
+                      color: guestAuthTab === 'login' ? '#991b1b' : '#475569',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    ya tengo registro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setGuestAuthTab('registro'); setGuestSearchError(null); }}
+                    style={{
+                      padding: '7px 18px',
+                      borderRadius: '9999px',
+                      border: guestAuthTab === 'registro' ? '2px solid #d91a2a' : '1px solid #cbd5e1',
+                      backgroundColor: guestAuthTab === 'registro' ? '#fee2e2' : '#ffffff',
+                      color: guestAuthTab === 'registro' ? '#991b1b' : '#475569',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    Crear cuenta nueva
+                  </button>
+                </div>
+              )}
+
               {/* Indicador de sesión activa con opción de cerrar sesión */}
               {selectedHuesped && (
                 <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '0.75rem 0.9rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -494,6 +534,7 @@ const ModalGuestAuth = () => {
                             <input
                               id="reg-nombre"
                               type="text"
+                              aria-label="Nombre(s)"
                               placeholder="Nombre(s)"
                               value={nombreLegal}
                               onChange={(e) => setNombreLegal(e.target.value)}
@@ -506,6 +547,7 @@ const ModalGuestAuth = () => {
                             <input
                               id="reg-apellido"
                               type="text"
+                              aria-label="Apellido(s)"
                               placeholder="Apellido(s)"
                               value={apellidoLegal}
                               onChange={(e) => setApellidoLegal(e.target.value)}
@@ -568,6 +610,7 @@ const ModalGuestAuth = () => {
                               id="reg-documento"
                               type="text"
                               name="documento"
+                              aria-label="Documento"
                               value={formData.documento}
                               onChange={handleUserChange}
                               placeholder={docTipo === 'PASAPORTE' ? 'Ej: A12345678' : 'Ej: 1017283944'}
@@ -658,6 +701,7 @@ const ModalGuestAuth = () => {
                               id="reg-telefono"
                               type="tel"
                               name="telefono"
+                              aria-label="Teléfono de contacto"
                               value={formData.telefono}
                               onChange={handleUserChange}
                               placeholder="Ej: 3154449876"
@@ -705,7 +749,7 @@ const ModalGuestAuth = () => {
                             style={{ marginTop: '2px', accentColor: '#d91a2a', flexShrink: 0 }}
                           />
                           <span>
-                            Acepto los <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('terminos')}>Términos</button>, la <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('privacidad')}>Privacidad</button> y autorizo el tratamiento de mis datos personales (Ley 1581 de 2012 / RNT Colombia).
+                            Autorizo expresamente el tratamiento de mis datos personales (Ley 1581 de 2012 / RNT Colombia) y acepto los <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('terminos')}>Términos</button> y la <button type="button" className="btn-link-legal" onClick={() => setModalLegalTipo('privacidad')}>Privacidad</button>.
                           </span>
                         </label>
                       </div>

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import {
   UserPlus, ShieldCheck, Mail, Phone, FileText, Briefcase,
   Users, AlertCircle, Calendar, Home, User, CheckCircle2,
@@ -6,6 +7,7 @@ import {
 import { useApp } from '../context/AppContext.jsx';
 
 const VistaReservar = () => {
+  const [submittingReserva, setSubmittingReserva] = useState(false);
   const {
     habitaciones, reservas, espaciosNegocio, reservaNegocioForm,
     setReservaNegocioForm, setActiveTab, formData, habeasData,
@@ -218,7 +220,18 @@ const VistaReservar = () => {
                 </div>
               )}
 
-              <form onSubmit={handleReservaSubmit}>
+              <form onSubmit={async (e) => {
+                if (loading || submittingReserva) {
+                  e.preventDefault();
+                  return;
+                }
+                setSubmittingReserva(true);
+                try {
+                  await handleReservaSubmit(e);
+                } finally {
+                  setTimeout(() => setSubmittingReserva(false), 2000);
+                }
+              }}>
                 <div className="form-field">
                   <label>Seleccionar Apartamento o Espacio de Coworking</label>
                   <div className="field-input-wrap">
@@ -782,8 +795,13 @@ const VistaReservar = () => {
                         <Lock size={16}/> Iniciar Sesión / Registrarme para Confirmar
                       </button>
                     ) : (
-                      <button type="submit" className="btn-submit-red" disabled={loading}>
-                        <CheckCircle2 size={16}/> {loading ? 'Confirmando...' : 'Confirmar Reserva'}
+                      <button 
+                        type="submit" 
+                        className="btn-submit-red" 
+                        aria-label="Confirmar Reserva"
+                        disabled={loading || submittingReserva}
+                      >
+                        <CheckCircle2 size={16}/> {loading || submittingReserva ? 'Confirmando...' : 'Confirmar Reserva'}
                       </button>
                     )}
                   </>

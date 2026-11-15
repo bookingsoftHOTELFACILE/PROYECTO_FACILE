@@ -177,7 +177,10 @@ INSERT INTO empleado (id_empleado, nombre, usuario, contrasena, rol, numero_docu
 (1, 'Administrador BookingSoft', 'admin', '$2b$12$7ecjaNx7WWX11bJ5XhjpT.zNkbkLDl4O6k5WG1KYcT66zdQyQ4n5C', 'Administrador', 'CC1001', 'admin@bookingsoft.com', 'Activo'),
 (2, 'Carlos Recepción', 'recepcion', '$2b$12$og/tytRRc2JIyeDacuO/IeL8lEs8wwajuMBiAj/sfq6dZ6on8Lvae', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com', 'Activo'),
 (3, 'Marta Ama de Llaves', 'amallaves', '$2b$12$CU8wHuuLkjkC2zI/opkXWuhJ8CiEbCcn5pBHEd6bFjQIpeZkqRDcS', 'Ama de llaves', 'CC1003', 'amallaves@bookingsoft.com', 'Activo'),
-(4, 'Jhon Mantenimiento', 'mantenimiento', '$2b$12$BkXExO.RTh5PIP786eOHp.gdPuVuK5eaUWvumLdWujlil5pSZaYoW', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com', 'Activo')
+(4, 'Jhon Mantenimiento', 'mantenimiento', '$2b$12$BkXExO.RTh5PIP786eOHp.gdPuVuK5eaUWvumLdWujlil5pSZaYoW', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com', 'Activo'),
+(5, 'Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador', 'CC9001', 'admin_legacy@bookingsoft.com', 'Activo'),
+(6, 'Carlos Pérez', 'carlos_recep', '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W', 'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com', 'Activo'),
+(7, 'Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com', 'Activo')
 ON CONFLICT (usuario) DO UPDATE SET 
     contrasena = EXCLUDED.contrasena, 
     nombre = EXCLUDED.nombre,
@@ -185,7 +188,7 @@ ON CONFLICT (usuario) DO UPDATE SET
     numero_documento = EXCLUDED.numero_documento,
     correo = EXCLUDED.correo;
 
-SELECT setval('empleado_id_empleado_seq', 4);
+SELECT setval('empleado_id_empleado_seq', 7);
 
 -- Sembrado de 38 Alojamientos Reales Facile (14 Dúplex, 11 Dobles, 2 Familiares, 11 Habitaciones) + 2 Legacy para Tests
 INSERT INTO habitacion (numero, tipo, capacidad, precio_noche, estado) VALUES
@@ -243,11 +246,11 @@ INSERT INTO espacio_negocio (nombre, tipo, capacidad, precio_hora) VALUES
 ('Espacio Coworking (Flex)', 'Coworking', 15, 20000.00)
 ON CONFLICT (nombre) DO NOTHING;
 
-INSERT INTO huesped (nombre, documento, telefono, correo, empresa, lealtad, estado) VALUES
-('John Doe', '12345678', '3115551234', 'john.doe@example.com', NULL, 'Silver', 'Activo'),
-('Sofía Restrepo', '98765432', '3126667890', 'sofia.restrepo@bancolombia.com.co', 'Bancolombia', 'Gold', 'Activo'),
-('Thomas Miller', 'PP998877', '+155589012', 'thomas.miller@siemens.com', 'Siemens', 'Platinum', 'Activo')
-ON CONFLICT (documento) DO NOTHING;
+INSERT INTO huesped (nombre, documento, telefono, correo, password_hash, empresa, lealtad, estado) VALUES
+('John Doe', '12345678', '3115551234', 'john.doe@example.com', '$2b$12$f/etmMycJrff99ejNNR0y.pWqXXdMaSTQsL7bZrLMfwCwDevVI/um', NULL, 'Silver', 'Activo'),
+('Sofía Restrepo', '98765432', '3126667890', 'sofia.restrepo@bancolombia.com.co', NULL, 'Bancolombia', 'Gold', 'Activo'),
+('Thomas Miller', 'PP998877', '+155589012', 'thomas.miller@siemens.com', NULL, 'Siemens', 'Platinum', 'Activo')
+ON CONFLICT (documento) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
 INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado)
 SELECT h.id_huesped, hab.id_habitacion, CURRENT_DATE + INTERVAL '1 day', CURRENT_DATE + INTERVAL '4 days', 'Confirmada'

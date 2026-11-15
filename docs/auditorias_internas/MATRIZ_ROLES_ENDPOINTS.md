@@ -8,7 +8,7 @@
              las dependencias FastAPI de cada ruta backend.
 
   Fuente de verdad: el árbol de rutas expuesto por FastAPI (`GET /openapi.json`), que en la
-  remediación (Fase C/D) arroja 27 operaciones. Toda fila de esta matriz debe corresponderse
+  remediación arroja 28 operaciones. Toda fila de esta matriz debe corresponderse
   con una operación real: no existen endpoints de alta/baja de habitaciones ni rutas "guest-*".
 -->
 
@@ -19,7 +19,7 @@
 
 ---
 
-## 🛡️ Matriz General de Permisos (27 endpoints)
+## 🛡️ Matriz General de Permisos (28 endpoints)
 
 | Método HTTP | Ruta / Endpoint | Descripción Funcional | Público | Administrador | Recepcionista 24h | Ama de Llaves | Mantenimiento |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -37,6 +37,7 @@
 | `POST` | `/api/user/login` | Login de huésped (sin token JWT) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `POST` | `/api/user/recuperar-password` | Solicitud de recuperación de clave | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `POST` | `/api/user/restablecer-password` | Restablecimiento de clave de huésped | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `POST` | `/api/user/auth-social` | Autenticación federada con Google | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `GET` | `/api/habitaciones` | Inventario completo de unidades | ❌ | ✅ | ✅ | ✅ | ✅ |
 | `GET` | `/api/habitaciones/publicas` | Catálogo mínimo para el portal | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `GET` | `/api/habitaciones/disponibilidad` | Disponibilidad por rango de fechas (RF-012) | ❌ | ✅ | ✅ | ❌ | ❌ |

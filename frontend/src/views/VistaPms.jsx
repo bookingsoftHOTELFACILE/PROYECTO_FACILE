@@ -368,6 +368,7 @@ const VistaPms = () => {
   return (
         <section className="facile-section" style={{ padding: '20px 0' }}>
           <div className="pms-container-bounded">
+          <h1 className="sr-only">Panel de Control Hotelero (PMS)</h1>
 
           {/* BARRA DE NAVEGACIÓN RÁPIDA DE SUB-PESTAÑAS PMS */}
           <div className="flex flex-wrap items-center gap-2.5 mb-6">
@@ -1995,12 +1996,12 @@ const VistaPms = () => {
                   <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-xs flex items-start gap-4">
                     <input
                       type="checkbox"
-                      id="checkin-directo"
+                      id="pms-walkin-checkin"
                       checked={walkinCheckinInmediato}
                       onChange={(e) => setWalkinCheckinInmediato(e.target.checked)}
                       className="w-5 h-5 rounded-md text-[#d91a2a] focus:ring-[#d91a2a] accent-[#d91a2a] mt-0.5 cursor-pointer shrink-0"
                     />
-                    <label htmlFor="checkin-directo" className="text-xs sm:text-sm text-slate-700 leading-relaxed cursor-pointer m-0">
+                    <label htmlFor="pms-walkin-checkin" className="text-xs sm:text-sm text-slate-700 leading-relaxed cursor-pointer m-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-xs">🔑</span>
                         <span className="font-extrabold text-slate-900">
@@ -2433,6 +2434,8 @@ const VistaPms = () => {
           {/* 3. SUB-PESTAÑA 3: RESERVAS ACTIVAS DE APARTAMENTOS (PANEL DE AUDITORÍA) */}
           {(pmsSubTab === 'reservas' || pmsSubTab === 'todos') && (
             <PanelAuditoriaReservas
+              reservas={reservas}
+              reservaAlert={reservaAlert}
               onNuevaReserva={() => setPmsSubTab('recepcion')}
               onCheckIn={(id) => handleCambiarEstadoReserva(id, 'Check-In')}
               onCheckOut={(id) => handleCambiarEstadoReserva(id, 'Completada')}

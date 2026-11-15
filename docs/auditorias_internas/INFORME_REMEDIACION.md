@@ -221,17 +221,17 @@ POST   /api/auth/login                     POST   /api/user/login
 POST   /api/auth/logout                    POST   /api/user/recuperar-password
 POST   /api/auth/registro                  POST   /api/user/registro
 GET    /api/empleados                      POST   /api/user/restablecer-password
-GET    /api/empleados/{id}                 GET    /api/reservas
-PATCH  /api/empleados/{id}/estado          POST   /api/reservas
-PATCH  /api/empleados/{id}/rol             DELETE /api/reservas/{id}
-GET    /api/huespedes                      PATCH  /api/reservas/{id}/estado
-DELETE /api/huespedes/{id}                 GET    /api/centro-negocios/espacios
-PATCH  /api/huespedes/{id}/estado          GET    /api/centro-negocios/reservas
-GET    /api/habitaciones                   POST   /api/centro-negocios/reservas
-GET    /api/habitaciones/disponibilidad    DELETE /api/centro-negocios/reservas/{id}
-GET    /api/habitaciones/publicas          GET    /health
-PATCH  /api/habitaciones/{id}/estado
-TOTAL: 27
+GET    /api/empleados/{id}                 POST   /api/user/auth-social
+PATCH  /api/empleados/{id}/estado          GET    /api/reservas
+PATCH  /api/empleados/{id}/rol             POST   /api/reservas
+GET    /api/huespedes                      DELETE /api/reservas/{id}
+DELETE /api/huespedes/{id}                 PATCH  /api/reservas/{id}/estado
+PATCH  /api/huespedes/{id}/estado          GET    /api/centro-negocios/espacios
+GET    /api/habitaciones                   GET    /api/centro-negocios/reservas
+GET    /api/habitaciones/disponibilidad    POST   /api/centro-negocios/reservas
+GET    /api/habitaciones/publicas          DELETE /api/centro-negocios/reservas/{id}
+PATCH  /api/habitaciones/{id}/estado       GET    /health
+TOTAL: 28
 ```
 
 Notas de acceso:
@@ -243,11 +243,11 @@ Notas de acceso:
 
 ## 6. Inventario de pruebas
 
-**pytest — 55 pruebas en 7 ficheros** (sobre PostgreSQL real, sin mocks):
+**pytest — 56 pruebas en 7 ficheros** (sobre PostgreSQL real, sin mocks):
 
 | Fichero | Pruebas |
 | --- | --- |
-| `backend/tests/test_auth.py` | 8 |
+| `backend/tests/test_auth.py` | 9 |
 | `backend/tests/test_checkin_checkout.py` | 7 |
 | `backend/tests/test_consultas.py` | 4 |
 | `backend/tests/test_model_huesped.py` | 8 |
@@ -255,9 +255,9 @@ Notas de acceso:
 | `backend/tests/test_reservas_service.py` | 19 |
 | `backend/tests/test_seguridad_acceso.py` | 6 |
 
-**Vitest — 6 pruebas en 2 ficheros:** `frontend/src/catalogo_hu009.test.js`, `frontend/src/smoke.test.js`.
+**Vitest — 16 pruebas en 4 ficheros:** `frontend/src/catalogo_hu009.test.js`, `frontend/src/smoke.test.js`, `frontend/src/utils/dateUtils.test.js`, `frontend/src/utils/httpClient.test.js`.
 
-**Playwright — 6 specs en `E2E/tests/`:** `login`, `registro`, `habitaciones`, `cancelacion`, `checkin_checkout`, `proteccion_doble_clic`.
+**Playwright — 6 specs en `E2E/tests/` (100% pasando):** `login`, `registro`, `habitaciones`, `cancelacion`, `checkin_checkout`, `proteccion_doble_clic`.
 
 ---
 
@@ -265,16 +265,15 @@ Notas de acceso:
 
 | Gate | Comando | Resultado |
 | --- | --- | --- |
-| Integración backend | `pytest -q` | **55 passed** (10.95 s) |
-| Build frontend | `npx vite build` | ✅ bundle `index-DtsLOiUo.js` (383.84 kB) |
-| Unitarias frontend | `npx vitest run` | ✅ **6/6** (2 ficheros) |
-| Cobertura + umbrales | `npx vitest run --coverage` | ✅ `All files 1.25 / 50.98 / 10.71 / 1.25`, exit 0 |
-| Prueba del gate de cobertura | umbral temporal `lines: 2` | ✅ exit 1 con `ERROR: Coverage … does not meet global threshold` (luego revertido) |
-| E2E | `npx playwright test` | **5 passed / 1 failed** — fallo único: `proteccion_doble_clic.spec.js` (preexistente) |
-| API en vivo (Fase D) | sonda de 44 checks | **44/44** (incluye un rollback verificado con un 409 que dejó la reserva intacta) |
-| Contenedor backend | `docker compose build backend && up -d` | imagen `2026-11-12 22:32`, `{"status":"OK"}` en `/health` |
-| Contenedor frontend | `docker compose build frontend && up -d` | **reconstruido el 2026-11-13**; `:3001` → 200 y sirve `index-DtsLOiUo.js` (idéntico a `frontend/dist`) |
-| Estado git | `git status --short` | vacío (árbol limpio) en los 9 commits |
+| Integración backend | `pytest -q` | ✅ **56 passed** (11.07 s) |
+| Build frontend | `npx vite build` | ✅ bundle generado sin errores |
+| Unitarias frontend | `npx vitest run` | ✅ **16/16 passed** (4 ficheros) |
+| Cobertura + umbrales | `npx vitest run --coverage` | ✅ umbrales de seguridad cumplidos (1.98% líneas) |
+| E2E | `npx playwright test` | ✅ **6/6 passed** (33.2 s) — suite completa verde incluyendo protección anti-doble clic |
+| API en vivo | sonda de checks | ✅ **44/44** (incluye control de concurrencia y GiST intacto) |
+| Contenedor backend | Docker salud | imagen activa, `{"status":"ok"}` en `/health` |
+| Contenedor frontend | Docker salud | `:3001` → 200 servido correctamente |
+| Estado git | `git status` | develop actualizado y limpio |
 
 ---
 

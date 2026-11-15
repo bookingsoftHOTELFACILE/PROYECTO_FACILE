@@ -77,7 +77,7 @@ graph TD
 | **Web Server Frontend** | Nginx Alpine      | Nginx 1.25+                       | Servidor de estáticos y proxy reverso hacia el backend.                   |
 | **Administración DB**   | pgAdmin 4         | dpage/pgadmin4                    | Consola visual web para administración y auditoría de la base de datos.   |
 | **Contenedores**        | Docker Compose    | Compose v2.20+                    | Orquestación con volúmenes persistentes y dependencias con healthcheck.   |
-| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 55 pruebas de integración sobre PostgreSQL real sin mocks.                |
+| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 56 pruebas de integración sobre PostgreSQL real sin mocks.                |
 
 ---
 
@@ -125,7 +125,7 @@ bookingsoft/
 │   │   ├── habitaciones.py          # Catálogo, disponibilidad y cambio de estado
 │   │   ├── reservas.py              # Creación atómica, check-in/check-out y cancelación
 │   │   └── centro_negocios.py       # Salas de juntas y coworking por horas
-│   └── tests/                       # Suite de integración sobre PostgreSQL real (55 pruebas)
+│   └── tests/                       # Suite de integración sobre PostgreSQL real (56 pruebas)
 │       ├── conftest.py              # Fixtures de Pytest (cliente HTTP, tokens seed)
 │       ├── test_auth.py             # Login, registro, RBAC y firma JWT
 │       ├── test_consultas.py        # Listados, filtros y estados
@@ -146,14 +146,14 @@ bookingsoft/
     └── src/
         ├── main.jsx                 # Punto de entrada de React en el DOM
         ├── index.css                # Sistema de diseño con CSS tokens y estilos modernos
-        ├── App.jsx                  # Ensamblador ligero (83 líneas): providers + vistas
+        ├── App.jsx                  # Ensamblador ligero (86 líneas): providers + vistas
         ├── api/client.js            # Cliente HTTP unificado `apiFetch` + manejo de errores
         ├── context/AppContext.jsx   # Proveedor del estado global
         ├── state/useAppState.js     # Hook con el estado y los flujos del PMS
         ├── data/catalogo.js         # Catálogo inicial de unidades
         ├── views/                   # 9 vistas (Portal, Reservar, PMS, Perfil, ...)
-        ├── components/              # 11 componentes reutilizables
-        └── *.test.js                # 6 pruebas unitarias (Vitest)
+        ├── components/              # 16 componentes modulares PMS y Portal
+        └── *.test.js                # 16 pruebas unitarias (Vitest en 4 archivos)
 ```
 
 ---
@@ -394,7 +394,7 @@ BookingSoft aplica el principio de mínimo privilegio mediante dependencias inye
 
 ## 🔌 Catálogo Completo de Endpoints REST (API)
 
-La API expone **27 endpoints REST** con serialización estricta mediante modelos Pydantic v2.
+La API expone **28 endpoints REST** con serialización estricta mediante modelos Pydantic v2.
 
 ### 1. Módulo de Autenticación (`/api/auth`)
 
@@ -418,6 +418,7 @@ La API expone **27 endpoints REST** con serialización estricta mediante modelos
 - `POST /api/user/login`: Login de huésped por documento o correo. Devuelve `{message, usuario}` **sin token**: el portal no usa JWT.
 - `POST /api/user/recuperar-password`: Solicitud de recuperación de credenciales (mascara el correo en la respuesta).
 - `POST /api/user/restablecer-password`: Restablecimiento de contraseña (mínimo 4 caracteres).
+- `POST /api/user/auth-social`: Autenticación federada de Google para registro e inicio de sesión ágil.
 
 ### 4. Módulo de Habitaciones (`/api/habitaciones`)
 
@@ -526,18 +527,18 @@ El archivo `schema.sql` aprovisiona credenciales cifradas con bcrypt para valida
 
 ### Suite de Integración con Pytest
 
-El sistema cuenta con **55 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
+El sistema cuenta con **56 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
 
 ```bash
 # Ejecutar la suite completa dentro del contenedor backend
 docker compose exec backend pytest -v
 ```
 
-#### Cobertura de las Pruebas (55 en 7 archivos):
+#### Cobertura de las Pruebas (56 en 7 archivos):
 
 | Archivo | Pruebas | Qué valida |
 | :------ | :-----: | :--------- |
-| `test_auth.py` | 8 | Login, registro con hash bcrypt, rechazo de duplicados e inactivos, denegaciones 401/403 y firma JWT manipulada. |
+| `test_auth.py` | 9 | Login, registro con hash bcrypt, rechazo de duplicados e inactivos, denegaciones 401/403, firma JWT manipulada y autenticación social Google. |
 | `test_consultas.py` | 4 | Listado y detalle de empleados, permisos de Recepción y disponibilidad de habitaciones (RF-012). |
 | `test_reservas.py` | 3 | Descuento del 15 % en estancias > 15 noches, aforo sobre capacidad y constraint GiST de doble reserva. |
 | `test_reservas_service.py` | 19 | Unidad de `services/reservas_service.py` (sin BD ni HTTP): validación de fechas, disponibilidad de la unidad, cálculo de costo de estadía y errores de dominio. |
@@ -547,7 +548,7 @@ docker compose exec backend pytest -v
 
 ### Pruebas Unitarias del Frontend (Vitest)
 
-Seis pruebas sobre utilidades puras del SPA (catálogo HU-009, `apiFetch` y manejo de errores):
+Dieciséis pruebas unitarias organizadas en 4 suites sobre utilidades del SPA (catálogo HU-009, fechas, `apiFetch` y smoke):
 
 ```bash
 cd frontend && npx vitest run
@@ -641,7 +642,7 @@ Si vas a abrir un nuevo chat o sesión con **Gemini**, puedes copiar y pegar el 
 - Regla Clave: Prevención de doble reserva a nivel DB mediante constraint GiST en reserva_habitacion (daterange &&), triggers de mantenimiento y cálculo automático de descuentos (15% para estancias >15 noches).
 - Tablas Principales: empleado, huesped, habitacion (38 unidades oficiales), espacio_negocio, reserva_negocio (coworking por horas), reserva_habitacion. Todas con baja lógica y auditoría (creado_por, modificado_por).
 - Frontend: Single Page Application con doble modo: Portal de Huéspedes público (Inicio, Apartamentos, Centro de Negocios, Servicios, Galería, Reservar) y Suite PMS para empleados (sub-pestañas: Personal, Recepción Walk-in, Huéspedes, Reservas, Planta, Coworking, Todos).
-- Tests: 55 tests en pytest con PostgreSQL real (sin mocks), 6 tests unitarios en Vitest y 6 specs E2E en Playwright, más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
+- Tests: 56 tests en pytest con PostgreSQL real (sin mocks), 16 tests unitarios en Vitest y 6 specs E2E en Playwright (100% pasando), más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
 - Estado: Fase 1 completa y probada (incluye HU-005 check-in/check-out y remediación de arquitectura Fases A–E). Listo para abordar nuevas funcionalidades de Fase 2.
 ```
 

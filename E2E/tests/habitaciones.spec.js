@@ -21,7 +21,7 @@ test('Complete the room reservation flow for an authenticated user', async ({ pa
   await page.getByLabel('Contraseña').fill('john123');
   await page.getByRole('button', { name: 'Iniciar Sesión y Continuar' }).click();
 
-  await page.getByRole('button', { name: 'Apartamentos' }).click();
+  await page.getByRole('button', { name: 'Apartamentos', exact: true }).click();
   await page.getByRole('button', { name: 'Reservar' }).first().click();
   await page.getByRole('button', { name: 'Mes Sig. ▶' }).click();
   await page.getByRole('button', { name: '20', exact: true }).click();
