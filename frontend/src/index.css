@@ -2998,6 +2998,26 @@ body {
   font-family: var(--font-family-base) !important;
   font-weight: 500 !important;
   color: #334155 !important;
+  text-align: center !important;
+}
+
+.pms-date-input::-webkit-datetime-edit {
+  display: inline-flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+.pms-date-input::-webkit-datetime-edit-fields-wrapper {
+  display: inline-flex !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+.pms-date-input::-webkit-date-and-time-value {
+  text-align: center !important;
 }
 
 .pms-date-input::-webkit-calendar-picker-indicator,

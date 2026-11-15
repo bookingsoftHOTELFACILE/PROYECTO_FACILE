@@ -1482,12 +1482,13 @@ const VistaPms = () => {
                               onChange={handleReservaChange}
                               onClick={(e) => e.target.showPicker && e.target.showPicker()}
                               required
-                              className="pms-date-input w-full pl-4 pr-11 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm outline-none transition-all cursor-pointer focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10"
+                              className="pms-date-input w-full px-11 py-3 text-center rounded-2xl border border-slate-200 bg-slate-50/60 text-sm outline-none transition-all cursor-pointer focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10"
                               style={{
                                 color: '#334155',
                                 fontWeight: 500,
                                 fontSize: '0.88rem',
-                                letterSpacing: 'normal'
+                                letterSpacing: 'normal',
+                                textAlign: 'center'
                               }}
                             />
                             <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center text-slate-400">
@@ -1531,12 +1532,13 @@ const VistaPms = () => {
                               onChange={handleReservaChange}
                               onClick={(e) => e.target.showPicker && e.target.showPicker()}
                               required
-                              className="pms-date-input w-full pl-4 pr-11 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm outline-none transition-all cursor-pointer focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10"
+                              className="pms-date-input w-full px-11 py-3 text-center rounded-2xl border border-slate-200 bg-slate-50/60 text-sm outline-none transition-all cursor-pointer focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10"
                               style={{
                                 color: '#334155',
                                 fontWeight: 500,
                                 fontSize: '0.88rem',
-                                letterSpacing: 'normal'
+                                letterSpacing: 'normal',
+                                textAlign: 'center'
                               }}
                             />
                             <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center text-emerald-600">
