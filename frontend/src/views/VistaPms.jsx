@@ -3,7 +3,7 @@ import {
   UserPlus, ShieldCheck, Users, Calendar, ListOrdered, Trash2,
   Wrench, Check, Search, Tag, Mail, Shield, User, AlertTriangle,
   CheckCircle2, X, Clock, KeyRound, RotateCcw, Sparkles, Ban, CheckCircle, Home,
-  Building2, UserCheck, Download, Plus, Phone
+  Building2, UserCheck, Download, Plus, Phone, Key, Building, CreditCard, ArrowRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 
@@ -929,29 +929,36 @@ const VistaPms = () => {
             const totalFacturar = cotizacion?.total || Math.max(0, subtotalCalculado - descuentoCalculado);
 
             return (
-              <div id="pms-reception-reserva-module" className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-8 mb-6">
+              <div id="pms-reception-reserva-module" className="max-w-6xl mx-auto space-y-8 mb-6">
                 
-                {/* 1. ENCABEZADO DEL MÓDULO OPERATIVO */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                {/* 1. ENCABEZADO CON IDENTIFICACIÓN INSTITUCIONAL */}
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#d91a2a]">
-                      <span>📅</span>
-                      <span>Módulo de Recepción</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="p-1.5 rounded-lg bg-red-50 text-[#d91a2a]">
+                        <Calendar className="w-4 h-4" />
+                      </span>
+                      <span className="text-xs font-black uppercase tracking-wider text-[#d91a2a]">
+                        Módulo de Recepción
+                      </span>
                       <span className="text-slate-300">•</span>
-                      <span className="text-slate-600">Crear Nueva Reserva Presencial (Walk-in)</span>
+                      <span className="text-xs font-semibold text-slate-500">Operaciones en Vivo</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl font-normal mb-0">
-                      Seleccione un huésped frecuente registrado o capture en tiempo real sus datos de contacto e identidad (Cédula, Pasaporte o C.E.) para emisión inmediata de llaves.
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight m-0">
+                      Crear Nueva Reserva Presencial (Walk-In)
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl mb-0">
+                      Registre huéspedes al instante, asigne suites con disponibilidad en tiempo real y genere códigos de cerradura digital para emisión inmediata de llaves.
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap sm:flex-col items-start sm:items-end gap-1.5 shrink-0">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                  <div className="flex flex-row md:flex-col items-start md:items-end gap-2 shrink-0">
+                    <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                       Turno: AM / Recepción Principal
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#d91a2a]"></span>
+                    <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       Atención Presencial en Hotel
                     </span>
                   </div>
@@ -959,7 +966,7 @@ const VistaPms = () => {
 
                 {/* ALERTAS OPERATIVAS DEL PMS */}
                 {reservaAlert && (
-                  <div className={`p-4 rounded-xl text-xs font-bold border flex items-center gap-2.5 ${
+                  <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${
                     reservaAlert.type === 'success'
                       ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
                       : reservaAlert.type === 'info'
@@ -971,525 +978,544 @@ const VistaPms = () => {
                   </div>
                 )}
 
-                {/* 2. ALERTA DE HUÉSPED FRECUENTE ENCONTRADO */}
-                {selectedHuesped && (
-                  <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-xl p-4 flex items-center justify-between gap-3 transition-all">
-                    <div className="flex items-center gap-3 text-xs text-emerald-950">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <div className="leading-relaxed">
-                        <span className="font-extrabold text-emerald-900">
-                          Huésped Frecuente Encontrado: {selectedHuesped.nombre}
-                        </span>
-                        <span className="mx-2 text-emerald-400">•</span>
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-100/90 font-bold text-emerald-800 text-[11px] inline-block mr-2">
-                          {guestNivel}
-                        </span>
-                        <span className="mx-1 text-emerald-400">•</span>
-                        <span className="font-semibold">{guestReservasPrevias} Reservas Previas.</span>
-                        <span className="text-emerald-800/80 hidden md:inline ml-1">
-                          Los registros de contacto han sido precompletados con los datos guardados en el sistema central.
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedHuesped(null);
-                        setPmsWalkInGuest(prev => ({ ...prev, documento: '', nombre: '', telefono: '', correo: '' }));
-                      }}
-                      className="p-1 rounded-lg text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900 transition-colors cursor-pointer"
-                      title="Cerrar notificación y limpiar huésped"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                {/* FORMULARIO OPERATIVO */}
                 <form onSubmit={handleReservaSubmit} className="space-y-8">
                   
-                  {/* SECCIÓN 1: DATOS DEL HUÉSPED */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center text-xs font-bold">
-                          👤
+                  {/* 2. BLOQUE 1: IDENTIDAD DEL HUÉSPED & LOCALIZACIÓN */}
+                  <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+                    {/* Acento rojo superior */}
+                    <div className="h-1.5 w-full bg-gradient-to-r from-[#d91a2a] via-rose-500 to-amber-500" />
+                    
+                    <div className="p-6 sm:p-8 space-y-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-xs">
+                            <User className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 m-0">
+                              1. Identidad del Huésped Presencial & Localización
+                            </h3>
+                            <span className="text-xs text-slate-400">
+                              Búsqueda automática en base de datos de huéspedes frecuentes o registro rápido
+                            </span>
+                          </div>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          1. Datos del Huésped Presencial (Walk-in)
-                        </h3>
-                      </div>
-                      <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
-                        Campos marcados con (*) son obligatorios
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-500 italic m-0">
-                      Digite el número de documento para auto-completar datos de un huésped existente o ingrese la información si es un nuevo registro.
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                      {/* Tipo de Documento */}
-                      <div className="md:col-span-3">
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          Tipo de Documento <span className="text-[#d91a2a]">*</span>
-                        </label>
-                        <select
-                          name="tipo_documento"
-                          value={pmsWalkInGuest.tipo_documento}
-                          onChange={handlePmsWalkInGuestChange}
-                          style={{ height: '44px', borderRadius: '12px' }}
-                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
-                        >
-                          <option value="Cédula de Ciudadanía">Cédula de Ciudadanía (C.C.)</option>
-                          <option value="Cédula de Extranjería">Cédula de Extranjería (C.E.)</option>
-                          <option value="Pasaporte">Pasaporte Internacional</option>
-                        </select>
+                        <span className="text-xs font-semibold text-slate-400">
+                          Campos con (<span className="text-[#d91a2a]">*</span>) obligatorios
+                        </span>
                       </div>
 
-                      {/* Número de Documento + Buscador */}
-                      <div className="md:col-span-4">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                            Número de Documento <span className="text-[#d91a2a]">*</span>
+                      {/* Alerta Huésped VIP / Frecuente (SOLO VISIBLE SI SE ENCUENTRA UN HUÉSPED REGISTRADO) */}
+                      {selectedHuesped && (
+                        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white border border-emerald-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                              <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-emerald-950">
+                                  Huésped Frecuente Identificado
+                                </span>
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wider uppercase">
+                                  {guestNivel}
+                                </span>
+                              </div>
+                              <p className="text-xs text-emerald-800/90 mt-0.5 mb-0">
+                                {selectedHuesped.nombre} ha completado {guestReservasPrevias} estancias previas en BookingSoft. Datos sincronizados correctamente.
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedHuesped(null);
+                              setPmsWalkInGuest(prev => ({ ...prev, documento: '', nombre: '', telefono: '', correo: '' }));
+                            }}
+                            className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 self-end sm:self-center cursor-pointer"
+                            title="Limpiar datos de huésped"
+                          >
+                            <span>Limpiar datos</span>
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Inputs del Huésped (LIMPIOS POR DEFECTO CON PLACEHOLDERS) */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                        {/* Tipo de Documento */}
+                        <div className="md:col-span-3">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Tipo de Documento <span className="text-[#d91a2a]">*</span>
                           </label>
-                          <span className="text-xs text-amber-700 font-bold flex items-center gap-1">
-                            💡 Presione Enter o Buscar
-                          </span>
+                          <select
+                            name="tipo_documento"
+                            value={pmsWalkInGuest.tipo_documento}
+                            onChange={handlePmsWalkInGuestChange}
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          >
+                            <option value="Cédula de Ciudadanía">Cédula de Ciudadanía (C.C.)</option>
+                            <option value="Cédula de Extranjería">Cédula de Extranjería (C.E.)</option>
+                            <option value="Pasaporte">Pasaporte Internacional</option>
+                          </select>
                         </div>
-                        <div className="flex gap-2" style={{ alignItems: 'stretch' }}>
-                          <input
-                            type="text"
-                            name="documento"
-                            value={pmsWalkInGuest.documento}
-                            onChange={(e) => {
-                              handlePmsWalkInGuestChange(e);
-                              const val = e.target.value.trim();
-                              if (val) {
-                                const match = huespedes.find(h => h.documento && h.documento.trim() === val);
-                                if (match) {
-                                  setSelectedHuesped(match);
-                                  setPmsWalkInGuest(prev => ({
-                                    ...prev,
-                                    nombre: match.nombre,
-                                    telefono: match.telefono || prev.telefono,
-                                    correo: match.correo || prev.correo
-                                  }));
+
+                        {/* Número de Documento + Buscador */}
+                        <div className="md:col-span-4">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 m-0">
+                              Número de Documento <span className="text-[#d91a2a]">*</span>
+                            </label>
+                            <span className="text-[11px] text-amber-700 font-bold">↵ Enter para buscar</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              name="documento"
+                              value={pmsWalkInGuest.documento}
+                              onChange={(e) => {
+                                handlePmsWalkInGuestChange(e);
+                                const val = e.target.value.trim();
+                                if (val) {
+                                  const match = huespedes.find(h => h.documento && h.documento.trim() === val);
+                                  if (match) {
+                                    setSelectedHuesped(match);
+                                    setPmsWalkInGuest(prev => ({
+                                      ...prev,
+                                      nombre: match.nombre,
+                                      telefono: match.telefono || prev.telefono,
+                                      correo: match.correo || prev.correo
+                                    }));
+                                  } else {
+                                    setSelectedHuesped(null);
+                                  }
                                 } else {
                                   setSelectedHuesped(null);
                                 }
-                              } else {
-                                setSelectedHuesped(null);
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleBuscarHuespedPorDocumento(pmsWalkInGuest.documento);
-                              }
-                            }}
-                            placeholder={pmsWalkInGuest.tipo_documento === 'Pasaporte' ? 'Ej: AA1234567' : 'Ej: 1017283944'}
-                            maxLength={20}
-                            required
-                            style={{ height: '44px', borderRadius: '12px', flex: '1 1 auto' }}
-                            className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleBuscarHuespedPorDocumento(pmsWalkInGuest.documento)}
-                            style={{ height: '44px', borderRadius: '12px' }}
-                            className="px-4 bg-[#0f172a] hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs"
-                          >
-                            <Search className="w-3.5 h-3.5" />
-                            <span>Buscar</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Nombre Completo */}
-                      <div className="md:col-span-5">
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          Nombre Completo <span className="text-[#d91a2a]">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="nombre"
-                          value={pmsWalkInGuest.nombre}
-                          onChange={handlePmsWalkInGuestChange}
-                          placeholder="Ej: Jose Miguel Chico"
-                          required
-                          style={{ height: '44px', borderRadius: '12px' }}
-                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
-                        />
-                      </div>
-
-                      {/* Celular / WhatsApp */}
-                      <div className="md:col-span-6">
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          Celular / WhatsApp <span className="text-[#d91a2a]">*</span>
-                        </label>
-                        <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
-                          <div 
-                            style={{ 
-                              position: 'absolute', 
-                              left: '12px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              pointerEvents: 'none', 
-                              color: '#475569', 
-                              fontSize: '0.8125rem', 
-                              fontWeight: 700,
-                              zIndex: 2
-                            }}
-                          >
-                            🇨🇴 +57
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleBuscarHuespedPorDocumento(pmsWalkInGuest.documento);
+                                }
+                              }}
+                              placeholder={pmsWalkInGuest.tipo_documento === 'Pasaporte' ? 'Ej: AA1234567' : 'Ej: 1017283944'}
+                              maxLength={20}
+                              required
+                              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleBuscarHuespedPorDocumento(pmsWalkInGuest.documento)}
+                              className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-[#d91a2a] text-white text-xs font-black flex items-center gap-2 shrink-0 transition-all cursor-pointer shadow-xs"
+                            >
+                              <Search className="w-4 h-4" />
+                              <span>Buscar</span>
+                            </button>
                           </div>
+                        </div>
+
+                        {/* Nombre Completo */}
+                        <div className="md:col-span-5">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Nombre Completo <span className="text-[#d91a2a]">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              name="nombre"
+                              value={pmsWalkInGuest.nombre}
+                              onChange={handlePmsWalkInGuestChange}
+                              placeholder="Ej: Jose Miguel Chico"
+                              required
+                              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
+                            />
+                            {pmsWalkInGuest.nombre && (
+                              <CheckCircle2 className="w-5 h-5 text-emerald-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Celular / WhatsApp */}
+                        <div className="md:col-span-6">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Celular / WhatsApp <span className="text-[#d91a2a]">*</span>
+                          </label>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 font-bold text-xs">
+                              🇨🇴 +57
+                            </span>
+                            <input
+                              type="tel"
+                              name="telefono"
+                              value={pmsWalkInGuest.telefono}
+                              onChange={handlePmsWalkInGuestChange}
+                              placeholder="Ej: 3154449876"
+                              maxLength={15}
+                              required
+                              className="w-full pl-20 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Correo Electrónico */}
+                        <div className="md:col-span-6">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Correo Electrónico (Factura Electrónica & Llave Digital) <span className="text-[#d91a2a]">*</span>
+                          </label>
                           <input
-                            type="tel"
-                            name="telefono"
-                            value={pmsWalkInGuest.telefono}
+                            type="email"
+                            name="correo"
+                            value={pmsWalkInGuest.correo}
                             onChange={handlePmsWalkInGuestChange}
-                            placeholder="3154449876"
-                            maxLength={15}
+                            placeholder="Ej: jocmiguelcc@gmail.com"
                             required
-                            style={{ paddingLeft: '84px', height: '44px', borderRadius: '12px' }}
-                            className="w-full pr-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
                           />
                         </div>
-                      </div>
-
-                      {/* Correo Electrónico */}
-                      <div className="md:col-span-6">
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          Correo Electrónico (Factura & Llave Digital) <span className="text-[#d91a2a]">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          name="correo"
-                          value={pmsWalkInGuest.correo}
-                          onChange={handlePmsWalkInGuestChange}
-                          placeholder="jocmiguelcc@gmail.com"
-                          required
-                          style={{ height: '44px', borderRadius: '12px' }}
-                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all"
-                        />
                       </div>
                     </div>
                   </div>
 
-                  {/* SECCIÓN 2: ASIGNACIÓN DE UNIDAD Y CALENDARIO */}
-                  <div className="space-y-4 pt-2">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-red-50 text-[#d91a2a] flex items-center justify-center text-xs font-bold">
-                          🏠
-                        </div>
-                        <h3 className="text-sm font-bold text-slate-900 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          2. Asignación de Unidad y Calendario de Estadía
-                        </h3>
-                      </div>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        Disponibilidad en vivo: {vacantesCount} Apartamentos Vacantes
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                      {/* Apartamento / Habitación Disponible */}
-                      <div className="md:col-span-8">
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          Apartamento / Habitación Disponible <span className="text-[#d91a2a]">*</span>
-                        </label>
-                        <select
-                          name="id_habitacion"
-                          value={reservaData.id_habitacion}
-                          onChange={handleReservaChange}
-                          required
-                          style={{ height: '44px', borderRadius: '12px' }}
-                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
-                        >
-                          <option value="">-- Seleccionar Unidad Disponible --</option>
-                          {habitaciones.map(hab => (
-                            <option key={hab.id_habitacion} value={hab.id_habitacion}>
-                              🏢 {hab.tipo?.toLowerCase().includes('suite') ? 'Suite' : 'Dúplex'} {hab.numero} — Piso {hab.numero?.[0] || '1'} ({hab.tipo} • Disponible) — ${Number(hab.precio_noche || 0).toLocaleString('es-CO')} COP / Noche
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Ocupantes */}
-                      <div className="md:col-span-4">
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          Número de Personas / Ocupantes <span className="text-[#d91a2a]">*</span>
-                        </label>
-                        <select
-                          name="numero_personas"
-                          value={reservaData.numero_personas}
-                          onChange={handleReservaChange}
-                          style={{ height: '44px', borderRadius: '12px' }}
-                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
-                        >
-                          <option value={1}>1 huésped (Titular)</option>
-                          <option value={2}>2 huéspedes</option>
-                          <option value={3}>3 huéspedes</option>
-                          <option value={4}>4 huéspedes</option>
-                          <option value={5}>5 huéspedes</option>
-                          <option value={6}>6 huéspedes</option>
-                        </select>
-                      </div>
-
-                      {/* Fecha Entrada */}
-                      <div className="md:col-span-6">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                            Fecha de Entrada (Check-In) <span className="text-[#d91a2a]">*</span>
-                          </label>
-                          <span className="text-[11px] text-slate-400">Hora estándar: 15:00</span>
-                        </div>
-                        <input
-                          type="date"
-                          name="fecha_entrada"
-                          value={reservaData.fecha_entrada}
-                          onChange={handleReservaChange}
-                          required
-                          style={{ height: '44px', borderRadius: '12px' }}
-                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
-                        />
-                      </div>
-
-                      {/* Fecha Salida */}
-                      <div className="md:col-span-6">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 m-0" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                            Fecha de Salida (Check-Out) <span className="text-[#d91a2a]">*</span>
-                          </label>
-                          <span className="text-[11px] text-slate-400">Hora límite: 11:00</span>
-                        </div>
-                        <input
-                          type="date"
-                          name="fecha_salida"
-                          value={reservaData.fecha_salida}
-                          onChange={handleReservaChange}
-                          required
-                          style={{ height: '44px', borderRadius: '12px' }}
-                          className="w-full px-3.5 border border-slate-300 bg-slate-50/50 text-sm font-medium text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-2 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
-                        />
-                      </div>
-                    </div>
-
-                    {/* CALENDARIO DE OCUPACIÓN INTERACTIVO */}
-                    {reservaData.id_habitacion && (() => {
-                      const year = calDate.getFullYear();
-                      const month = calDate.getMonth();
-                      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                      const habReservas = reservas.filter(r => String(r.id_habitacion) === String(reservaData.id_habitacion) && (r.estado === 'Confirmada' || r.estado === 'Check-In'));
-
-                      const firstDay = new Date(year, month, 1);
-                      const daysInMonth = new Date(year, month + 1, 0).getDate();
-                      let startDay = firstDay.getDay() - 1;
-                      if (startDay === -1) startDay = 6;
-
-                      const daysGrid = [];
-                      for (let i = 0; i < startDay; i++) daysGrid.push(null);
-                      for (let d = 1; d <= daysInMonth; d++) {
-                        const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                        const isOccupied = habReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
-                        const isSelectedIn = reservaData.fecha_entrada === dayStr;
-                        const isSelectedOut = reservaData.fecha_salida === dayStr;
-                        const inRange = reservaData.fecha_entrada && reservaData.fecha_salida && dayStr >= reservaData.fecha_entrada && dayStr <= reservaData.fecha_salida;
-                        daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
-                      }
-
-                      const handleDayClick = (item) => {
-                        if (!item || item.isOccupied) return;
-                        if (!reservaData.fecha_entrada || (reservaData.fecha_entrada && reservaData.fecha_salida)) {
-                          setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
-                        } else if (reservaData.fecha_entrada && !reservaData.fecha_salida) {
-                          if (item.dayStr <= reservaData.fecha_entrada) {
-                            setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
-                          } else {
-                            const hasBlock = habReservas.some(r => r.fecha_entrada <= item.dayStr && r.fecha_salida >= reservaData.fecha_entrada);
-                            if (hasBlock) {
-                              setReservaAlert({ type: 'error', message: 'El rango seleccionado incluye fechas ocupadas en rojo.' });
-                              return;
-                            }
-                            setReservaData(prev => ({ ...prev, fecha_salida: item.dayStr }));
-                          }
-                        }
-                      };
-
-                      return (
-                        <div className="bg-slate-50/50 rounded-2xl border border-slate-200/90 p-4 mt-2">
-                          <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
-                            <button
-                              type="button"
-                              onClick={() => setCalDate(new Date(year, month - 1, 1))}
-                              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
-                            >
-                              ◀ Mes Ant.
-                            </button>
-                            <span className="text-xs font-extrabold text-slate-800">
-                              🗓️ Calendario de Disponibilidad: {monthNames[month]} {year}
+                  {/* 3. BLOQUE 2: ASIGNACIÓN DE HABITACIÓN & CALENDARIO */}
+                  <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+                    <div className="h-1.5 w-full bg-gradient-to-r from-amber-500 via-rose-500 to-[#d91a2a]" />
+                    
+                    <div className="p-6 sm:p-8 space-y-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-red-50 text-[#d91a2a] flex items-center justify-center font-bold">
+                            <Building className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 m-0">
+                              2. Asignación de Unidad y Calendario de Estadía
+                            </h3>
+                            <span className="text-xs text-slate-400">
+                              Seleccione el tipo de habitación disponible y defina el período de alojamiento
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => setCalDate(new Date(year, month + 1, 1))}
-                              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
-                            >
-                              Mes Sig. ▶
-                            </button>
                           </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Disponibilidad en vivo: {vacantesCount} Apartamentos Vacantes
+                        </span>
+                      </div>
 
-                          <div className="flex items-center justify-center gap-4 py-2 text-[11px] font-semibold text-slate-600">
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-3.5 h-3.5 rounded bg-white border border-slate-300 inline-block" />
-                              <span>Disponible</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-red-600">
-                              <span className="w-3.5 h-3.5 rounded bg-slate-100 border border-slate-300 text-slate-400 line-through flex items-center justify-center text-[9px] font-black">
-                                ✕
-                              </span>
-                              <span>Ocupado</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[#d91a2a]">
-                              <span className="w-3.5 h-3.5 rounded bg-[#d91a2a] text-white flex items-center justify-center text-[9px] font-black">
-                                ✓
-                              </span>
-                              <span>Tu Selección</span>
-                            </div>
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                        {/* Apartamento / Habitación Seleccionada */}
+                        <div className="md:col-span-8">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Apartamento / Habitación Seleccionada <span className="text-[#d91a2a]">*</span>
+                          </label>
+                          <select
+                            name="id_habitacion"
+                            value={reservaData.id_habitacion}
+                            onChange={handleReservaChange}
+                            required
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          >
+                            <option value="">-- Seleccionar Apartamento Disponible --</option>
+                            {habitaciones.map(hab => (
+                              <option key={hab.id_habitacion} value={hab.id_habitacion}>
+                                🏢 {hab.tipo?.toLowerCase().includes('suite') ? 'Suite' : 'Dúplex'} {hab.numero} — Piso {hab.numero?.[0] || '1'} ({hab.tipo} • Disponible) — ${Number(hab.precio_noche || 0).toLocaleString('es-CO')} COP / Noche
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Ocupantes */}
+                        <div className="md:col-span-4">
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Número de Personas / Ocupantes <span className="text-[#d91a2a]">*</span>
+                          </label>
+                          <select
+                            name="numero_personas"
+                            value={reservaData.numero_personas}
+                            onChange={handleReservaChange}
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          >
+                            <option value={1}>1 huésped (Titular)</option>
+                            <option value={2}>2 huéspedes</option>
+                            <option value={3}>3 huéspedes</option>
+                            <option value={4}>4 huéspedes</option>
+                            <option value={5}>5 huéspedes</option>
+                            <option value={6}>6 huéspedes</option>
+                          </select>
+                        </div>
+
+                        {/* Fecha Entrada */}
+                        <div className="md:col-span-6">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 m-0">
+                              Fecha de Entrada (Check-In) <span className="text-[#d91a2a]">*</span>
+                            </label>
+                            <span className="text-[11px] text-slate-400">Hora estándar: 15:00</span>
                           </div>
+                          <input
+                            type="date"
+                            name="fecha_entrada"
+                            value={reservaData.fecha_entrada}
+                            onChange={handleReservaChange}
+                            required
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          />
+                        </div>
 
-                          <div className="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 uppercase mb-1">
-                            <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                        {/* Fecha Salida */}
+                        <div className="md:col-span-6">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 m-0">
+                              Fecha de Salida (Check-Out) <span className="text-[#d91a2a]">*</span>
+                            </label>
+                            <span className="text-[11px] text-slate-400">Hora límite: 11:00</span>
                           </div>
+                          <input
+                            type="date"
+                            name="fecha_salida"
+                            value={reservaData.fecha_salida}
+                            onChange={handleReservaChange}
+                            required
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          />
+                        </div>
+                      </div>
 
-                          <div className="grid grid-cols-7 gap-1.5">
-                            {daysGrid.map((item, idx) => {
-                              if (!item) return <div key={`empty-${idx}`} className="h-9" />;
+                      {/* CALENDARIO DE OCUPACIÓN INTERACTIVO */}
+                      {reservaData.id_habitacion && (() => {
+                        const year = calDate.getFullYear();
+                        const month = calDate.getMonth();
+                        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                        const habReservas = reservas.filter(r => String(r.id_habitacion) === String(reservaData.id_habitacion) && (r.estado === 'Confirmada' || r.estado === 'Check-In'));
 
-                              if (item.isOccupied) {
-                                return (
-                                  <div
-                                    key={item.dayStr}
-                                    title={`Fecha ${item.dayStr} ocupada`}
-                                    className="h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold line-through flex items-center justify-center cursor-not-allowed select-none"
-                                  >
-                                    {item.d}
-                                  </div>
-                                );
+                        const firstDay = new Date(year, month, 1);
+                        const daysInMonth = new Date(year, month + 1, 0).getDate();
+                        let startDay = firstDay.getDay() - 1;
+                        if (startDay === -1) startDay = 6;
+
+                        const daysGrid = [];
+                        for (let i = 0; i < startDay; i++) daysGrid.push(null);
+                        for (let d = 1; d <= daysInMonth; d++) {
+                          const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                          const isOccupied = habReservas.some(r => dayStr >= r.fecha_entrada && dayStr <= r.fecha_salida);
+                          const isSelectedIn = reservaData.fecha_entrada === dayStr;
+                          const isSelectedOut = reservaData.fecha_salida === dayStr;
+                          const inRange = reservaData.fecha_entrada && reservaData.fecha_salida && dayStr >= reservaData.fecha_entrada && dayStr <= reservaData.fecha_salida;
+                          daysGrid.push({ d, dayStr, isOccupied, isSelectedIn, isSelectedOut, inRange });
+                        }
+
+                        const handleDayClick = (item) => {
+                          if (!item || item.isOccupied) return;
+                          if (!reservaData.fecha_entrada || (reservaData.fecha_entrada && reservaData.fecha_salida)) {
+                            setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
+                          } else if (reservaData.fecha_entrada && !reservaData.fecha_salida) {
+                            if (item.dayStr <= reservaData.fecha_entrada) {
+                              setReservaData(prev => ({ ...prev, fecha_entrada: item.dayStr, fecha_salida: '' }));
+                            } else {
+                              const hasBlock = habReservas.some(r => r.fecha_entrada <= item.dayStr && r.fecha_salida >= reservaData.fecha_entrada);
+                              if (hasBlock) {
+                                setReservaAlert({ type: 'error', message: 'El rango seleccionado incluye fechas ocupadas en rojo.' });
+                                return;
                               }
+                              setReservaData(prev => ({ ...prev, fecha_salida: item.dayStr }));
+                            }
+                          }
+                        };
 
-                              const esExtremo = item.isSelectedIn || item.isSelectedOut;
-                              if (esExtremo || item.inRange) {
+                        return (
+                          <div className="bg-slate-50/50 rounded-2xl border border-slate-200/90 p-4 mt-2">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
+                              <button
+                                type="button"
+                                onClick={() => setCalDate(new Date(year, month - 1, 1))}
+                                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                              >
+                                ◀ Mes Ant.
+                              </button>
+                              <span className="text-xs font-extrabold text-slate-800">
+                                🗓️ Calendario de Disponibilidad: {monthNames[month]} {year}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setCalDate(new Date(year, month + 1, 1))}
+                                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+                              >
+                                Mes Sig. ▶
+                              </button>
+                            </div>
+
+                            <div className="flex items-center justify-center gap-4 py-2 text-[11px] font-semibold text-slate-600">
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-3.5 h-3.5 rounded bg-white border border-slate-300 inline-block" />
+                                <span>Disponible</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-red-600">
+                                <span className="w-3.5 h-3.5 rounded bg-slate-100 border border-slate-300 text-slate-400 line-through flex items-center justify-center text-[9px] font-black">
+                                  ✕
+                                </span>
+                                <span>Ocupado</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[#d91a2a]">
+                                <span className="w-3.5 h-3.5 rounded bg-[#d91a2a] text-white flex items-center justify-center text-[9px] font-black">
+                                  ✓
+                                </span>
+                                <span>Tu Selección</span>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 uppercase mb-1">
+                              <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                            </div>
+
+                            <div className="grid grid-cols-7 gap-1.5">
+                              {daysGrid.map((item, idx) => {
+                                if (!item) return <div key={`empty-${idx}`} className="h-9" />;
+
+                                if (item.isOccupied) {
+                                  return (
+                                    <div
+                                      key={item.dayStr}
+                                      title={`Fecha ${item.dayStr} ocupada`}
+                                      className="h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold line-through flex items-center justify-center cursor-not-allowed select-none"
+                                    >
+                                      {item.d}
+                                    </div>
+                                  );
+                                }
+
+                                const esExtremo = item.isSelectedIn || item.isSelectedOut;
+                                if (esExtremo || item.inRange) {
+                                  return (
+                                    <button
+                                      key={item.dayStr}
+                                      type="button"
+                                      onClick={() => handleDayClick(item)}
+                                      className={`h-9 rounded-lg text-xs font-black flex items-center justify-center cursor-pointer transition-all ${
+                                        esExtremo
+                                          ? 'bg-[#d91a2a] text-white shadow-sm shadow-[#d91a2a]/30 scale-105'
+                                          : 'bg-red-50 text-[#b91522] border border-dashed border-red-300'
+                                      }`}
+                                    >
+                                      {item.d}
+                                    </button>
+                                  );
+                                }
+
                                 return (
                                   <button
                                     key={item.dayStr}
                                     type="button"
                                     onClick={() => handleDayClick(item)}
-                                    className={`h-9 rounded-lg text-xs font-black flex items-center justify-center cursor-pointer transition-all ${
-                                      esExtremo
-                                        ? 'bg-[#d91a2a] text-white shadow-sm shadow-[#d91a2a]/30 scale-105'
-                                        : 'bg-red-50 text-[#b91522] border border-dashed border-red-300'
-                                    }`}
+                                    className="h-9 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-semibold hover:border-[#d91a2a] hover:text-[#d91a2a] hover:bg-red-50/50 flex items-center justify-center transition-colors cursor-pointer"
                                   >
                                     {item.d}
                                   </button>
                                 );
-                              }
-
-                              return (
-                                <button
-                                  key={item.dayStr}
-                                  type="button"
-                                  onClick={() => handleDayClick(item)}
-                                  className="h-9 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-semibold hover:border-[#d91a2a] hover:text-[#d91a2a] hover:bg-red-50/50 flex items-center justify-center transition-colors cursor-pointer"
-                                >
-                                  {item.d}
-                                </button>
-                              );
-                            })}
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })()}
+                        );
+                      })()}
+                    </div>
                   </div>
 
-                  {/* 3. RESUMEN DE COTIZACIÓN EN TIEMPO REAL (LIVE PRICING) */}
-                  <div className="bg-slate-50/90 rounded-2xl border border-slate-200/90 p-6">
-                    <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200/70">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                        <span>💳</span>
-                        <span>Resumen de Cotización en Tiempo Real</span>
+                  {/* 4. BLOQUE OSCURO DE COTIZACIÓN EN VIVO (LIVE PRICING) */}
+                  <div className="bg-[#0f172a] rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800">
+                    <div className="flex items-center justify-between pb-6 mb-6 border-b border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span className="p-2 rounded-xl bg-slate-800 text-rose-400">
+                          <CreditCard className="w-5 h-5" />
+                        </span>
+                        <div>
+                          <h4 className="text-sm font-black uppercase tracking-wider m-0">
+                            Resumen de Cotización en Tiempo Real
+                          </h4>
+                          <p className="text-xs text-slate-400 mt-0.5 mb-0">Cálculo automático con impuestos hoteleros incluidos</p>
+                        </div>
                       </div>
-                      <span className="text-xs font-semibold text-slate-500">Moneda: COP ($)</span>
+                      <span className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
+                        ● Moneda: COP ($)
+                      </span>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-center">
-                      <div>
-                        <span className="text-xs font-semibold text-slate-500 block mb-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                           Estadía Total
                         </span>
-                        <span className="text-xl font-bold text-slate-900">{noches} {noches === 1 ? 'Noche' : 'Noches'}</span>
+                        <div className="text-2xl font-black">{noches} {noches === 1 ? 'Noche' : 'Noches'}</div>
+                        <span className="text-xs text-slate-400 mt-0.5 block">
+                          {reservaData.fecha_entrada && reservaData.fecha_salida ? `${reservaData.fecha_entrada} al ${reservaData.fecha_salida}` : 'Seleccione fechas'}
+                        </span>
                       </div>
 
-                      <div>
-                        <span className="text-xs font-semibold text-slate-500 block mb-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                           Tarifa por Noche
                         </span>
-                        <span className="text-xl font-bold text-slate-900">
-                          ${tarifaNoche.toLocaleString('es-CO')} COP
-                        </span>
+                        <div className="text-2xl font-black">${tarifaNoche.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
+                        <span className="text-xs text-emerald-400 mt-0.5 block">✓ Tarifa Estándar Walk-In</span>
                       </div>
 
-                      <div>
-                        <span className="text-xs font-semibold text-slate-500 block mb-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                           Depósito en Garantía
                         </span>
-                        <span className="text-xl font-bold text-slate-900">
-                          ${depositoGarantia.toLocaleString('es-CO')} COP{' '}
-                          <span className="text-xs font-normal text-slate-500">(Reembolsable)</span>
-                        </span>
+                        <div className="text-2xl font-black">${depositoGarantia.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
+                        <span className="text-xs text-slate-400 mt-0.5 block">(100% Reembolsable)</span>
                       </div>
 
-                      <div className="text-left md:text-right border-t md:border-t-0 pt-4 md:pt-0 border-slate-200">
-                        <span className="text-xs font-bold text-slate-700 block mb-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                          Total a Facturar Presencial
-                        </span>
-                        <span className="text-2xl sm:text-3xl font-extrabold text-[#d91a2a] block" style={{ letterSpacing: '-0.01em' }}>
-                          ${totalFacturar.toLocaleString('es-CO')}{' '}
-                          <span className="text-xs font-bold text-slate-600">COP</span>
-                        </span>
+                      {/* Tarjeta de Total con Fondo Carmín Vibrante */}
+                      <div className="bg-gradient-to-br from-[#d91a2a] to-[#9b111e] p-5 rounded-2xl shadow-lg border border-red-500/30 text-white">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-red-100">
+                            Total a Facturar
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-white/20 text-[10px] font-bold uppercase tracking-wider text-white">
+                            Liquidación Inmediata
+                          </span>
+                        </div>
+                        <div className="text-3xl font-black tracking-tight">
+                          ${totalFacturar.toLocaleString('es-CO')} <span className="text-xs font-bold text-red-200">COP</span>
+                        </div>
+                        <span className="text-[11px] text-red-100 mt-1 block">Incluye impuestos y seguro hotelero</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* 4. CHECKBOX CHECK-IN DIRECTO Y LLAVE DIGITAL */}
-                  <div className="bg-amber-50/60 border border-amber-200/90 rounded-xl p-4 flex items-start gap-3">
+                  {/* 5. CHECK-IN DIRECTO & YALE CONNECT SMARTLOCK */}
+                  <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-xs flex items-start gap-4">
                     <input
                       type="checkbox"
                       id="checkin-directo"
                       checked={walkinCheckinInmediato}
                       onChange={(e) => setWalkinCheckinInmediato(e.target.checked)}
-                      className="w-4 h-4 rounded text-[#d91a2a] focus:ring-[#d91a2a] accent-[#d91a2a] mt-0.5 cursor-pointer shrink-0"
+                      className="w-5 h-5 rounded-lg text-[#d91a2a] focus:ring-[#d91a2a] accent-[#d91a2a] mt-0.5 cursor-pointer shrink-0"
                     />
-                    <label htmlFor="checkin-directo" className="text-xs text-slate-700 leading-relaxed cursor-pointer m-0">
-                      <span className="font-extrabold text-slate-900">🏷️ Registrar check-in directo (El huésped ya se encuentra físicamente en el hotel):</span>{' '}
-                      Se expedirá y enviará al correo el código de acceso a cerradura digital Yale para el <strong>{selectedHab ? `Apto ${selectedHab.numero} (${selectedHab.tipo})` : 'apartamento seleccionado'}</strong> y se registrará formalmente el ingreso en la bitácora activa del PMS.
+                    <label htmlFor="checkin-directo" className="text-xs sm:text-sm text-slate-700 leading-relaxed cursor-pointer m-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-extrabold text-slate-900">
+                          Registrar Check-In Directo Inmediato (Huésped presente en el lobby)
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black tracking-wider uppercase">
+                          🔒 Yale Connect Smartlock
+                        </span>
+                      </div>
+                      Al confirmar, el PMS generará de inmediato el código dinámico de cerradura digital Yale para el apartamento <strong>{selectedHab ? `Apto ${selectedHab.numero} (${selectedHab.tipo})` : 'apartamento seleccionado'}</strong>, enviará el enlace de llave móvil al correo <strong>{pmsWalkInGuest.correo || 'indicado'}</strong> y WhatsApp, y actualizará la bitácora activa del hotel a estado <span className="font-bold text-blue-700">"Ocupada (Check-in Realizado)"</span>.
                     </label>
                   </div>
 
-                  {/* 5. BOTONES DE ACCIÓN */}
-                  <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-end gap-3">
+                  {/* 6. BOTONES DE ACCIÓN */}
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-end gap-3">
                     <button
                       type="button"
                       onClick={() => {
                         setSelectedHuesped(null);
                         setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
                         setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', telefono: '', correo: '' });
-                        setWalkinCheckinInmediato(true);
+                        setWalkinCheckinInmediato(false);
                       }}
-                      style={{ height: '44px', borderRadius: '12px' }}
-                      className="px-6 border border-slate-300 bg-white hover:bg-slate-50 text-xs sm:text-sm font-bold text-slate-700 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-2xs"
+                      className="px-6 py-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm font-bold text-slate-700 transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="w-4 h-4 text-slate-400" />
                       <span>Limpiar Formulario</span>
@@ -1498,11 +1524,10 @@ const VistaPms = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      style={{ height: '44px', borderRadius: '12px' }}
-                      className="px-8 bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#d91a2a]/25 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#d91a2a] to-[#b91522] hover:from-[#b91522] hover:to-[#9b111e] text-white text-xs sm:text-sm font-black shadow-lg shadow-[#d91a2a]/30 hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <Calendar className="w-4 h-4" />
-                      <span>{loading ? 'Guardando Reserva...' : 'Confirmar Reserva Presencial (Check-in)'}</span>
+                      <Key className="w-4 h-4" />
+                      <span>{loading ? 'Confirmando Reserva...' : 'Confirmar Reserva Presencial & Emitir Llave'}</span>
                     </button>
                   </div>
                 </form>
