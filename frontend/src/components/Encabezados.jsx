@@ -20,32 +20,83 @@ export default function Encabezados() {
     { id: 'galeria', label: 'Galería' }
   ];
 
+  const getInitials = (nombre) => {
+    if (!nombre) return 'AD';
+    const parts = nombre.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return nombre.slice(0, 2).toUpperCase();
+  };
+
   if (activeTab === 'pms') {
+    const initials = getInitials(usuarioSesion?.nombre);
     return (
-      <header className="pms-dedicated-header">
-        <div className="pms-dedicated-header-content">
-          <div className="pms-logo-brand" onClick={() => setActiveTab('pms')}>
-            <span className="pms-logo-title">BookingSoft</span>
-            <span className="pms-logo-badge">PMS HOTELERO</span>
+      <header style={{ backgroundColor: '#090e1a', borderBottom: '1px solid #1e293b', color: '#ffffff', position: 'sticky', top: 0, zIndex: 1000, boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}>
+        <div style={{ width: '100%', maxWidth: '1720px', margin: '0 auto', padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+          
+          {/* LADO IZQUIERDO: LOGO FACILE PMS + SERVIDOR BADGE */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div 
+              onClick={() => setActiveTab('pms')}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#d91a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', flexShrink: 0, boxShadow: '0 2px 8px rgba(217,26,42,0.35)' }}>
+                <Building2 size={20} color="#ffffff" />
+              </div>
+              <div style={{ lineHeight: 1.15 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontWeight: 900, color: '#ffffff', fontSize: '1rem', letterSpacing: '-0.3px' }}>FACILE</span>
+                  <span style={{ color: '#f87171', fontWeight: 800, fontSize: '0.78rem' }}>PMS V4.8</span>
+                </div>
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, display: 'block', marginTop: '2px' }}>
+                  Apartamentos & Suites de Lujo
+                </span>
+              </div>
+            </div>
+
+            {/* STATUS BADGE CENTRAL */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '9999px', backgroundColor: '#0f172a', border: '1px solid #1e293b', fontSize: '11px', fontWeight: 600, color: '#cbd5e1' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }}></span>
+              <span>Servidor Central: <strong style={{ color: '#34d399', fontWeight: 800 }}>Activo</strong></span>
+              <span style={{ color: '#475569' }}>•</span>
+              <span>Latencia: 24ms</span>
+              <span style={{ color: '#475569' }}>•</span>
+              <span style={{ fontFamily: 'monospace', color: '#94a3b8', fontWeight: 700 }}>Terminal: REC-01-MED</span>
+            </div>
           </div>
 
-          <div className="pms-user-actions">
-            {usuarioSesion && (
-              <span style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600 }}>
-                👤 {usuarioSesion.nombre} <strong style={{ color: '#f43f5e' }}>({usuarioSesion.rol})</strong>
-              </span>
-            )}
+          {/* LADO DERECHO: USUARIO + TURNO + AVATAR + SALIR */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ textAlign: 'right', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff' }}>
+                {usuarioSesion?.nombre || 'Administrador Grupo BookingSoft'}
+              </div>
+              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, marginTop: '2px' }}>
+                Turno Dia • Recepción Central
+              </div>
+            </div>
+
+            <div style={{ width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#1e293b', border: '1px solid #334155', color: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 900, flexShrink: 0 }}>
+              {initials}
+            </div>
+
             <button
-              className="btn-pms-switch-web"
               onClick={() => setActiveTab('inicio')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', backgroundColor: '#1e293b', border: '1px solid #334155', cursor: 'pointer', transition: 'all 0.2s ease' }}
               title="Ir al sitio web comercial de huéspedes"
             >
-              🌐 Ver Web Pública
+              <Globe size={13} color="#94a3b8" />
+              <span>Ver Web</span>
             </button>
-            <button className="btn-pms-logout" onClick={handleLogout} title="Cerrar Sesión">
-              <LogOut size={13}/> Salir
+
+            <button
+              onClick={handleLogout}
+              style={{ width: '34px', height: '34px', borderRadius: '8px', backgroundColor: '#1e293b', border: '1px solid #334155', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
+              title="Cerrar Sesión"
+            >
+              <LogOut size={14} />
             </button>
           </div>
+
         </div>
       </header>
     );

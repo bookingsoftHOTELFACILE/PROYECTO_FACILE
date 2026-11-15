@@ -2793,14 +2793,42 @@ body {
   .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
+  .lg\:col-span-4 { grid-column: span 4 / span 4 !important; }
+  .lg\:col-span-5 { grid-column: span 5 / span 5 !important; }
+  .lg\:col-span-6 { grid-column: span 6 / span 6 !important; }
+  .lg\:col-span-7 { grid-column: span 7 / span 7 !important; }
+  .lg\:col-span-8 { grid-column: span 8 / span 8 !important; }
+  .lg\:col-span-12 { grid-column: span 12 / span 12 !important; }
   .lg\:flex-row { flex-direction: row !important; }
   .lg\:items-center { align-items: center !important; }
+}
+
+/* Grid oficial PMS Coworking 2 columnas SCREEN_60 */
+.pms-coworking-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .pms-coworking-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  }
+  .pms-coworking-form-col {
+    grid-column: span 5 / span 5 !important;
+  }
+  .pms-coworking-table-col {
+    grid-column: span 7 / span 7 !important;
+  }
 }
 
 .space-y-1 > * + * { margin-top: 0.25rem !important; }
 .space-y-2 > * + * { margin-top: 0.5rem !important; }
 .space-y-3 > * + * { margin-top: 0.75rem !important; }
+.space-y-3\.5 > * + * { margin-top: 0.875rem !important; }
 .space-y-4 > * + * { margin-top: 1rem !important; }
+.space-y-5 > * + * { margin-top: 1.25rem !important; }
 .space-y-6 > * + * { margin-top: 1.5rem !important; }
 .space-y-8 > * + * { margin-top: 2rem !important; }
 
