@@ -1081,8 +1081,9 @@ const VistaPms = () => {
             }
             const depositoGarantia = 150000;
             const subtotalCalculado = noches * tarifaNoche;
-            const descuentoCalculado = cotizacion?.descuento || (noches >= 15 ? subtotalCalculado * 0.15 : (noches >= 7 ? subtotalCalculado * 0.10 : 0));
-            const totalFacturar = cotizacion?.total || Math.max(0, subtotalCalculado - descuentoCalculado);
+            const porcentajeDcto = noches >= 15 ? 15 : (noches >= 7 ? 10 : 0);
+            const descuentoCalculado = cotizacion?.descuento !== undefined ? cotizacion.descuento : (noches >= 15 ? subtotalCalculado * 0.15 : (noches >= 7 ? subtotalCalculado * 0.10 : 0));
+            const totalFacturar = cotizacion?.total !== undefined ? cotizacion.total : Math.max(0, subtotalCalculado - descuentoCalculado);
 
             return (
               <div id="pms-reception-reserva-module" className="w-full mx-auto space-y-8 mb-6">
@@ -1679,7 +1680,13 @@ const VistaPms = () => {
                           <Tag className="w-4 h-4 text-slate-400 shrink-0" />
                         </div>
                         <div className="text-2xl font-black text-white">${tarifaNoche.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
-                        <span className="text-xs text-emerald-400 font-semibold mt-1 block">✓ Tarifa Estándar Walk-In</span>
+                        {descuentoCalculado > 0 ? (
+                          <span className="text-xs text-emerald-400 font-bold mt-1 block">
+                            🎉 Dcto. Larga Estadía ({porcentajeDcto}%)
+                          </span>
+                        ) : (
+                          <span className="text-xs text-emerald-400 font-semibold mt-1 block">✓ Tarifa Estándar Walk-In</span>
+                        )}
                       </div>
 
                       {/* Tarjeta 3: Depósito en Garantía */}
@@ -1704,14 +1711,60 @@ const VistaPms = () => {
                             Liquidación Inmediata
                           </span>
                         </div>
+                        {descuentoCalculado > 0 && (
+                          <div className="text-[11px] text-red-200/90 line-through font-semibold -mb-1">
+                            Base: ${subtotalCalculado.toLocaleString('es-CO')} COP
+                          </div>
+                        )}
                         <div className="text-3xl font-black tracking-tight text-white my-0.5">
                           ${totalFacturar.toLocaleString('es-CO')} <span className="text-xs font-bold text-red-100">COP</span>
                         </div>
-                        <span className="text-[11px] text-red-100 font-medium block">
-                          Incluye impuestos y seguro hotelero
-                        </span>
+                        {descuentoCalculado > 0 ? (
+                          <span className="text-[11px] text-emerald-200 font-bold block">
+                            🎉 Ahorro aplicado: -${descuentoCalculado.toLocaleString('es-CO')} COP ({porcentajeDcto}%)
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-red-100 font-medium block">
+                            Incluye impuestos y seguro hotelero
+                          </span>
+                        )}
                       </div>
                     </div>
+
+                    {/* Banner de Desglose de Descuento de Larga Estadía (Misma Lógica del Portal Principal) */}
+                    {descuentoCalculado > 0 ? (
+                      <div className="mt-5 p-3.5 rounded-2xl bg-emerald-950/70 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">🎉</span>
+                          <div>
+                            <span className="text-xs sm:text-sm font-extrabold text-emerald-300 block">
+                              ¡Descuento de Larga Estadía Activado ({porcentajeDcto}% de Ahorro Automático)!
+                            </span>
+                            <span className="text-[11px] text-slate-300 font-medium">
+                              Subtotal base: <span className="line-through text-slate-400">${subtotalCalculado.toLocaleString('es-CO')} COP</span> por estadía de {noches} noches.
+                            </span>
+                          </div>
+                        </div>
+                        <div className="bg-emerald-500/20 border border-emerald-400/40 px-3.5 py-1.5 rounded-xl text-left sm:text-right shrink-0">
+                          <span className="text-[10px] uppercase font-bold text-emerald-300/90 block">Ahorro Aplicado</span>
+                          <span className="text-xs sm:text-sm font-black text-emerald-300">-${descuentoCalculado.toLocaleString('es-CO')} COP</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-5 p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-slate-400">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span>💡</span>
+                          <span>
+                            <strong>Ahorro por estadía prolongada:</strong> Estadías de 7 a 14 noches reciben <strong>10% de descuento automático</strong>, y de 15 o más noches reciben <strong>15% de descuento</strong>.
+                          </span>
+                        </div>
+                        {noches < 7 && (
+                          <span className="text-[11px] text-amber-400 font-semibold whitespace-nowrap">
+                            Faltan {7 - noches} {7 - noches === 1 ? 'noche' : 'noches'} para el 10%
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* 5. CHECK-IN DIRECTO & YALE CONNECT SMARTLOCK (EXACTO A IMAGEN 2) */}
