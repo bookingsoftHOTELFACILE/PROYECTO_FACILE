@@ -2220,7 +2220,7 @@ const VistaPms = () => {
                           <th className="px-6 py-3.5">Documento</th>
                           <th className="px-6 py-3.5">Contacto & Correo</th>
                           <th className="px-6 py-3.5">Estado</th>
-                          <th className="px-6 sm:px-8 py-3.5 text-right">Acción</th>
+                          <th className="px-6 sm:px-8 py-3.5 text-right whitespace-nowrap min-w-[200px]">Gestión de Perfil</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
@@ -2299,60 +2299,71 @@ const VistaPms = () => {
                                 <td className="px-6 py-4">
                                   {h.estado === 'Activo' ? (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
                                       Activo
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200" title="Perfil suspendido: no admite nuevas reservas">
                                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
-                                      Inactivo
+                                      Inactivo / Suspendido
                                     </span>
                                   )}
                                 </td>
 
-                                {/* Acciones */}
-                                <td className="px-6 sm:px-8 py-4 text-right">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setSelectedHuesped(h);
-                                        setPmsWalkInGuest({
-                                          tipo_documento: h.documento?.toUpperCase().startsWith('P') ? 'Pasaporte' : 'Cédula de Ciudadanía',
-                                          documento: h.documento || '',
-                                          nombre: h.nombre || '',
-                                          telefono: h.telefono || '',
-                                          correo: h.correo || ''
-                                        });
-                                        setPmsSubTab('recepcion');
-                                      }}
-                                      className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
-                                      title="Crear reserva directa para este huésped en Recepción Walk-in"
-                                    >
-                                      <Plus className="w-3.5 h-3.5" />
-                                      <span>+ Reservar</span>
-                                    </button>
-
-                                    <button
-                                      type="button"
-                                      onClick={() => handleToggleEstadoHuesped(h)}
-                                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                                        h.estado === 'Activo'
-                                          ? 'border-slate-200 text-slate-600 hover:bg-slate-100'
-                                          : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                                      }`}
-                                    >
-                                      {h.estado === 'Activo' ? 'Desactivar' : 'Activar'}
-                                    </button>
-
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteHuesped(h.id_huesped)}
-                                      className="p-1.5 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
-                                      title="Eliminar registro de huésped"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
+                                {/* Gestión de Perfil */}
+                                <td className="px-6 sm:px-8 py-4 text-right whitespace-nowrap min-w-[200px]">
+                                  <div className="flex items-center justify-end">
+                                    {h.estado === 'Activo' ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleToggleEstadoHuesped(h)}
+                                        className="rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-amber-50 hover:border-amber-300 hover:text-amber-800 text-xs font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                                        style={{
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          gap: '9px',
+                                          padding: '8px 20px',
+                                          minWidth: '165px',
+                                          height: '38px',
+                                          letterSpacing: '0.01em'
+                                        }}
+                                        title="Suspender perfil del huésped. Conserva la trazabilidad legal y el histórico contable."
+                                      >
+                                        <Ban 
+                                          size={14} 
+                                          strokeWidth={2.3}
+                                          className="text-slate-400 group-hover:text-amber-600 shrink-0" 
+                                          style={{ display: 'inline-block', transform: 'translateY(2px)' }} 
+                                        />
+                                        <span style={{ display: 'inline-block', lineHeight: 1 }}>Desactivar Perfil</span>
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleToggleEstadoHuesped(h)}
+                                        className="rounded-xl border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 text-xs font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                                        style={{
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          gap: '9px',
+                                          padding: '8px 20px',
+                                          minWidth: '165px',
+                                          height: '38px',
+                                          letterSpacing: '0.01em'
+                                        }}
+                                        title="Reactivar perfil: Habilita al huésped para nuevas reservas y check-in"
+                                      >
+                                        <CheckCircle2 
+                                          size={14} 
+                                          strokeWidth={2.3}
+                                          className="text-emerald-600 shrink-0" 
+                                          style={{ display: 'inline-block', transform: 'translateY(2px)' }} 
+                                        />
+                                        <span style={{ display: 'inline-block', lineHeight: 1 }}>Activar Perfil</span>
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -2361,6 +2372,14 @@ const VistaPms = () => {
                         )}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* Nota informativa de Auditoría y Cumplimiento PMS */}
+                  <div className="px-6 sm:px-8 py-2.5 bg-slate-50/80 border-t border-slate-200/80 flex items-center gap-2 text-[11px] text-slate-500">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>
+                      <strong className="text-slate-700">Políticas de Auditoría & Trazabilidad PMS:</strong> De acuerdo con la normativa tributaria (DIAN) y de registro hotelero (SIRE / TRA), los perfiles no se destruyen físicamente; se gestionan mediante baja lógica y suspensión de perfil para proteger la integridad del historial de estancias y folios contables.
+                    </span>
                   </div>
 
                   {/* Paginación al Pie */}
@@ -2416,6 +2435,7 @@ const VistaPms = () => {
             <PanelAuditoriaReservas
               onNuevaReserva={() => setPmsSubTab('recepcion')}
               onCheckIn={(id) => handleCambiarEstadoReserva(id, 'Check-In')}
+              onCheckOut={(id) => handleCambiarEstadoReserva(id, 'Completada')}
               onCancelarReserva={(id) => handleDeleteReserva(id)}
             />
           )}

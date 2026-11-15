@@ -15,13 +15,15 @@ import {
   Activity,
   Laptop,
   ConciergeBell,
-  Crown
+  Crown,
+  ArrowRight
 } from 'lucide-react';
 
 export default function PanelAuditoriaReservas({ 
   reservas = [], 
   onNuevaReserva, 
   onCheckIn, 
+  onCheckOut,
   onCancelarReserva 
 }) {
   const [busqueda, setBusqueda] = useState('');
@@ -150,18 +152,37 @@ export default function PanelAuditoriaReservas({
   const handleCheckInInterno = (id) => {
     if (onCheckIn) {
       onCheckIn(id);
-    } else {
-      setListaReservas(listaReservas.map(r => r.id === id ? { ...r, estado: 'Check-In' } : r));
     }
+    setListaReservas(prev => prev.map(r => (r.id === id || r.id_reserva === id) ? { ...r, estado: 'Check-In' } : r));
+  };
+
+  const handleCheckOutInterno = (id) => {
+    if (onCheckOut) {
+      onCheckOut(id);
+    }
+    setListaReservas(prev => prev.map(r => (r.id === id || r.id_reserva === id) ? { ...r, estado: 'Completada' } : r));
   };
 
   const handleCancelarInterno = (id) => {
     if (onCancelarReserva) {
       onCancelarReserva(id);
-    } else {
-      setListaReservas(listaReservas.filter(r => r.id !== id));
     }
+    setListaReservas(prev => prev.map(r => (r.id === id || r.id_reserva === id) ? { ...r, estado: 'Cancelada' } : r));
   };
+
+  // Métricas dinámicas de ciclo de vida PMS
+  const totalReservasCount = listaReservas.filter(r => r.estado !== 'Cancelada').length;
+  const checkinsPendientesCount = listaReservas.filter(r => {
+    const est = String(r.estado || '').toUpperCase();
+    return est === 'CONFIRMADA' || est === 'PENDIENTE';
+  }).length;
+  const inHouseCount = listaReservas.filter(r => {
+    const est = String(r.estado || '').toUpperCase();
+    return est === 'CHECK-IN' || est === 'IN-HOUSE' || est === 'OCUPADA';
+  }).length;
+  const checkoutsProgramadosCount = inHouseCount;
+  const totalAptos = 40;
+  const pctOcupacion = Math.min(100, Math.round((inHouseCount / totalAptos) * 100)) || 30;
 
   const reservasFiltradas = listaReservas.filter((r) => {
     const q = busqueda.toLowerCase().trim();
@@ -169,8 +190,10 @@ export default function PanelAuditoriaReservas({
       r.huesped.toLowerCase().includes(q) ||
       (r.doc && r.doc.includes(q)) ||
       r.apartamento.toLowerCase().includes(q);
-    const coincideEstado = filtroEstado === 'TODOS' || r.estado.toUpperCase() === filtroEstado.toUpperCase();
-    const coincideOrigen = filtroOrigen === 'TODOS' || r.tipoOrigen.toUpperCase() === filtroOrigen.toUpperCase();
+    const est = String(r.estado || '').toUpperCase();
+    const coincideEstado = filtroEstado === 'TODOS' || 
+      (filtroEstado === 'CHECK-IN' ? (est === 'CHECK-IN' || est === 'IN-HOUSE' || est === 'OCUPADA') : est === filtroEstado.toUpperCase());
+    const coincideOrigen = filtroOrigen === 'TODOS' || (r.tipoOrigen && r.tipoOrigen.toUpperCase() === filtroOrigen.toUpperCase());
     return coincideTexto && coincideEstado && coincideOrigen;
   });
 
@@ -198,10 +221,10 @@ export default function PanelAuditoriaReservas({
               TOTAL RESERVAS
             </span>
             <div style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginTop: '4px' }}>
-              21
+              {totalReservasCount}
             </div>
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626', marginTop: '4px', display: 'inline-block' }}>
-              ↑ +4 registradas hoy
+              ↑ Activas en Sistema
             </span>
           </div>
           <div 
@@ -239,10 +262,10 @@ export default function PanelAuditoriaReservas({
               CHECK-INS PENDIENTES
             </span>
             <div style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginTop: '4px' }}>
-              05
+              {String(checkinsPendientesCount).padStart(2, '0')}
             </div>
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#b45309', marginTop: '4px', display: 'inline-block' }}>
-              Prioritarios antes de 15:00
+              Por ingresar al hotel
             </span>
           </div>
           <div 
@@ -281,7 +304,7 @@ export default function PanelAuditoriaReservas({
                 HUÉSPEDES IN-HOUSE
               </span>
               <div style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginTop: '4px' }}>
-                12
+                {String(inHouseCount).padStart(2, '0')}
               </div>
             </div>
             <div 
@@ -303,10 +326,10 @@ export default function PanelAuditoriaReservas({
           <div style={{ marginTop: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
               <span>Ocupación actual</span>
-              <span style={{ color: '#059669', fontWeight: 900 }}>60%</span>
+              <span style={{ color: '#059669', fontWeight: 900 }}>{pctOcupacion}%</span>
             </div>
             <div style={{ width: '100%', height: '6px', backgroundColor: '#f1f5f9', borderRadius: '9999px', overflow: 'hidden' }}>
-              <div style={{ width: '60%', height: '100%', backgroundColor: '#10b981', borderRadius: '9999px' }}></div>
+              <div style={{ width: `${pctOcupacion}%`, height: '100%', backgroundColor: '#10b981', borderRadius: '9999px', transition: 'width 0.3s ease' }}></div>
             </div>
           </div>
         </div>
@@ -329,10 +352,10 @@ export default function PanelAuditoriaReservas({
               CHECK-OUTS PROGRAMADOS
             </span>
             <div style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginTop: '4px' }}>
-              03
+              {String(checkoutsProgramadosCount).padStart(2, '0')}
             </div>
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#0284c7', marginTop: '4px', display: 'inline-block' }}>
-              ✓ 1 liquidado con éxito
+              ✓ Salidas por liquidar
             </span>
           </div>
           <div 
@@ -502,8 +525,10 @@ export default function PanelAuditoriaReservas({
               }}
             >
               <option value="TODOS">Todos los estados</option>
-              <option value="CONFIRMADA">Confirmadas</option>
-              <option value="CHECK-IN">Check-In</option>
+              <option value="CONFIRMADA">Confirmadas (Por llegar)</option>
+              <option value="CHECK-IN">In-House (Hospedadas)</option>
+              <option value="COMPLETADA">Completadas (Check-out)</option>
+              <option value="CANCELADA">Canceladas</option>
             </select>
 
             <select
@@ -628,23 +653,96 @@ export default function PanelAuditoriaReservas({
 
                     {/* Estado */}
                     <td style={{ padding: '14px 16px' }}>
-                      <span 
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '3px 10px',
-                          borderRadius: '9999px',
-                          backgroundColor: '#fffbeb',
-                          border: '1px solid #fde68a',
-                          color: '#b45309',
-                          fontWeight: 700,
-                          fontSize: '11px'
-                        }}
-                      >
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#d97706', display: 'inline-block' }}></span>
-                        {r.estado}
-                      </span>
+                      {(() => {
+                        const est = String(r.estado || '').toUpperCase();
+                        if (est === 'CHECK-IN' || est === 'IN-HOUSE' || est === 'OCUPADA') {
+                          return (
+                            <span 
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '3px 10px',
+                                borderRadius: '9999px',
+                                backgroundColor: '#ecfdf5',
+                                border: '1px solid #a7f3d0',
+                                color: '#047857',
+                                fontWeight: 800,
+                                fontSize: '11px',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }} className="animate-pulse"></span>
+                              In-House (Activa)
+                            </span>
+                          );
+                        }
+                        if (est === 'COMPLETADA' || est === 'FINALIZADA') {
+                          return (
+                            <span 
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '3px 10px',
+                                borderRadius: '9999px',
+                                backgroundColor: '#f1f5f9',
+                                border: '1px solid #e2e8f0',
+                                color: '#475569',
+                                fontWeight: 700,
+                                fontSize: '11px',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#64748b', display: 'inline-block' }}></span>
+                              Completada
+                            </span>
+                          );
+                        }
+                        if (est === 'CANCELADA') {
+                          return (
+                            <span 
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '3px 10px',
+                                borderRadius: '9999px',
+                                backgroundColor: '#fef2f2',
+                                border: '1px solid #fecaca',
+                                color: '#b91c1c',
+                                fontWeight: 700,
+                                fontSize: '11px',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#dc2626', display: 'inline-block' }}></span>
+                              Cancelada
+                            </span>
+                          );
+                        }
+                        // Por defecto: Confirmada
+                        return (
+                          <span 
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '3px 10px',
+                              borderRadius: '9999px',
+                              backgroundColor: '#fffbeb',
+                              border: '1px solid #fde68a',
+                              color: '#b45309',
+                              fontWeight: 700,
+                              fontSize: '11px',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#d97706', display: 'inline-block' }}></span>
+                            Confirmada
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     {/* Origen */}
@@ -693,66 +791,166 @@ export default function PanelAuditoriaReservas({
                     {/* Acciones */}
                     <td style={{ padding: '14px 28px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleCheckInInterno(r.id)}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '5px 12px',
-                            borderRadius: '8px',
-                            border: '1px solid #cbd5e1',
-                            backgroundColor: '#ffffff',
-                            color: '#334155',
-                            fontWeight: 600,
-                            fontSize: '11px',
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                            transition: 'all 0.15s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#ecfdf5';
-                            e.currentTarget.style.borderColor = '#a7f3d0';
-                            e.currentTarget.style.color = '#065f46';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#ffffff';
-                            e.currentTarget.style.borderColor = '#cbd5e1';
-                            e.currentTarget.style.color = '#334155';
-                          }}
-                        >
-                          <Check size={12} strokeWidth={2.5} />
-                          <span>Check-in</span>
-                        </button>
+                        {(() => {
+                          const est = String(r.estado || '').toUpperCase();
 
-                        <button
-                          type="button"
-                          onClick={() => handleCancelarInterno(r.id)}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            padding: '4px 12px',
-                            borderRadius: '8px',
-                            border: '1px solid #fecdd3',
-                            backgroundColor: '#ffffff',
-                            color: '#dc2626',
-                            fontWeight: 600,
-                            fontSize: '11px',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#fff1f2';
-                            e.currentTarget.style.borderColor = '#fca5a5';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#ffffff';
-                            e.currentTarget.style.borderColor = '#fecdd3';
-                          }}
-                        >
-                          Cancelar
-                        </button>
+                          // ESTADO IN-HOUSE: el huésped ya está adentro, corresponde CHECK-OUT
+                          if (est === 'CHECK-IN' || est === 'IN-HOUSE' || est === 'OCUPADA') {
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => handleCheckOutInterno(r.id || r.id_reserva)}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '5px 14px',
+                                  borderRadius: '8px',
+                                  border: '1px solid #bfdbfe',
+                                  backgroundColor: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  fontWeight: 700,
+                                  fontSize: '11px',
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 1px 2px rgba(29, 78, 216, 0.08)',
+                                  transition: 'all 0.15s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#dbeafe';
+                                  e.currentTarget.style.borderColor = '#93c5fd';
+                                  e.currentTarget.style.color = '#1e40af';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#eff6ff';
+                                  e.currentTarget.style.borderColor = '#bfdbfe';
+                                  e.currentTarget.style.color = '#1d4ed8';
+                                }}
+                                title="Registrar salida del huésped (Check-out), liquidar estancia y pasar apartamento a Limpieza"
+                              >
+                                <ArrowRight size={13} strokeWidth={2.5} />
+                                <span>Check-out</span>
+                              </button>
+                            );
+                          }
+
+                          // ESTADO COMPLETADA: estancia finalizada
+                          if (est === 'COMPLETADA' || est === 'FINALIZADA') {
+                            return (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '4px 10px',
+                                  borderRadius: '6px',
+                                  backgroundColor: '#f8fafc',
+                                  border: '1px solid #e2e8f0',
+                                  color: '#64748b',
+                                  fontWeight: 600,
+                                  fontSize: '11px',
+                                  whiteSpace: 'nowrap'
+                                }}
+                                title="Estancia completada y liquidada"
+                              >
+                                <Check size={12} strokeWidth={2.5} color="#059669" />
+                                <span>Liquidada</span>
+                              </span>
+                            );
+                          }
+
+                          // ESTADO CANCELADA: anulada
+                          if (est === 'CANCELADA') {
+                            return (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '4px 10px',
+                                  borderRadius: '6px',
+                                  backgroundColor: '#fef2f2',
+                                  border: '1px solid #fee2e2',
+                                  color: '#dc2626',
+                                  fontWeight: 600,
+                                  fontSize: '11px',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                Anulada
+                              </span>
+                            );
+                          }
+
+                          // ESTADO CONFIRMADA (Llegada pendiente): CHECK-IN + CANCELAR
+                          return (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleCheckInInterno(r.id || r.id_reserva)}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '5px 12px',
+                                  borderRadius: '8px',
+                                  border: '1px solid #a7f3d0',
+                                  backgroundColor: '#f0fdf4',
+                                  color: '#047857',
+                                  fontWeight: 700,
+                                  fontSize: '11px',
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 1px 2px rgba(4, 120, 87, 0.06)',
+                                  transition: 'all 0.15s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#dcfce7';
+                                  e.currentTarget.style.borderColor = '#86efac';
+                                  e.currentTarget.style.color = '#065f46';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#f0fdf4';
+                                  e.currentTarget.style.borderColor = '#a7f3d0';
+                                  e.currentTarget.style.color = '#047857';
+                                }}
+                                title="Registrar entrada del huésped (Check-in) y marcar habitación como Ocupada"
+                              >
+                                <Check size={12} strokeWidth={2.5} />
+                                <span>Check-in</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleCancelarInterno(r.id || r.id_reserva)}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '4px 12px',
+                                  borderRadius: '8px',
+                                  border: '1px solid #fecdd3',
+                                  backgroundColor: '#ffffff',
+                                  color: '#dc2626',
+                                  fontWeight: 600,
+                                  fontSize: '11px',
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap',
+                                  transition: 'all 0.15s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#fff1f2';
+                                  e.currentTarget.style.borderColor = '#fca5a5';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#ffffff';
+                                  e.currentTarget.style.borderColor = '#fecdd3';
+                                }}
+                                title="Cancelar esta reserva"
+                              >
+                                Cancelar
+                              </button>
+                            </>
+                          );
+                        })()}
                       </div>
                     </td>
                   </tr>

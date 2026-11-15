@@ -1238,11 +1238,14 @@ export function useAppState() {
     window.scrollTo({ top: 600, behavior: 'smooth' });
   };
 
-  // Activar / Desactivar Huésped
+  // Activar / Desactivar Huésped (Gestión de Perfiles y Baja Lógica PMS)
   const handleToggleEstadoHuesped = async (h) => {
     const nuevoEstado = h.estado === 'Activo' ? 'Inactivo' : 'Activo';
-    const accionTexto = nuevoEstado === 'Activo' ? 'activar' : 'desactivar';
-    if (!window.confirm(`¿Está seguro de ${accionTexto} al huésped "${h.nombre}"?`)) return;
+    const confirmMessage = nuevoEstado === 'Inactivo'
+      ? `¿Desea suspender/desactivar el perfil del huésped "${h.nombre}"?\n\nℹ️ Estándar Hotelero PMS:\n• El perfil no podrá recibir nuevas reservas ni check-in activo.\n• Su histórico de estancias, folios de facturación y trazabilidad legal (DIAN / SIRE) permanecerá íntegro y protegido.`
+      : `¿Desea reactivar el perfil del huésped "${h.nombre}"?\n\nEl huésped volverá a estar habilitado para check-in y reservas inmediatas.`;
+
+    if (!window.confirm(confirmMessage)) return;
 
     setLoading(true);
     if (backendActivo) {
@@ -1275,9 +1278,9 @@ export function useAppState() {
     setAlert({ type: 'success', message: `Huésped "${h.nombre}" seleccionado para reserva.` });
   };
 
-  // Eliminar Huésped
+  // Baja Lógica de Huésped (Conserva integridad fiscal y reservas)
   const handleDeleteHuesped = async (id_huesped) => {
-    if (!window.confirm('¿Está seguro de desactivar/eliminar este huésped del sistema?')) return;
+    if (!window.confirm('¿Desea dar de baja lógica al huésped en el sistema?\n\nℹ️ Política PMS: Conforme a la normativa hotelera (DIAN / SIRE), se conservará todo el historial contable y de estancias anteriores, cambiando su estado a Inactivo.')) return;
     setLoading(true);
     if (backendActivo) {
       try {
