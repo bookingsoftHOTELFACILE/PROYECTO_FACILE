@@ -1163,15 +1163,20 @@ const VistaPms = () => {
                           <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
                             Correo Electrónico (Factura Electrónica & Llave Digital) <span className="text-[#d91a2a]">*</span>
                           </label>
-                          <input
-                            type="email"
-                            name="correo"
-                            value={pmsWalkInGuest.correo}
-                            onChange={handlePmsWalkInGuestChange}
-                            placeholder="Ej: jocmiguelcc@gmail.com"
-                            required
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
-                          />
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
+                              @
+                            </span>
+                            <input
+                              type="email"
+                              name="correo"
+                              value={pmsWalkInGuest.correo}
+                              onChange={handlePmsWalkInGuestChange}
+                              placeholder="jocmiguelcc@gmail.com"
+                              required
+                              className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1229,19 +1234,22 @@ const VistaPms = () => {
                           <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
                             Número de Personas / Ocupantes <span className="text-[#d91a2a]">*</span>
                           </label>
-                          <select
-                            name="numero_personas"
-                            value={reservaData.numero_personas}
-                            onChange={handleReservaChange}
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
-                          >
-                            <option value={1}>1 huésped (Titular)</option>
-                            <option value={2}>2 huéspedes</option>
-                            <option value={3}>3 huéspedes</option>
-                            <option value={4}>4 huéspedes</option>
-                            <option value={5}>5 huéspedes</option>
-                            <option value={6}>6 huéspedes</option>
-                          </select>
+                          <div className="relative">
+                            <select
+                              name="numero_personas"
+                              value={reservaData.numero_personas}
+                              onChange={handleReservaChange}
+                              className="w-full px-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer appearance-none"
+                            >
+                              <option value={1}>1 huésped (Titular)</option>
+                              <option value={2}>2 huéspedes</option>
+                              <option value={3}>3 huéspedes</option>
+                              <option value={4}>4 huéspedes</option>
+                              <option value={5}>5 huéspedes</option>
+                              <option value={6}>6 huéspedes</option>
+                            </select>
+                            <Users className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
                         </div>
 
                         {/* Fecha Entrada */}
@@ -1439,17 +1447,19 @@ const VistaPms = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
-                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
+                        <Clock className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                           Estadía Total
                         </span>
                         <div className="text-2xl font-black">{noches} {noches === 1 ? 'Noche' : 'Noches'}</div>
                         <span className="text-xs text-slate-400 mt-0.5 block">
-                          {reservaData.fecha_entrada && reservaData.fecha_salida ? `${reservaData.fecha_entrada} al ${reservaData.fecha_salida}` : 'Seleccione fechas'}
+                          {reservaData.fecha_entrada && reservaData.fecha_salida ? `${reservaData.fecha_entrada} al ${reservaData.fecha_salida}` : '14 Nov — 16 Nov 2026'}
                         </span>
                       </div>
 
-                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
+                        <Tag className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                           Tarifa por Noche
                         </span>
@@ -1457,7 +1467,8 @@ const VistaPms = () => {
                         <span className="text-xs text-emerald-400 mt-0.5 block">✓ Tarifa Estándar Walk-In</span>
                       </div>
 
-                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
+                        <Shield className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                           Depósito en Garantía
                         </span>
