@@ -1624,9 +1624,10 @@ body {
 }
 
 .pms-dedicated-header-content {
-  max-width: 1280px;
+  width: 100%;
+  max-width: 1720px;
   margin: 0 auto;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem clamp(1rem, 3vw, 3rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2857,11 +2858,11 @@ body {
 
 .pms-container-bounded {
   width: 100% !important;
-  max-width: 1160px !important;
+  max-width: 1720px !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  padding-left: 18px !important;
-  padding-right: 18px !important;
+  padding-left: clamp(1rem, 3vw, 3rem) !important;
+  padding-right: clamp(1rem, 3vw, 3rem) !important;
   box-sizing: border-box !important;
 }
 
@@ -2960,6 +2961,36 @@ body {
   border-color: #6ee7b7 !important;
 }
 
+/* Rol Activo de Sesión (Tú) en Tabla PMS (Exacto a Imagen 2) */
+.pms-role-badge-self {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 14px !important;
+  border-radius: 12px !important;
+  font-family: var(--font-family-base) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  color: #7e22ce !important;
+  background-color: #f3e8ff !important;
+  border: 1px solid #ddd6fe !important;
+  box-shadow: 0 1px 3px rgba(126, 34, 206, 0.1) !important;
+  white-space: nowrap !important;
+}
+
+/* Indicador de Sesión Activa en Acción de Estado (Exacto a Imagen 2) */
+.pms-session-active-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-family: var(--font-family-base) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  font-style: italic !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+}
+
 /* Botón PMS Buscar Huésped - Sólido Negro con Icono Blanco como la Maqueta */
 .btn-pms-search-dark {
   background-color: #0f172a !important;
@@ -2998,4 +3029,84 @@ body {
 
 .bg-black {
   background-color: #000000 !important;
+}
+
+/* Botones de Acción PMS Walk-in (Exacto como la Maqueta de Referencia de Imagen 2) */
+.btn-pms-clear {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 0 24px !important;
+  height: 48px !important;
+  border-radius: 14px !important;
+  font-family: var(--font-family-base) !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+}
+
+.btn-pms-clear:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.btn-pms-confirm {
+  background-color: #d91a2a !important;
+  color: #ffffff !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 0 28px !important;
+  height: 48px !important;
+  border-radius: 14px !important;
+  font-family: var(--font-family-base) !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 4px 14px rgba(217, 26, 42, 0.35) !important;
+  white-space: nowrap !important;
+}
+
+.btn-pms-confirm:hover {
+  background-color: #b91522 !important;
+  box-shadow: 0 6px 20px rgba(217, 26, 42, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-pms-confirm:active {
+  transform: translateY(0) !important;
+}
+
+/* Tarjetas de Live Pricing PMS (Exactas a Imagen 2) */
+.card-pms-pricing-dark {
+  background-color: rgba(30, 41, 59, 0.75) !important;
+  border: 1px solid rgba(51, 65, 85, 0.7) !important;
+  border-radius: 16px !important;
+  padding: 1.25rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-height: 115px !important;
+}
+
+.card-pms-pricing-total {
+  background: linear-gradient(135deg, #e11d48 0%, #d91a2a 50%, #991b1b 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 16px !important;
+  padding: 1.25rem !important;
+  box-shadow: 0 8px 24px rgba(217, 26, 42, 0.45) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-height: 115px !important;
+  color: #ffffff !important;
 }

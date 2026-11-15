@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   UserPlus, ShieldCheck, Users, Calendar, ListOrdered, Trash2,
   Wrench, Check, Search, Tag, Mail, Shield, User, AlertTriangle,
@@ -68,9 +68,38 @@ const VistaPms = () => {
   const [confirmRolModal, setConfirmRolModal] = useState(null);
   const [confirmEstadoModal, setConfirmEstadoModal] = useState(null);
 
-  // Filtrado reactivo de empleados
+  // Detección robusta de la cuenta activa (Tú)
+  const checkIsSelf = useCallback((emp) => {
+    if (!emp) return false;
+    if (!usuarioSesion) {
+      return Number(emp.id_empleado) === 2 || emp.usuario === 'admin';
+    }
+    const empUser = String(emp.usuario || '').toLowerCase().trim();
+    const sesUser = String(usuarioSesion.usuario || '').toLowerCase().trim();
+    if (empUser && sesUser && empUser === sesUser) return true;
+
+    const empNom = String(emp.nombre || '').toLowerCase().trim();
+    const sesNom = String(usuarioSesion.nombre || '').toLowerCase().trim();
+    if (empNom && sesNom && (empNom === sesNom || empNom.includes(sesNom) || sesNom.includes(empNom))) return true;
+
+    const empMail = String(emp.correo || '').toLowerCase().trim();
+    const sesMail = String(usuarioSesion.correo || '').toLowerCase().trim();
+    if (empMail && sesMail && empMail === sesMail) return true;
+
+    const empId = String(emp.id_empleado || '');
+    const sesId = String(usuarioSesion.id_empleado || usuarioSesion.sub || '');
+    if (empId && sesId && empId === sesId) return true;
+
+    if ((sesUser === 'admin' || sesNom.includes('administrador')) && (empUser === 'admin' || empId === '2')) {
+      return true;
+    }
+
+    return false;
+  }, [usuarioSesion]);
+
+  // Filtrado y ordenamiento reactivo de empleados (orden natural por id_empleado para que las cuentas clave y la sesión activa aparezcan ordenadas en la página 1)
   const filteredEmpleados = useMemo(() => {
-    return (empleadosList || []).filter(emp => {
+    const list = (empleadosList || []).filter(emp => {
       const q = empSearchQuery.toLowerCase().trim();
       const matchSearch = !q ||
         (emp.nombre && emp.nombre.toLowerCase().includes(q)) ||
@@ -82,6 +111,10 @@ const VistaPms = () => {
       const matchEstado = empEstadoFilter === 'todos' || emp.estado === empEstadoFilter;
 
       return matchSearch && matchRol && matchEstado;
+    });
+
+    return list.sort((a, b) => {
+      return (Number(a.id_empleado) || 0) - (Number(b.id_empleado) || 0);
     });
   }, [empleadosList, empSearchQuery, empRolFilter, empEstadoFilter]);
 
@@ -404,10 +437,10 @@ const VistaPms = () => {
                   </div>
                   <div>
                     <h3 className="text-base sm:text-lg font-bold text-slate-900 m-0">
-                      👑 Gestión de Personal & Roles — Dirección Operativa y Front Desk
+                      👑 Panel de Superusuario — Gestión de Personal & Roles (Grupo BookingSoft)
                     </h3>
                     <p className="text-xs text-slate-500 font-medium mt-0.5 mb-0">
-                      Control integral de colaboradores, asignación de turnos, roles operativos y estados del personal del apartahotel.
+                      Control integral de empleados, asignación de roles operativos y estados del personal.
                     </p>
                   </div>
                 </div>
@@ -619,7 +652,7 @@ const VistaPms = () => {
                         const avatar = getAvatarStyle(idx);
                         const subinfo = getSubinfo(emp, idx);
                         const initials = getInitials(emp.nombre);
-                        const isSelf = usuarioSesion && (usuarioSesion.usuario === emp.usuario || usuarioSesion.nombre === emp.nombre);
+                        const isSelf = checkIsSelf(emp);
 
                         return (
                           <tr key={emp.id_empleado} className="hover:bg-slate-50/50 transition-colors">
@@ -666,11 +699,25 @@ const VistaPms = () => {
                             <td>
                               {isSelf ? (
                                 <span
-                                  title="Tu cuenta actual (No puedes auto-degradar tu rol)"
-                                  className="px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-xs font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap"
+                                  title="Tu cuenta actual (Sesión Activa - No puedes auto-degradar tu rol)"
+                                  className="pms-role-badge-self"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '6px 14px',
+                                    borderRadius: '12px',
+                                    fontSize: '0.82rem',
+                                    fontWeight: 800,
+                                    color: '#7e22ce',
+                                    backgroundColor: '#f3e8ff',
+                                    border: '1px solid #ddd6fe',
+                                    boxShadow: '0 1px 3px rgba(126, 34, 206, 0.1)',
+                                    whiteSpace: 'nowrap'
+                                  }}
                                 >
                                   <span>👑</span>
-                                  <span>{emp.rol} (Tú)</span>
+                                  <span>{emp.rol || 'Administrador'} (Tú)</span>
                                 </span>
                               ) : (
                                 <select
@@ -697,13 +744,43 @@ const VistaPms = () => {
                             </td>
                             <td>
                               {emp.estado === 'Activo' ? (
-                                <span className="pms-status-pill bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                                <span
+                                  className="pms-status-pill"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '5px 12px',
+                                    borderRadius: '9999px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 700,
+                                    color: '#15803d',
+                                    backgroundColor: '#dcfce7',
+                                    border: '1px solid #bbf7d0',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16a34a', display: 'inline-block' }}></span>
                                   <span>Activo</span>
                                 </span>
                               ) : (
-                                <span className="pms-status-pill bg-red-50 text-red-700 border border-red-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
+                                <span
+                                  className="pms-status-pill"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '5px 12px',
+                                    borderRadius: '9999px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 700,
+                                    color: '#b91c1c',
+                                    backgroundColor: '#fee2e2',
+                                    border: '1px solid #fecdd3',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#dc2626', display: 'inline-block' }}></span>
                                   <span>Inactivo</span>
                                 </span>
                               )}
@@ -723,8 +800,22 @@ const VistaPms = () => {
                             </td>
                             <td style={{ textAlign: 'right' }}>
                               {isSelf ? (
-                                <span className="text-[11px] font-bold text-slate-400 italic whitespace-nowrap">
-                                  🔒 Sesión Activa
+                                <span
+                                  className="pms-session-active-pill"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-end',
+                                    gap: '6px',
+                                    fontSize: '0.82rem',
+                                    fontWeight: 700,
+                                    fontStyle: 'italic',
+                                    color: '#64748b',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  <span style={{ fontSize: '0.9rem' }}>🔒</span>
+                                  <span>Sesión Activa</span>
                                 </span>
                               ) : (
                                 <button
@@ -737,16 +828,47 @@ const VistaPms = () => {
                                     });
                                   }}
                                   className={emp.estado === 'Activo' ? 'pms-action-btn-danger' : 'pms-action-btn-success'}
+                                  style={
+                                    emp.estado === 'Activo'
+                                      ? {
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '6px',
+                                          padding: '6px 16px',
+                                          borderRadius: '10px',
+                                          fontSize: '0.8rem',
+                                          fontWeight: 700,
+                                          color: '#b91c1c',
+                                          backgroundColor: '#fef2f2',
+                                          border: '1px solid #fecdd3',
+                                          cursor: 'pointer',
+                                          whiteSpace: 'nowrap'
+                                        }
+                                      : {
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '6px',
+                                          padding: '6px 16px',
+                                          borderRadius: '10px',
+                                          fontSize: '0.8rem',
+                                          fontWeight: 700,
+                                          color: '#047857',
+                                          backgroundColor: '#ecfdf5',
+                                          border: '1px solid #a7f3d0',
+                                          cursor: 'pointer',
+                                          whiteSpace: 'nowrap'
+                                        }
+                                  }
                                   title={emp.estado === 'Activo' ? 'Desactivar acceso al sistema' : 'Activar colaborador'}
                                 >
                                   {emp.estado === 'Activo' ? (
                                     <>
-                                      <Ban size={13} />
+                                      <Ban size={14} style={{ color: '#dc2626' }} />
                                       <span>Desactivar</span>
                                     </>
                                   ) : (
                                     <>
-                                      <CheckCircle size={13} />
+                                      <CheckCircle size={14} style={{ color: '#16a34a' }} />
                                       <span>Activar</span>
                                     </>
                                   )}
@@ -962,7 +1084,7 @@ const VistaPms = () => {
             const totalFacturar = cotizacion?.total || Math.max(0, subtotalCalculado - descuentoCalculado);
 
             return (
-              <div id="pms-reception-reserva-module" className="max-w-6xl mx-auto space-y-8 mb-6">
+              <div id="pms-reception-reserva-module" className="w-full mx-auto space-y-8 mb-6">
                 
                 {/* 1. ENCABEZADO CON IDENTIFICACIÓN INSTITUCIONAL */}
                 <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -1014,9 +1136,9 @@ const VistaPms = () => {
                 <form onSubmit={handleReservaSubmit} className="space-y-8">
                   
                   {/* 2. BLOQUE 1: IDENTIDAD DEL HUÉSPED & LOCALIZACIÓN */}
-                  <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+                  <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs relative z-20">
                     {/* Acento rojo superior */}
-                    <div className="h-1.5 w-full bg-gradient-to-r from-[#d91a2a] via-rose-500 to-amber-500" />
+                    <div className="h-1.5 w-full bg-gradient-to-r from-[#d91a2a] via-rose-500 to-amber-500 rounded-t-3xl" />
                     
                     <div className="p-6 sm:p-8 space-y-6">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
@@ -1186,7 +1308,7 @@ const VistaPms = () => {
                         {/* Celular / WhatsApp Internacional */}
                         <div className="md:col-span-6">
                           <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                            Celular / WhatsApp (Cualquier Nacionalidad) <span className="text-[#d91a2a]">*</span>
+                            Teléfono Móvil (WhatsApp) <span className="text-[#d91a2a]">*</span>
                           </label>
                           <div className="flex gap-2">
                             <select
@@ -1220,30 +1342,25 @@ const VistaPms = () => {
                         {/* Correo Electrónico */}
                         <div className="md:col-span-6">
                           <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                            Correo Electrónico (Factura Electrónica & Llave Digital) <span className="text-[#d91a2a]">*</span>
+                            Correo Electrónico <span className="text-[#d91a2a]">*</span>
                           </label>
-                          <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
-                              @
-                            </span>
-                            <input
-                              type="email"
-                              name="correo"
-                              value={pmsWalkInGuest.correo}
-                              onChange={handlePmsWalkInGuestChange}
-                              placeholder="jocmiguelcc@gmail.com"
-                              required
-                              className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
-                            />
-                          </div>
+                          <input
+                            type="email"
+                            name="correo"
+                            value={pmsWalkInGuest.correo}
+                            onChange={handlePmsWalkInGuestChange}
+                            placeholder="Ej: jocmiguelcc@gmail.com"
+                            required
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
+                          />
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* 3. BLOQUE 2: ASIGNACIÓN DE HABITACIÓN & CALENDARIO */}
-                  <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
-                    <div className="h-1.5 w-full bg-gradient-to-r from-amber-500 via-rose-500 to-[#d91a2a]" />
+                  <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs relative z-30">
+                    <div className="h-1.5 w-full bg-gradient-to-r from-amber-500 via-rose-500 to-[#d91a2a] rounded-t-3xl" />
                     
                     <div className="p-6 sm:p-8 space-y-6">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
@@ -1280,11 +1397,32 @@ const VistaPms = () => {
                             className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
                           >
                             <option value="">-- Seleccionar Apartamento Disponible --</option>
-                            {habitaciones.map(hab => (
-                              <option key={hab.id_habitacion} value={hab.id_habitacion}>
-                                🏢 {hab.tipo?.toLowerCase().includes('suite') ? 'Suite' : 'Dúplex'} {hab.numero} — Piso {hab.numero?.[0] || '1'} ({hab.tipo} • Disponible) — ${Number(hab.precio_noche || 0).toLocaleString('es-CO')} COP / Noche
-                              </option>
-                            ))}
+                            {habitaciones.map(hab => {
+                              const digits = String(hab.numero || '').replace(/\D/g, '');
+                              const piso = digits ? digits[0] : '1';
+                              let icono = '🏢';
+                              let nombreTipo = hab.tipo || 'Apartamento';
+                              if (hab.tipo === 'Dúplex') {
+                                icono = '🏢';
+                                nombreTipo = 'Dúplex';
+                              } else if (hab.tipo === 'Dobles') {
+                                icono = '🛏️';
+                                nombreTipo = 'Suite Doble';
+                              } else if (hab.tipo === 'Familiares') {
+                                icono = '👨‍👩‍👧‍👦';
+                                nombreTipo = 'Suite Familiar';
+                              } else if (hab.tipo === 'Habitaciones') {
+                                icono = '🚪';
+                                nombreTipo = 'Habitación Estándar';
+                              }
+
+                              const capText = hab.capacidad ? `(Capacidad: ${hab.capacidad} ${hab.capacidad === 1 ? 'persona' : 'personas'})` : '';
+                              return (
+                                <option key={hab.id_habitacion} value={hab.id_habitacion}>
+                                  {icono} {nombreTipo} {hab.numero} — Piso {piso} {capText} — ${Number(hab.precio_noche || 0).toLocaleString('es-CO')} COP / Noche
+                                </option>
+                              );
+                            })}
                           </select>
                         </div>
 
@@ -1482,11 +1620,11 @@ const VistaPms = () => {
                     </div>
                   </div>
 
-                  {/* 4. BLOQUE OSCURO DE COTIZACIÓN EN VIVO (LIVE PRICING) */}
+                  {/* 4. BLOQUE OSCURO DE COTIZACIÓN EN VIVO (LIVE PRICING EXACTO A IMAGEN 2) */}
                   <div className="bg-[#0f172a] rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800">
                     <div className="flex items-center justify-between pb-6 mb-6 border-b border-slate-800">
-                      <div className="flex items-center gap-2">
-                        <span className="p-2 rounded-xl bg-slate-800 text-rose-400">
+                      <div className="flex items-center gap-3">
+                        <span className="p-2.5 rounded-xl bg-red-500/10 text-rose-500 border border-red-500/20">
                           <CreditCard className="w-5 h-5" />
                         </span>
                         <div>
@@ -1496,103 +1634,118 @@ const VistaPms = () => {
                           <p className="text-xs text-slate-400 mt-0.5 mb-0">Cálculo automático con impuestos hoteleros incluidos</p>
                         </div>
                       </div>
-                      <span className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
-                        ● Moneda: COP ($)
+                      <span className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        MONEDA: COP ($)
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
-                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
-                        <Clock className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
-                        <span className="text-xs font-semibold text-slate-400 block mb-1">
-                          Estadía Total
-                        </span>
-                        <div className="text-2xl font-black">{noches} {noches === 1 ? 'Noche' : 'Noches'}</div>
-                        <span className="text-xs text-slate-400 mt-0.5 block">
-                          {reservaData.fecha_entrada && reservaData.fecha_salida ? `${reservaData.fecha_entrada} al ${reservaData.fecha_salida}` : '14 Nov — 16 Nov 2026'}
-                        </span>
-                      </div>
-
-                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
-                        <Tag className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
-                        <span className="text-xs font-semibold text-slate-400 block mb-1">
-                          Tarifa por Noche
-                        </span>
-                        <div className="text-2xl font-black">${tarifaNoche.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
-                        <span className="text-xs text-emerald-400 mt-0.5 block">✓ Tarifa Estándar Walk-In</span>
-                      </div>
-
-                      <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
-                        <Shield className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
-                        <span className="text-xs font-semibold text-slate-400 block mb-1">
-                          Depósito en Garantía
-                        </span>
-                        <div className="text-2xl font-black">${depositoGarantia.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
-                        <span className="text-xs text-slate-400 mt-0.5 block">(100% Reembolsable)</span>
-                      </div>
-
-                      {/* Tarjeta de Total con Fondo Carmín Vibrante */}
-                      <div className="bg-gradient-to-br from-[#d91a2a] to-[#9b111e] p-5 rounded-2xl shadow-lg border border-red-500/30 text-white">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold text-red-100">
-                            Total a Facturar Presencial
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch">
+                      {/* Tarjeta 1: Estadía Total */}
+                      <div className="card-pms-pricing-dark">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Estadía Total
                           </span>
-                          <span className="px-2 py-0.5 rounded bg-white/20 text-[10px] font-bold uppercase tracking-wider text-white">
+                          <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                        </div>
+                        <div className="text-2xl font-black text-white">{noches} {noches === 1 ? 'Noche' : 'Noches'}</div>
+                        <span className="text-xs text-slate-400 mt-1 block">
+                          {reservaData.fecha_entrada && reservaData.fecha_salida ? `${reservaData.fecha_entrada} — ${reservaData.fecha_salida}` : '14 Nov — 16 Nov 2026'}
+                        </span>
+                      </div>
+
+                      {/* Tarjeta 2: Tarifa por Noche */}
+                      <div className="card-pms-pricing-dark">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Tarifa por Noche
+                          </span>
+                          <Tag className="w-4 h-4 text-slate-400 shrink-0" />
+                        </div>
+                        <div className="text-2xl font-black text-white">${tarifaNoche.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
+                        <span className="text-xs text-emerald-400 font-semibold mt-1 block">✓ Tarifa Estándar Walk-In</span>
+                      </div>
+
+                      {/* Tarjeta 3: Depósito en Garantía */}
+                      <div className="card-pms-pricing-dark">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Depósito en Garantía
+                          </span>
+                          <Shield className="w-4 h-4 text-slate-400 shrink-0" />
+                        </div>
+                        <div className="text-2xl font-black text-white">${depositoGarantia.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
+                        <span className="text-xs text-amber-400 font-semibold mt-1 block">(100% Reembolsable)</span>
+                      </div>
+
+                      {/* Tarjeta 4: Total a Facturar Presencial (Exacto a Imagen 2) */}
+                      <div className="card-pms-pricing-total" style={{ background: 'linear-gradient(135deg, #d91a2a 0%, #b91522 55%, #881337 100%)', boxShadow: '0 8px 24px rgba(217, 26, 42, 0.4)' }}>
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          <div className="text-[11px] font-black uppercase tracking-wider text-white leading-tight">
+                            Total a<br />Facturar
+                          </div>
+                          <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider text-white shrink-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.35)' }}>
                             Liquidación Inmediata
                           </span>
                         </div>
-                        <div className="text-3xl font-black tracking-tight">
-                          ${totalFacturar.toLocaleString('es-CO')} <span className="text-xs font-bold text-red-200">COP</span>
+                        <div className="text-3xl font-black tracking-tight text-white my-0.5">
+                          ${totalFacturar.toLocaleString('es-CO')} <span className="text-xs font-bold text-red-100">COP</span>
                         </div>
-                        <span className="text-[11px] text-red-100 mt-1 block">Incluye impuestos y seguro hotelero</span>
+                        <span className="text-[11px] text-red-100 font-medium block">
+                          Incluye impuestos y seguro hotelero
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* 5. CHECK-IN DIRECTO & YALE CONNECT SMARTLOCK */}
+                  {/* 5. CHECK-IN DIRECTO & YALE CONNECT SMARTLOCK (EXACTO A IMAGEN 2) */}
                   <div className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-xs flex items-start gap-4">
                     <input
                       type="checkbox"
                       id="checkin-directo"
                       checked={walkinCheckinInmediato}
                       onChange={(e) => setWalkinCheckinInmediato(e.target.checked)}
-                      className="w-5 h-5 rounded-lg text-[#d91a2a] focus:ring-[#d91a2a] accent-[#d91a2a] mt-0.5 cursor-pointer shrink-0"
+                      className="w-5 h-5 rounded-md text-[#d91a2a] focus:ring-[#d91a2a] accent-[#d91a2a] mt-0.5 cursor-pointer shrink-0"
                     />
                     <label htmlFor="checkin-directo" className="text-xs sm:text-sm text-slate-700 leading-relaxed cursor-pointer m-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-xs">🔑</span>
                         <span className="font-extrabold text-slate-900">
                           Registrar Check-In Directo Inmediato (Huésped presente en el lobby)
                         </span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black tracking-wider uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black tracking-wider uppercase border border-amber-200">
                           🔒 Yale Connect Smartlock
                         </span>
                       </div>
-                      Al confirmar, el PMS generará de inmediato el código dinámico de cerradura digital Yale para el apartamento <strong>{selectedHab ? `Apto ${selectedHab.numero} (${selectedHab.tipo})` : 'apartamento seleccionado'}</strong>, enviará el enlace de llave móvil al correo <strong>{pmsWalkInGuest.correo || 'indicado'}</strong> y WhatsApp, y actualizará la bitácora activa del hotel a estado <span className="font-bold text-blue-700">"Ocupada (Check-in Realizado)"</span>.
+                      Al confirmar, el PMS generará de inmediato el código dinámico de cerradura digital Yale para el apartamento <strong>{selectedHab ? `Apto ${selectedHab.numero} (${selectedHab.tipo})` : 'apartamento seleccionado'}</strong>, enviará el enlace de llave móvil al correo <strong>{pmsWalkInGuest.correo || 'indicado'}</strong> y WhatsApp, y actualizará la bitácora activa del hotel a estado <span className="font-bold text-emerald-700">"Ocupada (Check-in Realizado)"</span>.
                     </label>
                   </div>
 
-                  {/* 6. BOTONES DE ACCIÓN */}
-                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-end gap-3">
+                  {/* 6. BOTONES DE ACCIÓN (EXACTOS A IMAGEN 2) */}
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-end gap-3.5">
                     <button
                       type="button"
                       onClick={() => {
                         setSelectedHuesped(null);
                         setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
-                        setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', telefono: '', correo: '' });
+                        setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', indicativo: '+57', telefono: '', correo: '' });
                         setWalkinCheckinInmediato(false);
                       }}
-                      className="px-6 py-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm font-bold text-slate-700 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="btn-pms-clear"
+                      style={{ backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0' }}
                     >
-                      <RotateCcw className="w-4 h-4 text-slate-400" />
+                      <RotateCcw className="w-4 h-4 text-slate-500" />
                       <span>Limpiar Formulario</span>
                     </button>
 
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#d91a2a] to-[#b91522] hover:from-[#b91522] hover:to-[#9b111e] text-white text-xs sm:text-sm font-black shadow-lg shadow-[#d91a2a]/30 hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="btn-pms-confirm"
+                      style={{ backgroundColor: '#d91a2a', color: '#ffffff' }}
                     >
-                      <Key className="w-4 h-4" />
+                      <ShieldCheck className="w-4 h-4 text-white" />
                       <span>{loading ? 'Confirmando Reserva...' : 'Confirmar Reserva Presencial & Emitir Llave'}</span>
                     </button>
                   </div>
