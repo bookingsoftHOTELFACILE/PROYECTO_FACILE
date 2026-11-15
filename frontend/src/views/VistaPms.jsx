@@ -6,6 +6,39 @@ import {
   Building2, UserCheck, Download, Plus, Phone, Key, Building, CreditCard, ArrowRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
+import HuespedesPicker from '../components/HuespedesPicker.jsx';
+
+// Lista de indicativos telefónicos internacionales para recepción presencial
+const LISTA_PAISES_INDICATIVOS = [
+  { code: '+57', flag: '🇨🇴', label: '🇨🇴 +57 (Colombia)' },
+  { code: '+1', flag: '🇺🇸', label: '🇺🇸 +1 (EE.UU. / CA)' },
+  { code: '+34', flag: '🇪🇸', label: '🇪🇸 +34 (España)' },
+  { code: '+52', flag: '🇲🇽', label: '🇲🇽 +52 (México)' },
+  { code: '+54', flag: '🇦🇷', label: '🇦🇷 +54 (Argentina)' },
+  { code: '+56', flag: '🇨🇱', label: '🇨🇱 +56 (Chile)' },
+  { code: '+55', flag: '🇧🇷', label: '🇧🇷 +55 (Brasil)' },
+  { code: '+51', flag: '🇵🇪', label: '🇵🇪 +51 (Perú)' },
+  { code: '+593', flag: '🇪🇨', label: '🇪🇨 +593 (Ecuador)' },
+  { code: '+507', flag: '🇵🇦', label: '🇵🇦 +507 (Panamá)' },
+  { code: '+58', flag: '🇻🇪', label: '🇻🇪 +58 (Venezuela)' },
+  { code: '+506', flag: '🇨🇷', label: '🇨🇷 +506 (Costa Rica)' },
+  { code: '+502', flag: '🇬🇹', label: '🇬🇹 +502 (Guatemala)' },
+  { code: '+503', flag: '🇸🇻', label: '🇸🇻 +503 (El Salvador)' },
+  { code: '+504', flag: '🇭🇳', label: '🇭🇳 +504 (Honduras)' },
+  { code: '+591', flag: '🇧🇴', label: '🇧🇴 +591 (Bolivia)' },
+  { code: '+595', flag: '🇵🇾', label: '🇵🇾 +595 (Paraguay)' },
+  { code: '+598', flag: '🇺🇾', label: '🇺🇾 +598 (Uruguay)' },
+  { code: '+33', flag: '🇫🇷', label: '🇫🇷 +33 (Francia)' },
+  { code: '+49', flag: '🇩🇪', label: '🇩🇪 +49 (Alemania)' },
+  { code: '+44', flag: '🇬🇧', label: '🇬🇧 +44 (Reino Unido)' },
+  { code: '+39', flag: '🇮🇹', label: '🇮🇹 +39 (Italia)' },
+  { code: '+351', flag: '🇵🇹', label: '🇵🇹 +351 (Portugal)' },
+  { code: '+41', flag: '🇨🇭', label: '🇨🇭 +41 (Suiza)' },
+  { code: '+31', flag: '🇳🇱', label: '🇳🇱 +31 (Países Bajos)' },
+  { code: '+81', flag: '🇯🇵', label: '🇯🇵 +81 (Japón)' },
+  { code: '+86', flag: '🇨🇳', label: '🇨🇳 +86 (China)' },
+  { code: '+61', flag: '🇦🇺', label: '🇦🇺 +61 (Australia)' }
+];
 
 const VistaPms = () => {
   const {
@@ -1045,7 +1078,7 @@ const VistaPms = () => {
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                         {/* Tipo de Documento */}
                         <div className="md:col-span-3">
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
                             Tipo de Documento <span className="text-[#d91a2a]">*</span>
                           </label>
                           <select
@@ -1063,10 +1096,12 @@ const VistaPms = () => {
                         {/* Número de Documento + Buscador */}
                         <div className="md:col-span-4">
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 m-0">
+                            <label className="block text-xs font-bold text-slate-700 m-0">
                               Número de Documento <span className="text-[#d91a2a]">*</span>
                             </label>
-                            <span className="text-[11px] text-amber-700 font-bold">↵ Enter para buscar</span>
+                            <span className="text-[11px] text-amber-700 font-bold flex items-center gap-1">
+                              ↵ Enter para buscar
+                            </span>
                           </div>
                           <div className="flex gap-2">
                             <input
@@ -1080,10 +1115,20 @@ const VistaPms = () => {
                                   const match = huespedes.find(h => h.documento && h.documento.trim() === val);
                                   if (match) {
                                     setSelectedHuesped(match);
+                                    let tel = match.telefono || '';
+                                    let ind = '+57';
+                                    if (tel.startsWith('+')) {
+                                      const parts = tel.split(' ');
+                                      if (parts.length > 1) {
+                                        ind = parts[0];
+                                        tel = parts.slice(1).join('');
+                                      }
+                                    }
                                     setPmsWalkInGuest(prev => ({
                                       ...prev,
                                       nombre: match.nombre,
-                                      telefono: match.telefono || prev.telefono,
+                                      indicativo: ind,
+                                      telefono: tel || prev.telefono,
                                       correo: match.correo || prev.correo
                                     }));
                                   } else {
@@ -1107,17 +1152,19 @@ const VistaPms = () => {
                             <button
                               type="button"
                               onClick={() => handleBuscarHuespedPorDocumento(pmsWalkInGuest.documento)}
-                              className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-[#d91a2a] text-white text-xs font-black flex items-center gap-2 shrink-0 transition-all cursor-pointer shadow-xs"
+                              className="btn-pms-search-dark"
+                              style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+                              title="Buscar huésped por documento"
                             >
-                              <Search className="w-4 h-4" />
-                              <span>Buscar</span>
+                              <Search className="w-4 h-4 text-white" />
+                              <span className="text-white">Buscar</span>
                             </button>
                           </div>
                         </div>
 
                         {/* Nombre Completo */}
                         <div className="md:col-span-5">
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
                             Nombre Completo <span className="text-[#d91a2a]">*</span>
                           </label>
                           <div className="relative">
@@ -1136,31 +1183,43 @@ const VistaPms = () => {
                           </div>
                         </div>
 
-                        {/* Celular / WhatsApp */}
+                        {/* Celular / WhatsApp Internacional */}
                         <div className="md:col-span-6">
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Celular / WhatsApp <span className="text-[#d91a2a]">*</span>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                            Celular / WhatsApp (Cualquier Nacionalidad) <span className="text-[#d91a2a]">*</span>
                           </label>
-                          <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 font-bold text-xs">
-                              🇨🇴 +57
-                            </span>
-                            <input
-                              type="tel"
-                              name="telefono"
-                              value={pmsWalkInGuest.telefono}
+                          <div className="flex gap-2">
+                            <select
+                              name="indicativo"
+                              value={pmsWalkInGuest.indicativo || '+57'}
                               onChange={handlePmsWalkInGuestChange}
-                              placeholder="Ej: 3154449876"
-                              maxLength={15}
-                              required
-                              className="w-full pl-20 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
-                            />
+                              className="w-40 sm:w-44 shrink-0 px-3 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-xs sm:text-sm font-bold text-slate-800 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                              title="Seleccione nacionalidad e indicativo de país"
+                            >
+                              {LISTA_PAISES_INDICATIVOS.map(p => (
+                                <option key={p.code + p.label} value={p.code}>
+                                  {p.label}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="relative flex-1">
+                              <input
+                                type="tel"
+                                name="telefono"
+                                value={pmsWalkInGuest.telefono}
+                                onChange={handlePmsWalkInGuestChange}
+                                placeholder="Ej: 3154449876"
+                                maxLength={16}
+                                required
+                                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
+                              />
+                            </div>
                           </div>
                         </div>
 
                         {/* Correo Electrónico */}
                         <div className="md:col-span-6">
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
                             Correo Electrónico (Factura Electrónica & Llave Digital) <span className="text-[#d91a2a]">*</span>
                           </label>
                           <div className="relative">
@@ -1193,7 +1252,7 @@ const VistaPms = () => {
                             <Building className="w-5 h-5" />
                           </div>
                           <div>
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 m-0">
+                            <h3 className="text-sm sm:text-base font-extrabold text-slate-900 m-0 tracking-tight">
                               2. Asignación de Unidad y Calendario de Estadía
                             </h3>
                             <span className="text-xs text-slate-400">
@@ -1209,8 +1268,8 @@ const VistaPms = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                         {/* Apartamento / Habitación Seleccionada */}
-                        <div className="md:col-span-8">
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <div className="md:col-span-7">
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
                             Apartamento / Habitación Seleccionada <span className="text-[#d91a2a]">*</span>
                           </label>
                           <select
@@ -1229,36 +1288,32 @@ const VistaPms = () => {
                           </select>
                         </div>
 
-                        {/* Ocupantes */}
-                        <div className="md:col-span-4">
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                        {/* Ocupantes con Selector Airbnb (Adultos, Niños, Bebés, Mascotas) */}
+                        <div className="md:col-span-5">
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
                             Número de Personas / Ocupantes <span className="text-[#d91a2a]">*</span>
                           </label>
-                          <div className="relative">
-                            <select
-                              name="numero_personas"
-                              value={reservaData.numero_personas}
-                              onChange={handleReservaChange}
-                              className="w-full px-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer appearance-none"
-                            >
-                              <option value={1}>1 huésped (Titular)</option>
-                              <option value={2}>2 huéspedes</option>
-                              <option value={3}>3 huéspedes</option>
-                              <option value={4}>4 huéspedes</option>
-                              <option value={5}>5 huéspedes</option>
-                              <option value={6}>6 huéspedes</option>
-                            </select>
-                            <Users className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          </div>
+                          <HuespedesPicker
+                            maxCapacidad={selectedHab ? (selectedHab.capacidad || (selectedHab.tipo?.toLowerCase().includes('familiar') ? 6 : 4)) : 6}
+                            variant="pms"
+                            popoverAlign="right"
+                            onChange={(val) => {
+                              setReservaData(prev => ({
+                                ...prev,
+                                numero_personas: val.total || 1,
+                                huespedes_detalle: val.summary
+                              }));
+                            }}
+                          />
                         </div>
 
                         {/* Fecha Entrada */}
                         <div className="md:col-span-6">
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 m-0">
+                            <label className="block text-xs font-bold text-slate-700 m-0">
                               Fecha de Entrada (Check-In) <span className="text-[#d91a2a]">*</span>
                             </label>
-                            <span className="text-[11px] text-slate-400">Hora estándar: 15:00</span>
+                            <span className="text-[11px] text-slate-400 font-medium">Hora estándar: 15:00</span>
                           </div>
                           <input
                             type="date"
@@ -1273,10 +1328,10 @@ const VistaPms = () => {
                         {/* Fecha Salida */}
                         <div className="md:col-span-6">
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 m-0">
+                            <label className="block text-xs font-bold text-slate-700 m-0">
                               Fecha de Salida (Check-Out) <span className="text-[#d91a2a]">*</span>
                             </label>
-                            <span className="text-[11px] text-slate-400">Hora límite: 11:00</span>
+                            <span className="text-[11px] text-slate-400 font-medium">Hora límite: 11:00</span>
                           </div>
                           <input
                             type="date"
@@ -1435,7 +1490,7 @@ const VistaPms = () => {
                           <CreditCard className="w-5 h-5" />
                         </span>
                         <div>
-                          <h4 className="text-sm font-black uppercase tracking-wider m-0">
+                          <h4 className="text-base font-extrabold text-white m-0 tracking-tight">
                             Resumen de Cotización en Tiempo Real
                           </h4>
                           <p className="text-xs text-slate-400 mt-0.5 mb-0">Cálculo automático con impuestos hoteleros incluidos</p>
@@ -1449,7 +1504,7 @@ const VistaPms = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
                       <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
                         <Clock className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        <span className="text-xs font-semibold text-slate-400 block mb-1">
                           Estadía Total
                         </span>
                         <div className="text-2xl font-black">{noches} {noches === 1 ? 'Noche' : 'Noches'}</div>
@@ -1460,7 +1515,7 @@ const VistaPms = () => {
 
                       <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
                         <Tag className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        <span className="text-xs font-semibold text-slate-400 block mb-1">
                           Tarifa por Noche
                         </span>
                         <div className="text-2xl font-black">${tarifaNoche.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
@@ -1469,7 +1524,7 @@ const VistaPms = () => {
 
                       <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 relative">
                         <Shield className="w-4 h-4 text-slate-400 absolute top-4 right-4" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        <span className="text-xs font-semibold text-slate-400 block mb-1">
                           Depósito en Garantía
                         </span>
                         <div className="text-2xl font-black">${depositoGarantia.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span></div>
@@ -1479,8 +1534,8 @@ const VistaPms = () => {
                       {/* Tarjeta de Total con Fondo Carmín Vibrante */}
                       <div className="bg-gradient-to-br from-[#d91a2a] to-[#9b111e] p-5 rounded-2xl shadow-lg border border-red-500/30 text-white">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] font-black uppercase tracking-wider text-red-100">
-                            Total a Facturar
+                          <span className="text-xs font-bold text-red-100">
+                            Total a Facturar Presencial
                           </span>
                           <span className="px-2 py-0.5 rounded bg-white/20 text-[10px] font-bold uppercase tracking-wider text-white">
                             Liquidación Inmediata

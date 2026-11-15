@@ -271,6 +271,7 @@ export function useAppState() {
     tipo_documento: 'Cédula de Ciudadanía',
     documento: '',
     nombre: '',
+    indicativo: '+57',
     telefono: '',
     correo: ''
   });
@@ -1070,10 +1071,11 @@ export function useAppState() {
         }
         if (backendActivo) {
           try {
+            const telCompleto = `${pmsWalkInGuest.indicativo || '+57'} ${(pmsWalkInGuest.telefono || '').trim()}`.trim();
             const resReg = await apiFetch(`/api/user/registro`, {method: 'POST', body: {
                 nombre: (pmsWalkInGuest.nombre || '').trim(),
                 documento: (pmsWalkInGuest.documento || '').trim(),
-                telefono: (pmsWalkInGuest.telefono || '').trim(),
+                telefono: telCompleto,
                 correo: (pmsWalkInGuest.correo || '').trim(),
                 empresa: `Walk-in (${pmsWalkInGuest.tipo_documento || 'Cédula'})`,
                 password: (pmsWalkInGuest.documento || '').trim()
@@ -1109,7 +1111,7 @@ export function useAppState() {
             id_huesped: Date.now(),
             nombre: (pmsWalkInGuest.nombre || '').trim(),
             documento: (pmsWalkInGuest.documento || '').trim(),
-            telefono: (pmsWalkInGuest.telefono || '').trim(),
+            telefono: `${pmsWalkInGuest.indicativo || '+57'} ${(pmsWalkInGuest.telefono || '').trim()}`.trim(),
             correo: (pmsWalkInGuest.correo || '').trim(),
             empresa: `Walk-in (${pmsWalkInGuest.tipo_documento || 'Cédula'})`,
             lealtad: 'Silver',

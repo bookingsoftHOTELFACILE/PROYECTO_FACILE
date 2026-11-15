@@ -1,14 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Users, ChevronDown } from 'lucide-react';
 import ServiceAnimalModal from './ServiceAnimalModal.jsx';
 
 // COMPONENTE DESPLEGABLE SELECTOR DE HUÉSPEDES ESTILO AIRBNB (ADULTOS, NIÑOS, BEBÉS, MASCOTAS)
-const HuespedesPicker = ({ maxCapacidad = 4, onChange }) => {
-  const [adultos, setAdultos] = useState(1);
-  const [ninos, setNinos] = useState(0);
-  const [bebes, setBebes] = useState(0);
-  const [mascotas, setMascotas] = useState(0);
+const HuespedesPicker = ({
+  maxCapacidad = 4,
+  onChange,
+  initialAdultos = 1,
+  initialNinos = 0,
+  initialBebes = 0,
+  initialMascotas = 0,
+  popoverAlign = 'left',
+  variant = 'default'
+}) => {
+  const [adultos, setAdultos] = useState(initialAdultos);
+  const [ninos, setNinos] = useState(initialNinos);
+  const [bebes, setBebes] = useState(initialBebes);
+  const [mascotas, setMascotas] = useState(initialMascotas);
   const [isOpen, setIsOpen] = useState(false);
   const [showServiceAnimalModal, setShowServiceAnimalModal] = useState(false);
+  const containerRef = useRef(null);
+
+  // Cerrar popover automáticamente al hacer clic fuera del componente
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const totalHuespedes = adultos + ninos;
 
@@ -37,17 +63,41 @@ const HuespedesPicker = ({ maxCapacidad = 4, onChange }) => {
   }, [adultos, ninos, bebes, mascotas]);
 
   return (
-    <div className="huespedes-trigger-box">
-      <div
-        className={`huespedes-trigger-btn ${isOpen ? 'active' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span>{getSummaryText()}</span>
-        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{isOpen ? '▲' : '▼'}</span>
-      </div>
+    <div ref={containerRef} className={`huespedes-trigger-box relative ${variant === 'pms' ? 'w-full' : ''}`}>
+      {variant === 'pms' ? (
+        <div
+          className={`w-full px-4 py-3 rounded-2xl border text-sm font-semibold flex items-center justify-between transition-all cursor-pointer select-none ${
+            isOpen
+              ? 'border-[#d91a2a] ring-4 ring-[#d91a2a]/10 bg-white text-slate-900 shadow-xs'
+              : 'border-slate-200 bg-slate-50/60 hover:border-slate-300 hover:bg-white text-slate-900'
+          }`}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Users className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="truncate">{getSummaryText()}</span>
+          </div>
+          <ChevronDown
+            className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+              isOpen ? 'rotate-180 text-[#d91a2a]' : ''
+            }`}
+          />
+        </div>
+      ) : (
+        <div
+          className={`huespedes-trigger-btn ${isOpen ? 'active' : ''}`}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <span>{getSummaryText()}</span>
+          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{isOpen ? '▲' : '▼'}</span>
+        </div>
+      )}
 
       {isOpen && (
-        <div className="huespedes-popover-card">
+        <div
+          className="huespedes-popover-card"
+          style={popoverAlign === 'right' ? { left: 'auto', right: 0, minWidth: '320px' } : { minWidth: '320px' }}
+        >
           {/* Adultos */}
           <div className="huespedes-row">
             <div className="huespedes-info">

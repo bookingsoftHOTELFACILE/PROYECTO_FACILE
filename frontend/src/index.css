@@ -2959,3 +2959,43 @@ body {
   background-color: #d1fae5 !important;
   border-color: #6ee7b7 !important;
 }
+
+/* Botón PMS Buscar Huésped - Sólido Negro con Icono Blanco como la Maqueta */
+.btn-pms-search-dark {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 0 20px !important;
+  height: 46px !important;
+  border-radius: 16px !important;
+  font-family: var(--font-family-base) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-pms-search-dark:hover {
+  background-color: #d91a2a !important;
+  box-shadow: 0 6px 16px rgba(217, 26, 42, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-pms-search-dark:active {
+  transform: translateY(0) !important;
+}
+
+.bg-slate-900 {
+  background-color: #0f172a !important;
+}
+
+.bg-black {
+  background-color: #000000 !important;
+}
