@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Briefcase, 
   Calendar, 
@@ -10,28 +10,69 @@ import {
   User, 
   X,
   Plus,
-  List
+  List,
+  Trash2,
+  AlertCircle,
+  FileText,
+  Users
 } from 'lucide-react';
 
-export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspacio }) {
+export default function ModuloSalasCoworkingPMS({ 
+  espaciosNegocio = [], 
+  reservasNegocio = [], 
+  huespedes = [],
+  habitaciones = [],
+  reservasHabitaciones = [],
+  onNuevaReserva, 
+  onLiberarEspacio 
+}) {
+  // Lista de espacios disponibles (reales de la base de datos o fallback oficial)
+  const espacios = useMemo(() => {
+    if (espaciosNegocio && espaciosNegocio.length > 0) return espaciosNegocio;
+    return [
+      { id_espacio: 1, nombre: 'Sala de Juntas 1', tipo: 'Sala de Juntas', capacidad: 10, precio_hora: 70000, estado: 'Disponible' },
+      { id_espacio: 2, nombre: 'Sala de Juntas 2', tipo: 'Sala de Juntas', capacidad: 10, precio_hora: 70000, estado: 'Disponible' },
+      { id_espacio: 3, nombre: 'Espacio Coworking (Flex)', tipo: 'Coworking', capacidad: 15, precio_hora: 20000, estado: 'Disponible' },
+    ];
+  }, [espaciosNegocio]);
+
+  // Lista de huéspedes mapeados con su apartamento si tienen estancia activa
+  const opcionesHuespedes = useMemo(() => {
+    return (huespedes || []).map(h => {
+      const resActiva = (reservasHabitaciones || []).find(r => 
+        (String(r.id_huesped) === String(h.id_huesped) || r.huesped === h.nombre) && 
+        (r.estado === 'Confirmada' || r.estado === 'Check-In' || r.estado === 'In-House' || r.estado === 'Ocupada')
+      );
+      const aptoTexto = resActiva?.apartamento || resActiva?.numero_habitacion || '';
+      return {
+        ...h,
+        label: aptoTexto 
+          ? `Apto ${aptoTexto} — ${h.nombre} (Doc: ${h.documento})`
+          : `Huésped Registrado — ${h.nombre} (Doc: ${h.documento})`,
+        apto: aptoTexto
+      };
+    });
+  }, [huespedes, reservasHabitaciones]);
+
   // Estados del Formulario
-  const [espacio, setEspacio] = useState('SALA_1');
+  const [idEspacio, setIdEspacio] = useState(() => (espacios[0]?.id_espacio ? String(espacios[0].id_espacio) : '1'));
   const [tipoCliente, setTipoCliente] = useState('HUESPED'); // 'HUESPED' | 'EXTERNO'
-  const [huespedRegistrado, setHuespedRegistrado] = useState('APTO_D101');
+  const [idHuesped, setIdHuesped] = useState(() => (opcionesHuespedes[0]?.id_huesped ? String(opcionesHuespedes[0].id_huesped) : ''));
   const [clienteExternoNombre, setClienteExternoNombre] = useState('');
   const [clienteExternoNit, setClienteExternoNit] = useState('');
-  const [fecha, setFecha] = useState('2026-11-15');
+  const [fecha, setFecha] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [horaInicio, setHoraInicio] = useState('09:00');
   const [horaFin, setHoraFin] = useState('11:00');
   const [observaciones, setObservaciones] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [alerta, setAlerta] = useState(null);
 
-  // Tarifario oficial por hora
-  const tarifario = {
-    SALA_1: { nombre: 'Sala de Juntas 1 (10 pax)', tarifa: 70000, capacidad: 'Capacidad: 10 pax' },
-    SALA_2: { nombre: 'Sala de Juntas 2 (10 pax)', tarifa: 70000, capacidad: 'Capacidad: 10 pax' },
-    SALA_3: { nombre: 'Sala 3 VIP (15 pax)', tarifa: 20000, capacidad: 'Capacidad: 15 pax' },
-    COWORKING: { nombre: 'Coworking Flex (Puesto)', tarifa: 15000, capacidad: 'Flex Desk Conectividad' },
-  };
+  // Espacio seleccionado actualmente
+  const espacioSeleccionado = useMemo(() => {
+    return espacios.find(e => String(e.id_espacio) === String(idEspacio)) || espacios[0];
+  }, [espacios, idEspacio]);
+
+  const tarifaPorHora = Number(espacioSeleccionado?.precio_hora || 70000);
 
   // Cálculo de horas en tiempo real
   let horasReservadas = 2.0;
@@ -39,87 +80,110 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
     const [h1, m1] = horaInicio.split(':').map(Number);
     const [h2, m2] = horaFin.split(':').map(Number);
     let diff = (h2 + m2 / 60) - (h1 + m1 / 60);
-    if (diff <= 0) diff = 2.0;
-    horasReservadas = Math.round(diff * 10) / 10;
+    if (diff > 0) horasReservadas = Math.round(diff * 10) / 10;
+    else horasReservadas = 1.0;
   }
-  const tarifaPorHora = tarifario[espacio]?.tarifa || 70000;
-  const totalLiquidacion = tarifaPorHora * horasReservadas;
 
-  // Lista de reservas activas del día
-  const [reservasHoy, setReservasHoy] = useState([
-    {
-      id: 'res-01',
-      espacio: 'Sala de Juntas 1',
-      capacidad: 'Capacidad: 10 pax',
-      cliente: 'Jose Miguel Chico',
-      origen: 'Apto D101',
-      tipoCliente: 'Huésped Facile',
-      horario: '09:00 - 11:00',
-      duracion: '2 horas (En uso)',
-      total: 140000,
-      estado: 'EN_CURSO',
-    },
-    {
-      id: 'res-02',
-      espacio: 'Sala de Juntas 2',
-      capacidad: 'Capacidad: 10 pax',
-      cliente: 'Inversiones Tech SAS',
-      origen: 'NIT: 901.442.110-3',
-      tipoCliente: 'Cliente Externo',
-      horario: '14:00 - 17:00',
-      duracion: '3 horas',
-      total: 210000,
-      estado: 'CONFIRMADA',
-    },
-    {
-      id: 'res-03',
-      espacio: 'Coworking Puesto 4',
-      capacidad: 'Flex Desk Conectividad',
-      cliente: 'Carlos Mendoza',
-      origen: 'Apto S201',
-      tipoCliente: 'Huésped Facile',
-      horario: '10:00 - 18:00',
-      duracion: '8 horas (Pase Día)',
-      total: 120000,
-      estado: 'ACTIVA',
-    },
-  ]);
+  // Liquidación con tarifas y descuentos corporativos oficiales
+  let totalLiquidacion = horasReservadas * tarifaPorHora;
+  let descuentoPaqueteTexto = null;
 
-  const handleLiberar = (id) => {
-    if (onLiberarEspacio) {
-      onLiberarEspacio(id);
+  if (espacioSeleccionado?.tipo === 'Sala de Juntas') {
+    if (horasReservadas >= 8) {
+      totalLiquidacion = 450000;
+      descuentoPaqueteTexto = 'Paquete Día Completo (Tarifa plana $450.000 COP)';
+    } else if (horasReservadas >= 4) {
+      totalLiquidacion = 250000;
+      descuentoPaqueteTexto = 'Paquete Medio Día (Tarifa plana $250.000 COP)';
     }
-    setReservasHoy(reservasHoy.filter((r) => r.id !== id));
+  } else {
+    if (horasReservadas >= 8) {
+      totalLiquidacion = 100000;
+      descuentoPaqueteTexto = 'Pase Día Coworking (Tarifa plana $100.000 COP)';
+    } else if (horasReservadas >= 4) {
+      totalLiquidacion = 70000;
+      descuentoPaqueteTexto = 'Bloque 4 Horas Coworking (Tarifa plana $70.000 COP)';
+    }
+  }
+
+  // Filtrado de reservas activas
+  const reservasActivas = useMemo(() => {
+    return (reservasNegocio || []).filter(r => r.estado !== 'Cancelada');
+  }, [reservasNegocio]);
+
+  // Reservas activas de hoy
+  const hoyStr = new Date().toLocaleDateString('en-CA');
+  const reservasHoy = useMemo(() => {
+    return reservasActivas.filter(r => String(r.fecha) === hoyStr);
+  }, [reservasActivas, hoyStr]);
+
+  // Subtotal facturado hoy
+  const subtotalFacturadoHoy = useMemo(() => {
+    return reservasHoy.reduce((acc, curr) => acc + (Number(curr.precio_total) || 0), 0);
+  }, [reservasHoy]);
+
+  // Conteo de disponibilidad actual
+  const salasTotales = espacios.filter(e => e.tipo === 'Sala de Juntas').length;
+  const salasOcupadasHoy = new Set(reservasHoy.filter(r => r.tipo_espacio === 'Sala de Juntas' || (r.espacio && r.espacio.includes('Sala'))).map(r => r.espacio)).size;
+  const salasDisponibles = Math.max(0, salasTotales - salasOcupadasHoy);
+
+  // Manejo de envío
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setAlerta(null);
+
+    const huespedSel = opcionesHuespedes.find(h => String(h.id_huesped) === String(idHuesped)) || opcionesHuespedes[0];
+    const nombreFinal = tipoCliente === 'HUESPED' 
+      ? (huespedSel?.nombre || 'Huésped Registrado')
+      : (clienteExternoNombre.trim() || 'Cliente Corporativo');
+    const docFinal = tipoCliente === 'HUESPED'
+      ? (huespedSel?.documento || null)
+      : (clienteExternoNit.trim() || null);
+
+    const payload = {
+      id_espacio: parseInt(idEspacio),
+      tipo_cliente: tipoCliente === 'HUESPED' ? 'Huésped Registrado' : 'Cliente Externo',
+      id_huesped: tipoCliente === 'HUESPED' ? (huespedSel?.id_huesped || null) : null,
+      nombre_cliente: nombreFinal,
+      documento_cliente: docFinal,
+      fecha,
+      hora_inicio: horaInicio,
+      hora_fin: horaFin,
+      observaciones: observaciones.trim() || null
+    };
+
+    if (onNuevaReserva) {
+      const res = await onNuevaReserva(payload);
+      if (res && res.ok) {
+        setAlerta({ type: 'success', text: `✓ ¡Reserva confirmada para ${espacioSeleccionado?.nombre || 'Espacio'}!` });
+        setObservaciones('');
+        if (tipoCliente === 'EXTERNO') {
+          setClienteExternoNombre('');
+          setClienteExternoNit('');
+        }
+      } else if (res && !res.ok) {
+        setAlerta({ type: 'error', text: res.message || 'Error al procesar la reserva.' });
+      }
+    }
+    setSubmitting(false);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const nueva = {
-      id: `res-${Date.now()}`,
-      espacio: tarifario[espacio].nombre,
-      capacidad: tarifario[espacio].capacidad,
-      cliente: tipoCliente === 'HUESPED' ? 'Jose Miguel Chico' : (clienteExternoNombre || 'Cliente Corporativo'),
-      origen: tipoCliente === 'HUESPED' ? 'Apto D101' : `NIT: ${clienteExternoNit || '901.883.210-1'}`,
-      tipoCliente: tipoCliente === 'HUESPED' ? 'Huésped Facile' : 'Cliente Externo',
-      horario: `${horaInicio} - ${horaFin}`,
-      duracion: `${horasReservadas.toFixed(1)} horas`,
-      total: totalLiquidacion,
-      estado: 'CONFIRMADA',
-    };
-    if (onNuevaReserva) {
-      onNuevaReserva(nueva);
+  // Liberar espacio
+  const handleLiberar = async (id_reserva_negocio) => {
+    if (onLiberarEspacio) {
+      await onLiberarEspacio(id_reserva_negocio);
     }
-    setReservasHoy([nueva, ...reservasHoy]);
   };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto mb-8 font-sans">
       
-      {/* 1. ENCABEZADO INSTITUCIONAL CON CONTADORES (ESTILO SCREEN_60 / IMAGEN 2) */}
+      {/* 1. ENCABEZADO INSTITUCIONAL CON CONTADORES DINÁMICOS */}
       <div 
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '16px',
+          borderRadius: '24px',
           border: '1px solid #e2e8f0',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
           padding: '24px 28px',
@@ -152,39 +216,49 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
             💼
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.4px', lineHeight: 1.15, margin: 0 }}>
-                Centro de<br />Negocios
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.3px', margin: 0 }}>
+                Centro de Negocios — Reservas por Horas & Coworking
               </h2>
-              <span style={{ color: '#cbd5e1', fontWeight: 300, fontSize: '24px', lineHeight: 1, userSelect: 'none' }}>—</span>
-              <div style={{ color: '#1e293b', fontWeight: 800, fontSize: '18px', letterSpacing: '-0.2px', lineHeight: 1.2 }}>
-                Reservas por Horas &<br />Coworking
-              </div>
+              <span 
+                style={{
+                  display: 'inline-block',
+                  padding: '2px 10px',
+                  borderRadius: '9999px',
+                  backgroundColor: '#f1f5f9',
+                  border: '1px solid #e2e8f0',
+                  color: '#475569',
+                  fontSize: '11px',
+                  fontWeight: 800
+                }}
+              >
+                {espacios.length} Espacios Corporativos
+              </span>
             </div>
-            <p style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, marginTop: '6px', marginBottom: 0 }}>
-              Gestión ejecutiva de salas de conferencias, juntas y puestos flex por bloques horarios
+            <p style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, marginTop: '4px', marginBottom: 0 }}>
+              Gestión y liquidación de salas de juntas ejecutivas y puestos flex de conectividad para huéspedes y clientes corporativos.
             </p>
           </div>
         </div>
 
-        {/* Lado Derecho: Contadores de Disponibilidad (Sin botón de actualizar) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        {/* Lado Derecho: Contadores de Disponibilidad en Tiempo Real */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, flexWrap: 'wrap' }}>
           {/* Salas Disponibles */}
           <div 
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '6px 12px',
-              borderRadius: '8px',
+              padding: '6px 14px',
+              borderRadius: '10px',
               backgroundColor: '#ecfdf5',
               border: '1px solid #a7f3d0'
             }}
           >
-            <span style={{ width: '8px', height: '8px', minWidth: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 6px rgba(16, 185, 129, 0.4)' }}></span>
+            <span style={{ width: '8px', height: '8px', minWidth: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 6px rgba(16, 185, 129, 0.4)' }} className="animate-pulse"></span>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#065f46' }}>Salas Disponibles:</span>
             <span style={{ backgroundColor: '#ffffff', padding: '2px 8px', borderRadius: '6px', border: '1px solid #6ee7b7', fontWeight: 800, color: '#0f172a', fontSize: '12px' }}>
-              3 de 4
+              {salasDisponibles} de {salasTotales}
             </span>
           </div>
 
@@ -194,8 +268,8 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '6px 12px',
-              borderRadius: '8px',
+              padding: '6px 14px',
+              borderRadius: '10px',
               backgroundColor: '#eff6ff',
               border: '1px solid #bfdbfe'
             }}
@@ -203,17 +277,44 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
             <span style={{ width: '8px', height: '8px', minWidth: '8px', borderRadius: '50%', backgroundColor: '#3b82f6', display: 'inline-block', boxShadow: '0 0 6px rgba(59, 130, 246, 0.4)' }}></span>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e40af' }}>Coworking Flex:</span>
             <span style={{ backgroundColor: '#ffffff', padding: '2px 8px', borderRadius: '6px', border: '1px solid #93c5fd', fontWeight: 800, color: '#0f172a', fontSize: '12px' }}>
-              12 Disponibles
+              15 Puestos
             </span>
           </div>
         </div>
       </div>
 
-      {/* 2. GRID PRINCIPAL (12 COLUMNAS: 5 COLS FORMULARIO / 7 COLS AGENDA) */}
-      <div className="pms-coworking-grid grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* ALERTA DE ESTADO */}
+      {alerta && (
+        <div 
+          style={{
+            padding: '12px 18px',
+            borderRadius: '14px',
+            fontSize: '12px',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: alerta.type === 'success' ? '#ecfdf5' : '#fef2f2',
+            border: `1px solid ${alerta.type === 'success' ? '#a7f3d0' : '#fecaca'}`,
+            color: alerta.type === 'success' ? '#065f46' : '#dc2626'
+          }}
+        >
+          <span>{alerta.text}</span>
+          <button 
+            type="button" 
+            onClick={() => setAlerta(null)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 900 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* 2. GRID PRINCIPAL: 5 COLS FORMULARIO / 7 COLS AGENDA EN VIVO */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* COLUMNA IZQUIERDA (5 COLS): FORMULARIO DE RESERVA */}
-        <div className="pms-coworking-form-col lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-7 space-y-5">
+        <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 sm:p-7 space-y-5">
           {/* Encabezado del Formulario */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '14px', borderBottom: '1px solid #f1f5f9' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -222,18 +323,18 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                 NUEVA RESERVA DE SALA / COWORKING
               </h3>
             </div>
-            <span style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8' }}>Tarificación por Hora</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8' }}>Tarificación por Hora</span>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Espacio / Sala */}
+            {/* Espacio / Sala Real de la BD */}
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#334155', marginBottom: '6px' }}>
                 ESPACIO DE TRABAJO / SALA <span style={{ color: '#d91a2a' }}>*</span>
               </label>
               <select
-                value={espacio}
-                onChange={(e) => setEspacio(e.target.value)}
+                value={idEspacio}
+                onChange={(e) => setIdEspacio(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '10px 14px',
@@ -247,14 +348,15 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                   cursor: 'pointer'
                 }}
               >
-                <option value="SALA_1">🏢 Sala de Juntas 1 (10 pax) — $70.000 COP / hora</option>
-                <option value="SALA_2">🏢 Sala de Juntas 2 (10 pax) — $70.000 COP / hora</option>
-                <option value="SALA_3">🏢 Sala 3 VIP (15 pax) — $20.000 COP / hora</option>
-                <option value="COWORKING">💻 Puesto Coworking Flex — $15.000 COP / hora</option>
+                {espacios.map(esp => (
+                  <option key={esp.id_espacio} value={esp.id_espacio}>
+                    {esp.tipo === 'Coworking' ? '💻' : '🏢'} {esp.nombre} ({esp.capacidad} pax) — ${Number(esp.precio_hora).toLocaleString('es-CO')} COP / h
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Tipo de Cliente (Radio Cards Idénticas a Imagen 2) */}
+            {/* Tipo de Cliente (Radio Cards) */}
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#334155', marginBottom: '8px' }}>
                 TIPO DE CLIENTE <span style={{ color: '#d91a2a' }}>*</span>
@@ -370,36 +472,43 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
               </div>
             </div>
 
-            {/* Huésped Registrado o Datos Cliente Externo */}
+            {/* Huésped Registrado de la BD o Formulario de Cliente Externo */}
             {tipoCliente === 'HUESPED' ? (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#334155', margin: 0 }}>
-                    HUÉSPED REGISTRADO <span style={{ color: '#d91a2a' }}>*</span>
+                    HUÉSPED TITULAR <span style={{ color: '#d91a2a' }}>*</span>
                   </label>
-                  <span style={{ fontSize: '12px', color: '#d91a2a', fontWeight: 700, cursor: 'pointer' }}>
-                    Ver folio de cuenta
+                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                    {opcionesHuespedes.length} huéspedes registrados
                   </span>
                 </div>
                 <select
-                  value={huespedRegistrado}
-                  onChange={(e) => setHuespedRegistrado(e.target.value)}
+                  value={idHuesped}
+                  onChange={(e) => setIdHuesped(e.target.value)}
+                  required
                   style={{
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
                     border: '1px solid #cbd5e1',
                     backgroundColor: '#ffffff',
-                    fontSize: '13px',
+                    fontSize: '12.5px',
                     fontWeight: 600,
                     color: '#0f172a',
                     outline: 'none',
                     cursor: 'pointer'
                   }}
                 >
-                  <option value="APTO_D101">Apto D101 — Jose Miguel Chico (Check-out: 18 Nov)</option>
-                  <option value="APTO_S201">Apto S201 — Carlos Mendoza (Check-out: 20 Nov)</option>
-                  <option value="APTO_F301">Apto F301 — María Gómez (Check-out: 22 Nov)</option>
+                  {opcionesHuespedes.length === 0 ? (
+                    <option value="">No hay huéspedes registrados en el sistema</option>
+                  ) : (
+                    opcionesHuespedes.map(h => (
+                      <option key={h.id_huesped} value={h.id_huesped}>
+                        {h.label}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             ) : (
@@ -412,7 +521,7 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                     type="text"
                     value={clienteExternoNombre}
                     onChange={(e) => setClienteExternoNombre(e.target.value)}
-                    placeholder="Ej: Inversiones Tech SAS"
+                    placeholder="Ej: Inversiones Tech S.A.S."
                     style={{
                       width: '100%',
                       padding: '10px 14px',
@@ -422,7 +531,8 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                       fontSize: '12px',
                       fontWeight: 600,
                       color: '#0f172a',
-                      outline: 'none'
+                      outline: 'none',
+                      boxSizing: 'border-box'
                     }}
                     required
                   />
@@ -445,7 +555,8 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                       fontSize: '12px',
                       fontWeight: 600,
                       color: '#0f172a',
-                      outline: 'none'
+                      outline: 'none',
+                      boxSizing: 'border-box'
                     }}
                     required
                   />
@@ -475,8 +586,10 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                     color: '#334155',
                     textAlign: 'center',
                     outline: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    boxSizing: 'border-box'
                   }}
+                  required
                 />
               </div>
               <div>
@@ -498,8 +611,10 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                     color: '#334155',
                     textAlign: 'center',
                     outline: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    boxSizing: 'border-box'
                   }}
+                  required
                 />
               </div>
               <div>
@@ -521,8 +636,10 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                     color: '#334155',
                     textAlign: 'center',
                     outline: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    boxSizing: 'border-box'
                   }}
+                  required
                 />
               </div>
             </div>
@@ -547,12 +664,14 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                   color: '#334155',
                   outline: 'none',
                   resize: 'none',
-                  minHeight: '62px'
+                  minHeight: '62px',
+                  boxSizing: 'border-box',
+                  fontFamily: 'inherit'
                 }}
               />
             </div>
 
-            {/* TARJETA OSCURA DE COTIZACIÓN EN VIVO (ESTILO SCREEN_60 / IMAGEN 2) */}
+            {/* TARJETA OSCURA DE COTIZACIÓN EN VIVO */}
             <div 
               style={{
                 backgroundColor: '#0f172a',
@@ -612,6 +731,27 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                 </span>
               </div>
 
+              {/* Descuento por Paquete si aplica */}
+              {descuentoPaqueteTexto && (
+                <div 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '11px',
+                    color: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                    marginBottom: '14px'
+                  }}
+                >
+                  <span>Promoción Aplicada:</span>
+                  <span style={{ fontWeight: 800 }}>{descuentoPaqueteTexto}</span>
+                </div>
+              )}
+
               {/* IVA Exento */}
               <div 
                 style={{
@@ -623,7 +763,7 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                   marginBottom: '16px'
                 }}
               >
-                <span>IVA (19% Exento Huéspedes Ley Turismo):</span>
+                <span>IVA (19% Exento Servicios Integrados):</span>
                 <span style={{ fontFamily: 'monospace', fontWeight: 800, color: '#ffffff', fontSize: '13px' }}>
                   $0 <span style={{ color: '#cbd5e1', fontFamily: 'sans-serif', fontWeight: 600, fontSize: '11px' }}>COP</span>
                 </span>
@@ -653,7 +793,7 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                     TOTAL A LIQUIDAR
                   </span>
                   <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '3px' }}>
-                    {tipoCliente === 'HUESPED' ? 'Cargable a cuenta folio #FC-9482' : 'Factura corporativa directa'}
+                    {tipoCliente === 'HUESPED' ? 'Cargable al folio contable de estancia' : 'Facturación empresarial con NIT'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
@@ -673,9 +813,10 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
               </div>
             </div>
 
-            {/* Botón de Confirmación con Rojo Facile y Sombra Luminosa */}
+            {/* Botón de Confirmación */}
             <button
               type="submit"
+              disabled={submitting}
               style={{
                 width: '100%',
                 padding: '14px 20px',
@@ -690,30 +831,31 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                cursor: 'pointer',
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                opacity: submitting ? 0.7 : 1,
                 transition: 'all 0.2s ease',
                 marginTop: '16px'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b91522'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#d91a2a'}
+              onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.backgroundColor = '#b91522'; }}
+              onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.backgroundColor = '#d91a2a'; }}
             >
               <Calendar size={18} color="#ffffff" />
-              <span>Confirmar Reserva de Espacio</span>
+              <span>{submitting ? 'Confirmando Reserva...' : 'Confirmar Reserva de Espacio'}</span>
             </button>
             <p style={{ fontSize: '11px', textAlign: 'center', color: '#94a3b8', marginTop: '8px', marginBottom: 0 }}>
-              Se enviará voucher digital al correo del titular automáticamente.
+              Sincronización instantánea con agenda y bloqueo de sala en base de datos.
             </p>
           </form>
         </div>
 
-        {/* COLUMNA DERECHA (7 COLS): AGENDA EN TIEMPO REAL & DISPONIBILIDAD (ESTILO SCREEN_60 / IMAGEN 2) */}
-        <div className="pms-coworking-table-col lg:col-span-7" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* COLUMNA DERECHA (7 COLS): AGENDA EN TIEMPO REAL & DISPONIBILIDAD */}
+        <div className="lg:col-span-7" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* TABLA DE RESERVAS ACTIVAS DEL DÍA */}
           <div 
             style={{
               backgroundColor: '#ffffff',
-              borderRadius: '16px',
+              borderRadius: '20px',
               border: '1px solid #e2e8f0',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
               overflow: 'hidden'
@@ -727,7 +869,8 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '12px'
+                gap: '12px',
+                flexWrap: 'wrap'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -749,10 +892,10 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                 </div>
                 <div>
                   <h3 style={{ fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#0f172a', margin: 0 }}>
-                    RESERVAS ACTIVAS & PROGRAMADAS DE HOY
+                    RESERVAS ACTIVAS & PROGRAMADAS
                   </h3>
-                  <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0', fontWeight: 500 }}>
-                    Agenda en tiempo real del 15 de Noviembre de 2026
+                  <p style={{ fontSize: '11px', color: '#94a3b8', margin: '2px 0 0', fontWeight: 500 }}>
+                    Agenda en vivo del Centro de Negocios • Fecha: {fecha}
                   </p>
                 </div>
               </div>
@@ -773,283 +916,184 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                 }}
               >
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
-                {reservasHoy.length} Reservas Hoy
+                {reservasActivas.length} Reservas Registradas
               </span>
             </div>
 
-            {/* Tabla */}
+            {/* Tabla de Reservas */}
             <div style={{ overflowX: 'auto', width: '100%' }}>
               <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '580px' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#475569' }}>
-                    <th style={{ padding: '12px 14px' }}>ESPACIO / RECURSO</th>
-                    <th style={{ padding: '12px 14px' }}>CLIENTE / APTO</th>
-                    <th style={{ padding: '12px 12px' }}>HORARIO & TIEMPO</th>
-                    <th style={{ padding: '12px 12px' }}>TIPO & TOTAL</th>
+                    <th style={{ padding: '12px 14px' }}>ESPACIO / SALA</th>
+                    <th style={{ padding: '12px 14px' }}>CLIENTE / TITULAR</th>
+                    <th style={{ padding: '12px 12px' }}>HORARIO & DURACIÓN</th>
+                    <th style={{ padding: '12px 12px' }}>TARIFA LIQUIDADA</th>
                     <th style={{ padding: '12px 12px' }}>ESTADO</th>
                     <th style={{ padding: '12px 16px', textAlign: 'right' }}>ACCIÓN</th>
                   </tr>
                 </thead>
                 <tbody style={{ fontSize: '12px' }}>
-                  {reservasHoy.map((res, idx) => (
-                    <tr 
-                      key={res.id} 
-                      style={{ 
-                        borderBottom: idx < reservasHoy.length - 1 ? '1px solid #f1f5f9' : 'none',
-                        transition: 'background-color 0.15s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      {/* Espacio / Recurso */}
-                      <td style={{ padding: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span 
-                            style={{
-                              width: '7px',
-                              height: '7px',
-                              minWidth: '7px',
-                              borderRadius: '50%',
-                              backgroundColor: res.estado === 'EN_CURSO' ? '#10b981' : res.estado === 'CONFIRMADA' ? '#3b82f6' : '#a855f7',
-                              display: 'inline-block'
-                            }}
-                          />
-                          <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>{res.espacio}</span>
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8', paddingLeft: '15px', marginTop: '2px', fontWeight: 500 }}>
-                          {res.capacidad}
-                        </div>
-                      </td>
-
-                      {/* Cliente / Apto */}
-                      <td style={{ padding: '14px' }}>
-                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>{res.cliente}</div>
-                        <div style={{ marginTop: '4px' }}>
-                          {res.origen.includes('NIT') ? (
-                            <span 
-                              style={{
-                                display: 'inline-block',
-                                padding: '2px 8px',
-                                borderRadius: '6px',
-                                backgroundColor: '#fffbeb',
-                                border: '1px solid #fde68a',
-                                color: '#b45309',
-                                fontSize: '11px',
-                                fontWeight: 700
-                              }}
-                            >
-                              {res.origen}
-                            </span>
-                          ) : (
-                            <span 
-                              style={{
-                                display: 'inline-block',
-                                padding: '2px 8px',
-                                borderRadius: '6px',
-                                backgroundColor: '#eff6ff',
-                                border: '1px solid #bfdbfe',
-                                color: '#1d4ed8',
-                                fontSize: '11px',
-                                fontWeight: 700
-                              }}
-                            >
-                              {res.origen}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Horario & Tiempo */}
-                      <td style={{ padding: '14px 12px' }}>
-                        <div style={{ fontFamily: 'monospace', fontWeight: 800, color: '#0f172a', fontSize: '12px' }}>
-                          {res.horario}
-                        </div>
-                        <div 
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            marginTop: '2px',
-                            color: res.estado === 'EN_CURSO' ? '#059669' : res.estado === 'CONFIRMADA' ? '#64748b' : '#9333ea'
-                          }}
-                        >
-                          {res.duracion}
-                        </div>
-                      </td>
-
-                      {/* Tipo & Total */}
-                      <td style={{ padding: '14px 12px' }}>
-                        <div style={{ fontWeight: 900, color: '#0f172a', fontSize: '13px', lineHeight: 1.1 }}>
-                          ${res.total.toLocaleString('es-CO')}
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 800 }}>COP</div>
-                        <div 
-                          style={{
-                            fontSize: '11px',
-                            marginTop: '2px',
-                            fontWeight: res.tipoCliente === 'Cliente Externo' ? 700 : 500,
-                            color: res.tipoCliente === 'Cliente Externo' ? '#2563eb' : '#94a3b8'
-                          }}
-                        >
-                          {res.tipoCliente}
-                        </div>
-                      </td>
-
-                      {/* Estado */}
-                      <td style={{ padding: '14px 12px' }}>
-                        {res.estado === 'EN_CURSO' && (
-                          <span 
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '4px 10px',
-                              borderRadius: '9999px',
-                              backgroundColor: '#ecfdf5',
-                              border: '1px solid #a7f3d0',
-                              color: '#047857',
-                              fontSize: '11px',
-                              fontWeight: 800
-                            }}
-                          >
-                            <span style={{ fontSize: '10px' }}>◌</span>
-                            En Curso
-                          </span>
-                        )}
-                        {res.estado === 'CONFIRMADA' && (
-                          <span 
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '4px 14px',
-                              borderRadius: '9999px',
-                              backgroundColor: '#eff6ff',
-                              border: '1.5px solid #60a5fa',
-                              color: '#2563eb',
-                              fontSize: '11px',
-                              fontWeight: 800
-                            }}
-                          >
-                            Confirmada
-                          </span>
-                        )}
-                        {res.estado === 'ACTIVA' && (
-                          <span 
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '4px 14px',
-                              borderRadius: '9999px',
-                              backgroundColor: '#faf5ff',
-                              border: '1px solid #f3e8ff',
-                              color: '#9333ea',
-                              fontSize: '11px',
-                              fontWeight: 800
-                            }}
-                          >
-                            Activa
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Acción */}
-                      <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                          {idx === 2 ? (
-                            <button
-                              type="button"
-                              style={{
-                                padding: '5px 14px',
-                                borderRadius: '8px',
-                                border: '1px solid #cbd5e1',
-                                backgroundColor: '#ffffff',
-                                color: '#334155',
-                                fontWeight: 700,
-                                fontSize: '11px',
-                                cursor: 'pointer',
-                                transition: 'all 0.15s ease'
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
-                            >
-                              Gestionar
-                            </button>
-                          ) : (
-                            <>
-                              <button
-                                type="button"
-                                style={{
-                                  padding: '4px 12px',
-                                  borderRadius: '8px',
-                                  border: '1px solid #cbd5e1',
-                                  backgroundColor: '#ffffff',
-                                  color: '#334155',
-                                  fontWeight: 600,
-                                  fontSize: '11px',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.15s ease'
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
-                              >
-                                Detalle
-                              </button>
-                              {res.estado === 'EN_CURSO' ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleLiberar(res.id)}
-                                  style={{
-                                    padding: '4px 12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #fecdd3',
-                                    backgroundColor: '#fff1f2',
-                                    color: '#e11d48',
-                                    fontWeight: 700,
-                                    fontSize: '11px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s ease'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ffe4e6'}
-                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff1f2'}
-                                >
-                                  Liberar
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => handleLiberar(res.id)}
-                                  style={{
-                                    padding: '4px 8px',
-                                    border: 'none',
-                                    backgroundColor: 'transparent',
-                                    color: '#94a3b8',
-                                    fontSize: '14px',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s ease'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-                                  title="Cancelar reserva"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </>
-                          )}
+                  {reservasActivas.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: '36px 20px', textAlign: 'center', color: '#64748b', fontWeight: 500 }}>
+                        <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '28px' }}>📅</span>
+                          <span style={{ fontWeight: 700, color: '#1e293b' }}>No hay reservas activas en el Centro de Negocios</span>
+                          <span style={{ fontSize: '11px', color: '#94a3b8' }}>Diligencie el formulario a la izquierda para agendar una sala o flex desk.</span>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    reservasActivas.map((res, idx) => (
+                      <tr 
+                        key={res.id_reserva_negocio || idx} 
+                        style={{ 
+                          borderBottom: idx < reservasActivas.length - 1 ? '1px solid #f1f5f9' : 'none',
+                          transition: 'background-color 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        {/* Espacio */}
+                        <td style={{ padding: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span 
+                              style={{
+                                width: '7px',
+                                height: '7px',
+                                minWidth: '7px',
+                                borderRadius: '50%',
+                                backgroundColor: res.estado === 'Confirmada' ? '#10b981' : '#3b82f6',
+                                display: 'inline-block'
+                              }}
+                            />
+                            <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>{res.espacio}</span>
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', paddingLeft: '15px', marginTop: '2px', fontWeight: 500 }}>
+                            {res.tipo_espacio || 'Espacio Ejecutivo'}
+                          </div>
+                        </td>
+
+                        {/* Cliente */}
+                        <td style={{ padding: '14px' }}>
+                          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>
+                            {res.nombre_cliente}
+                          </div>
+                          <div style={{ marginTop: '4px' }}>
+                            {res.tipo_cliente === 'Cliente Externo' ? (
+                              <span 
+                                style={{
+                                  display: 'inline-block',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  backgroundColor: '#fffbeb',
+                                  border: '1px solid #fde68a',
+                                  color: '#b45309',
+                                  fontSize: '11px',
+                                  fontWeight: 700
+                                }}
+                              >
+                                {res.documento_cliente ? `NIT: ${res.documento_cliente}` : 'Cliente Externo'}
+                              </span>
+                            ) : (
+                              <span 
+                                style={{
+                                  display: 'inline-block',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  backgroundColor: '#eff6ff',
+                                  border: '1px solid #bfdbfe',
+                                  color: '#1d4ed8',
+                                  fontSize: '11px',
+                                  fontWeight: 700
+                                }}
+                              >
+                                Huésped Facile
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Horario */}
+                        <td style={{ padding: '14px 12px' }}>
+                          <div style={{ fontFamily: 'monospace', fontWeight: 800, color: '#0f172a', fontSize: '12px' }}>
+                            {res.hora_inicio} - {res.hora_fin}
+                          </div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, marginTop: '2px', color: '#059669' }}>
+                            {res.duracion_horas} {res.duracion_horas === 1 ? 'hora' : 'horas'} • {res.fecha}
+                          </div>
+                        </td>
+
+                        {/* Tarifa */}
+                        <td style={{ padding: '14px 12px' }}>
+                          <div style={{ fontWeight: 900, color: '#0f172a', fontSize: '13px', lineHeight: 1.1 }}>
+                            ${Number(res.precio_total).toLocaleString('es-CO')}
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 800 }}>COP</div>
+                        </td>
+
+                        {/* Estado */}
+                        <td style={{ padding: '14px 12px' }}>
+                          <span 
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              padding: '3px 10px',
+                              borderRadius: '9999px',
+                              backgroundColor: '#ecfdf5',
+                              border: '1px solid #a7f3d0',
+                              color: '#065f46',
+                              fontSize: '11px',
+                              fontWeight: 800
+                            }}
+                          >
+                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
+                            {res.estado || 'Confirmada'}
+                          </span>
+                        </td>
+
+                        {/* Acción */}
+                        <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleLiberar(res.id_reserva_negocio)}
+                            style={{
+                              padding: '5px 10px',
+                              borderRadius: '8px',
+                              border: '1px solid #fecaca',
+                              backgroundColor: '#ffffff',
+                              color: '#dc2626',
+                              fontWeight: 700,
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'all 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                            title="Cancelar reserva y liberar horario"
+                          >
+                            <RotateCcw size={12} color="#dc2626" />
+                            <span>Liberar</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
 
-            {/* Footer de la Tabla */}
+            {/* Subtotal al Pie de Tabla */}
             <div 
               style={{
                 padding: '14px 24px',
-                backgroundColor: '#ffffff',
                 borderTop: '1px solid #f1f5f9',
+                backgroundColor: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -1057,142 +1101,67 @@ export default function ModuloSalasCoworkingPMS({ onNuevaReserva, onLiberarEspac
                 gap: '8px'
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
-                <span>🛡️</span> Tolerancia de desocupación: 15 min después de la hora fin.
+              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                Auditoría horaria y folios contables integrados
               </span>
               <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>
-                Subtotal Facturado Hoy: <strong style={{ color: '#0f172a', fontWeight: 900 }}>$470.000 COP</strong>
+                Subtotal Facturado Hoy: <strong style={{ color: '#0f172a', fontWeight: 900 }}>${subtotalFacturadoHoy.toLocaleString('es-CO')} COP</strong>
               </span>
             </div>
           </div>
 
-          {/* 3 TARJETAS INFERIORES DE ESTADO RÁPIDO DE SALAS (ESTILO IMAGEN 2) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
-            {/* Tarjeta 1 - Sala 1 */}
-            <div 
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '16px',
-                border: '1px solid #e2e8f0',
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
-              }}
-            >
-              <div 
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  minWidth: '44px',
-                  borderRadius: '12px',
-                  backgroundColor: '#fee2e2',
-                  border: 'none',
-                  color: '#dc2626',
-                  fontSize: '20px',
-                  fontWeight: 900,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}
-              >
-                1
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
-                  Sala 1 (10p)
-                </div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: '#059669', marginTop: '3px' }}>
-                  En uso hasta 11:00
-                </div>
-              </div>
-            </div>
+          {/* 3 TARJETAS INFERIORES DE ESTADO DINÁMICO POR CADA ESPACIO */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '16px' }}>
+            {espacios.map((esp, i) => {
+              const resActivaEspacio = reservasHoy.find(r => r.espacio === esp.nombre);
+              const estaOcupada = !!resActivaEspacio;
 
-            {/* Tarjeta 2 - Sala 2 */}
-            <div 
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '16px',
-                border: '1px solid #e2e8f0',
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
-              }}
-            >
-              <div 
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  minWidth: '44px',
-                  borderRadius: '12px',
-                  backgroundColor: '#dcfce7',
-                  border: 'none',
-                  color: '#059669',
-                  fontSize: '20px',
-                  fontWeight: 900,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}
-              >
-                2
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
-                  Sala 2 (10p)
+              return (
+                <div 
+                  key={esp.id_espacio}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '16px',
+                    border: '1px solid #e2e8f0',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
+                  }}
+                >
+                  <div 
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      minWidth: '44px',
+                      borderRadius: '12px',
+                      backgroundColor: estaOcupada ? '#fee2e2' : '#dcfce7',
+                      color: estaOcupada ? '#dc2626' : '#059669',
+                      fontSize: '18px',
+                      fontWeight: 900,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    {i + 1}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
+                      {esp.nombre}
+                    </div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: estaOcupada ? '#dc2626' : '#059669', marginTop: '3px' }}>
+                      {estaOcupada ? `En uso (${resActivaEspacio.hora_inicio} - ${resActivaEspacio.hora_fin})` : 'Disponible hoy'}
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 500, marginTop: '1px' }}>
+                      Capacidad: {esp.capacidad} pax
+                    </div>
+                  </div>
                 </div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: '#059669', marginTop: '3px' }}>
-                  Disponible hasta 14:00
-                </div>
-              </div>
-            </div>
-
-            {/* Tarjeta 3 - Sala 3 VIP */}
-            <div 
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '16px',
-                border: '1px solid #e2e8f0',
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
-              }}
-            >
-              <div 
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  minWidth: '44px',
-                  borderRadius: '12px',
-                  backgroundColor: '#dcfce7',
-                  border: 'none',
-                  color: '#059669',
-                  fontSize: '20px',
-                  fontWeight: 900,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}
-              >
-                3
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
-                  Sala 3 VIP (15p)
-                </div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: '#059669', marginTop: '3px' }}>
-                  Disponible todo el día
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
 
         </div>

@@ -1405,50 +1405,75 @@ export function useAppState() {
   };
 
   // Centro de Negocios — Crear Reserva por Horas
-  const handleCrearReservaNegocio = async (e) => {
-    e.preventDefault();
-    if (!reservaNegocioForm.id_espacio) {
+  const handleCrearReservaNegocio = async (datosOEvento) => {
+    let payload = null;
+    if (datosOEvento && typeof datosOEvento.preventDefault === 'function') {
+      datosOEvento.preventDefault();
+      payload = reservaNegocioForm;
+    } else if (datosOEvento) {
+      payload = datosOEvento;
+    } else {
+      payload = reservaNegocioForm;
+    }
+
+    if (!payload.id_espacio) {
       setReservaNegocioAlert({ type: 'error', message: 'Seleccione un espacio del Centro de Negocios.' });
-      return;
+      return { ok: false, message: 'Seleccione un espacio del Centro de Negocios.' };
     }
-    let nombre_cliente = reservaNegocioForm.nombre_cliente;
+
+    let nombre_cliente = payload.nombre_cliente;
     let id_huesped_val = null;
-    if (reservaNegocioForm.tipo_cliente === 'Huésped Registrado') {
-      const hSel = huespedes.find(h => h.id_huesped === parseInt(reservaNegocioForm.id_huesped));
-      if (!hSel) {
+    let doc_cliente = payload.documento_cliente || null;
+
+    if (payload.tipo_cliente === 'Huésped Registrado' || payload.tipo_cliente === 'Huésped Facile') {
+      const hSel = huespedes.find(h => String(h.id_huesped) === String(payload.id_huesped));
+      if (hSel) {
+        nombre_cliente = hSel.nombre;
+        id_huesped_val = hSel.id_huesped;
+        doc_cliente = hSel.documento;
+      } else if (!nombre_cliente) {
         setReservaNegocioAlert({ type: 'error', message: 'Seleccione un huésped de la lista.' });
-        return;
+        return { ok: false, message: 'Seleccione un huésped de la lista.' };
       }
-      nombre_cliente = hSel.nombre;
-      id_huesped_val = hSel.id_huesped;
     }
+
     setLoading(true);
     setReservaNegocioAlert(null);
     try {
-      const res = await apiFetch(`/api/centro-negocios/reservas`, {method: 'POST', token: authToken, body: {
-          id_espacio: parseInt(reservaNegocioForm.id_espacio),
-          tipo_cliente: reservaNegocioForm.tipo_cliente,
+      const res = await apiFetch(`/api/centro-negocios/reservas`, {
+        method: 'POST', 
+        token: authToken, 
+        body: {
+          id_espacio: parseInt(payload.id_espacio),
+          tipo_cliente: payload.tipo_cliente === 'Huésped Facile' ? 'Huésped Registrado' : payload.tipo_cliente,
           id_huesped: id_huesped_val,
           nombre_cliente,
-          documento_cliente: reservaNegocioForm.documento_cliente || null,
-          correo_cliente: null,
-          fecha: reservaNegocioForm.fecha,
-          hora_inicio: reservaNegocioForm.hora_inicio,
-          hora_fin: reservaNegocioForm.hora_fin,
-          observaciones: reservaNegocioForm.observaciones || null,
-        }});
+          documento_cliente: doc_cliente,
+          correo_cliente: payload.correo_cliente || null,
+          fecha: payload.fecha,
+          hora_inicio: payload.hora_inicio,
+          hora_fin: payload.hora_fin,
+          observaciones: payload.observaciones || null,
+        }
+      });
       const data = res.data;
       if (res.ok) {
         setReservaNegocioAlert({ type: 'success', message: data.message || '¡Reserva del Centro de Negocios confirmada!' });
         setReservaNegocioForm({ id_espacio: '', tipo_cliente: 'Huésped Registrado', id_huesped: '', nombre_cliente: '', documento_cliente: '', fecha: new Date().toISOString().split('T')[0], hora_inicio: '09:00', hora_fin: '11:00', observaciones: '' });
-        cargarDatosBackend(authToken);
+        await cargarDatosBackend(authToken);
+        setLoading(false);
+        return { ok: true, data };
       } else {
-        setReservaNegocioAlert({ type: 'error', message: formatErrorMessage(data.detail) });
+        const errorMsg = formatErrorMessage(data.detail);
+        setReservaNegocioAlert({ type: 'error', message: errorMsg });
+        setLoading(false);
+        return { ok: false, message: errorMsg };
       }
     } catch {
       setReservaNegocioAlert({ type: 'error', message: 'Error de conexión al reservar espacio.' });
+      setLoading(false);
+      return { ok: false, message: 'Error de conexión al reservar espacio.' };
     }
-    setLoading(false);
   };
 
   // Buscar Huésped por Documento (Cédula / Pasaporte / Extranjería) y auto-completar datos
@@ -1473,22 +1498,30 @@ export function useAppState() {
 
   // Centro de Negocios — Cancelar Reserva
   const handleCancelarReservaNegocio = async (id_reserva_negocio) => {
-    if (!window.confirm('¿Desea cancelar esta reserva de espacio y liberar el horario?')) return;
+    if (!window.confirm('¿Desea cancelar esta reserva de espacio y liberar el horario?')) return false;
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/centro-negocios/reservas/${id_reserva_negocio}`, {method: 'DELETE', token: authToken});
+      const res = await apiFetch(`/api/centro-negocios/reservas/${id_reserva_negocio}`, {
+        method: 'DELETE', 
+        token: authToken
+      });
       const data = res.data;
       if (res.ok) {
         setReservasNegocio(prev => prev.filter(r => r.id_reserva_negocio !== id_reserva_negocio));
         setReservaNegocioAlert({ type: 'success', message: '✓ Reserva de espacio cancelada y horario liberado exitosamente.' });
-        cargarDatosBackend(authToken);
+        await cargarDatosBackend(authToken);
+        setLoading(false);
+        return true;
       } else {
         setReservaNegocioAlert({ type: 'error', message: formatErrorMessage(data.detail) });
+        setLoading(false);
+        return false;
       }
     } catch {
       setReservaNegocioAlert({ type: 'error', message: 'Error al cancelar la reserva.' });
+      setLoading(false);
+      return false;
     }
-    setLoading(false);
   };
 
   // ---- COMPONENTE MODAL LEGAL INTERACTIVO (TÉRMINOS Y POLÍTICAS PROPIAS FACILE & BOOKINGSOFT) ----

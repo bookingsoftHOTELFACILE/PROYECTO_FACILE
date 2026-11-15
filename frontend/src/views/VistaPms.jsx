@@ -2453,6 +2453,11 @@ const VistaPms = () => {
           {/* 5. SUB-PESTAÑA 5: CENTRO DE NEGOCIOS — RESERVAS POR HORAS & COWORKING */}
           {(pmsSubTab === 'coworking' || pmsSubTab === 'todos') && (
             <ModuloSalasCoworkingPMS
+              espaciosNegocio={espaciosNegocio}
+              reservasNegocio={reservasNegocio}
+              huespedes={huespedes}
+              habitaciones={habitaciones}
+              reservasHabitaciones={reservas}
               onNuevaReserva={handleCrearReservaNegocio}
               onLiberarEspacio={handleCancelarReservaNegocio}
             />
