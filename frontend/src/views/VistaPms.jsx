@@ -4,7 +4,7 @@ import {
   Wrench, Check, Search, Tag, Mail, Shield, User, AlertTriangle,
   CheckCircle2, X, Clock, KeyRound, RotateCcw, Sparkles, Ban, CheckCircle, Home,
   Building2, UserCheck, Download, Plus, Phone, Key, Building, CreditCard, ArrowRight,
-  CalendarCheck, Bed
+  CalendarCheck, Bed, Briefcase, Monitor
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 import HuespedesPicker from '../components/HuespedesPicker.jsx';
@@ -192,6 +192,80 @@ const VistaPms = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Estados de Búsqueda, Filtros y Paginación para Reservas Activas
+  const [reservaSearchQuery, setReservaSearchQuery] = useState('');
+  const [reservaEstadoFilter, setReservaEstadoFilter] = useState('todos');
+  const [reservaOrigenFilter, setReservaOrigenFilter] = useState('todos');
+  const [reservaCurrentPage, setReservaCurrentPage] = useState(1);
+  const RESERVAS_ITEMS_PER_PAGE = 8;
+
+  const filteredReservas = useMemo(() => {
+    return (reservas || []).filter(r => {
+      const q = reservaSearchQuery.toLowerCase().trim();
+      const matchSearch = !q ||
+        (r.huesped_nombre && r.huesped_nombre.toLowerCase().includes(q)) ||
+        (r.huesped_documento && String(r.huesped_documento).toLowerCase().includes(q)) ||
+        (r.habitacion_numero && String(r.habitacion_numero).toLowerCase().includes(q)) ||
+        (r.id_reserva && String(r.id_reserva).includes(q));
+
+      const matchEstado =
+        reservaEstadoFilter === 'todos'
+          ? r.estado !== 'Cancelada'
+          : r.estado === reservaEstadoFilter;
+
+      const matchOrigen =
+        reservaOrigenFilter === 'todos' ||
+        (reservaOrigenFilter === 'web' && r.creado_por?.includes('Web')) ||
+        (reservaOrigenFilter === 'pms' && !r.creado_por?.includes('Web'));
+
+      return matchSearch && matchEstado && matchOrigen;
+    });
+  }, [reservas, reservaSearchQuery, reservaEstadoFilter, reservaOrigenFilter]);
+
+  const totalReservasPages = Math.max(1, Math.ceil(filteredReservas.length / RESERVAS_ITEMS_PER_PAGE));
+  const validReservaPage = Math.min(reservaCurrentPage, totalReservasPages);
+
+  const paginatedReservas = useMemo(() => {
+    const start = (validReservaPage - 1) * RESERVAS_ITEMS_PER_PAGE;
+    return filteredReservas.slice(start, start + RESERVAS_ITEMS_PER_PAGE);
+  }, [filteredReservas, validReservaPage]);
+
+  // Estados de Búsqueda, Filtros y Paginación para Mantenimiento y Aseo (Plantas)
+  const [plantaSearchQuery, setPlantaSearchQuery] = useState('');
+  const [plantaEstadoFilter, setPlantaEstadoFilter] = useState('todos');
+  const [plantaTipoFilter, setPlantaTipoFilter] = useState('todos');
+  const [plantaCurrentPage, setPlantaCurrentPage] = useState(1);
+  const PLANTA_ITEMS_PER_PAGE = 8;
+
+  const filteredPlantas = useMemo(() => {
+    return (habitaciones || []).filter(h => {
+      const q = plantaSearchQuery.toLowerCase().trim();
+      const matchSearch = !q ||
+        (h.numero && String(h.numero).toLowerCase().includes(q)) ||
+        (h.tipo && h.tipo.toLowerCase().includes(q)) ||
+        (h.detalle_mantenimiento && h.detalle_mantenimiento.toLowerCase().includes(q));
+
+      const matchEstado =
+        plantaEstadoFilter === 'todos' ||
+        (plantaEstadoFilter === 'En limpieza' && h.estado === 'En limpieza') ||
+        (plantaEstadoFilter === 'Mantenimiento' && h.estado === 'Mantenimiento') ||
+        (plantaEstadoFilter === 'Disponible' && h.estado === 'Disponible') ||
+        (plantaEstadoFilter === 'Ocupada' && h.estado === 'Ocupada');
+
+      const matchTipo = plantaTipoFilter === 'todos' || h.tipo === plantaTipoFilter;
+
+      return matchSearch && matchEstado && matchTipo;
+    });
+  }, [habitaciones, plantaSearchQuery, plantaEstadoFilter, plantaTipoFilter]);
+
+  const totalPlantaPages = Math.max(1, Math.ceil(filteredPlantas.length / PLANTA_ITEMS_PER_PAGE));
+  const validPlantaPage = Math.min(plantaCurrentPage, totalPlantaPages);
+
+  const paginatedPlantas = useMemo(() => {
+    const start = (validPlantaPage - 1) * PLANTA_ITEMS_PER_PAGE;
+    return filteredPlantas.slice(start, start + PLANTA_ITEMS_PER_PAGE);
+  }, [filteredPlantas, validPlantaPage]);
 
   // Paletas de iniciales en tonos pastel según el diseño con valores HEX garantizados
   const getAvatarStyle = (index) => {
@@ -1109,13 +1183,41 @@ const VistaPms = () => {
                     </p>
                   </div>
 
-                  <div className="flex flex-row md:flex-col items-start md:items-end gap-2 shrink-0">
-                    <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <div className="flex flex-row md:flex-col items-start md:items-end gap-2.5 shrink-0">
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 14px',
+                        borderRadius: '9999px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        backgroundColor: '#f1f5f9',
+                        color: '#334155',
+                        border: '1px solid #cbd5e1',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <span style={{ width: '8px', height: '8px', minWidth: '8px', borderRadius: '50%', backgroundColor: '#2563eb', display: 'inline-block' }}></span>
                       Turno: AM / Recepción Principal
                     </span>
-                    <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 14px',
+                        borderRadius: '9999px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        backgroundColor: '#ecfdf5',
+                        color: '#065f46',
+                        border: '1px solid #a7f3d0',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <span style={{ width: '8px', height: '8px', minWidth: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
                       Atención Presencial en Hotel
                     </span>
                   </div>
@@ -2272,443 +2374,1228 @@ const VistaPms = () => {
 
           {/* 3. SUB-PESTAÑA 3: RESERVAS ACTIVAS DE APARTAMENTOS */}
           {(pmsSubTab === 'reservas' || pmsSubTab === 'todos') && (
-            <div id="pms-reservas-table" className="clean-card" style={{ marginBottom: '1.5rem' }}>
-              <div className="clean-card-header">
-                <ListOrdered size={18} color="var(--color-primary-red)"/>
-                <h3 style={{ fontSize: '1.1rem' }}>Reservas Activas ({reservas.filter(r => r.estado !== 'Cancelada').length})</h3>
+            <div id="pms-reservas-module" className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden mb-6">
+              {/* Encabezado interno de la tarjeta */}
+              <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl border border-slate-200/90 bg-slate-50 flex items-center justify-center text-slate-700 shrink-0">
+                    <ListOrdered size={20} className="text-slate-800" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 m-0">
+                        📑 Panel de Auditoría — Reservas Activas del Hotel
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#d91a2a] text-white text-xs font-bold">
+                        {reservas.filter(r => r.estado !== 'Cancelada').length} Activas
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5 mb-0">
+                      Control de estancias, liquidación inmediata, seguimiento de Check-In/Check-Out y auditoría operativa.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPmsSubTab('recepcion')}
+                  className="bg-[#0f172a] hover:bg-slate-800 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 self-start md:self-auto shrink-0"
+                >
+                  <Plus size={15} />
+                  <span>+ Nueva Reserva Presencial</span>
+                </button>
               </div>
+
               {reservaAlert && (
-                <div style={{
-                  padding: '0.75rem 1rem',
-                  margin: '0.8rem 1rem',
-                  borderRadius: '10px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  background: reservaAlert.type === 'success' ? '#f0fdf4' : '#fee2e2',
-                  color: reservaAlert.type === 'success' ? '#166534' : '#991b1b',
-                  border: `1px solid ${reservaAlert.type === 'success' ? '#bbf7d0' : '#fca5a5'}`
-                }}>
-                  {reservaAlert.message}
+                <div className={`mx-6 mt-4 p-3.5 rounded-xl text-xs font-bold border flex items-center gap-2 ${
+                  reservaAlert.type === 'success'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-red-50 text-red-800 border-red-200'
+                }`}>
+                  <span>{reservaAlert.type === 'success' ? '✅' : '⚠️'}</span>
+                  <span>{reservaAlert.message}</span>
                 </div>
               )}
-              <div className="pms-table-wrap">
-                <table className="pms-table">
-                  <thead>
-                    <tr><th>Huésped</th><th>Apto</th><th>Fechas</th><th>Estado</th><th>Origen</th><th>Acción</th></tr>
-                  </thead>
-                  <tbody>
-                    {reservas.filter(r => r.estado !== 'Cancelada').map(r => {
-                      // HU-005: colores por estado del ciclo de vida (Confirmada / Check-In / Completada).
-                      const estadoEstilos = {
-                        'Confirmada': { bg: '#fef3c7', fg: '#b45309', icono: '📅' },
-                        'Check-In': { bg: '#dcfce7', fg: '#166534', icono: '🚪' },
-                        'Completada': { bg: '#e0f2fe', fg: '#0369a1', icono: '✅' }
-                      };
-                      const est = estadoEstilos[r.estado] || { bg: '#f1f5f9', fg: '#475569', icono: '•' };
 
-                      return (
-                      <tr key={r.id_reserva}>
-                        <td>
-                          <strong>{r.huesped_nombre}</strong>
-                          <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>Doc: {r.huesped_documento}</span>
-                        </td>
-                        <td><span className="badge-tag badge-occup">Apto {r.habitacion_numero}</span></td>
-                        <td style={{ fontSize: '0.72rem' }}>
-                          In: {r.fecha_entrada}<br/>Out: {r.fecha_salida}
-                        </td>
-                        <td style={{ fontSize: '0.72rem' }}>
-                          <span className="badge-tag" style={{ background: est.bg, color: est.fg, fontSize: '0.7rem' }}>
-                            {est.icono} {r.estado}
-                          </span>
-                          {/* HU-005 (CA-005.1 / CA-005.4): marca temporal física registrada en el backend */}
-                          {r.checkin_at && (
-                            <span style={{ display: 'block', color: '#166534', fontWeight: 600, marginTop: '0.15rem' }}>
-                              Entrada: {r.checkin_at}
-                            </span>
-                          )}
-                          {r.checkout_at && (
-                            <span style={{ display: 'block', color: '#0369a1', fontWeight: 600, marginTop: '0.15rem' }}>
-                              Salida: {r.checkout_at}
-                            </span>
-                          )}
-                        </td>
-                        <td>
-                          <span className="badge-tag" style={{ background: r.creado_por?.includes('Web') ? '#e0f2fe' : '#fef3c7', color: r.creado_por?.includes('Web') ? '#0369a1' : '#b45309', fontSize: '0.7rem' }}>
-                            {r.creado_por?.includes('Web') ? '🌐 Web Pública' : `👨‍💼 ${r.creado_por || 'Recepción'}`}
-                          </span>
-                        </td>
-                        <td style={{ whiteSpace: 'nowrap' }}>
-                          {/* HU-005: transiciones 'Confirmada -> Check-In -> Completada' */}
-                          {r.estado === 'Confirmada' && (
-                            <button
-                              id={`pms-checkin-${r.id_reserva}`}
-                              className="btn-mini"
-                              style={{ color: '#166534', fontWeight: 700, marginRight: '0.35rem' }}
-                              onClick={() => handleCambiarEstadoReserva(r.id_reserva, 'Check-In')}
-                            >
-                              🚪 Check-in
-                            </button>
-                          )}
-                          {r.estado === 'Check-In' && (
-                            <button
-                              id={`pms-checkout-${r.id_reserva}`}
-                              className="btn-mini"
-                              style={{ color: '#2563eb', fontWeight: 700, marginRight: '0.35rem' }}
-                              onClick={() => handleCambiarEstadoReserva(r.id_reserva, 'Completada')}
-                            >
-                              🚪 Check-out
-                            </button>
-                          )}
-                          {r.estado !== 'Completada' && (
-                            <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleDeleteReserva(r.id_reserva)}>
-                              Cancelar
-                            </button>
-                          )}
-                          {r.estado === 'Completada' && (
-                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>✓ Estadía finalizada</span>
-                          )}
+              {/* BARRA DE BÚSQUEDA Y FILTROS OPERATIVOS */}
+              <div className="px-6 py-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50/40">
+                <div className="flex flex-wrap items-center gap-3" style={{ flex: '1 1 auto' }}>
+                  <div className="relative" style={{ minWidth: '280px', flex: '1 1 280px', maxWidth: '420px' }}>
+                    <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={reservaSearchQuery}
+                      onChange={e => {
+                        setReservaSearchQuery(e.target.value);
+                        setReservaCurrentPage(1);
+                      }}
+                      placeholder="Buscar por huésped, documento o apartamento..."
+                      className="w-full pl-9 pr-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#d91a2a] shadow-xs"
+                    />
+                  </div>
+
+                  <select
+                    value={reservaEstadoFilter}
+                    onChange={e => {
+                      setReservaEstadoFilter(e.target.value);
+                      setReservaCurrentPage(1);
+                    }}
+                    style={{ minWidth: '160px' }}
+                    className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="Confirmada">Confirmada</option>
+                    <option value="Check-In">Check-In</option>
+                    <option value="Completada">Completada</option>
+                    <option value="Cancelada">Cancelada</option>
+                  </select>
+
+                  <select
+                    value={reservaOrigenFilter}
+                    onChange={e => {
+                      setReservaOrigenFilter(e.target.value);
+                      setReservaCurrentPage(1);
+                    }}
+                    style={{ minWidth: '160px' }}
+                    className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
+                  >
+                    <option value="todos">Todos los orígenes</option>
+                    <option value="web">Web Pública</option>
+                    <option value="pms">Recepción / PMS</option>
+                  </select>
+                </div>
+
+                <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                  Mostrando <strong className="text-slate-800">{paginatedReservas.length}</strong> de <strong className="text-slate-800">{filteredReservas.length}</strong> reservas registradas
+                </div>
+              </div>
+
+              {/* TABLA DE RESERVAS DEL SISTEMA */}
+              <div className="overflow-x-auto" style={{ width: '100%' }}>
+                <table className="pms-table-executive" style={{ minWidth: '1000px' }}>
+                  <thead>
+                    <tr className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-[0.06em] text-slate-500 border-b border-slate-200/80">
+                      <th style={{ width: '24%' }}>Huésped</th>
+                      <th style={{ width: '14%' }}>Apartamento</th>
+                      <th style={{ width: '18%' }}>Fechas & Estadía</th>
+                      <th style={{ width: '16%' }}>Estado</th>
+                      <th style={{ width: '14%' }}>Origen</th>
+                      <th style={{ width: '14%', textAlign: 'right' }}>Acción de Ciclo</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-sm">
+                    {paginatedReservas.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-xs text-slate-500 font-medium">
+                          No se encontraron reservas con los filtros seleccionados.
                         </td>
                       </tr>
-                      );
-                    })}
+                    ) : (
+                      paginatedReservas.map((r, idx) => {
+                        const avatar = getAvatarStyle(idx);
+                        const initials = getInitials(r.huesped_nombre);
+                        const estadoEstilos = {
+                          'Confirmada': { bg: '#fef3c7', fg: '#b45309', border: '#fde68a', dot: '#d97706', label: 'Confirmada' },
+                          'Check-In': { bg: '#dcfce7', fg: '#166534', border: '#bbf7d0', dot: '#16a34a', label: 'Check-In' },
+                          'Completada': { bg: '#e0f2fe', fg: '#0369a1', border: '#bae6fd', dot: '#0284c7', label: 'Completada' },
+                          'Cancelada': { bg: '#fee2e2', fg: '#991b1b', border: '#fca5a5', dot: '#dc2626', label: 'Cancelada' }
+                        };
+                        const est = estadoEstilos[r.estado] || { bg: '#f1f5f9', fg: '#475569', border: '#e2e8f0', dot: '#64748b', label: r.estado };
+
+                        return (
+                          <tr key={r.id_reserva} className="hover:bg-slate-50/50 transition-colors">
+                            <td>
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 border"
+                                  style={{
+                                    backgroundColor: avatar.bgHex,
+                                    color: avatar.textHex,
+                                    borderColor: avatar.borderHex
+                                  }}
+                                >
+                                  {initials}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-bold text-slate-900 text-xs sm:text-sm truncate">
+                                    {r.huesped_nombre}
+                                  </div>
+                                  <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
+                                    <span>Doc: {r.huesped_documento || 'No registrado'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '4px 10px',
+                                  borderRadius: '8px',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  backgroundColor: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  border: '1px solid #bfdbfe'
+                                }}
+                              >
+                                🚪 Apto {r.habitacion_numero}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="text-xs text-slate-700 font-semibold">
+                                <div><span className="text-slate-400 font-medium">In:</span> {r.fecha_entrada}</div>
+                                <div><span className="text-slate-400 font-medium">Out:</span> {r.fecha_salida}</div>
+                              </div>
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '3px 10px',
+                                  borderRadius: '9999px',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  backgroundColor: est.bg,
+                                  color: est.fg,
+                                  border: `1px solid ${est.border}`
+                                }}
+                              >
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: est.dot }}></span>
+                                {est.label}
+                              </span>
+                              {r.checkin_at && (
+                                <div className="text-[10px] text-emerald-700 font-bold mt-1">
+                                  Entrada: {r.checkin_at}
+                                </div>
+                              )}
+                              {r.checkout_at && (
+                                <div className="text-[10px] text-blue-700 font-bold mt-0.5">
+                                  Salida: {r.checkout_at}
+                                </div>
+                              )}
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  padding: '3px 9px',
+                                  borderRadius: '8px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: r.creado_por?.includes('Web') ? '#f0f9ff' : '#fefce8',
+                                  color: r.creado_por?.includes('Web') ? '#0284c7' : '#854d0e',
+                                  border: `1px solid ${r.creado_por?.includes('Web') ? '#bae6fd' : '#fef08a'}`
+                                }}
+                              >
+                                {r.creado_por?.includes('Web') ? '🌐 Web Pública' : `👨‍💼 ${r.creado_por || 'Recepción'}`}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              <div className="flex items-center justify-end gap-2">
+                                {r.estado === 'Confirmada' && (
+                                  <button
+                                    type="button"
+                                    id={`pms-checkin-${r.id_reserva}`}
+                                    onClick={() => handleCambiarEstadoReserva(r.id_reserva, 'Check-In')}
+                                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                                  >
+                                    <span>🚪 Check-in</span>
+                                  </button>
+                                )}
+                                {r.estado === 'Check-In' && (
+                                  <button
+                                    type="button"
+                                    id={`pms-checkout-${r.id_reserva}`}
+                                    onClick={() => handleCambiarEstadoReserva(r.id_reserva, 'Completada')}
+                                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                                  >
+                                    <span>🏁 Check-out</span>
+                                  </button>
+                                )}
+                                {r.estado !== 'Completada' && r.estado !== 'Cancelada' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteReserva(r.id_reserva)}
+                                    className="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors cursor-pointer"
+                                  >
+                                    Cancelar
+                                  </button>
+                                )}
+                                {r.estado === 'Completada' && (
+                                  <span className="text-xs text-slate-400 font-semibold">✓ Finalizada</span>
+                                )}
+                                {r.estado === 'Cancelada' && (
+                                  <span className="text-xs text-red-400 font-semibold">✕ Anulada</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* PAGINACIÓN INFERIOR DE RESERVAS */}
+              <div className="p-4 sm:px-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                <div>
+                  Página <strong>{validReservaPage}</strong> de <strong>{totalReservasPages}</strong>
+                </div>
+
+                {totalReservasPages > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={validReservaPage === 1}
+                      onClick={() => setReservaCurrentPage(p => Math.max(1, p - 1))}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+
+                    {Array.from({ length: totalReservasPages }, (_, i) => i + 1).map((pg) => (
+                      <button
+                        key={pg}
+                        type="button"
+                        onClick={() => setReservaCurrentPage(pg)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          validReservaPage === pg
+                            ? 'bg-[#0f172a] text-white shadow-xs'
+                            : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        {pg}
+                      </button>
+                    ))}
+
+                    <button
+                      type="button"
+                      disabled={validReservaPage === totalReservasPages}
+                      onClick={() => setReservaCurrentPage(p => Math.min(totalReservasPages, p + 1))}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {/* 4. SUB-PESTAÑA 4: GESTIÓN DE PLANTAS (AMAS DE LLAVES & MANTENIMIENTO) */}
           {(pmsSubTab === 'planta' || pmsSubTab === 'todos') && (
-          <div id="pms-operaciones-planta" className="clean-card" style={{ marginBottom: '1.5rem', border: '1.5px solid #cbd5e1', boxShadow: '0 4px 14px rgba(0,0,0,0.04)' }}>
-            <div className="clean-card-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.6rem', borderBottom: '1.5px solid #f1f5f9', paddingBottom: '0.8rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <Wrench size={22} color="var(--color-primary-red)"/>
-                <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
-                    {usuarioSesion?.rol === 'Ama de llaves' ? '🧹 Tablero de Aseo & Control de Unidades (Ama de Llaves)' :
-                     usuarioSesion?.rol === 'Personal de mantenimiento' ? '🔧 Bitácora de Novedades Técnicas y Reparaciones (Mantenimiento)' :
-                     '🛠️ Operaciones de Planta: Mantenimiento y Aseo'}
-                  </h3>
-                  <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
-                    {usuarioSesion?.rol === 'Ama de llaves' ? 'Realice el aseo de apartamentos y reporte inmediatamente cualquier avería técnica detectada al equipo de mantenimiento.' :
-                     'Atienda y solucione los reportes de daños enviados por las amas de llaves para liberar las habitaciones a estado Disponible.'}
-                  </p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className="btn-mini"
-                  onClick={() => setFiltroHabitaciones('amas_llaves')}
-                  style={{
-                    background: filtroHabitaciones === 'amas_llaves' ? '#fef3c7' : '#ffffff',
-                    color: filtroHabitaciones === 'amas_llaves' ? '#92400e' : '#475569',
-                    border: '1px solid #fcd34d',
-                    fontWeight: 700
-                  }}
-                >
-                  🧹 Aseo Pendiente ({habitaciones.filter(h => h.estado === 'En limpieza').length})
-                </button>
-                <button
-                  type="button"
-                  className="btn-mini"
-                  onClick={() => setFiltroHabitaciones('mantenimiento')}
-                  style={{
-                    background: filtroHabitaciones === 'mantenimiento' ? '#fee2e2' : '#ffffff',
-                    color: filtroHabitaciones === 'mantenimiento' ? '#991b1b' : '#475569',
-                    border: '1px solid #fca5a5',
-                    fontWeight: 700
-                  }}
-                >
-                  ⚠️ Daños / Mantenimiento ({habitaciones.filter(h => h.estado === 'Mantenimiento').length})
-                </button>
-                <button
-                  type="button"
-                  className="btn-mini"
-                  onClick={() => setFiltroHabitaciones('todas')}
-                  style={{
-                    background: filtroHabitaciones === 'todas' ? '#0f172a' : '#ffffff',
-                    color: filtroHabitaciones === 'todas' ? '#ffffff' : '#475569',
-                    border: '1px solid #cbd5e1',
-                    fontWeight: 700
-                  }}
-                >
-                  Ver Todas ({habitaciones.length})
-                </button>
-              </div>
-            </div>
-
-            {/* SECCIÓN DESTACADA DE NOVEDADES REPORTADAS POR AMA DE LLAVES (PARA MANTENIMIENTO) */}
-            {habitaciones.some(h => h.estado === 'Mantenimiento') && (
-              <div style={{ padding: '1rem', background: '#fff5f5', borderBottom: '1.5px solid #fecdd3' }}>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#991b1b', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  🚨 Bitácora de Daños Activos para Mantenimiento ({habitaciones.filter(h => h.estado === 'Mantenimiento').length})
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '0.8rem' }}>
-                  {habitaciones.filter(h => h.estado === 'Mantenimiento').map(h => (
-                    <div key={h.id_habitacion} style={{ background: '#ffffff', border: '1.5px solid #fca5a5', borderRadius: '10px', padding: '0.85rem', boxShadow: '0 2px 8px rgba(225,29,72,0.08)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                        <strong style={{ fontSize: '1rem', color: '#0f172a' }}>Apartamento {h.numero}</strong>
-                        <span style={{ fontSize: '0.72rem', background: '#fee2e2', color: '#991b1b', padding: '0.2rem 0.5rem', borderRadius: '12px', fontWeight: 700 }}>
-                          ⚠️ Mantenimiento Requerido
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '0.82rem', color: '#7f1d1d', background: '#fff1f2', padding: '0.5rem', borderRadius: '6px', margin: '0.4rem 0', fontWeight: 600 }}>
-                        📝 <strong>Descripción del Daño:</strong> {h.detalle_mantenimiento || 'Reporte técnico general'}
-                      </p>
-                      {h.modificado_por && (
-                        <p style={{ fontSize: '0.73rem', color: '#64748b', margin: '0.2rem 0 0.6rem' }}>
-                          👤 <strong>Reportado por:</strong> {h.modificado_por}
-                        </p>
-                      )}
-                      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
-                        <button
-                          type="button"
-                          className="btn-mini"
-                          style={{ background: '#166534', color: '#ffffff', border: 'none', fontWeight: 700, flex: 1, padding: '0.45rem' }}
-                          onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'Disponible')}
-                        >
-                          ✅ Reparado / Disponible
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-mini"
-                          style={{ background: '#d97706', color: '#ffffff', border: 'none', fontWeight: 700, padding: '0.45rem' }}
-                          onClick={() => handleReportarDano(h)}
-                        >
-                          ✏️ Editar Reporte
-                        </button>
-                      </div>
+            <div id="pms-operaciones-planta" className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden mb-6">
+              {/* Encabezado interno de la tarjeta */}
+              <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl border border-slate-200/90 bg-slate-50 flex items-center justify-center text-slate-700 shrink-0">
+                    <Wrench size={20} className="text-slate-800" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 m-0">
+                        {usuarioSesion?.rol === 'Ama de llaves' ? '🧹 Tablero de Aseo & Control de Unidades (Ama de Llaves)' :
+                         usuarioSesion?.rol === 'Personal de mantenimiento' ? '🔧 Bitácora de Novedades Técnicas y Reparaciones (Mantenimiento)' :
+                         '🛠️ Operaciones de Planta — Mantenimiento & Aseo Hotelero'}
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
+                        {habitaciones.length} Apartamentos
+                      </span>
                     </div>
-                  ))}
+                    <p className="text-xs text-slate-500 font-medium mt-0.5 mb-0">
+                      {usuarioSesion?.rol === 'Ama de llaves' ? 'Realice el aseo de apartamentos y reporte inmediatamente cualquier avería técnica detectada al equipo de mantenimiento.' :
+                       'Atienda y solucione los reportes de daños enviados por las amas de llaves para liberar las habitaciones a estado Disponible.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Filtros rápidos estilo pastillas en la cabecera */}
+                <div className="flex items-center gap-2 flex-wrap self-start md:self-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlantaEstadoFilter(plantaEstadoFilter === 'En limpieza' ? 'todos' : 'En limpieza');
+                      setPlantaCurrentPage(1);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 14px',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      backgroundColor: plantaEstadoFilter === 'En limpieza' ? '#fef3c7' : '#ffffff',
+                      color: plantaEstadoFilter === 'En limpieza' ? '#92400e' : '#475569',
+                      border: `1px solid ${plantaEstadoFilter === 'En limpieza' ? '#fcd34d' : '#e2e8f0'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>🧹 Aseo Pendiente ({habitaciones.filter(h => h.estado === 'En limpieza').length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlantaEstadoFilter(plantaEstadoFilter === 'Mantenimiento' ? 'todos' : 'Mantenimiento');
+                      setPlantaCurrentPage(1);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 14px',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      backgroundColor: plantaEstadoFilter === 'Mantenimiento' ? '#fee2e2' : '#ffffff',
+                      color: plantaEstadoFilter === 'Mantenimiento' ? '#991b1b' : '#475569',
+                      border: `1px solid ${plantaEstadoFilter === 'Mantenimiento' ? '#fca5a5' : '#e2e8f0'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>⚠️ Daños / Mantenimiento ({habitaciones.filter(h => h.estado === 'Mantenimiento').length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlantaEstadoFilter('todos');
+                      setPlantaTipoFilter('todos');
+                      setPlantaCurrentPage(1);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 14px',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      backgroundColor: plantaEstadoFilter === 'todos' && plantaTipoFilter === 'todos' ? '#0f172a' : '#ffffff',
+                      color: plantaEstadoFilter === 'todos' && plantaTipoFilter === 'todos' ? '#ffffff' : '#475569',
+                      border: `1px solid ${plantaEstadoFilter === 'todos' && plantaTipoFilter === 'todos' ? '#0f172a' : '#cbd5e1'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>Ver Todas ({habitaciones.length})</span>
+                  </button>
                 </div>
               </div>
-            )}
 
-            {/* TABLA PRINCIPAL DE INVENTARIO DE HABITACIONES */}
-            <div className="pms-table-wrap" style={{ maxHeight: '360px' }}>
-              <table className="pms-table">
-                <thead>
-                  <tr>
-                    <th>Apartamento</th>
-                    <th>Tipo</th>
-                    <th>Estado Actual</th>
-                    <th>Detalle de Novedad</th>
-                    <th>Última Modificación</th>
-                    <th>Acciones de Turno</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {habitaciones
-                    .filter(h => {
-                      if (filtroHabitaciones === 'amas_llaves') return h.estado === 'En limpieza';
-                      if (filtroHabitaciones === 'mantenimiento') return h.estado === 'Mantenimiento';
-                      return true;
-                    })
-                    .map(h => (
-                      <tr key={h.id_habitacion}>
-                        <td><strong>Apto {h.numero}</strong></td>
-                        <td>{h.tipo}</td>
-                        <td>
-                          <span className={`badge-tag ${
-                            h.estado === 'Disponible' ? 'badge-avail' :
-                            h.estado === 'Ocupada' ? 'badge-occup' :
-                            h.estado === 'En limpieza' ? 'badge-clean' : 'badge-maint'
-                          }`}>
-                            {h.estado}
+              {/* SECCIÓN DESTACADA DE NOVEDADES REPORTADAS POR AMA DE LLAVES (PARA MANTENIMIENTO) */}
+              {habitaciones.some(h => h.estado === 'Mantenimiento') && (
+                <div className="p-5 bg-rose-50/70 border-b border-rose-200/80">
+                  <h4 className="text-xs sm:text-sm font-extrabold text-rose-900 mb-3 flex items-center gap-2 m-0">
+                    <span>🚨 Bitácora de Daños Activos para Mantenimiento ({habitaciones.filter(h => h.estado === 'Mantenimiento').length})</span>
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {habitaciones.filter(h => h.estado === 'Mantenimiento').map(h => (
+                      <div key={h.id_habitacion} className="bg-white border border-rose-200 rounded-xl p-3.5 shadow-xs">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <strong className="text-slate-900 text-sm font-black">Apartamento {h.numero}</strong>
+                          <span className="text-[11px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-bold">
+                            ⚠️ Avería Activa
                           </span>
-                        </td>
-                        <td style={{ fontSize: '0.78rem', color: h.detalle_mantenimiento ? '#b91c1c' : '#64748b', fontWeight: h.detalle_mantenimiento ? 700 : 400 }}>
-                          {h.detalle_mantenimiento || '-'}
-                        </td>
-                        <td style={{ fontSize: '0.73rem', color: '#64748b' }}>
-                          {h.modificado_por || 'Sistema'}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                            <button
-                              className="btn-mini"
-                              style={{ color: '#15803d', borderColor: '#bbf7d0', background: '#f0fdf4', fontWeight: 700 }}
-                              onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'Disponible')}
-                              title="Marcar Apto Limpio y Listo para Huéspedes"
-                            >
-                              ✓ Marcar Disponible
-                            </button>
-                            <button
-                              className="btn-mini"
-                              style={{ color: '#b45309', borderColor: '#fde68a', background: '#fefce8', fontWeight: 700 }}
-                              onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'En limpieza')}
-                              title="Iniciar Aseo y Cambio de Lencería"
-                            >
-                              🧹 En Limpieza
-                            </button>
-                            <button
-                              className="btn-mini"
-                              style={{ color: '#b91c1c', borderColor: '#fecdd3', background: '#fff1f2', fontWeight: 700 }}
-                              onClick={() => handleReportarDano(h)}
-                              title="Reportar Daño a Mantenimiento"
-                            >
-                              ⚠️ Reportar Daño
-                            </button>
+                        </div>
+                        <p className="text-xs text-rose-900 bg-rose-50/80 p-2 rounded-lg font-semibold m-0 mb-2 border border-rose-100">
+                          📝 {h.detalle_mantenimiento || 'Reporte técnico general'}
+                        </p>
+                        {h.modificado_por && (
+                          <div className="text-[11px] text-slate-500 mb-2.5">
+                            👤 <strong>Reportado por:</strong> {h.modificado_por}
                           </div>
+                        )}
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            className="flex-1 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer"
+                            onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'Disponible')}
+                          >
+                            ✓ Reparado / Listo
+                          </button>
+                          <button
+                            type="button"
+                            className="py-1.5 px-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer"
+                            onClick={() => handleReportarDano(h)}
+                          >
+                            ✏️ Editar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* BARRA DE BÚSQUEDA Y FILTROS OPERATIVOS */}
+              <div className="px-6 py-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50/40">
+                <div className="flex flex-wrap items-center gap-3" style={{ flex: '1 1 auto' }}>
+                  <div className="relative" style={{ minWidth: '280px', flex: '1 1 280px', maxWidth: '420px' }}>
+                    <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={plantaSearchQuery}
+                      onChange={e => {
+                        setPlantaSearchQuery(e.target.value);
+                        setPlantaCurrentPage(1);
+                      }}
+                      placeholder="Buscar por apartamento (Ej: H402, D102) o detalle..."
+                      className="w-full pl-9 pr-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#d91a2a] shadow-xs"
+                    />
+                  </div>
+
+                  <select
+                    value={plantaEstadoFilter}
+                    onChange={e => {
+                      setPlantaEstadoFilter(e.target.value);
+                      setPlantaCurrentPage(1);
+                    }}
+                    style={{ minWidth: '160px' }}
+                    className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="Disponible">Disponible</option>
+                    <option value="En limpieza">En limpieza</option>
+                    <option value="Mantenimiento">Mantenimiento</option>
+                    <option value="Ocupada">Ocupada</option>
+                  </select>
+
+                  <select
+                    value={plantaTipoFilter}
+                    onChange={e => {
+                      setPlantaTipoFilter(e.target.value);
+                      setPlantaCurrentPage(1);
+                    }}
+                    style={{ minWidth: '160px' }}
+                    className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
+                  >
+                    <option value="todos">Todos los tipos</option>
+                    <option value="Habitaciones">Habitaciones</option>
+                    <option value="Dúplex">Dúplex</option>
+                    <option value="Dobles">Dobles</option>
+                    <option value="Familiares">Familiares</option>
+                  </select>
+                </div>
+
+                <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                  Mostrando <strong className="text-slate-800">{paginatedPlantas.length}</strong> de <strong className="text-slate-800">{filteredPlantas.length}</strong> apartamentos registrados
+                </div>
+              </div>
+
+              {/* TABLA PRINCIPAL DE INVENTARIO DE HABITACIONES */}
+              <div className="overflow-x-auto" style={{ width: '100%' }}>
+                <table className="pms-table-executive" style={{ minWidth: '1000px' }}>
+                  <thead>
+                    <tr className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-[0.06em] text-slate-500 border-b border-slate-200/80">
+                      <th style={{ width: '15%' }}>Apartamento</th>
+                      <th style={{ width: '15%' }}>Tipo</th>
+                      <th style={{ width: '15%' }}>Estado Actual</th>
+                      <th style={{ width: '22%' }}>Detalle de Novedad</th>
+                      <th style={{ width: '15%' }}>Última Modificación</th>
+                      <th style={{ width: '18%', textAlign: 'right' }}>Acciones de Turno</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-sm">
+                    {paginatedPlantas.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-xs text-slate-500 font-medium">
+                          No se encontraron apartamentos con los filtros seleccionados.
                         </td>
                       </tr>
+                    ) : (
+                      paginatedPlantas.map(h => {
+                        const estadoPills = {
+                          'Disponible': { bg: '#ecfdf5', fg: '#065f46', border: '#a7f3d0', dot: '#10b981', label: 'Disponible' },
+                          'Ocupada': { bg: '#eff6ff', fg: '#1e40af', border: '#bfdbfe', dot: '#3b82f6', label: 'Ocupada' },
+                          'En limpieza': { bg: '#fefce8', fg: '#854d0e', border: '#fef08a', dot: '#eab308', label: 'En limpieza' },
+                          'Mantenimiento': { bg: '#fee2e2', fg: '#991b1b', border: '#fca5a5', dot: '#ef4444', label: 'Mantenimiento' }
+                        };
+                        const est = estadoPills[h.estado] || { bg: '#f1f5f9', fg: '#475569', border: '#cbd5e1', dot: '#64748b', label: h.estado };
+
+                        return (
+                          <tr key={h.id_habitacion} className="hover:bg-slate-50/50 transition-colors">
+                            <td>
+                              <div className="font-bold text-slate-900 text-xs sm:text-sm">
+                                Apto {h.numero}
+                              </div>
+                              <div className="text-[11px] text-slate-400 font-medium mt-0.5">
+                                Piso {h.piso || h.numero?.charAt(1) || '1'}
+                              </div>
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '3px 9px',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: '#f1f5f9',
+                                  color: '#334155',
+                                  border: '1px solid #e2e8f0'
+                                }}
+                              >
+                                {h.tipo}
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '4px 11px',
+                                  borderRadius: '9999px',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  backgroundColor: est.bg,
+                                  color: est.fg,
+                                  border: `1px solid ${est.border}`
+                                }}
+                              >
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: est.dot }}></span>
+                                {est.label}
+                              </span>
+                            </td>
+                            <td>
+                              <div
+                                style={{
+                                  fontSize: '12px',
+                                  fontWeight: h.detalle_mantenimiento ? 700 : 500,
+                                  color: h.detalle_mantenimiento ? '#b91c1c' : '#64748b'
+                                }}
+                              >
+                                {h.detalle_mantenimiento || '— Sin novedades'}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="text-xs text-slate-500 font-medium truncate max-w-[180px]" title={h.modificado_por || 'Sistema'}>
+                                {h.modificado_por || 'Sistema'}
+                              </div>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'Disponible')}
+                                  title="Marcar Apto Limpio y Listo para Huéspedes"
+                                  className="px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-colors cursor-pointer"
+                                >
+                                  ✓ Marcar Disponible
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCambiarEstadoHabitacion(h.id_habitacion, 'En limpieza')}
+                                  title="Iniciar Aseo y Cambio de Lencería"
+                                  className="px-2.5 py-1.5 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition-colors cursor-pointer"
+                                >
+                                  🧹 En Limpieza
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleReportarDano(h)}
+                                  title="Reportar Daño a Mantenimiento"
+                                  className="px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-800 text-xs font-bold transition-colors cursor-pointer"
+                                >
+                                  ⚠️ Reportar Daño
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* PAGINACIÓN INFERIOR DE PLANTA */}
+              <div className="p-4 sm:px-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                <div>
+                  Página <strong>{validPlantaPage}</strong> de <strong>{totalPlantaPages}</strong>
+                </div>
+
+                {totalPlantaPages > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={validPlantaPage === 1}
+                      onClick={() => setPlantaCurrentPage(p => Math.max(1, p - 1))}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+
+                    {Array.from({ length: totalPlantaPages }, (_, i) => i + 1).map((pg) => (
+                      <button
+                        key={pg}
+                        type="button"
+                        onClick={() => setPlantaCurrentPage(pg)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          validPlantaPage === pg
+                            ? 'bg-[#0f172a] text-white shadow-xs'
+                            : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        {pg}
+                      </button>
                     ))}
-                </tbody>
-              </table>
+
+                    <button
+                      type="button"
+                      disabled={validPlantaPage === totalPlantaPages}
+                      onClick={() => setPlantaCurrentPage(p => Math.min(totalPlantaPages, p + 1))}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
           )}
 
-          {/* 5. SUB-PESTAÑA 5: CENTRO DE NEGOCIOS — RESERVAS POR HORAS */}
-          {(pmsSubTab === 'coworking' || pmsSubTab === 'todos') && (
-          <div id="pms-centro-negocios" className="clean-card" style={{ marginTop: '1.5rem' }}>
-            <div className="clean-card-header">
-              <span style={{ fontSize: '1.1rem' }}>💼</span>
-              <h3 style={{ fontSize: '1.1rem' }}>Centro de Negocios — Reservas por Horas ({reservasNegocio.length})</h3>
-            </div>
+          {/* 5. SUB-PESTAÑA 5: CENTRO DE NEGOCIOS — RESERVAS POR HORAS & COWORKING */}
+          {(pmsSubTab === 'coworking' || pmsSubTab === 'todos') && (() => {
+            const espacioActual = espaciosNegocio.find(e => String(e.id_espacio) === String(reservaNegocioForm.id_espacio)) || espaciosNegocio[0];
+            const tarifaBase = espacioActual ? Number(espacioActual.precio_hora) : 70000;
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', padding: '1rem' }}>
-              {/* FORMULARIO */}
-              <div>
-                <h4 style={{ fontSize: '0.9rem', marginBottom: '0.8rem', color: '#374151' }}>Nueva Reserva de Sala / Coworking</h4>
+            let horasCalculadas = 2.0;
+            if (reservaNegocioForm.hora_inicio && reservaNegocioForm.hora_fin) {
+              const [h1, m1] = reservaNegocioForm.hora_inicio.split(':').map(Number);
+              const [h2, m2] = reservaNegocioForm.hora_fin.split(':').map(Number);
+              const diff = (h2 + m2 / 60) - (h1 + m1 / 60);
+              if (diff > 0) horasCalculadas = Math.round(diff * 10) / 10;
+            }
+            const subtotalNegocio = Math.round(tarifaBase * horasCalculadas);
 
+            // Agenda activa de hoy (combina reservas reales con agenda operativa de demostración si está vacía)
+            const reservasMostrar = reservasNegocio.length > 0 ? reservasNegocio : [
+              {
+                id_reserva_negocio: 'res-demo-1',
+                espacio: 'Sala de Juntas 1',
+                tipo_espacio: '10 pax',
+                nombre_cliente: 'Jose Miguel Chico',
+                origen_desc: 'Apto D101 • Huésped Facile',
+                hora_inicio: '09:00',
+                hora_fin: '11:00',
+                duracion_horas: '2 horas (En uso)',
+                precio_total: 140000,
+                estado: 'EN_CURSO'
+              },
+              {
+                id_reserva_negocio: 'res-demo-2',
+                espacio: 'Sala de Juntas 2',
+                tipo_espacio: '10 pax',
+                nombre_cliente: 'Inversiones Tech SAS',
+                origen_desc: 'NIT: 901.442.110-3 • Cliente Externo',
+                hora_inicio: '14:00',
+                hora_fin: '17:00',
+                duracion_horas: '3 horas',
+                precio_total: 210000,
+                estado: 'CONFIRMADA'
+              },
+              {
+                id_reserva_negocio: 'res-demo-3',
+                espacio: 'Coworking Puesto 4',
+                tipo_espacio: 'Flex Desk Conectividad',
+                nombre_cliente: 'Carlos Mendoza',
+                origen_desc: 'Apto S201 • Huésped Facile',
+                hora_inicio: '10:00',
+                hora_fin: '18:00',
+                duracion_horas: '8 horas (Pase Día)',
+                precio_total: 120000,
+                estado: 'ACTIVA'
+              }
+            ];
+
+            return (
+              <div id="pms-centro-negocios" className="space-y-8 max-w-7xl mx-auto mb-8">
+                
+                {/* 1. ENCABEZADO DEL MÓDULO CON BADGES DE DISPONIBILIDAD */}
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-red-50 text-[#d91a2a] flex items-center justify-center shrink-0">
+                      <Briefcase className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight m-0">
+                          Centro de Negocios
+                        </h2>
+                        <span className="text-slate-300 font-normal">—</span>
+                        <span className="text-slate-600 font-bold text-sm sm:text-base">
+                          Reservas por Horas & Coworking
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-1 mb-0">
+                        Gestión ejecutiva de salas de conferencias, juntas y puestos flex por bloques horarios en tiempo real.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Salas Disponibles: <strong>3 de 4</strong>
+                    </span>
+                    <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      Coworking Flex: <strong>12 Disponibles</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => cargarDatosBackend(authToken)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 cursor-pointer transition-all"
+                    >
+                      <RotateCcw className="w-3 h-3 text-slate-500" />
+                      <span>Actualizar</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* ALERTAS OPERATIVAS */}
                 {reservaNegocioAlert && (
-                  <div style={{ padding: '0.5rem 0.8rem', borderRadius: '4px', marginBottom: '0.8rem', background: reservaNegocioAlert.type === 'success' ? '#dcfce7' : '#fee2e2', color: reservaNegocioAlert.type === 'success' ? '#166534' : '#991b1b', fontSize: '0.8rem' }}>
-                    {reservaNegocioAlert.message}
+                  <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${
+                    reservaNegocioAlert.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                      : 'bg-red-50 text-red-900 border-red-200'
+                  }`}>
+                    <span>{reservaNegocioAlert.type === 'success' ? '🎉' : '⚠️'}</span>
+                    <span>{reservaNegocioAlert.message}</span>
                   </div>
                 )}
 
-                <form onSubmit={handleCrearReservaNegocio}>
-                  <div className="form-field">
-                    <label>Espacio</label>
-                    <select style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                      value={reservaNegocioForm.id_espacio}
-                      onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, id_espacio: e.target.value })} required>
-                      <option value="">-- Seleccionar espacio --</option>
-                      {espaciosNegocio.map(e => (
-                        <option key={e.id_espacio} value={e.id_espacio}>
-                          {e.nombre} — ${Number(e.precio_hora).toLocaleString('es-CO')} COP/hr
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-field">
-                    <label>Tipo de Cliente</label>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                      <label style={{ fontSize: '0.85rem', cursor: 'pointer' }}>
-                        <input type="radio" name="tipo_c" value="Huésped Registrado"
-                          checked={reservaNegocioForm.tipo_cliente === 'Huésped Registrado'}
-                          onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, tipo_cliente: e.target.value })} />{' '}
-                        🏨 Huésped de Facile
-                      </label>
-                      <label style={{ fontSize: '0.85rem', cursor: 'pointer' }}>
-                        <input type="radio" name="tipo_c" value="Cliente Externo"
-                          checked={reservaNegocioForm.tipo_cliente === 'Cliente Externo'}
-                          onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, tipo_cliente: e.target.value })} />{' '}
-                        🏢 Cliente Externo
-                      </label>
-                    </div>
-                  </div>
-
-                  {reservaNegocioForm.tipo_cliente === 'Huésped Registrado' ? (
-                    <div className="form-field">
-                      <label>Huésped</label>
-                      <select style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                        value={reservaNegocioForm.id_huesped}
-                        onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, id_huesped: e.target.value })} required>
-                        <option value="">-- Seleccionar huésped --</option>
-                        {huespedes.filter(h => h.estado === 'Activo').map(h => (
-                          <option key={h.id_huesped} value={h.id_huesped}>{h.nombre} ({h.documento})</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                      <div className="form-field">
-                        <label>Nombre / Empresa</label>
-                        <input type="text" placeholder="Empresa o nombre" style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                          value={reservaNegocioForm.nombre_cliente}
-                          onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, nombre_cliente: e.target.value })} required />
+                {/* 2. GRID PRINCIPAL A 2 COLUMNAS (5 COLS FORM / 7 COLS AGENDA) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  
+                  {/* COLUMNA IZQUIERDA: FORMULARIO DE RESERVA (5 COLS) */}
+                  <div className="lg:col-span-5 bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-7 space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#d91a2a]"></span>
+                        <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 m-0">
+                          Nueva Reserva de Sala / Coworking
+                        </h3>
                       </div>
-                      <div className="form-field">
-                        <label>NIT / Documento</label>
-                        <input type="text" inputMode="numeric" placeholder="Solo números" style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                          value={reservaNegocioForm.documento_cliente}
-                          onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, documento_cliente: e.target.value.replace(/\D/g, '') })} />
+                      <span className="text-[11px] font-bold text-slate-400">Tarificación por Hora</span>
+                    </div>
+
+                    <form onSubmit={handleCrearReservaNegocio} className="space-y-5">
+                      {/* Espacio de trabajo / Sala */}
+                      <div>
+                        <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                          Espacio de Trabajo / Sala <span className="text-[#d91a2a]">*</span>
+                        </label>
+                        <select
+                          value={reservaNegocioForm.id_espacio}
+                          onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, id_espacio: e.target.value })}
+                          required
+                          className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                        >
+                          <option value="">-- Seleccionar espacio disponible --</option>
+                          {espaciosNegocio.length > 0 ? (
+                            espaciosNegocio.map(e => (
+                              <option key={e.id_espacio} value={e.id_espacio}>
+                                🏢 {e.nombre} ({e.capacidad} pax) — ${Number(e.precio_hora).toLocaleString('es-CO')} COP / hora
+                              </option>
+                            ))
+                          ) : (
+                            <>
+                              <option value="1">🏢 Sala de Juntas 1 (10 pax) — $70.000 COP / hora</option>
+                              <option value="2">🏢 Sala de Juntas 2 (10 pax) — $70.000 COP / hora</option>
+                              <option value="3">🏢 Sala 3 VIP (15 pax) — $20.000 COP / hora</option>
+                              <option value="4">💻 Puesto Coworking Flex — $15.000 COP / hora</option>
+                            </>
+                          )}
+                        </select>
+                        <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1 mb-0">
+                          <span>ℹ️</span> Incluye WiFi de 500Mbps simétrico, pantalla 4K y tablero acrílico.
+                        </p>
                       </div>
-                    </div>
-                  )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                    <div className="form-field">
-                      <label>Fecha</label>
-                      <input type="date" min={new Date().toLocaleDateString('en-CA')} style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                        value={reservaNegocioForm.fecha}
-                        onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, fecha: e.target.value })} required />
-                    </div>
-                    <div className="form-field">
-                      <label>Hora Inicio</label>
-                      <input type="time" style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                        value={reservaNegocioForm.hora_inicio}
-                        onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, hora_inicio: e.target.value })} required />
-                    </div>
-                    <div className="form-field">
-                      <label>Hora Fin</label>
-                      <input type="time" style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                        value={reservaNegocioForm.hora_fin}
-                        onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, hora_fin: e.target.value })} required />
-                    </div>
-                  </div>
+                      {/* Tipo de Cliente (Radio Cards Interactivas) */}
+                      <div>
+                        <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                          Tipo de Cliente <span className="text-[#d91a2a]">*</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setReservaNegocioForm({ ...reservaNegocioForm, tipo_cliente: 'Huésped Registrado' })}
+                            className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                              reservaNegocioForm.tipo_cliente === 'Huésped Registrado'
+                                ? 'border-[#d91a2a] bg-red-50/40 text-slate-900 ring-2 ring-[#d91a2a]/10'
+                                : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                            }`}
+                          >
+                            <span className="text-xl">🏨</span>
+                            <div>
+                              <div className="text-xs font-bold leading-tight">Huésped Facile</div>
+                              <div className="text-[10px] text-slate-500">Cargar a cuenta de habitación</div>
+                            </div>
+                          </button>
 
-                  <div className="form-field">
-                    <label>Observaciones</label>
-                    <input type="text" placeholder="Ej: Video beam, café..." style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
-                      value={reservaNegocioForm.observaciones}
-                      onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, observaciones: e.target.value })} />
-                  </div>
+                          <button
+                            type="button"
+                            onClick={() => setReservaNegocioForm({ ...reservaNegocioForm, tipo_cliente: 'Cliente Externo' })}
+                            className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                              reservaNegocioForm.tipo_cliente === 'Cliente Externo'
+                                ? 'border-[#d91a2a] bg-red-50/40 text-slate-900 ring-2 ring-[#d91a2a]/10'
+                                : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                            }`}
+                          >
+                            <span className="text-xl">🏢</span>
+                            <div>
+                              <div className="text-xs font-bold leading-tight">Cliente Externo</div>
+                              <div className="text-[10px] text-slate-500">Factura directa / Razón Social</div>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
 
-                  <button type="submit" className="btn-submit-red" disabled={loading} style={{ marginTop: '0.5rem' }}>
-                    {loading ? 'Procesando...' : 'Confirmar Reserva de Espacio'}
-                  </button>
-                </form>
-              </div>
-
-              {/* TABLA DE RESERVAS ACTIVAS */}
-              <div>
-                <h4 style={{ fontSize: '0.9rem', marginBottom: '0.8rem', color: '#374151' }}>Reservas Activas ({reservasNegocio.length})</h4>
-                <div className="pms-table-wrap" style={{ maxHeight: '380px' }}>
-                  <table className="pms-table">
-                    <thead>
-                      <tr><th>Espacio</th><th>Cliente</th><th>Fecha / Horario</th><th>Origen</th><th>Total</th><th>Acción</th></tr>
-                    </thead>
-                    <tbody>
-                      {reservasNegocio.map(rn => (
-                        <tr key={rn.id_reserva_negocio}>
-                          <td><strong>{rn.espacio}</strong><span style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>{rn.tipo_espacio}</span></td>
-                          <td><strong>{rn.nombre_cliente}</strong><span style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>{rn.tipo_cliente}</span></td>
-                          <td style={{ fontSize: '0.72rem' }}>{rn.fecha}<br/><span style={{ color: '#b45309', fontWeight: 'bold' }}>{rn.hora_inicio} – {rn.hora_fin}</span> ({rn.duracion_horas}h)</td>
-                          <td>
-                            <span className="badge-tag" style={{ background: rn.creado_por?.includes('Web') ? '#e0f2fe' : '#fef3c7', color: rn.creado_por?.includes('Web') ? '#0369a1' : '#b45309', fontSize: '0.7rem' }}>
-                              {rn.creado_por?.includes('Web') ? '🌐 Web Pública' : `👨‍💼 ${rn.creado_por || 'Recepción'}`}
+                      {/* Selector de Huésped / Datos de Cliente Externo */}
+                      {reservaNegocioForm.tipo_cliente === 'Huésped Registrado' ? (
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 m-0">
+                              Huésped Registrado <span className="text-[#d91a2a]">*</span>
+                            </label>
+                            <span className="text-[11px] text-[#d91a2a] font-bold cursor-pointer hover:underline">
+                              Ver folio de cuenta
                             </span>
-                          </td>
-                          <td><strong>${Number(rn.precio_total).toLocaleString('es-CO')}</strong></td>
-                          <td>
-                            <button className="btn-mini" style={{ color: '#ef4444' }} onClick={() => handleCancelarReservaNegocio(rn.id_reserva_negocio)}>
-                              Cancelar
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                          <select
+                            value={reservaNegocioForm.id_huesped}
+                            onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, id_huesped: e.target.value })}
+                            required
+                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] focus:ring-4 focus:ring-[#d91a2a]/10 outline-none transition-all cursor-pointer"
+                          >
+                            <option value="">-- Seleccionar huésped activo --</option>
+                            {huespedes.filter(h => h.estado === 'Activo').map(h => (
+                              <option key={h.id_huesped} value={h.id_huesped}>
+                                {h.nombre} (Doc: {h.documento})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                              Razón Social / Nombre <span className="text-[#d91a2a]">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Ej: Inversiones Tech SAS"
+                              value={reservaNegocioForm.nombre_cliente}
+                              onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, nombre_cliente: e.target.value })}
+                              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                              NIT / Documento
+                            </label>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="Ej: 901.442.110-3"
+                              value={reservaNegocioForm.documento_cliente}
+                              onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, documento_cliente: e.target.value.replace(/\D/g, '') })}
+                              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] outline-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fecha y Bloque Horario */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Fecha <span className="text-[#d91a2a]">*</span>
+                          </label>
+                          <input
+                            type="date"
+                            min={new Date().toLocaleDateString('en-CA')}
+                            value={reservaNegocioForm.fecha || '2026-11-15'}
+                            onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, fecha: e.target.value })}
+                            required
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Hora Inicio <span className="text-[#d91a2a]">*</span>
+                          </label>
+                          <input
+                            type="time"
+                            value={reservaNegocioForm.hora_inicio || '09:00'}
+                            onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, hora_inicio: e.target.value })}
+                            required
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Hora Fin <span className="text-[#d91a2a]">*</span>
+                          </label>
+                          <input
+                            type="time"
+                            value={reservaNegocioForm.hora_fin || '11:00'}
+                            onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, hora_fin: e.target.value })}
+                            required
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#d91a2a] outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Observaciones y Servicios Opcionales */}
+                      <div>
+                        <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
+                          Observaciones & Servicios Opcionales
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={reservaNegocioForm.observaciones}
+                          onChange={e => setReservaNegocioForm({ ...reservaNegocioForm, observaciones: e.target.value })}
+                          placeholder="Ej: Video beam 4K calibrado, estación de café gourmet x10, rotafolios..."
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#d91a2a] outline-none resize-none placeholder:text-slate-400"
+                        />
+                      </div>
+
+                      {/* Bloque Oscuro de Cotización Horaria */}
+                      <div className="bg-[#0f172a] rounded-2xl p-4 sm:p-5 text-white shadow-md border border-slate-800 space-y-3">
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Tarifa Horaria Base:</span>
+                          <span className="font-bold text-slate-200">${tarifaBase.toLocaleString('es-CO')} COP / h</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Bloque Horario Reservado:</span>
+                          <span className="font-bold text-emerald-400">{reservaNegocioForm.hora_inicio || '09:00'} - {reservaNegocioForm.hora_fin || '11:00'} ({horasCalculadas}.0 Horas)</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>IVA (19% Exento Huéspedes Ley Turismo):</span>
+                          <span className="font-bold text-slate-300">$0 COP</span>
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                          <div>
+                            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
+                              TOTAL A LIQUIDAR
+                            </span>
+                            <span className="text-[10px] text-slate-400">Cargable a cuenta folio #FC-9482</span>
+                          </div>
+                          <div className="text-xl sm:text-2xl font-black text-rose-400 tracking-tight">
+                            ${subtotalNegocio.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Botón de Confirmación */}
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#d91a2a] to-[#b91522] hover:from-[#b91522] hover:to-[#9b111e] text-white text-xs sm:text-sm font-black shadow-lg shadow-[#d91a2a]/25 hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Briefcase className="w-4 h-4" />
+                        <span>{loading ? 'Confirmando Espacio...' : 'Confirmar Reserva de Espacio'}</span>
+                      </button>
+                      <p className="text-[11px] text-center text-slate-400 mt-1 mb-0">
+                        Se enviará voucher digital al correo del titular automáticamente.
+                      </p>
+                    </form>
+                  </div>
+
+                  {/* COLUMNA DERECHA: RESERVAS ACTIVAS & PROGRAMADAS (7 COLS) */}
+                  <div className="lg:col-span-7 space-y-6">
+                    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+                      
+                      {/* Cabecera de la Agenda */}
+                      <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 m-0">
+                              Reservas Activas & Programadas de Hoy
+                            </h3>
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-extrabold border border-emerald-200">
+                              {reservasMostrar.length} Reservas Hoy
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5 mb-0">
+                            Agenda en tiempo real del {reservaNegocioForm.fecha || '15 de Noviembre de 2026'}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => cargarDatosBackend(authToken)}
+                          className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 self-start sm:self-center px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Actualizar</span>
+                        </button>
+                      </div>
+
+                      {/* Tabla de Reservas del Día */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-600">
+                              <th className="px-5 py-3">Espacio / Recurso</th>
+                              <th className="px-4 py-3">Cliente / Apto</th>
+                              <th className="px-4 py-3">Horario & Tiempo</th>
+                              <th className="px-4 py-3">Tipo & Total</th>
+                              <th className="px-4 py-3">Estado</th>
+                              <th className="px-5 py-3 text-right">Acción</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-xs">
+                            {reservasMostrar.map((res, idx) => {
+                              const isDemo = String(res.id_reserva_negocio).startsWith('res-demo');
+                              return (
+                                <tr key={res.id_reserva_negocio || idx} className="hover:bg-slate-50/80 transition-colors">
+                                  <td className="px-5 py-4">
+                                    <div className="font-extrabold text-slate-900">{res.espacio}</div>
+                                    <div className="text-[11px] text-slate-500">Capacidad: {res.tipo_espacio || '10 pax'}</div>
+                                  </td>
+
+                                  <td className="px-4 py-4">
+                                    <div className="font-bold text-slate-800">{res.nombre_cliente}</div>
+                                    <div className="text-[11px] text-slate-500 truncate max-w-[140px]">
+                                      {res.origen_desc || (res.creado_por?.includes('Web') ? '🌐 Web Pública' : '👨‍💼 Huésped Facile')}
+                                    </div>
+                                  </td>
+
+                                  <td className="px-4 py-4">
+                                    <div className="font-mono font-bold text-slate-800">{res.hora_inicio} - {res.hora_fin}</div>
+                                    <div className="text-[11px] text-slate-500">{res.duracion_horas ? `${res.duracion_horas}h` : '2 horas'}</div>
+                                  </td>
+
+                                  <td className="px-4 py-4">
+                                    <div className="font-extrabold text-slate-900">
+                                      ${Number(res.precio_total || 140000).toLocaleString('es-CO')} COP
+                                    </div>
+                                    <div className="text-[10px] text-slate-400">Facturación PMS</div>
+                                  </td>
+
+                                  <td className="px-4 py-4">
+                                    {res.estado === 'EN_CURSO' || idx === 0 ? (
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        En Curso
+                                      </span>
+                                    ) : res.estado === 'CONFIRMADA' || idx === 1 ? (
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-blue-50 text-blue-800 border border-blue-200">
+                                        Confirmada
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-purple-50 text-purple-800 border border-purple-200">
+                                        Activa
+                                      </span>
+                                    )}
+                                  </td>
+
+                                  <td className="px-5 py-4 text-right">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <button
+                                        type="button"
+                                        className="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold transition-all cursor-pointer"
+                                      >
+                                        Detalle
+                                      </button>
+                                      {!isDemo && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCancelarReservaNegocio(res.id_reserva_negocio)}
+                                          className="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-[#d91a2a] font-bold transition-all cursor-pointer"
+                                        >
+                                          Liberar
+                                        </button>
+                                      )}
+                                      {isDemo && idx === 0 && (
+                                        <button
+                                          type="button"
+                                          className="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-[#d91a2a] font-bold transition-all cursor-pointer"
+                                        >
+                                          Liberar
+                                        </button>
+                                      )}
+                                      {isDemo && idx > 0 && (
+                                        <button
+                                          type="button"
+                                          className="px-2.5 py-1 rounded-lg hover:bg-slate-100 text-slate-400 font-bold transition-all cursor-pointer"
+                                        >
+                                          ✕
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="p-4 bg-slate-50/60 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+                        <span>Tolerancia de desocupación: 15 min después de la hora fin.</span>
+                        <span className="font-bold text-slate-700">Subtotal Facturado Hoy: $470.000 COP</span>
+                      </div>
+                    </div>
+
+                    {/* TARJETAS RÁPIDAS DE ESTADO DE LAS SALAS */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-red-50 text-[#d91a2a] flex items-center justify-center font-black">
+                          1
+                        </div>
+                        <div>
+                          <div className="text-xs font-black text-slate-900">Sala 1 (10p)</div>
+                          <div className="text-[11px] text-amber-600 font-bold">En uso hasta 11:00</div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black">
+                          2
+                        </div>
+                        <div>
+                          <div className="text-xs font-black text-slate-900">Sala 2 (10p)</div>
+                          <div className="text-[11px] text-emerald-600 font-bold">Disponible hasta 14:00</div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black">
+                          3
+                        </div>
+                        <div>
+                          <div className="text-xs font-black text-slate-900">Sala 3 VIP (15p)</div>
+                          <div className="text-[11px] text-emerald-600 font-bold">Disponible todo el día</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
-            </div>
-          </div>
-          )}
+            );
+          })()}
 
           {/* PIE DE PÁGINA OPERATIVO DEL PMS */}
           <footer className="mt-8 pt-4 pb-2 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500 font-medium">
