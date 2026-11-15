@@ -3379,29 +3379,40 @@ const VistaPms = () => {
                       </div>
 
                       {/* Bloque Oscuro de Cotización Horaria */}
-                      <div className="bg-[#0f172a] rounded-2xl p-4 sm:p-5 text-white shadow-md border border-slate-800 space-y-3">
-                        <div className="flex items-center justify-between text-xs text-slate-400">
+                      <div className="bg-[#0f172a] rounded-2xl p-5 text-white shadow-lg border border-slate-800 space-y-3.5">
+                        <div className="flex items-center justify-between text-xs sm:text-[13px] text-slate-400 border-b border-slate-800/80 pb-3">
                           <span>Tarifa Horaria Base:</span>
-                          <span className="font-bold text-slate-200">${tarifaBase.toLocaleString('es-CO')} COP / h</span>
+                          <span className="font-mono font-bold text-white">
+                            ${tarifaBase.toLocaleString('es-CO')} <span className="text-slate-300 font-sans font-semibold text-xs">COP / h</span>
+                          </span>
                         </div>
-                        <div className="flex items-center justify-between text-xs text-slate-400">
+                        <div className="flex items-center justify-between text-xs sm:text-[13px] text-slate-400">
                           <span>Bloque Horario Reservado:</span>
-                          <span className="font-bold text-emerald-400">{reservaNegocioForm.hora_inicio || '09:00'} - {reservaNegocioForm.hora_fin || '11:00'} ({horasCalculadas}.0 Horas)</span>
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-md border border-emerald-500/40 bg-emerald-950/20 text-emerald-400 font-mono text-xs sm:text-[13px] font-bold">
+                            {reservaNegocioForm.hora_inicio || '09:00'} – {reservaNegocioForm.hora_fin || '11:00'} ({horasCalculadas}.0 Horas)
+                          </span>
                         </div>
-                        <div className="flex items-center justify-between text-xs text-slate-400">
+                        <div className="flex items-center justify-between text-xs sm:text-[13px] text-slate-400">
                           <span>IVA (19% Exento Huéspedes Ley Turismo):</span>
-                          <span className="font-bold text-slate-300">$0 COP</span>
+                          <span className="font-mono font-bold text-white">
+                            $0 <span className="text-slate-300 font-sans font-semibold text-xs">COP</span>
+                          </span>
                         </div>
 
-                        <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                        <div className="pt-3.5 border-t border-slate-800/80 flex items-center justify-between">
                           <div>
-                            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
+                            <span className="text-xs sm:text-[13px] font-extrabold uppercase tracking-wider text-slate-200 block">
                               TOTAL A LIQUIDAR
                             </span>
-                            <span className="text-[10px] text-slate-400">Cargable a cuenta folio #FC-9482</span>
+                            <span className="text-[11px] text-slate-400">
+                              {reservaNegocioForm.tipo_cliente === 'Huésped Registrado' ? 'Cargable a cuenta folio #FC-9482' : 'Factura corporativa directa'}
+                            </span>
                           </div>
-                          <div className="text-xl sm:text-2xl font-black text-rose-400 tracking-tight">
-                            ${subtotalNegocio.toLocaleString('es-CO')} <span className="text-xs font-normal text-slate-400">COP</span>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-2xl sm:text-[26px] font-black text-white tracking-tight">
+                              ${subtotalNegocio.toLocaleString('es-CO')}
+                            </span>
+                            <span className="text-xs sm:text-sm font-semibold text-slate-400">COP</span>
                           </div>
                         </div>
                       </div>
@@ -3410,9 +3421,9 @@ const VistaPms = () => {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#d91a2a] to-[#b91522] hover:from-[#b91522] hover:to-[#9b111e] text-white text-xs sm:text-sm font-black shadow-lg shadow-[#d91a2a]/25 hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                        className="w-full py-3.5 rounded-2xl bg-[#d91a2a] hover:bg-[#b91522] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
-                        <Briefcase className="w-4 h-4" />
+                        <Calendar className="w-4 h-4" />
                         <span>{loading ? 'Confirmando Espacio...' : 'Confirmar Reserva de Espacio'}</span>
                       </button>
                       <p className="text-[11px] text-center text-slate-400 mt-1 mb-0">
