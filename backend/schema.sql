@@ -160,8 +160,12 @@ BEGIN
 
     v_subtotal := v_noches * p_precio_noche;
 
-    IF v_noches > 15 THEN
+    -- Política publicada de larga estadía (ModalLegal / ModalDetalle):
+    --   >= 15 noches -> 15%   |   7 a 14 noches -> 10%   |   < 7 noches -> 0%
+    IF v_noches >= 15 THEN
         v_descuento := v_subtotal * 0.15;
+    ELSIF v_noches >= 7 THEN
+        v_descuento := v_subtotal * 0.10;
     END IF;
 
     v_total := v_subtotal - v_descuento;

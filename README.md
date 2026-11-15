@@ -77,7 +77,7 @@ graph TD
 | **Web Server Frontend** | Nginx Alpine      | Nginx 1.25+                       | Servidor de estáticos y proxy reverso hacia el backend.                   |
 | **Administración DB**   | pgAdmin 4         | dpage/pgadmin4                    | Consola visual web para administración y auditoría de la base de datos.   |
 | **Contenedores**        | Docker Compose    | Compose v2.20+                    | Orquestación con volúmenes persistentes y dependencias con healthcheck.   |
-| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 56 pruebas de integración sobre PostgreSQL real sin mocks.                |
+| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 61 pruebas de integración sobre PostgreSQL real sin mocks.                |
 
 ---
 
@@ -125,7 +125,7 @@ bookingsoft/
 │   │   ├── habitaciones.py          # Catálogo, disponibilidad y cambio de estado
 │   │   ├── reservas.py              # Creación atómica, check-in/check-out y cancelación
 │   │   └── centro_negocios.py       # Salas de juntas y coworking por horas
-│   └── tests/                       # Suite de integración sobre PostgreSQL real (56 pruebas)
+│   └── tests/                       # Suite de integración sobre PostgreSQL real (61 pruebas)
 │       ├── conftest.py              # Fixtures de Pytest (cliente HTTP, tokens seed)
 │       ├── test_auth.py             # Login, registro, RBAC y firma JWT
 │       ├── test_consultas.py        # Listados, filtros y estados
@@ -153,7 +153,7 @@ bookingsoft/
         ├── data/catalogo.js         # Catálogo inicial de unidades
         ├── views/                   # 9 vistas (Portal, Reservar, PMS, Perfil, ...)
         ├── components/              # 16 componentes modulares PMS y Portal
-        └── *.test.js                # 16 pruebas unitarias (Vitest en 4 archivos)
+        └── *.test.js                # 20 pruebas unitarias (Vitest en 5 archivos)
 ```
 
 ---
@@ -339,7 +339,7 @@ erDiagram
    La función `fn_validar_double_booking()` dispara una excepción si se intenta reservar una habitación marcada como `'Mantenimiento'`.
 
 3. **Cálculo de Estadía y Descuento por Larga Estancia:**
-   La función PL/pgSQL `fn_calcular_noches_y_precio()` calcula el importe total y deduce automáticamente un **15% de descuento** si la estadía supera las 15 noches.
+   La función PL/pgSQL `fn_calcular_noches_y_precio()` calcula el importe total y aplica la política de larga estadía publicada: **10% desde 7 hasta 14 noches** y **15% desde 15 noches en adelante**. Esa misma regla vive en `services/reservas_service.py` y en `frontend/src/utils/pricing.js` (única fuente del preview).
 
 4. **Auditoría Transaccional:**
    Todas las tablas maestras incorporan `creado_por` y `modificado_por`, registrando la firma del usuario y rol que originó el cambio.
@@ -527,36 +527,36 @@ El archivo `schema.sql` aprovisiona credenciales cifradas con bcrypt para valida
 
 ### Suite de Integración con Pytest
 
-El sistema cuenta con **56 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
+El sistema cuenta con **61 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
 
 ```bash
 # Ejecutar la suite completa dentro del contenedor backend
 docker compose exec backend pytest -v
 ```
 
-#### Cobertura de las Pruebas (56 en 7 archivos):
+#### Cobertura de las Pruebas (61 en 7 archivos):
 
 | Archivo | Pruebas | Qué valida |
 | :------ | :-----: | :--------- |
 | `test_auth.py` | 9 | Login, registro con hash bcrypt, rechazo de duplicados e inactivos, denegaciones 401/403, firma JWT manipulada y autenticación social Google. |
 | `test_consultas.py` | 4 | Listado y detalle de empleados, permisos de Recepción y disponibilidad de habitaciones (RF-012). |
-| `test_reservas.py` | 3 | Descuento del 15 % en estancias > 15 noches, aforo sobre capacidad y constraint GiST de doble reserva. |
-| `test_reservas_service.py` | 19 | Unidad de `services/reservas_service.py` (sin BD ni HTTP): validación de fechas, disponibilidad de la unidad, cálculo de costo de estadía y errores de dominio. |
+| `test_reservas.py` | 5 | Política de descuento por larga estadía (10 % de 7–14 noches y 15 % desde 15), aforo sobre capacidad, constraint GiST de doble reserva y alta atómica de huésped + reserva (éxito y rollback). |
+| `test_reservas_service.py` | 22 | Unidad de `services/reservas_service.py` (sin BD ni HTTP): validación de fechas, disponibilidad de la unidad, cálculo de costo de estadía con bordes de descuento (6/7/14/15/16 noches) y errores de dominio. |
 | `test_checkin_checkout.py` | 7 | HU-005: máquina de estados `Pendiente → Confirmada → Check-in → Completada → En limpieza` y rechazos de transición inválida. |
 | `test_seguridad_acceso.py` | 6 | H-01 / H-02: RBAC de `DELETE /api/reservas/{id}` y protección del inventario de habitaciones (401/403 + endpoint público). |
 | `test_model_huesped.py` | 8 | Modelo de dominio de huésped: campos obligatorios, formato de correo rechazado y validación de mayoría de edad (límite exacto de 18 años). |
 
 ### Pruebas Unitarias del Frontend (Vitest)
 
-Dieciséis pruebas unitarias organizadas en 4 suites sobre utilidades del SPA (catálogo HU-009, fechas, `apiFetch` y smoke):
+Veinte pruebas unitarias organizadas en 5 suites sobre utilidades del SPA (catálogo HU-009, fechas, `apiFetch`, política de descuentos y smoke):
 
 ```bash
 cd frontend && npx vitest run
 ```
 
 La cobertura se mide con `npx vitest run --coverage` y `frontend/vite.config.js` fija
-umbrales mínimos documentados (base medida: 1.25 % líneas) para que una regresión que
-borre las pruebas existentes rompa el build.
+umbrales mínimos documentados (base medida: 2.49 % líneas, 58.53 % ramas, 38 %
+funciones) para que una regresión que borre las pruebas existentes rompa el build.
 
 ### Pruebas E2E con Playwright
 
@@ -639,10 +639,10 @@ Si vas a abrir un nuevo chat o sesión con **Gemini**, puedes copiar y pegar el 
 - Stack: FastAPI (Python 3.11), PostgreSQL 15 con btree_gist, React 18 (Vite 5.4, JS ES2022), Docker Compose, Nginx.
 - Puertos en Docker: Frontend (3001), Backend (4001, interno 4000), DB (5433, interno 5432), pgAdmin (5050).
 - Seguridad: JWT Bearer (8h), bcrypt cost 12, guardas RBAC ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento'), Fail-Fast si JWT_SECRET no existe.
-- Regla Clave: Prevención de doble reserva a nivel DB mediante constraint GiST en reserva_habitacion (daterange &&), triggers de mantenimiento y cálculo automático de descuentos (15% para estancias >15 noches).
+- Regla Clave: Prevención de doble reserva a nivel DB mediante constraint GiST en reserva_habitacion (daterange &&), triggers de mantenimiento y cálculo automático de descuentos (10% de 7 a 14 noches y 15% desde 15 noches, regla única en PL/pgSQL + Python + frontend).
 - Tablas Principales: empleado, huesped, habitacion (38 unidades oficiales), espacio_negocio, reserva_negocio (coworking por horas), reserva_habitacion. Todas con baja lógica y auditoría (creado_por, modificado_por).
 - Frontend: Single Page Application con doble modo: Portal de Huéspedes público (Inicio, Apartamentos, Centro de Negocios, Servicios, Galería, Reservar) y Suite PMS para empleados (sub-pestañas: Personal, Recepción Walk-in, Huéspedes, Reservas, Planta, Coworking, Todos).
-- Tests: 56 tests en pytest con PostgreSQL real (sin mocks), 16 tests unitarios en Vitest y 6 specs E2E en Playwright (100% pasando), más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
+- Tests: 61 tests en pytest con PostgreSQL real (sin mocks), 20 tests unitarios en Vitest y 6 specs E2E en Playwright (100% pasando), más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
 - Estado: Fase 1 completa y probada (incluye HU-005 check-in/check-out y remediación de arquitectura Fases A–E). Listo para abordar nuevas funcionalidades de Fase 2.
 ```
 

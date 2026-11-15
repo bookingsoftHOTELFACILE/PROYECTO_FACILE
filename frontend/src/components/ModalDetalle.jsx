@@ -6,6 +6,7 @@ import {
   Maximize2, MessageSquare, ArrowRight, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { porcentajeDescuentoEstadia } from '../utils/pricing.js';
 import HuespedesPicker from './HuespedesPicker.jsx';
 import { 
   calcularNochesAgnostico, 
@@ -257,14 +258,14 @@ export default function ModalDetalle({ apartamento, onClose, onReservar }) {
     return isNaN(num) || num <= 0 ? 450000 : num;
   }, [apto.precio]);
 
-  // Desglose de descuentos por duración de estancia:
+  // Desglose de descuentos por duración de estancia (política unificada):
+  // - < 7 noches: sin descuento
   // - 7 a 14 noches: 10% de descuento
   // - 15+ noches: 15% de descuento
-  const porcentajeDescuento = useMemo(() => {
-    if (nochesEstancia >= 15) return 15;
-    if (nochesEstancia >= 7) return 10;
-    return 0;
-  }, [nochesEstancia]);
+  const porcentajeDescuento = useMemo(
+    () => porcentajeDescuentoEstadia(nochesEstancia),
+    [nochesEstancia]
+  );
 
   const subtotalSinDescuento = useMemo(() => {
     if (nochesEstancia === 0) return 0;

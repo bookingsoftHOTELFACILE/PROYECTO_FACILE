@@ -5,6 +5,7 @@ import {
   Check, UserCheck, Sparkles, Search, Lock
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
+import { etiquetaDescuentoEstadia } from '../utils/pricing.js';
 
 const VistaReservar = () => {
   const [submittingReserva, setSubmittingReserva] = useState(false);
@@ -737,7 +738,7 @@ const VistaReservar = () => {
                               border: '1px solid #a7f3d0'
                             }}>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <span>🎉 Descuento Larga Estadía ({(cotizacion.noches || 0) >= 15 ? '15%' : '10%'})</span>
+                                <span>🎉 Descuento Larga Estadía ({etiquetaDescuentoEstadia(cotizacion.noches || 0)})</span>
                               </span>
                               <span>-${Number(cotizacion.descuento || 0).toLocaleString('es-CO')} COP</span>
                             </div>

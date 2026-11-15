@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+import bcrypt
 import psycopg2
 from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies import requiere_rol, autenticar, autenticar_opcional, UsuarioActual
@@ -18,6 +19,59 @@ logger = logging.getLogger("bookingsoft.reservas")
 _ROLES_RESERVAS = ("Administrador", "Recepcionista 24h")
 
 router = APIRouter(prefix="/api/reservas", tags=["reservas"])
+
+
+def _crear_huesped_atomico(cur, datos, audit_str: str) -> int:
+    """
+    P1-1.4 — Da de alta un huésped usando el cursor (y por lo tanto la transacción)
+    que ya está abierta por `cursor_escritura`.
+
+    Si después la reserva falla (double booking, capacidad, unidad en
+    mantenimiento...), el `rollback` elimina también el huésped: no quedan huéspedes
+    huérfanos creados "a medio camino".
+    """
+    nombre = (datos.nombre or "").strip()
+    documento = (datos.documento or "").strip()
+    telefono = (datos.telefono or "").strip()
+    correo = (datos.correo or "").strip()
+
+    if not nombre or not documento or not telefono or not correo:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nombre, documento, teléfono y correo son campos obligatorios para registrar al huésped."
+        )
+
+    cur.execute(
+        "SELECT id_huesped FROM huesped WHERE documento = %s OR LOWER(correo) = LOWER(%s)",
+        (documento, correo.lower())
+    )
+    if cur.fetchone():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un huésped con este documento o correo. Selecciónelo del listado para continuar."
+        )
+
+    # Misma regla que POST /api/user/registro: contraseña propia o la cédula por defecto.
+    clave_base = (datos.password or "").strip() or documento
+    password_hash = bcrypt.hashpw(clave_base.encode(), bcrypt.gensalt()).decode()
+
+    cur.execute(
+        """
+        INSERT INTO huesped (nombre, documento, telefono, correo, empresa, lealtad, estado, modificado_por, password_hash)
+        VALUES (%s, %s, %s, %s, %s, 'Silver', 'Activo', %s, %s)
+        RETURNING id_huesped
+        """,
+        (
+            nombre,
+            documento,
+            telefono,
+            correo,
+            (datos.empresa or "").strip(),
+            audit_str,
+            password_hash,
+        ),
+    )
+    return cur.fetchone()["id_huesped"]
 
 # RF-009: consulta de reservas restringida a roles operativos.
 @router.get("", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
@@ -89,6 +143,23 @@ def crear_reserva(
         # M-05: una sola transacción con commit al salir y rollback si algo falla.
         with cursor_escritura() as cur:
 
+            # P1-1.4 — Alta atómica del huésped: se da de alta aquí mismo, dentro de
+            # la MISMA transacción que la reserva. Si la reserva es rechazada
+            # (double booking, capacidad, mantenimiento), el rollback deshace también
+            # el alta del huésped y no quedan perfiles huérfanos.
+            if reserva.nuevo_huesped is not None:
+                if reserva.id_huesped is not None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Indique id_huesped o adjunte nuevo_huesped, no ambos."
+                    )
+                reserva.id_huesped = _crear_huesped_atomico(cur, reserva.nuevo_huesped, audit_str)
+            elif reserva.id_huesped is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Debe indicar id_huesped o adjuntar nuevo_huesped para crear la reserva."
+                )
+
             # A. Obtener datos de la habitación
             cur.execute("SELECT precio_noche, numero, estado, capacidad FROM habitacion WHERE id_habitacion = %s", (reserva.id_habitacion,))
             hab_row = cur.fetchone()
@@ -156,9 +227,15 @@ def crear_reserva(
             ))
             res_row = cur.fetchone()
 
-            # Obtener detalles del huésped
-            cur.execute("SELECT nombre, documento FROM huesped WHERE id_huesped = %s", (reserva.id_huesped,))
+            # Obtener detalles del huésped (recién creado o preexistente)
+            cur.execute(
+                "SELECT id_huesped, nombre, documento, telefono, correo, empresa, lealtad, estado "
+                "FROM huesped WHERE id_huesped = %s",
+                (reserva.id_huesped,)
+            )
             hues_row = cur.fetchone()
+            if not hues_row:
+                raise HTTPException(status_code=404, detail="El huésped especificado no existe.")
 
             # HU-005: la unidad queda ocupada en cuanto se registra la entrada física.
             if es_checkin_directo:
@@ -191,6 +268,9 @@ def crear_reserva(
                 else f"Reserva confirmada exitosamente por {audit_str}."
             ),
             "reserva": nueva_res,
+            # P1-1.4: perfil del huésped (recién creado o el que ya existía) para que
+            # el PMS lo seleccione sin una segunda petición.
+            "huesped": hues_row,
             "cotizacion": {
                 "noches": noches,
                 "subtotal": float(subtotal),

@@ -43,7 +43,9 @@ export default function PanelAuditoriaReservas({
   onNuevaReserva, 
   onCheckIn, 
   onCheckOut,
-  onCancelarReserva 
+  onCancelarReserva,
+  // Inventario real de unidades (proporcionado por el PMS desde /api/habitaciones).
+  totalUnidades
 }) {
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
@@ -206,8 +208,13 @@ export default function PanelAuditoriaReservas({
     return est === 'CHECK-IN' || est === 'IN-HOUSE' || est === 'OCUPADA';
   }).length;
   const checkoutsProgramadosCount = inHouseCount;
-  const totalAptos = 40;
-  const pctOcupacion = Math.min(100, Math.round((inHouseCount / totalAptos) * 100)) || 30;
+  // P1-1.3: el inventario deja de ser un número fijo del componente. Si el PMS
+  // aún no pasa el total de unidades, se usa el sembrado oficial (40 unidades).
+  const totalAptos = Number(totalUnidades) > 0 ? Number(totalUnidades) : 40;
+  // Sin in-house no debe fingirse un 30% de ocupación: el KPI refleja 0.
+  const pctOcupacion = totalAptos > 0
+    ? Math.min(100, Math.round((inHouseCount / totalAptos) * 100))
+    : 0;
 
   const reservasFiltradas = listaReservas.filter((r) => {
     const q = busqueda.toLowerCase().trim();
@@ -221,6 +228,31 @@ export default function PanelAuditoriaReservas({
     const coincideOrigen = filtroOrigen === 'TODOS' || (r.tipoOrigen && r.tipoOrigen.toUpperCase() === filtroOrigen.toUpperCase());
     return coincideTexto && coincideEstado && coincideOrigen;
   });
+
+  // P1-1.3 — Paginación real sobre la lista filtrada (antes eran 3 páginas fijas
+  // y una tabla que renderizaba todo de golpe sin cortar por página).
+  const POR_PAGINA = 8;
+  const totalPaginas = Math.max(1, Math.ceil(reservasFiltradas.length / POR_PAGINA));
+  const paginaSegura = Math.min(paginaActual, totalPaginas);
+  const inicioFila = (paginaSegura - 1) * POR_PAGINA;
+  const filasVisibles = reservasFiltradas.slice(inicioFila, inicioFila + POR_PAGINA);
+  const hayFiltrosAplicados = reservasFiltradas.length !== listaReservas.length;
+
+  // Números de página visibles (ventana de 7 con "…" cuando hay muchas páginas)
+  const paginasVisibles = (() => {
+    if (totalPaginas <= 7) return Array.from({ length: totalPaginas }, (_, i) => i + 1);
+    const candidatas = [1, totalPaginas, paginaSegura - 1, paginaSegura, paginaSegura + 1]
+      .filter((p) => p >= 1 && p <= totalPaginas);
+    const ordenadas = [...new Set(candidatas)].sort((a, b) => a - b);
+    const salida = [];
+    let previa = 0;
+    for (const pg of ordenadas) {
+      if (previa && pg - previa > 1) salida.push('…');
+      salida.push(pg);
+      previa = pg;
+    }
+    return salida;
+  })();
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-sans mb-8">
@@ -476,7 +508,7 @@ export default function PanelAuditoriaReservas({
                     fontWeight: 900
                   }}
                 >
-                  21 Activas
+                  {totalReservasCount} Activas
                 </span>
               </div>
               <p style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, marginTop: '4px', marginBottom: 0 }}>
@@ -600,7 +632,9 @@ export default function PanelAuditoriaReservas({
           </div>
 
           <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
-            Mostrando <strong style={{ color: '#0f172a' }}>8 de 21</strong> reservas registradas
+            Mostrando <strong style={{ color: '#0f172a' }}>{filasVisibles.length}</strong> de{' '}
+            <strong style={{ color: '#0f172a' }}>{reservasFiltradas.length}</strong> reservas
+            {hayFiltrosAplicados ? ' (con filtros aplicados)' : ' registradas'}
           </div>
         </div>
 
@@ -618,14 +652,14 @@ export default function PanelAuditoriaReservas({
               </tr>
             </thead>
             <tbody style={{ fontSize: '12px' }}>
-              {reservasFiltradas.map((r, idx) => {
+              {filasVisibles.map((r, idx) => {
                 const iniciales = r.huesped.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
                 return (
                   <tr 
                     key={r.id || idx}
                     style={{ 
-                      borderBottom: idx < reservasFiltradas.length - 1 ? '1px solid #f1f5f9' : 'none',
+                      borderBottom: idx < filasVisibles.length - 1 ? '1px solid #f1f5f9' : 'none',
                       transition: 'background-color 0.15s ease'
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
@@ -1029,13 +1063,14 @@ export default function PanelAuditoriaReservas({
           }}
         >
           <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
-            Página <strong style={{ color: '#0f172a' }}>{paginaActual}</strong> de <strong style={{ color: '#0f172a' }}>3</strong>
+            Página <strong style={{ color: '#0f172a' }}>{paginaSegura}</strong> de{' '}
+            <strong style={{ color: '#0f172a' }}>{totalPaginas}</strong>
           </span>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button 
               type="button"
-              disabled={paginaActual === 1}
+              disabled={paginaSegura === 1}
               onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
               style={{
                 padding: '5px 12px',
@@ -1045,38 +1080,47 @@ export default function PanelAuditoriaReservas({
                 color: '#64748b',
                 fontSize: '11px',
                 fontWeight: 700,
-                cursor: paginaActual === 1 ? 'not-allowed' : 'pointer',
-                opacity: paginaActual === 1 ? 0.5 : 1
+                cursor: paginaSegura === 1 ? 'not-allowed' : 'pointer',
+                opacity: paginaSegura === 1 ? 0.5 : 1
               }}
             >
               Anterior
             </button>
             
-            {[1, 2, 3].map((pg) => (
-              <button
-                key={pg}
-                type="button"
-                onClick={() => setPaginaActual(pg)}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '8px',
-                  backgroundColor: paginaActual === pg ? '#0f172a' : '#ffffff',
-                  border: `1px solid ${paginaActual === pg ? '#0f172a' : '#e2e8f0'}`,
-                  color: paginaActual === pg ? '#ffffff' : '#334155',
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  cursor: 'pointer'
-                }}
-              >
-                {pg}
-              </button>
+            {paginasVisibles.map((pg, i) => (
+              pg === '…' ? (
+                <span
+                  key={`gap-${i}`}
+                  style={{ padding: '0 4px', fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={pg}
+                  type="button"
+                  onClick={() => setPaginaActual(pg)}
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '8px',
+                    backgroundColor: paginaSegura === pg ? '#0f172a' : '#ffffff',
+                    border: `1px solid ${paginaSegura === pg ? '#0f172a' : '#e2e8f0'}`,
+                    color: paginaSegura === pg ? '#ffffff' : '#334155',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {pg}
+                </button>
+              )
             ))}
 
             <button
               type="button"
-              disabled={paginaActual === 3}
-              onClick={() => setPaginaActual(p => Math.min(3, p + 1))}
+              disabled={paginaSegura === totalPaginas}
+              onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
               style={{
                 padding: '5px 12px',
                 borderRadius: '8px',
@@ -1085,7 +1129,8 @@ export default function PanelAuditoriaReservas({
                 color: '#334155',
                 fontSize: '11px',
                 fontWeight: 700,
-                cursor: paginaActual === 3 ? 'not-allowed' : 'pointer'
+                cursor: paginaSegura === totalPaginas ? 'not-allowed' : 'pointer',
+                opacity: paginaSegura === totalPaginas ? 0.5 : 1
               }}
             >
               Siguiente

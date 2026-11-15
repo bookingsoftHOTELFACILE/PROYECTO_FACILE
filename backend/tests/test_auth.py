@@ -131,24 +131,40 @@ def test_auth_social_google_nuevo_y_existente(client):
         "empresa": "Google Workspace"
     }
 
-    # 1. Primer registro social
-    res1 = client.post("/api/user/auth-social", json=payload)
-    assert res1.status_code == 200
-    data1 = res1.json()
-    assert data1["es_nuevo"] is True
-    assert "usuario" in data1
-    assert data1["usuario"]["correo"] == payload["correo"]
-    assert data1["usuario"]["id_huesped"] is not None
-    user_id = data1["usuario"]["id_huesped"]
+    user_id = None
+    try:
+        # 1. Primer registro social
+        res1 = client.post("/api/user/auth-social", json=payload)
+        assert res1.status_code == 200
+        data1 = res1.json()
+        assert data1["es_nuevo"] is True
+        assert "usuario" in data1
+        assert data1["usuario"]["correo"] == payload["correo"]
+        assert data1["usuario"]["id_huesped"] is not None
+        user_id = data1["usuario"]["id_huesped"]
 
-    # 2. Segundo intento con mismo correo debe iniciar sesión sin error y retornar el mismo ID
-    res2 = client.post("/api/user/auth-social", json={
-        "proveedor": "google",
-        "nombre": payload["nombre"],
-        "correo": payload["correo"]
-    })
-    assert res2.status_code == 200
-    data2 = res2.json()
-    assert data2["es_nuevo"] is False
-    assert data2["usuario"]["id_huesped"] == user_id
+        # 2. Segundo intento con mismo correo debe iniciar sesión sin error y retornar el mismo ID
+        res2 = client.post("/api/user/auth-social", json={
+            "proveedor": "google",
+            "nombre": payload["nombre"],
+            "correo": payload["correo"]
+        })
+        assert res2.status_code == 200
+        data2 = res2.json()
+        assert data2["es_nuevo"] is False
+        assert data2["usuario"]["id_huesped"] == user_id
+    finally:
+        # P1-1.5 — Teardown: la suite no debe acumular huéspedes de prueba en la
+        # base de datos compartida (se ejecuta también cuando un assert falla).
+        if user_id is not None:
+            try:
+                from database import connection
+                conn = connection.obtener_conexion()
+                cur = conn.cursor()
+                cur.execute("DELETE FROM huesped WHERE id_huesped = %s", (user_id,))
+                conn.commit()
+                cur.close()
+                connection.liberar_conexion(conn)
+            except Exception:
+                pass  # El teardown nunca debe enmascarar el fallo real del test
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiFetch, formatErrorMessage } from '../api/client.js';
 import { CATALOGO_HABITACIONES_INICIAL } from '../data/catalogo.js';
+import { cotizarEstadia } from '../utils/pricing.js';
 import {
   ArrowRight, Check
 } from 'lucide-react';
@@ -412,40 +413,11 @@ export function useAppState() {
         setLoginError(data.detail || 'Credenciales incorrectas.');
       }
     } catch {
-      // Fallback local si backend está en segundo plano o desconectado
-      const u = loginForm.usuario.trim();
-      const p = loginForm.contrasena;
-      if ((u === 'admin' || u === 'bookingsoft_admin') && p === 'Admin2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Administrador BookingSoft', rol: 'Administrador' });
-        setShowLoginModal(false);
-        setLoginForm({ usuario: '', contrasena: '' });
-        setActiveTab('pms');
-        setPmsSubTab('empleados');
-        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Administrador!' });
-      } else if ((u === 'recepcion' || u === 'carlos_recep') && p === 'Recep2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Carlos Recepción', rol: 'Recepcionista 24h' });
-        setShowLoginModal(false);
-        setLoginForm({ usuario: '', contrasena: '' });
-        setActiveTab('pms');
-        setPmsSubTab('recepcion');
-        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Recepcionista 24h!' });
-      } else if ((u === 'amallaves' || u === 'marta_limpieza') && (p === 'Amallaves2026!' || p === 'marta123')) {
-        setUsuarioSesion({ usuario: u, nombre: 'Marta Ama de Llaves', rol: 'Ama de llaves' });
-        setShowLoginModal(false);
-        setLoginForm({ usuario: '', contrasena: '' });
-        setActiveTab('pms');
-        setPmsSubTab('planta');
-        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Ama de llaves!' });
-      } else if ((u === 'mantenimiento' || u === 'jhon_mantenimiento') && p === 'Mantenimiento2026!') {
-        setUsuarioSesion({ usuario: u, nombre: 'Jhon Mantenimiento', rol: 'Personal de mantenimiento' });
-        setShowLoginModal(false);
-        setLoginForm({ usuario: '', contrasena: '' });
-        setActiveTab('pms');
-        setPmsSubTab('planta');
-        setAlert({ type: 'success', message: '¡Sesión iniciada con éxito como Mantenimiento!' });
-      } else {
-        setLoginError('Credenciales incorrectas o servidor no disponible.');
-      }
+      // P1-1.1: sin fallback local. La única fuente de autenticación es el backend
+      // (JWT + bcrypt): cualquier credenciales "de emergencia" embebida en el cliente
+      // es una puerta trasera explícitable desde el bundle. Si el backend no responde,
+      // se informa el fallo de conexión en lugar de simular una sesión válida.
+      setLoginError('No se pudo conectar con el servidor. Verifique que el backend esté disponible e intente de nuevo.');
     }
     setLoading(false);
   };
@@ -566,9 +538,9 @@ export function useAppState() {
         const diffMs = sDt.getTime() - eDt.getTime();
         const noches = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
         const precio_noche = Number(hab.precio_noche) || 0;
-        const subtotal = noches * precio_noche;
-        const descuento = noches >= 15 ? subtotal * 0.15 : (noches >= 7 ? subtotal * 0.10 : 0);
-        const total = Math.max(0, subtotal - descuento);
+        // P1-1.2: la regla de descuento vive en un solo archivo (utils/pricing.js)
+        // y replica exactamente la política del backend.
+        const { subtotal, descuento, total } = cotizarEstadia(noches, precio_noche);
         setCotizacion({
           precio_noche,
           noches,
@@ -1111,6 +1083,11 @@ export function useAppState() {
 
     let huespedDestino = selectedHuesped;
 
+    // P1-1.4: si hay un huésped sin registrar, sus datos viajan dentro del MISMO
+    // POST /api/reservas. Así el backend da de alta el huésped y crea la reserva en
+    // una sola transacción (si la reserva falla, el huésped no queda huérfano).
+    let nuevoHuespedPayload = null;
+
     // Procesar detección/registro de huésped presencial de forma inteligente
     if (!huespedDestino || (pmsWalkInGuest.documento && huespedDestino.documento !== pmsWalkInGuest.documento.trim())) {
       const q = (pmsWalkInGuest.documento || '').trim();
@@ -1127,49 +1104,26 @@ export function useAppState() {
           setLoading(false);
           return;
         }
+        const telCompleto = `${pmsWalkInGuest.indicativo || '+57'} ${(pmsWalkInGuest.telefono || '').trim()}`.trim();
+        const documentoLimpio = (pmsWalkInGuest.documento || '').trim();
         if (backendActivo) {
-          try {
-            const telCompleto = `${pmsWalkInGuest.indicativo || '+57'} ${(pmsWalkInGuest.telefono || '').trim()}`.trim();
-            const resReg = await apiFetch(`/api/user/registro`, {method: 'POST', body: {
-                nombre: (pmsWalkInGuest.nombre || '').trim(),
-                documento: (pmsWalkInGuest.documento || '').trim(),
-                telefono: telCompleto,
-                correo: (pmsWalkInGuest.correo || '').trim(),
-                empresa: `Walk-in (${pmsWalkInGuest.tipo_documento || 'Cédula'})`,
-                password: (pmsWalkInGuest.documento || '').trim()
-              }});
-            const dataReg = resReg.data;
-            if (resReg.ok) {
-              huespedDestino = dataReg.usuario;
-              setSelectedHuesped(huespedDestino);
-            } else {
-              // Si el usuario ya existía en backend por documento/correo
-              const qStr = (pmsWalkInGuest.documento || '').trim() || (pmsWalkInGuest.correo || '').trim();
-              const existenteBk = huespedes.find(h => 
-                (h.documento && h.documento === qStr) || 
-                (h.correo && (h.correo || '').toLowerCase() === qStr.toLowerCase())
-              );
-              if (existenteBk) {
-                huespedDestino = existenteBk;
-                setSelectedHuesped(existenteBk);
-              } else {
-                setReservaAlert({ type: 'error', message: formatErrorMessage(dataReg.detail) });
-                setLoading(false);
-                return;
-              }
-            }
-          } catch {
-            setReservaAlert({ type: 'error', message: 'Error de conexión al registrar los datos del huésped.' });
-            setLoading(false);
-            return;
-          }
+          // Alta conjunta con la reserva (ver backend: _crear_huesped_atomico).
+          nuevoHuespedPayload = {
+            nombre: (pmsWalkInGuest.nombre || '').trim(),
+            documento: documentoLimpio,
+            telefono: telCompleto,
+            correo: (pmsWalkInGuest.correo || '').trim(),
+            empresa: `Walk-in (${pmsWalkInGuest.tipo_documento || 'Cédula'})`,
+            password: documentoLimpio
+          };
+          huespedDestino = null;
         } else {
-          // Modo local fallback
+          // Modo local fallback (sin backend): sólo estado en memoria.
           const nuevoH = {
             id_huesped: Date.now(),
             nombre: (pmsWalkInGuest.nombre || '').trim(),
-            documento: (pmsWalkInGuest.documento || '').trim(),
-            telefono: `${pmsWalkInGuest.indicativo || '+57'} ${(pmsWalkInGuest.telefono || '').trim()}`.trim(),
+            documento: documentoLimpio,
+            telefono: telCompleto,
             correo: (pmsWalkInGuest.correo || '').trim(),
             empresa: `Walk-in (${pmsWalkInGuest.tipo_documento || 'Cédula'})`,
             lealtad: 'Silver',
@@ -1182,7 +1136,7 @@ export function useAppState() {
       }
     }
 
-    if (!huespedDestino) {
+    if (!nuevoHuespedPayload && !huespedDestino) {
       setReservaAlert({ type: 'error', message: 'Debe seleccionar un huésped o ingresar sus datos primero.' });
       setLoading(false);
       return;
@@ -1190,25 +1144,36 @@ export function useAppState() {
 
     if (backendActivo) {
       try {
-        const res = await apiFetch(`/api/reservas`, {method: 'POST', token: authToken, body: {
-            id_huesped: huespedDestino.id_huesped,
+        // P1-1.4: una única petición — huésped nuevo (si lo hay) + reserva juntos.
+        const bodyReserva = {
+            ...(huespedDestino ? { id_huesped: huespedDestino.id_huesped } : {}),
+            ...(nuevoHuespedPayload ? { nuevo_huesped: nuevoHuespedPayload } : {}),
             id_habitacion: parseInt(reservaData.id_habitacion),
             fecha_entrada: reservaData.fecha_entrada,
             fecha_salida: reservaData.fecha_salida,
             numero_personas: parseInt(reservaData.numero_personas || 1),
             // HU-005 / CA-005.2: check-in directo (solo recepción; el backend exige rol operativo).
             checkin_inmediato: walkinCheckinInmediato,
-          }});
+          };
+        const res = await apiFetch(`/api/reservas`, {method: 'POST', token: authToken, body: bodyReserva});
         const data = res.data;
         if (res.ok) {
           if (data.reserva) {
             setReservas(prev => [data.reserva, ...prev]);
           }
+          // El backend devuelve el huésped (nuevo o existente): se selecciona sin
+          // necesidad de una segunda petición ni de recargar la lista.
+          if (data.huesped) {
+            huespedDestino = data.huesped;
+            setSelectedHuesped(data.huesped);
+          }
+          const nombreHuesped = huespedDestino?.nombre || (pmsWalkInGuest.nombre || '').trim();
+          const docHuesped = huespedDestino?.documento || (pmsWalkInGuest.documento || '').trim();
           setReservaAlert({
             type: 'success',
             message: walkinCheckinInmediato
-              ? `✓ Check-in directo registrado para ${huespedDestino.nombre} (Doc: ${huespedDestino.documento}).`
-              : `¡Reserva presencial confirmada exitosamente para ${huespedDestino.nombre} (Doc: ${huespedDestino.documento})!`,
+              ? `✓ Check-in directo registrado para ${nombreHuesped} (Doc: ${docHuesped}).`
+              : `¡Reserva presencial confirmada exitosamente para ${nombreHuesped} (Doc: ${docHuesped})!`,
             data
           });
           setWalkinCheckinInmediato(false);
@@ -1216,6 +1181,11 @@ export function useAppState() {
           setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', telefono: '', correo: '' });
           cargarDatosBackend(authToken);
         } else {
+          // Si el documento/correo ya existía en backend (lista desactualizada),
+          // se refresca el listado para que recepción seleccione ese huésped.
+          if (typeof data.detail === 'string' && /ya existe/i.test(data.detail)) {
+            cargarDatosBackend(authToken);
+          }
           setReservaAlert({ type: 'error', message: formatErrorMessage(data.detail) || 'Error al crear la reserva.' });
         }
       } catch {

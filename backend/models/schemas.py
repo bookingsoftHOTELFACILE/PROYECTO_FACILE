@@ -33,7 +33,10 @@ class GuestRestablecerRequest(BaseModel):
     nueva_password: str
 
 class ReservaCreate(BaseModel):
-    id_huesped: int
+    # P1-1.4: id_huesped deja de ser obligatorio porque el walk-in puede traer el
+    # alta del huésped en el mismo payload. Se exige exactamente uno de los dos
+    # (id_huesped o nuevo_huesped) en la ruta, dentro de una única transacción.
+    id_huesped: Optional[int] = Field(None, description="Huésped existente que se aloja")
     id_habitacion: int
     fecha_entrada: str
     fecha_salida: str
@@ -43,6 +46,11 @@ class ReservaCreate(BaseModel):
     # HU-005 / CA-005.2: registro de check-in directo para llegadas sin reserva previa
     # (walk-in). Requiere rol operativo en el endpoint; el público siempre queda en False.
     checkin_inmediato: bool = False
+    # P1-1.4: alta atómica del huésped nuevo en la MISMA transacción que la reserva.
+    nuevo_huesped: Optional[UserRegistro] = Field(
+        None,
+        description="Datos del huésped a dar de alta junto con la reserva (walk-in sin registro previo)."
+    )
 
 
 class ReservaEstadoUpdate(BaseModel):

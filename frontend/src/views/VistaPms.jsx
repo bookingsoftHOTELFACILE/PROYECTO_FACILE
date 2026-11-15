@@ -7,6 +7,7 @@ import {
   CalendarCheck, Bed, Briefcase, Monitor
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
+import { porcentajeDescuentoEstadia, cotizarEstadia } from '../utils/pricing.js';
 import HuespedesPicker from '../components/HuespedesPicker.jsx';
 import ModuloSalasCoworkingPMS from '../components/ModuloSalasCoworkingPMS.jsx';
 import ModuloMantenimientoAseoPMS from '../components/ModuloMantenimientoAseoPMS.jsx';
@@ -1182,7 +1183,8 @@ const VistaPms = () => {
           {(pmsSubTab === 'recepcion' || pmsSubTab === 'todos') && (() => {
             const guestReservasPrevias = selectedHuesped ? reservas.filter(r => String(r.id_huesped) === String(selectedHuesped.id_huesped)).length : 0;
             const guestNivel = guestReservasPrevias >= 5 ? 'Nivel Platinum' : guestReservasPrevias >= 2 ? 'Nivel Gold' : 'Huésped Frecuente';
-            const vacantesCount = (habitaciones || []).filter(h => h.estado === 'Disponible').length || 6;
+            // P1-1.3: sin respaldo falso; si no hay unidades libres, el KPI dice 0.
+            const vacantesCount = (habitaciones || []).filter(h => h.estado === 'Disponible').length;
             const selectedHab = habitaciones.find(h => String(h.id_habitacion) === String(reservaData.id_habitacion));
             const tarifaNoche = selectedHab ? Number(selectedHab.precio_noche || 0) : (cotizacion?.precio_noche || 250000);
             
@@ -1195,8 +1197,12 @@ const VistaPms = () => {
             }
             const depositoGarantia = 150000;
             const subtotalCalculado = noches * tarifaNoche;
-            const porcentajeDcto = noches >= 15 ? 15 : (noches >= 7 ? 10 : 0);
-            const descuentoCalculado = cotizacion?.descuento !== undefined ? cotizacion.descuento : (noches >= 15 ? subtotalCalculado * 0.15 : (noches >= 7 ? subtotalCalculado * 0.10 : 0));
+            // P1-1.2: política de descuento unificada (utils/pricing.js). Si el
+            // backend ya devolvió la cotización oficial, ésta manda.
+            const porcentajeDcto = porcentajeDescuentoEstadia(noches);
+            const descuentoCalculado = cotizacion?.descuento !== undefined
+              ? cotizacion.descuento
+              : cotizarEstadia(noches, tarifaNoche).descuento;
             const totalFacturar = cotizacion?.total !== undefined ? cotizacion.total : Math.max(0, subtotalCalculado - descuentoCalculado);
 
             return (
@@ -2436,6 +2442,7 @@ const VistaPms = () => {
             <PanelAuditoriaReservas
               reservas={reservas}
               reservaAlert={reservaAlert}
+              totalUnidades={habitaciones.length}
               onNuevaReserva={() => setPmsSubTab('recepcion')}
               onCheckIn={(id) => handleCambiarEstadoReserva(id, 'Check-In')}
               onCheckOut={(id) => handleCambiarEstadoReserva(id, 'Completada')}

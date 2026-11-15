@@ -243,7 +243,7 @@ Notas de acceso:
 
 ## 6. Inventario de pruebas
 
-**pytest — 56 pruebas en 7 ficheros** (sobre PostgreSQL real, sin mocks):
+**pytest — 61 pruebas en 7 ficheros** (sobre PostgreSQL real, sin mocks):
 
 | Fichero | Pruebas |
 | --- | --- |
@@ -251,11 +251,11 @@ Notas de acceso:
 | `backend/tests/test_checkin_checkout.py` | 7 |
 | `backend/tests/test_consultas.py` | 4 |
 | `backend/tests/test_model_huesped.py` | 8 |
-| `backend/tests/test_reservas.py` | 3 |
-| `backend/tests/test_reservas_service.py` | 19 |
+| `backend/tests/test_reservas.py` | 5 |
+| `backend/tests/test_reservas_service.py` | 22 |
 | `backend/tests/test_seguridad_acceso.py` | 6 |
 
-**Vitest — 16 pruebas en 4 ficheros:** `frontend/src/catalogo_hu009.test.js`, `frontend/src/smoke.test.js`, `frontend/src/utils/dateUtils.test.js`, `frontend/src/utils/httpClient.test.js`.
+**Vitest — 20 pruebas en 5 ficheros:** `frontend/src/catalogo_hu009.test.js`, `frontend/src/smoke.test.js`, `frontend/src/utils/dateUtils.test.js`, `frontend/src/utils/httpClient.test.js`, `frontend/src/utils/pricing.test.js`.
 
 **Playwright — 6 specs en `E2E/tests/` (100% pasando):** `login`, `registro`, `habitaciones`, `cancelacion`, `checkin_checkout`, `proteccion_doble_clic`.
 
@@ -287,30 +287,30 @@ git status -sb && git log --oneline origin/main..HEAD && git diff --stat origin/
 cd backend && DB_HOST=localhost DB_PORT=5433 DB_USER=bookingsof4 \
   DB_PASSWORD=BooKingSoft DB_NAME=bookingsoft API_BASE_URL=http://localhost:4001 \
   python3 -m pytest -q -o addopts=""
-# Esperado: 55 passed
+# Esperado: 61 passed
 
 # 2) Build + unitarias + cobertura con umbrales
 #    REQUISITO: Node >= 20.19 (nvm use para leer frontend/.nvmrc). Con el Node
 #    18 del sistema, vitest falla con ERR_REQUIRE_ESM desde jsdom/@exodus/bytes.
 cd frontend && npx vite build && npx vitest run && npx vitest run --coverage
-# Esperado: 6/6 y "All files | 1.25 | 50.98 | 10.71 | 1.25", exit 0
+# Esperado: 20 passed (5 ficheros) y "All files | 2.49 | 58.53 | 38 | 2.49", exit 0
 
 # 3) E2E (arranca Vite en :3000 solo)
 cd E2E && npx playwright test
-# Esperado: 5 passed, 1 failed (proteccion_doble_clic — preexistente)
+# Esperado: 6 passed (desde la Fase 1 proteccion_doble_clic dejó de fallar)
 
 # 4) Reconstruir contenedores (NO hay volúmenes: todo cambio en backend/ o frontend/
 #    exige rebuild antes de E2E o de probar en :3001)
 docker compose build backend frontend && docker compose up -d backend frontend
 curl -s http://localhost:4001/health
-curl -s http://localhost:3001/ | grep -o 'index-[A-Za-z0-9_-]*\.js'   # debe ser index-DtsLOiUo.js
+curl -s http://localhost:3001/ | grep -o 'index-[A-Za-z0-9_-]*\.js'   # hash distinto por build
 
 # 5) Afirmaciones numéricas del informe
-wc -l frontend/src/App.jsx                                  # 83 (94 con andamios de Fase A)
+wc -l frontend/src/App.jsx                                  # 86
 grep -rn 'obtener_conexion' backend/routes | wc -l          # 0
-grep -rn 'logger.exception' backend --include=*.py | wc -l  # 28 (26 en routes/ + main.py + connection.py)
+grep -rn 'logger.exception' backend --include=*.py | wc -l  # 29
 grep -rn 'logger.error' backend --include=*.py | wc -l      # 0
-grep -rn 'fetch(' frontend/src --include=*.js --include=*.jsx | grep -v apiFetch | wc -l   # 1 (la propia apiFetch)
+grep -rn 'fetch(' frontend/src --include=*.js --include=*.jsx | grep -v apiFetch | wc -l   # 2 (los wrappers apiFetch y httpClient)
 # Ojo: hay que acotar los greps, porque este informe y el de auditoría mencionan
 # esos términos al describir la corrección.
 grep -rn 'Conserje' backend frontend/src E2E docs/requisitos README.md \
@@ -318,14 +318,14 @@ grep -rn 'Conserje' backend frontend/src E2E docs/requisitos README.md \
 grep -rn 'Recepcionista Noche' backend frontend/src E2E docs/requisitos README.md \
   --include=*.py --include=*.jsx --include=*.md --include=*.sql | wc -l                 # 0
 ls frontend/src/views | wc -l                               # 9
-ls frontend/src/components | wc -l                          # 11
+ls frontend/src/components | wc -l                          # 16
 git ls-files | grep -cE '^(frontend/)?(coverage|dist)/'     # 0
 
 # 6) Endpoints reales vs documentados
 curl -s http://localhost:4001/openapi.json | python3 -c "
 import json,sys; d=json.load(sys.stdin)
 print(sum(1 for p,o in d['paths'].items() for m in o if m in ('get','post','put','patch','delete'))) "
-# Esperado: 27  (y el README debe decir 27)
+# Esperado: 28  (y el README debe decir 28)
 
 # 7) Sonda de seguridad básica (debe dar 401/403, nunca 200 con datos)
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:4001/api/habitaciones        # 401
@@ -449,6 +449,38 @@ el arranque moría con un `NameError` secundario en lugar de salir limpio con
 
 ---
 
+---
+
+## 15. Fase 1 — Cierre de huecos críticos (2026-11-15)
+
+Plan priorizado de la revisión comparativa contra PMS comerciales (Oracle OPERA,
+Cloudbeds, Mews). Fase 1 ataca los puntos que ningún sistema de producción aceptaría.
+
+| ID | Hallazgo | Cambio | Archivos |
+| --- | --- | --- | --- |
+| **P1-1.1** | Credenciales de empleados embebidas en el bundle (fallback local de login) | Eliminado el fallback: si el backend no responde se informa el fallo de conexión en lugar de simular una sesión. Única fuente de autenticación = JWT + bcrypt | `frontend/src/state/useAppState.js` |
+| **P1-1.2** | Cotización divergente cliente/servidor (preview 10 %/15 % vs backend 0 %/15 %) | Política **única** publicada: **10 % de 7 a 14 noches, 15 % desde 15 noches**. PL/pgSQL (schema.sql + función aplicada a la BD viva), `services/reservas_service.py` y el nuevo `frontend/src/utils/pricing.js` (consumido por `useAppState`, `VistaPms`, `ModalDetalle`, `VistaReservar`) | `backend/schema.sql`, `backend/services/reservas_service.py`, `frontend/src/utils/pricing.js` |
+| **P1-1.3** | KPIs falsos en el panel de auditoría (badge "21 Activas", `totalAptos=40`, "Mostrando 8 de 21", 3 páginas fijas, ocupación con respaldo 30 %, "6 vacantes" fijo) | Métricas derivadas de los datos reales, inventario por prop desde `/api/habitaciones`, paginación real de 8 en 8 con ventana y "…" y contador de filas filtradas | `frontend/src/components/PanelAuditoriaReservas.jsx`, `frontend/src/views/VistaPms.jsx` |
+| **P1-1.4** | El alta de huésped walk-in y la reserva eran dos peticiones: si la reserva fallaba quedaba un huésped huérfano | `POST /api/reservas` acepta `nuevo_huesped` (exclusivo con `id_huesped`) y lo inserta **en la misma transacción**: el rollback deshace ambos. El PMS emite **un solo POST** y el backend devuelve el perfil (`huesped`) para seleccionarlo | `backend/models/schemas.py`, `backend/routes/reservas.py`, `frontend/src/state/useAppState.js` |
+| **P1-1.5** | `.pyc` huérfanos de tests borrados y suites que ensuciaban la BD compartida (huéspedes `test_social_*`/`ashley_*`, empleados `testuser_*`, reservas de prueba) | Purgado de `__pycache__`, fixture de sesión en `conftest.py` que borra al terminar todo lo creado por la suite, `finally` en el test de auth social y `afterAll` en `registro.spec.js` | `backend/tests/conftest.py`, `backend/tests/test_auth.py`, `E2E/tests/registro.spec.js` |
+
+### Cobertura de la política de descuento (regresión imposible sin que falle algo)
+
+- **pytest** (bordes): 6 → 0 %, 7 → 10 %, 14 → 10 %, 15 → 15 %, 16 → 15 % (`test_reservas_service.py`, parametrizado) y 16 noches vía API (`test_reservas.py`).
+- **vitest**: `frontend/src/utils/pricing.test.js` fija la misma escala en el cliente.
+- **atomicidad**: `test_alta_atomica_huesped_y_reserva` (éxito) y `test_alta_atomica_rollback_si_reserva_falla` (el huésped NO queda huérfano ante un 400).
+
+### Evidencia de verificación (2026-11-15)
+
+| Gate | Resultado |
+| --- | --- |
+| `pytest` (contenedor backend) | **61 passed** en 11.95 s |
+| `vitest run --coverage` | **20 passed (5 ficheros)**, `All files 2.49 / 58.53 / 38 / 2.49`, exit 0 |
+| `playwright test` | **6 passed** en 33 s |
+| Higiene de BD tras las 3 suites | `huespedes 3` · `reservas 2` · `empleados 7` · `habitacion 'Disponible' 40` |
+| Flujo walk-in atómico (1 solo POST con `nuevo_huesped`) | verificado en navegador con script temporal + limpieza posterior |
+
 _Informe generado el 2026-11-13 a partir de la rama `test/e2e-double-click-protection` y
-actualizado el 2026-11-14 con el resultado de la verificación externa (HEAD `47a122c`).
+actualizado el 2026-11-14 con el resultado de la verificación externa (HEAD `47a122c`) y el
+2026-11-15 con la Fase 1 de cierre de huecos críticos (§15).
 Toda cifra de este documento es verificable con los comandos de la sección 8._
