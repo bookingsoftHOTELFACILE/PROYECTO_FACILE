@@ -213,7 +213,7 @@ $$ LANGUAGE plpgsql;
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
 INSERT INTO empleado (id_empleado, nombre, usuario, contrasena, rol, numero_documento, correo, estado) VALUES
-(1, 'Administrador Grupo BookingSoft', 'admin', '$2b$12$7ecjaNx7WWX11bJ5XhjpT.zNkbkLDl4O6k5WG1KYcT66zdQyQ4n5C', 'Grupo BookingSoft', 'CC1001', 'bookingsoft4@gmail.com', 'Activo'),
+(1, 'Administrador Grupo BookingSoft', 'admin', '$2b$12$7ecjaNx7WWX11bJ5XhjpT.zNkbkLDl4O6k5WG1KYcT66zdQyQ4n5C', 'Grupo BookingSoft', NULL, 'bookingsoft4@gmail.com', 'Activo'),
 (3, 'Carlos Pérez', 'carlos_recep', '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W', 'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com', 'Activo'),
 (4, 'Recepción Facile', 'recepcion', '$2b$12$og/tytRRc2JIyeDacuO/IeL8lEs8wwajuMBiAj/sfq6dZ6on8Lvae', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com', 'Activo'),
 (5, 'Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com', 'Activo'),

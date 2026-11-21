@@ -890,34 +890,36 @@ const VistaPms = () => {
                           </td>
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                              {/* Fila 1: Documento de Identidad */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div
-                                  style={{
-                                    width: '22px',
-                                    height: '22px',
-                                    minWidth: '22px',
-                                    borderRadius: '6px',
-                                    backgroundColor: '#f1f5f9',
-                                    border: '1px solid #e2e8f0',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#64748b',
-                                    flexShrink: 0
-                                  }}
-                                >
-                                  <CreditCard size={12} strokeWidth={2.5} />
+                              {/* Fila 1: Documento de Identidad (Omitido para la cuenta creadora Grupo BookingSoft) */}
+                              {!isMasterCreator && emp.numero_documento && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div
+                                    style={{
+                                      width: '22px',
+                                      height: '22px',
+                                      minWidth: '22px',
+                                      borderRadius: '6px',
+                                      backgroundColor: '#f1f5f9',
+                                      border: '1px solid #e2e8f0',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      color: '#64748b',
+                                      flexShrink: 0
+                                    }}
+                                  >
+                                    <CreditCard size={12} strokeWidth={2.5} />
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                                    <span style={{ color: '#64748b', fontWeight: 600, fontSize: '11px' }}>
+                                      Cédula:
+                                    </span>
+                                    <span style={{ color: '#0f172a', fontWeight: 800, fontFamily: 'monospace', letterSpacing: '0.02em' }}>
+                                      {emp.numero_documento}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-                                  <span style={{ color: '#64748b', fontWeight: 600, fontSize: '11px' }}>
-                                    Cédula:
-                                  </span>
-                                  <span style={{ color: '#0f172a', fontWeight: 800, fontFamily: 'monospace', letterSpacing: '0.02em' }}>
-                                    {emp.numero_documento || 'No registrada'}
-                                  </span>
-                                </div>
-                              </div>
+                              )}
 
                               {/* Fila 2: Correo Corporativo */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
