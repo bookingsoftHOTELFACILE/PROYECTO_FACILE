@@ -1180,7 +1180,6 @@ export function useAppState() {
             data
           });
           setWalkinCheckinInmediato(false);
-          setSelectedHuesped(null);
           setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
           setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', telefono: '', correo: '' });
           cargarDatosBackend(authToken);
