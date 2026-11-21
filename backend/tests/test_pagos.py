@@ -1,7 +1,7 @@
 """
 backend/tests/test_pagos.py
 
-Fase 2 — Módulo financiero: folio con IVA desglosado, cobros vía pasarela
+Módulo financiero: folio con IVA desglosado, cobros vía pasarela
 (simulada), anulación con RBAC y factura electrónica SIMULADA UBL 2.1.
 
 Reglas cubiertas:

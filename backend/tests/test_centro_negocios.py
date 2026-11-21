@@ -1,7 +1,7 @@
 """
 backend/tests/test_centro_negocios.py
 
-Fase 3 — RF-015: reserva de salas de juntas y puestos de coworking por horas.
+RF-015: reserva de salas de juntas y puestos de coworking por horas.
 
 Cubre la lógica del endpoint que ya consumía el SPA y que hasta ahora no tenía
 pruebas automatizadas:
@@ -35,7 +35,7 @@ def _crear(client, headers, id_espacio, fecha, hora_inicio, hora_fin):
         json={
             "id_espacio": id_espacio,
             "tipo_cliente": "Cliente Externo",
-            "nombre_cliente": "Cliente Prueba Fase 3",
+            "nombre_cliente": "Cliente Corporativo",
             "documento_cliente": "900123456",
             "correo_cliente": "cliente.fase3@example.com",
             "fecha": fecha,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Receipt, Download, Plus, FileSpreadsheet, FileText } from 'lucide-react';
+import { X, Receipt, Download, Plus, FileSpreadsheet, FileText, Key } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { exportarExcelFolio } from '../utils/exportarExcelFolio.js';
 import ModalFacturaDian from './ModalFacturaDian.jsx';
@@ -266,7 +266,7 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
               </span>
               {reserva.observaciones && (
                 <div style={{ fontSize: '11.5px', color: '#475569', fontWeight: 600, marginTop: '2px' }}>
-                  📝 {reserva.observaciones}
+                  Nota: {reserva.observaciones}
                 </div>
               )}
             </div>
@@ -398,6 +398,43 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                   {filaResumen('Pagado', formatoCOP(totales.pagado), { color: '#047857' })}
                   {filaResumen('Saldo pendiente', formatoCOP(totales.saldo), { fuerte: true, color: '#b91c1c' })}
                 </div>
+
+                {reserva.cerradura && (
+                  <div
+                    style={{
+                      marginTop: '16px',
+                      padding: '14px 18px',
+                      borderRadius: '16px',
+                      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                      color: '#ffffff',
+                      border: '1px solid #334155',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Key size={16} color="#38bdf8" />
+                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#38bdf8' }}>
+                          Cerradura Inteligente (IoT)
+                        </span>
+                      </div>
+                      <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '2px 8px', borderRadius: '8px', fontSize: '11px', fontWeight: 700 }}>
+                        MQTTS v5.0 Conectado
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginTop: '8px' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.06)', padding: '8px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Tarjeta RFID Proximidad:</span>
+                        <strong style={{ fontSize: '12px', color: '#4ade80', fontWeight: 700 }}>{reserva.cerradura.tarjeta_rfid}</strong>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.06)', padding: '8px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Código PIN Teclado:</span>
+                        <strong style={{ fontSize: '14px', letterSpacing: '0.12em', color: '#ffffff', fontFamily: 'monospace', background: 'rgba(255,255,255,0.12)', padding: '2px 8px', borderRadius: '4px' }}>
+                          {reserva.cerradura.pin_temporal} #
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* 1. Botón Principal: Descargar Folio Oficial en Excel */}
                 <button

@@ -1,7 +1,7 @@
 """
 backend/tests/test_reservas_update.py
 
-Fase 3 — RF-013: modificación de una reserva existente (fechas, unidad y notas).
+RF-013: modificación de una reserva existente (fechas, unidad y notas).
 
 Reglas cubiertas:
 - Se recalculan noches y descuento con la política única del sistema.
@@ -10,7 +10,7 @@ Reglas cubiertas:
 - Una reserva en Check-In / Completada es inmutable (409).
 - No se puede mover una reserva a una unidad en Mantenimiento.
 - Edición restringida a Administrador / Recepcionista 24h.
-- El check-out devuelve el saldo pendiente (maduración Fase 3).
+- El check-out devuelve el saldo pendiente.
 """
 import uuid
 
@@ -231,7 +231,7 @@ def test_edicion_restringida_a_roles(client, amallaves_token):
 
 
 # ---------------------------------------------------------------------------
-# Maduración Fase 3 — el check-out informa el saldo pendiente
+# El check-out informa el saldo pendiente
 # ---------------------------------------------------------------------------
 
 def test_checkout_devuelve_saldo_pendiente(client, admin_token):

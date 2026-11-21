@@ -24,6 +24,7 @@ from dependencies import autenticar, requiere_rol, UsuarioActual
 from models.schemas import PagoCreate
 from repositories import cursor_escritura, cursor_lectura
 from services.folio import construir_folio, validar_monto_pago
+from services.llave_digital import generar_llave_digital
 from services.pasarela import obtener_pasarela
 from services.reservas_service import (
     calcular_costo_estadia,
@@ -96,6 +97,19 @@ def _consultar_folio(cur, id_reserva: int) -> Optional[Tuple[Dict[str, Any], Dic
         "habitacion_tipo": fila["habitacion_tipo"],
         "precio_noche": float(fila["precio_noche"]),
     }
+
+    if fila["estado"] == "Check-In":
+        try:
+            reserva["cerradura"] = generar_llave_digital(
+                id_reserva=fila["id_reserva"],
+                id_habitacion=fila["id_habitacion"],
+                numero_habitacion=fila["habitacion_numero"],
+                fecha_entrada=fila["fecha_entrada"],
+                fecha_salida=fila["fecha_salida"],
+                correo_huesped=fila["huesped_correo"],
+            )
+        except Exception:
+            reserva["cerradura"] = None
 
     # Misma regla de precio que al crear la reserva (política única de descuento).
     cotizacion = calcular_costo_estadia(
