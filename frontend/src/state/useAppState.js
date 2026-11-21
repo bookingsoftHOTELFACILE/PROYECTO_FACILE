@@ -1174,9 +1174,9 @@ export function useAppState() {
           setReservaAlert({
             type: 'success',
             message: walkinCheckinInmediato
-              ? `✓ Check-in directo registrado para ${nombreHuesped} (Doc: ${docHuesped}).`
-                + (llave ? ` Código de cerradura Yale: ${llave.pin_temporal} (válido hasta ${llave.valido_hasta}).` : '')
-              : `¡Reserva presencial confirmada exitosamente para ${nombreHuesped} (Doc: ${docHuesped})!`,
+              ? `Check-in directo registrado para ${nombreHuesped} (Doc: ${docHuesped}).`
+                + (llave ? ` Tarjeta RFID [${llave.tarjeta_rfid || 'ASIGNADA'}] y Código PIN [${llave.pin_temporal}] (válido hasta ${llave.valido_hasta}).` : '')
+              : `Reserva presencial confirmada exitosamente para ${nombreHuesped} (Doc: ${docHuesped}).`,
             data
           });
           setWalkinCheckinInmediato(false);

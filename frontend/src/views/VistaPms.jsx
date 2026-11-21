@@ -1271,18 +1271,22 @@ const VistaPms = () => {
                     ? 'bg-blue-50 text-blue-900 border-blue-200'
                     : 'bg-red-50 text-red-900 border-red-200'
                   }`}>
-                  <span>{reservaAlert.type === 'success' ? '🎉' : reservaAlert.type === 'info' ? 'ℹ️' : '⚠️'}</span>
                   <span className="flex-1">
                     {reservaAlert.message}
                     {reservaAlert.data?.yale_lock && (
-                      <span className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-black">
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 tracking-[0.3em] border border-slate-700">
-                          {reservaAlert.data.yale_lock.pin_temporal}
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-black">
+                        {reservaAlert.data.yale_lock.tarjeta_rfid && (
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-mono border border-emerald-800">
+                            Tarjeta RFID: {reservaAlert.data.yale_lock.tarjeta_rfid}
+                          </span>
+                        )}
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 tracking-[0.25em] font-mono border border-slate-700">
+                          PIN: {reservaAlert.data.yale_lock.pin_temporal} #
                         </span>
                         <span className="text-emerald-800 font-bold">
-                          🔒 {reservaAlert.data.yale_lock.valido_hasta}
+                          Válido hasta: {reservaAlert.data.yale_lock.valido_hasta}
                         </span>
-                      </span>
+                      </div>
                     )}
                   </span>
                 </div>
@@ -1332,7 +1336,7 @@ const VistaPms = () => {
                               </span>
                             </div>
                             <p className="text-xs text-emerald-800/90 mt-0.5 mb-0">
-                              {selectedHuesped.nombre} ha completado {guestReservasPrevias} estancias previas en BookingSoft. Datos sincronizados correctamente.
+                              {selectedHuesped.nombre} ha completado {guestReservasPrevias} estancias previas en Facile Apartamentos. Datos sincronizados correctamente.
                             </p>
                           </div>
                         </div>
@@ -2494,7 +2498,7 @@ const VistaPms = () => {
               Terminal ID: REC-01-MED
             </span>
             <span>•</span>
-            <span>Powered by BookingSoft Suite</span>
+            <span>Facile Apartamentos PMS</span>
           </div>
         </footer>
       </div>
