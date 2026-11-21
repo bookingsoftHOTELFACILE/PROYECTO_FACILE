@@ -60,9 +60,29 @@ A continuación se presenta la matriz de deuda técnica clasificada por impacto 
 
 ---
 
-## 5. Conclusión y Aprendizajes del Equipo
+## 5. Reflexión del Equipo y Feedback del Proceso de Desarrollo
 
-El ejercicio comparativo entre los 4 backends evidencia la madurez alcanzada por el equipo a lo largo del tecnólogo ADSO:
+Como parte del cierre formativo del tecnólogo ADSO, el equipo llevó a cabo una sesión de reflexión y feedback sobre la experiencia real de planificar, diseñar y programar el sistema BookingSoft:
+
+### 5.1 Principales Retos y Desafíos Enfrentados
+1. **El Motor de Disponibilidad y Fechas:** El mayor desafío lógico fue asegurar que dos reservas no colisionaran en la misma suite. Inicialmente se intentó validar mediante condicionales en el código de la aplicación, pero esto abría la posibilidad de condiciones de carrera concurrentes. La solución definitiva fue delegar la exclusión matemática a PostgreSQL mediante índices `GiST` y tipos de rango `daterange`.
+2. **Equilibrio entre Potencia y Usabilidad (UX/UI):** Diseñar un PMS hotelero requería mostrar mucha información simultánea (habitaciones, huéspedes, tarifas, estados de aseo). El reto de José Miguel Chico fue evitar que la pantalla se viera saturada, logrando condensar calendarios compactos, tarjetas limpias y paleta visual profesional sin perder datos operativos.
+3. **Coordinación Full-Stack:** Al principio, frontend y backend avanzaban a ritmos distintos. La adopción de Swagger/OpenAPI como contrato vivo permitió que David López y Maicol Mayor alinearan los endpoints antes de ensamblar las vistas de React, eliminando retrabajos.
+
+### 5.2 Aprendizajes Clave Obtenidos
+- **La arquitectura previa ahorra semanas de programación:** El modelado inicial de datos y esquemas realizado por Sebastián Parada y el levantamiento riguroso de Historias de Usuario por Ashly Echeverri evitaron tener que rehacer tablas a mitad del proyecto.
+- **La cultura de pruebas automáticas da tranquilidad:** Contar con 96 pruebas de backend y 28 de frontend permitió refactorizar y pulir pantallas sin el temor de dañar funciones que ya estaban operativas.
+- **Docker como estándar de equipo:** La contenedorización garantizó que el sistema funcionara de forma idéntica en los computadores de todos los compañeros.
+
+### 5.3 Feedback y Autocrítica Constructiva (¿Qué haríamos diferente?)
+- **Modularización temprana de componentes:** En las primeras semanas, algunos archivos de React crecieron demasiado en líneas de código antes de dividirlos en subcomponentes (`ModalDetalle.jsx`, `HuespedesPicker.jsx`). Si empezáramos de nuevo, aplicaríamos arquitectura atómica desde el primer día.
+- **Pruebas de interfaz en paralelo:** Aunque el backend quedó blindado con pruebas unitarias desde el inicio, las pruebas visuales de interfaz se concentraron hacia las fases finales. Lo ideal en futuros proyectos es implementar pruebas de componentes desde el Sprint 1.
+
+---
+
+## 6. Conclusión y Cierre de la Formación ADSO
+
+El desarrollo de BookingSoft para el Apartahotel Facile representó la consolidación práctica de los 6 trimestres de formación profesional:
 
 - Se comprendió que **no existe una tecnología única superior para todos los casos**, sino herramientas adecuadas para cada necesidad de negocio: Spring Boot destaca en grandes ecosistemas bancarios con cientos de microservicios corporativos, Node.js brilla en aplicaciones de mensajería o streaming en tiempo real, y **FastAPI demostró ser la alternativa más equilibrada para BookingSoft**, combinando velocidad de desarrollo, seguridad estricta y rendimiento asíncrono óptimo.
-- La documentación rigurosa de la deuda técnica demuestra honestidad profesional y establece una hoja de ruta clara para la evolución del producto hacia un entorno comercial real.
+- El equipo pasó de programar scripts aislados en los primeros trimestres a construir una solución integral, auditable, contenerizada y respaldada por metodologías ágiles, lista para responder a los estándares de la industria del software.
