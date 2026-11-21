@@ -1180,6 +1180,7 @@ export function useAppState() {
             data
           });
           setWalkinCheckinInmediato(false);
+          setSelectedHuesped(null);
           setReservaData({ id_habitacion: '', fecha_entrada: '', fecha_salida: '', numero_personas: 1 });
           setPmsWalkInGuest({ tipo_documento: 'Cédula de Ciudadanía', documento: '', nombre: '', telefono: '', correo: '' });
           cargarDatosBackend(authToken);
@@ -1507,7 +1508,7 @@ export function useAppState() {
         documento: found.documento
       }));
       setSelectedHuesped(found);
-      setReservaAlert({ type: 'success', message: `✓ Huésped registrado encontrado: ${found.nombre} (${found.correo || 'Sin correo'})` });
+      setReservaAlert({ type: 'success', message: `Huésped registrado encontrado: ${found.nombre} (${found.correo || 'Sin correo'})` });
     } else {
       setReservaAlert({ type: 'info', message: `Documento '${query}' no registrado previamente. Ingrese los datos para crear el registro.` });
     }

@@ -1176,7 +1176,15 @@ const VistaPms = () => {
         {/* 1. SUB-PESTAÑA 1: MÓDULO DE CREACIÓN DE RESERVAS PRESENCIALES EN RECEPCIÓN (WALK-IN) */}
         {(pmsSubTab === 'recepcion' || pmsSubTab === 'todos') && (() => {
           const guestReservasPrevias = selectedHuesped ? reservas.filter(r => String(r.id_huesped) === String(selectedHuesped.id_huesped)).length : 0;
-          const guestNivel = guestReservasPrevias >= 5 ? 'Nivel Platinum' : guestReservasPrevias >= 2 ? 'Nivel Gold' : 'Huésped Frecuente';
+          const esFrecuente = guestReservasPrevias >= 2;
+          const guestNivel = guestReservasPrevias >= 5
+            ? 'Nivel VIP Platinum'
+            : guestReservasPrevias >= 2
+              ? 'Nivel Gold'
+              : guestReservasPrevias === 1
+                ? 'Segunda Visita'
+                : 'Nuevo Registro';
+          const guestTitulo = esFrecuente ? 'Huésped Frecuente Identificado' : 'Huésped Registrado en el Sistema';
           // P1-1.3: sin respaldo falso; si no hay unidades libres, el KPI dice 0.
           const vacantesCount = (habitaciones || []).filter(h => h.estado === 'Disponible').length;
           const selectedHab = habitaciones.find(h => String(h.id_habitacion) === String(reservaData.id_habitacion));
@@ -1329,14 +1337,14 @@ const VistaPms = () => {
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-black text-emerald-950">
-                                Huésped Frecuente Identificado
+                                {guestTitulo}
                               </span>
                               <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wider uppercase">
                                 {guestNivel}
                               </span>
                             </div>
                             <p className="text-xs text-emerald-800/90 mt-0.5 mb-0">
-                              {selectedHuesped.nombre} ha completado {guestReservasPrevias} estancias previas en Facile Apartamentos. Datos sincronizados correctamente.
+                              {selectedHuesped.nombre} ha completado {guestReservasPrevias} {guestReservasPrevias === 1 ? 'estancia previa' : 'estancias previas'} en Facile Apartamentos. Datos sincronizados correctamente.
                             </p>
                           </div>
                         </div>
