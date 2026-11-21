@@ -564,20 +564,37 @@ def cambiar_estado_reserva(
                 )
 
                 cur.execute(
-                    "SELECT checkin_at, checkout_at FROM reserva_habitacion WHERE id_reserva = %s",
+                    """SELECT r.checkin_at, r.checkout_at, r.fecha_entrada, r.fecha_salida,
+                              hab.numero AS hab_numero, hues.correo AS huesped_correo
+                       FROM reserva_habitacion r
+                       JOIN habitacion hab ON hab.id_habitacion = r.id_habitacion
+                       LEFT JOIN huesped hues ON hues.id_huesped = r.id_huesped
+                       WHERE r.id_reserva = %s""",
                     (id_reserva,)
                 )
                 marcas = cur.fetchone()
+                yale_lock = generar_llave_digital(
+                    id_reserva=id_reserva,
+                    id_habitacion=id_habitacion,
+                    numero_habitacion=marcas["hab_numero"],
+                    fecha_entrada=marcas["fecha_entrada"],
+                    fecha_salida=marcas["fecha_salida"],
+                    correo_huesped=marcas["huesped_correo"],
+                )
                 # El return cierra el contexto y dispara el commit (M-05).
                 return {
-                    "message": f"Check-in registrado para la reserva #{id_reserva} por {audit_str}.",
+                    "message": (
+                        f"Check-in registrado para la reserva #{id_reserva} por {audit_str}. "
+                        f"Código de cerradura Yale: {yale_lock['pin_temporal']} (válido hasta {yale_lock['valido_hasta']})."
+                    ),
                     "reserva": {
                         "id_reserva": id_reserva,
                         "estado": "Check-In",
                         "checkin_at": marcas["checkin_at"].strftime("%Y-%m-%d %H:%M") if marcas["checkin_at"] else None,
                         "checkout_at": marcas["checkout_at"].strftime("%Y-%m-%d %H:%M") if marcas["checkout_at"] else None,
                     },
-                    "habitacion": {"id_habitacion": id_habitacion, "estado": "Ocupada"}
+                    "habitacion": {"id_habitacion": id_habitacion, "estado": "Ocupada"},
+                    "yale_lock": yale_lock,
                 }
 
             # ---- Check-out (CA-005.4 / CA-005.5) ----

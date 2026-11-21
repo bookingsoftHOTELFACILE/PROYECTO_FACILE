@@ -275,14 +275,34 @@ export default function PanelAuditoriaReservas({
           fontWeight: 700,
           marginBottom: '16px',
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
           gap: '8px',
           backgroundColor: reservaAlert.type === 'success' ? '#f0fdf4' : reservaAlert.type === 'info' ? '#eff6ff' : '#fef2f2',
           color: reservaAlert.type === 'success' ? '#166534' : reservaAlert.type === 'info' ? '#1e40af' : '#991b1b',
           border: `1px solid ${reservaAlert.type === 'success' ? '#bbf7d0' : reservaAlert.type === 'info' ? '#bfdbfe' : '#fecaca'}`
         }}>
-          <span>{reservaAlert.type === 'success' ? '✓' : '⚠️'}</span>
-          <span>{reservaAlert.message}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>{reservaAlert.type === 'success' ? '✓' : '⚠️'}</span>
+            <span>{reservaAlert.message}</span>
+          </div>
+          {reservaAlert.data?.yale_lock && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+              <span style={{
+                padding: '4px 10px',
+                borderRadius: '8px',
+                backgroundColor: '#0f172a',
+                color: '#fcd34d',
+                letterSpacing: '0.2em',
+                fontWeight: 900,
+                fontSize: '12px'
+              }}>
+                🔑 PIN YALE: {reservaAlert.data.yale_lock.pin_temporal}
+              </span>
+              <span style={{ fontSize: '11px', color: '#065f46', fontWeight: 600 }}>
+                🔒 Válido hasta: {reservaAlert.data.yale_lock.valido_hasta}
+              </span>
+            </div>
+          )}
         </div>
       )}
       

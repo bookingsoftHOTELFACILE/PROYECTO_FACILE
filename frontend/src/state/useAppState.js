@@ -300,7 +300,7 @@ export function useAppState() {
     correo: ''
   });
   // HU-005 / CA-005.2: check-in directo al crear la reserva en recepción (walk-in).
-  const [walkinCheckinInmediato, setWalkinCheckinInmediato] = useState(false);
+  const [walkinCheckinInmediato, setWalkinCheckinInmediato] = useState(true);
 
   // ---- ESTADO DE SUB-PESTAÑAS INDIVIDUALES EN EL PANEL PMS (PERSISTENTE) ----
   const [pmsSubTab, setPmsSubTab] = useState(() => {
@@ -1324,9 +1324,14 @@ export function useAppState() {
             setReservaAlert({
               type: 'error',
               message: `${data.message || `✓ ${etiqueta} registrado.`} ⚠️ Saldo pendiente al cierre: ${formatoCOP(saldoPendiente)}.`,
+              data,
             });
           } else {
-            setReservaAlert({ type: 'success', message: data.message || `✓ ${etiqueta} registrado.` });
+            setReservaAlert({
+              type: 'success',
+              message: data.message || `✓ ${etiqueta} registrado.`,
+              data,
+            });
           }
           cargarDatosBackend(authToken);
         } else {
