@@ -1282,18 +1282,25 @@ const VistaPms = () => {
                   <span className="flex-1">
                     {reservaAlert.message}
                     {reservaAlert.data?.yale_lock && (
-                      <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-black">
+                      <div className="mt-3 p-3 bg-white rounded-xl border border-emerald-200 flex flex-wrap items-center gap-3 text-xs shadow-xs">
                         {reservaAlert.data.yale_lock.tarjeta_rfid && (
-                          <span className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-mono border border-emerald-800">
-                            Tarjeta RFID: {reservaAlert.data.yale_lock.tarjeta_rfid}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-600 font-semibold">Tarjeta RFID:</span>
+                            <span className="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 font-mono font-bold border border-emerald-300">
+                              {reservaAlert.data.yale_lock.tarjeta_rfid}
+                            </span>
+                          </div>
                         )}
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 tracking-[0.25em] font-mono border border-slate-700">
-                          PIN: {reservaAlert.data.yale_lock.pin_temporal} #
-                        </span>
-                        <span className="text-emerald-800 font-bold">
-                          Válido hasta: {reservaAlert.data.yale_lock.valido_hasta}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-600 font-semibold">PIN de Entrada:</span>
+                          <span className="px-3 py-1 rounded-md bg-blue-100 text-blue-900 font-mono font-black text-sm tracking-widest border border-blue-300">
+                            {reservaAlert.data.yale_lock.pin_temporal} #
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-500 font-medium text-[11px] ml-auto">
+                          <span>Válido hasta:</span>
+                          <strong className="text-slate-700 font-semibold">{reservaAlert.data.yale_lock.valido_hasta}</strong>
+                        </div>
                       </div>
                     )}
                   </span>

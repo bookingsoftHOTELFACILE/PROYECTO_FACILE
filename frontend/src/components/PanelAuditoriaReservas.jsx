@@ -277,25 +277,58 @@ export default function PanelAuditoriaReservas({
           border: `1px solid ${reservaAlert.type === 'success' ? '#bbf7d0' : reservaAlert.type === 'info' ? '#bfdbfe' : '#fecaca'}`
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>{reservaAlert.type === 'success' ? '✓' : '⚠️'}</span>
             <span>{reservaAlert.message}</span>
           </div>
           {reservaAlert.data?.yale_lock && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
-              <span style={{
-                padding: '4px 10px',
-                borderRadius: '8px',
-                backgroundColor: '#0f172a',
-                color: '#fcd34d',
-                letterSpacing: '0.2em',
-                fontWeight: 900,
-                fontSize: '12px'
-              }}>
-                🔑 PIN YALE: {reservaAlert.data.yale_lock.pin_temporal}
-              </span>
-              <span style={{ fontSize: '11px', color: '#065f46', fontWeight: 600 }}>
-                🔒 Válido hasta: {reservaAlert.data.yale_lock.valido_hasta}
-              </span>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '12px',
+              marginTop: '6px',
+              padding: '10px 14px',
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              border: '1px solid #bbf7d0',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+            }}>
+              {reservaAlert.data.yale_lock.tarjeta_rfid && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', color: '#475569', fontWeight: 600 }}>Tarjeta RFID:</span>
+                  <span style={{
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    backgroundColor: '#dcfce7',
+                    color: '#166534',
+                    fontFamily: 'monospace',
+                    fontWeight: 800,
+                    fontSize: '12px',
+                    border: '1px solid #86efac'
+                  }}>
+                    {reservaAlert.data.yale_lock.tarjeta_rfid}
+                  </span>
+                </div>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#475569', fontWeight: 600 }}>PIN Teclado:</span>
+                <span style={{
+                  padding: '3px 10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#dbeafe',
+                  color: '#1e40af',
+                  fontFamily: 'monospace',
+                  fontWeight: 900,
+                  fontSize: '13px',
+                  letterSpacing: '0.15em',
+                  border: '1px solid #93c5fd'
+                }}>
+                  {reservaAlert.data.yale_lock.pin_temporal} #
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto', fontSize: '11px', color: '#64748b' }}>
+                <span>Válido hasta:</span>
+                <strong style={{ color: '#334155' }}>{reservaAlert.data.yale_lock.valido_hasta}</strong>
+              </div>
             </div>
           )}
         </div>
