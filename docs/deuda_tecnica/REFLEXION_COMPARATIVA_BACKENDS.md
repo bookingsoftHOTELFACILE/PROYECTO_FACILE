@@ -55,7 +55,7 @@ En el desarrollo de software es normal que por tiempo queden funciones pendiente
 | **Pasarela de pago real (Wompi / PSE)** | Alta | Actualmente el cobro se liquida y se calcula con impuestos en el sistema, pero el cobro bancario es simulado. En una fase 2 se conectaría la API oficial de Wompi o PSE para recibir dinero real de tarjetas. |
 | **Cerraduras físicas Yale en las puertas** | Media | El sistema ya genera el código PIN de 6 dígitos para el huésped y crea la llave digital en la pantalla, pero en el laboratorio no teníamos las cerraduras físicas para conectarlas por Wi-Fi. Queda listo para instalar el hardware. |
 | **Facturación electrónica con la DIAN** | Media | El sistema genera el archivo XML de factura electrónica bajo el estándar legal UBL 2.1, pero no tenemos el certificado digital pagado ante la DIAN para timbrarla de verdad. |
-| **Pruebas automáticas visuales de React** | Baja | Tenemos 96 pruebas automáticas del servidor funcionando, pero en el frontend probamos las operaciones clave y nos faltaron pruebas visuales en los modales pequeños. |
+| **Pruebas automáticas visuales de React** | Baja | Tenemos 118 pruebas automáticas del servidor funcionando, pero en el frontend probamos las operaciones clave y nos faltaron pruebas visuales en los modales pequeños. |
 | **Crear nuevas habitaciones desde la web** | Baja | Las 38 habitaciones del hotel ya están cargadas en la base de datos. Como el edificio tiene un número fijo de apartamentos, no fue urgente hacer un botón de "demoler o construir habitaciones". |
 
 ---

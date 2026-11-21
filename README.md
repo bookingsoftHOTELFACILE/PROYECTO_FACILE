@@ -93,7 +93,7 @@ bookingsoft/
 ├── docs/                            # Documentación de ingeniería y requisitos
 │   ├── matriz-rotacion.md           # Matriz de rotación de credenciales
 │   ├── scrum/                       # Metodología ágil: Backlog, Sprints 1–3, Poker y Feedback
-│   ├── pruebas/                     # QA: Plan de pruebas, Informe de 124 tests y Bug Tracker
+│   ├── pruebas/                     # QA: Plan de pruebas, Informe de 146 tests y Bug Tracker
 │   ├── arquitectura/                # Diagramas UML, Clases, MER, MR y Propuesta IoT Yale
 │   ├── deuda_tecnica/               # Reflexión comparativa de 4 backends y deuda técnica
 │   ├── auditorias_internas/
@@ -562,7 +562,7 @@ El sistema cuenta con **118 pruebas automatizadas de integración** que se ejecu
 docker compose exec backend pytest -v
 ```
 
-#### Cobertura de las Pruebas (96 en 10 archivos):
+#### Cobertura de las Pruebas (118 en 12 archivos):
 
 | Archivo | Pruebas | Qué valida |
 | :------ | :-----: | :--------- |
@@ -570,12 +570,14 @@ docker compose exec backend pytest -v
 | `test_consultas.py` | 4 | Listado y detalle de empleados, permisos de Recepción y disponibilidad de habitaciones (RF-012). |
 | `test_reservas.py` | 5 | Política de descuento por larga estadía (10 % de 7–14 noches y 15 % desde 15), aforo sobre capacidad, constraint GiST de doble reserva y alta atómica de huésped + reserva (éxito y rollback). |
 | `test_reservas_service.py` | 22 | Unidad de `services/reservas_service.py` (sin BD ni HTTP): validación de fechas, disponibilidad de la unidad, cálculo de costo de estadía con bordes de descuento (6/7/14/15/16 noches) y errores de dominio. |
-| `test_checkin_checkout.py` | 7 | HU-005: máquina de estados `Pendiente → Confirmada → Check-in → Completada → En limpieza` y rechazos de transición inválida. |
+| `test_checkin_checkout.py` | 9 | HU-005: máquina de estados `Pendiente → Confirmada → Check-in → Completada → En limpieza`, rechazos de transición inválida y emisión de cerradura Yale en check-in directo vs normal. |
 | `test_seguridad_acceso.py` | 6 | H-01 / H-02: RBAC de `DELETE /api/reservas/{id}` y protección del inventario de habitaciones (401/403 + endpoint público). |
 | `test_model_huesped.py` | 8 | Modelo de dominio de huésped: campos obligatorios, formato de correo rechazado y validación de mayoría de edad (límite exacto de 18 años). |
 | `test_pagos.py` | 13 | Fase 2: desglose de IVA 19% incluido, cobros totales/parciales, anti doble captura, pasarela simulada (aprobado/rechazado), anulación con RBAC y factura electrónica simulada UBL 2.1. |
 | `test_centro_negocios.py` | 12 | Fase 3 (RF-015): catálogo de espacios, tarifa por horas, paquetes de 4 h y día completo (sala/coworking), solapamientos 409, horarios contiguos, validación de hora y liberación al cancelar. |
 | `test_reservas_update.py` | 10 | Fase 3 (RF-013): edición de fechas/unidad/notas, recálculo de cotización, colisión GiST 409 sin cambios parciales, inmutabilidad en Check-In, bloqueo de mantenimiento, RBAC y saldo devuelto por el check-out. |
+| `test_llave_digital.py` | 18 | Punto 6 (Bonificación IoT): generación de paquete Yale Lock, PIN CSPRNG de 6 dígitos, vigencia hotelera 15:00 a 11:00, checksum SHA-256 truncado y llaves móviles. |
+| `test_bd_real_constraints.py` | 2 | Integridad referencial PostgreSQL: validación estricta de Foreign Keys y rechazo de sobrepaso de límites VARCHAR sin truncamiento silencioso. |
 
 ### Pruebas Unitarias del Frontend (Vitest)
 
@@ -676,7 +678,7 @@ Si vas a abrir un nuevo chat o sesión con **Gemini**, puedes copiar y pegar el 
 - Regla Clave: Prevención de doble reserva a nivel DB mediante constraint GiST en reserva_habitacion (daterange &&), triggers de mantenimiento y cálculo automático de descuentos (10% de 7 a 14 noches y 15% desde 15 noches, regla única en PL/pgSQL + Python + frontend). Módulo financiero (Fase 2): folio con IVA 19% ya incluido en la tarifa, cobros vía adaptador de pasarela (hoy simulado, sin claves externas) y factura electrónica SIMULADA UBL 2.1 en borrador (sin envío a la DIAN).
 - Tablas Principales: empleado, huesped, habitacion (38 unidades oficiales), espacio_negocio, reserva_negocio (coworking por horas), reserva_habitacion. Todas con baja lógica y auditoría (creado_por, modificado_por).
 - Frontend: Single Page Application con doble modo: Portal de Huéspedes público (Inicio, Apartamentos, Centro de Negocios, Servicios, Galería, Reservar) y Suite PMS para empleados (sub-pestañas: Personal, Recepción Walk-in, Huéspedes, Reservas, Planta, Coworking, Todos).
-- Tests: 96 tests en pytest con PostgreSQL real (sin mocks), 28 tests unitarios en Vitest y 9 specs E2E en Playwright (100% pasando), más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
+- Tests: 118 tests en pytest con PostgreSQL real (sin mocks), 28 tests unitarios en Vitest y 9 specs E2E en Playwright (100% pasando), más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
 - Estado: Fases 1–3 completas y probadas. Fase 3 (Plan de Maduración): RF-013 edición de reservas con `PATCH` atómico y constraint GiST, RF-015 salas/coworking con 12 pruebas, notas de reserva, exportación CSV del folio y aviso de saldo pendiente al check-out. Sin integraciones externas de pago.
 ```
 

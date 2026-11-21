@@ -36,7 +36,7 @@ El propósito de este documento es definir la estrategia, alcance, niveles, ambi
 | Nivel de Prueba | Alcance y Objetivo | Herramientas Utilizadas | Cobertura |
 |---|---|---|:---:|
 | **Nivel 3: Pruebas E2E / Sistema** | Flujo completo de navegación, formularios y localizadores accesibles de punta a punta. | Playwright (Node.js) | 9 Specs E2E |
-| **Nivel 2: Pruebas de Integración** | Transaccionalidad ACID en PostgreSQL, prevención de concurrencia y contratos HTTP. | Pytest + FastAPI TestClient | 96 Casos Backend |
+| **Nivel 2: Pruebas de Integración** | Transaccionalidad ACID en PostgreSQL, prevención de concurrencia y contratos HTTP. | Pytest + FastAPI TestClient | 118 Casos Backend |
 | **Nivel 1: Pruebas Unitarias** | Funciones de dominio, cálculo de tarifas COP, utilidades de fecha y modelos Pydantic. | Pytest (Backend) y Vitest (Frontend) | 146 Casos Totales |
 
 ### 3.1 Nivel 1: Pruebas Unitarias
