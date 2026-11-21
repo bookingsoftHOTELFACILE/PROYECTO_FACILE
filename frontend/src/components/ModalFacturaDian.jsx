@@ -17,7 +17,7 @@ export default function ModalFacturaDian({ folio, onClose, onDescargarXml }) {
   const totales = folio.totales || { total: 0, pagado: 0, saldo: 0 };
   const factura = folio.factura || {};
   const emisor = folio.emisor || {
-    razon_social: 'BookingSoft Apartahotel Facile Bogotá',
+    razon_social: 'Facile Apartamentos Bogotá',
     nit: '900.000.000-1',
     domicilio: 'Calle 97 #21-62, Chicó, Bogotá D.C., Colombia',
     telefono: '+57 (601) 745-2000',
@@ -27,7 +27,20 @@ export default function ModalFacturaDian({ folio, onClose, onDescargarXml }) {
 
   const consecutivo = factura.consecutivo || `FACT-${String(reserva.id_reserva || '0').padStart(8, '0')}`;
   const estadoFactura = factura.estado || 'Borrador';
-  const cufe = factura.cufe || '86b142c2b9d87053dad6af0d7a43aa5a8d22cf7694edb83b01d83e00d49f54cac4f9317199c785dadf3d615c00202502';
+  const cufe = factura.cufe || (() => {
+    const semilla = `${reserva.id_reserva || '0'}|${reserva.huesped_documento || ''}|${reserva.fecha_entrada || ''}|${reserva.fecha_salida || ''}|${totales.total || 0}|${emisor.nit}`;
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0; i < semilla.length; i++) {
+      const ch = semilla.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    const p1 = (h1 >>> 0).toString(16).padStart(8, '0');
+    const p2 = (h2 >>> 0).toString(16).padStart(8, '0');
+    return `${p1}${p2}e20e60ca8a27890abffbd67e66744a90db97b9972ac9c68a65b8d`.slice(0, 64);
+  })();
 
   const fechaEmision = formatoFecha(reserva.fecha_entrada || new Date().toISOString());
   const fechaVence = formatoFecha(reserva.fecha_salida || new Date().toISOString());
@@ -198,28 +211,17 @@ export default function ModalFacturaDian({ folio, onClose, onDescargarXml }) {
             overflowY: 'auto',
           }}
         >
-          {/* Encabezado: Logo y datos del emisor a la izquierda; Factura y consecutivo a la derecha */}
+          {/* Encabezado: Logo oficial y datos de Facile Apartamentos a la izquierda; Factura y consecutivo a la derecha */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '50%',
-                  background: '#0284c7',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ffffff',
-                  fontWeight: 900,
-                  fontSize: '24px',
-                }}
-              >
-                F
-              </div>
+              <img 
+                src="/images/logo-facile-bicolor.png" 
+                alt="Facile Apartamentos" 
+                style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
+              />
               <div>
-                <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#0284c7' }}>
-                  {emisor.razon_social}
+                <h1 style={{ margin: 0, fontSize: '19px', fontWeight: 800, color: '#0f172a' }}>
+                  Facile Apartamentos Bogotá
                 </h1>
                 <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>
                   NIT: {emisor.nit}
@@ -497,7 +499,7 @@ export default function ModalFacturaDian({ folio, onClose, onDescargarXml }) {
 
           {/* Pie de página corporativo */}
           <div style={{ marginTop: '20px', paddingTop: '10px', borderTop: '1px solid #e2e8f0', fontSize: '9.5px', color: '#94a3b8', textAlign: 'center' }}>
-            Factura Electrónica de Venta generada por BookingSoft PMS • Sistema de Gestión Hotelera Facile Bogotá • Documento para soporte tributario DIAN
+            Factura Electrónica de Venta • Facile Apartamentos Bogotá • Documento soporte tributario DIAN (Resolución 000165 de 2023)
           </div>
         </div>
       </div>

@@ -37,7 +37,7 @@ _ROLES_COBRO = ("Administrador", "Recepcionista 24h")
 
 # Datos del emisor de la factura SIMULADA (demostración; no es un NIT real).
 _EMISOR = {
-    "razon_social": "BookingSoft Apartahotel Facile Bogotá",
+    "razon_social": "Facile Apartamentos Bogotá",
     "nit": "900.000.000-1",
     "domicilio": "Calle 97 #21-62, Chicó, Bogotá D.C., Colombia",
     "telefono": "+57 (601) 745-2000",
