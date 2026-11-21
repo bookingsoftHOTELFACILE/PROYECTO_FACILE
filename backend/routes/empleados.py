@@ -185,7 +185,7 @@ def modificar_rol(
 
             # Verificar que el empleado existe
             cur.execute(
-                "SELECT id_empleado, nombre, rol, estado FROM empleado WHERE id_empleado = %s",
+                "SELECT id_empleado, nombre, usuario, rol, estado FROM empleado WHERE id_empleado = %s",
                 (id_empleado,),
             )
             fila = cur.fetchone()
@@ -196,6 +196,18 @@ def modificar_rol(
                 )
             nombre_emp = fila["nombre"]
             rol_actual = fila["rol"]
+
+            # Salvaguarda Creador del Software: Grupo BookingSoft es inmutable y no puede ser modificado por nadie
+            if (
+                id_empleado in (1, 2)
+                or (fila["usuario"] and "bookingsoft" in fila["usuario"].lower())
+                or (fila["usuario"] and fila["usuario"].lower() == "admin")
+                or (fila["nombre"] and "bookingsoft" in fila["nombre"].lower())
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="El usuario Superadministrador del creador del software (Grupo BookingSoft) está protegido por el sistema y su rol es inmutable.",
+                )
 
             # Salvaguarda: si el cambio remueve un rol de gestión (Administrador o Recepcionista 24h),
             # verificar que quede al menos un usuario activo con rol de gestión en el sistema.
@@ -272,7 +284,7 @@ def modificar_estado(
 
             # Verificar que el empleado existe
             cur.execute(
-                "SELECT id_empleado, nombre, rol, estado FROM empleado WHERE id_empleado = %s",
+                "SELECT id_empleado, nombre, usuario, rol, estado FROM empleado WHERE id_empleado = %s",
                 (id_empleado,),
             )
             fila = cur.fetchone()
@@ -284,6 +296,18 @@ def modificar_estado(
             nombre_emp = fila["nombre"]
             rol_emp = fila["rol"]
             estado_actual = fila["estado"]
+
+            # Salvaguarda Creador del Software: Grupo BookingSoft es inmutable y no puede ser desactivado
+            if (
+                id_empleado in (1, 2)
+                or (fila["usuario"] and "bookingsoft" in fila["usuario"].lower())
+                or (fila["usuario"] and fila["usuario"].lower() == "admin")
+                or (fila["nombre"] and "bookingsoft" in fila["nombre"].lower())
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="El usuario Superadministrador del creador del software (Grupo BookingSoft) está protegido por el sistema y no puede ser desactivado.",
+                )
 
             # Salvaguarda: si se intenta desactivar a un usuario con rol de gestión, verificar que quede otro activo.
             if nuevo_estado == "Inactivo" and estado_actual == "Activo" and rol_emp in _ROLES_GESTION:

@@ -708,6 +708,12 @@ const VistaPms = () => {
                       const subinfo = getSubinfo(emp, idx);
                       const initials = getInitials(emp.nombre);
                       const isSelf = checkIsSelf(emp);
+                      const isMasterCreator =
+                        emp.id_empleado === 1 ||
+                        emp.id_empleado === 2 ||
+                        emp.usuario === 'admin' ||
+                        emp.usuario === 'bookingsoft_admin' ||
+                        (emp.nombre && emp.nombre.toLowerCase().includes('bookingsoft'));
 
                       return (
                         <tr key={emp.id_empleado} className="hover:bg-slate-50/50 transition-colors">
@@ -752,7 +758,28 @@ const VistaPms = () => {
                             </span>
                           </td>
                           <td>
-                            {isSelf ? (
+                            {isMasterCreator ? (
+                              <span
+                                title="Cuenta creadora del software hotelero BookingSoft - Rol inmutable"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '6px 14px',
+                                  borderRadius: '12px',
+                                  fontSize: '0.82rem',
+                                  fontWeight: 800,
+                                  color: '#0369a1',
+                                  backgroundColor: '#f0f9ff',
+                                  border: '1px solid #bae6fd',
+                                  boxShadow: '0 1px 3px rgba(3, 105, 161, 0.08)',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                <ShieldCheck size={14} color="#0284c7" />
+                                <span>Grupo BookingSoft (Inmutable)</span>
+                              </span>
+                            ) : isSelf ? (
                               <span
                                 title="Tu cuenta actual (Sesión Activa - No puedes auto-degradar tu rol)"
                                 className="pms-role-badge-self"
@@ -771,7 +798,7 @@ const VistaPms = () => {
                                   whiteSpace: 'nowrap'
                                 }}
                               >
-                                <span>👑</span>
+                                <User size={13} />
                                 <span>{emp.rol || 'Administrador'} (Tú)</span>
                               </span>
                             ) : (
@@ -798,7 +825,27 @@ const VistaPms = () => {
                             )}
                           </td>
                           <td>
-                            {emp.estado === 'Activo' ? (
+                            {isMasterCreator ? (
+                              <span
+                                className="pms-status-pill"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '5px 12px',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 700,
+                                  color: '#0369a1',
+                                  backgroundColor: '#e0f2fe',
+                                  border: '1px solid #bae6fd',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#0284c7', display: 'inline-block' }}></span>
+                                <span>Activo Permanente</span>
+                              </span>
+                            ) : emp.estado === 'Activo' ? (
                               <span
                                 className="pms-status-pill"
                                 style={{
@@ -910,7 +957,29 @@ const VistaPms = () => {
                             </div>
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            {isSelf ? (
+                            {isMasterCreator ? (
+                              <span
+                                className="pms-creator-protected-pill"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'flex-end',
+                                  gap: '6px',
+                                  padding: '6px 14px',
+                                  borderRadius: '10px',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 700,
+                                  color: '#0369a1',
+                                  backgroundColor: '#f0f9ff',
+                                  border: '1px solid #bae6fd',
+                                  whiteSpace: 'nowrap'
+                                }}
+                                title="Cuenta protegida: Administrador creador del software BookingSoft"
+                              >
+                                <ShieldCheck size={13} color="#0284c7" />
+                                <span>Protegido por el Sistema</span>
+                              </span>
+                            ) : isSelf ? (
                               <span
                                 className="pms-session-active-pill"
                                 style={{
@@ -925,7 +994,7 @@ const VistaPms = () => {
                                   whiteSpace: 'nowrap'
                                 }}
                               >
-                                <span style={{ fontSize: '0.9rem' }}>🔒</span>
+                                <ShieldCheck size={13} color="#7e22ce" />
                                 <span>Sesión Activa</span>
                               </span>
                             ) : (
