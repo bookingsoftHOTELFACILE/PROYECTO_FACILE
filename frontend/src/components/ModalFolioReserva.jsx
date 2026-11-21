@@ -406,31 +406,7 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                   {filaResumen('Saldo pendiente', formatoCOP(totales.saldo), { fuerte: true, color: '#b91c1c' })}
                 </div>
 
-                <button
-                  type="button"
-                  id="folio-descargar-factura"
-                  onClick={descargarFactura}
-                  disabled={descargando}
-                  style={{
-                    marginTop: '16px',
-                    width: '100%',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '11px 16px',
-                    borderRadius: '12px',
-                    border: '1px solid #cbd5e1',
-                    backgroundColor: '#ffffff',
-                    color: '#334155',
-                    fontSize: '13px',
-                    fontWeight: 800,
-                    cursor: descargando ? 'wait' : 'pointer',
-                  }}
-                >
-                  <Download size={16} />
-                  {descargando ? 'Generando factura…' : 'Descargar factura XML (simulada)'}
-                </button>
+                {/* 1. Botón Principal: Descargar Folio Oficial en Excel */}
                 <button
                   type="button"
                   id="folio-descargar-excel"
@@ -450,31 +426,34 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                   }}
                   disabled={descargandoExcel}
                   style={{
-                    marginTop: '8px',
+                    marginTop: '16px',
                     width: '100%',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    padding: '11px 16px',
+                    padding: '12px 16px',
                     borderRadius: '12px',
-                    border: '1px solid #10b981',
-                    backgroundColor: '#ecfdf5',
-                    color: '#047857',
+                    border: '1px solid #0f172a',
+                    backgroundColor: '#0f172a',
+                    color: '#ffffff',
                     fontSize: '13px',
                     fontWeight: 800,
                     cursor: descargandoExcel ? 'wait' : 'pointer',
-                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                    boxShadow: '0 2px 6px rgba(15, 23, 42, 0.15)',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  <FileSpreadsheet size={16} />
-                  {descargandoExcel ? 'Generando Excel…' : 'Descargar en Excel (.xlsx)'}
+                  <FileSpreadsheet size={16} color="#38bdf8" />
+                  {descargandoExcel ? 'Generando Excel…' : 'Descargar Folio Oficial (.xlsx)'}
                 </button>
+
+                {/* 2. Botón Secundario: Factura Electrónica XML UBL 2.1 (DIAN) */}
                 <button
                   type="button"
-                  id="folio-descargar-csv"
-                  onClick={descargarCsv}
+                  id="folio-descargar-factura"
+                  onClick={descargarFactura}
+                  disabled={descargando}
                   style={{
                     marginTop: '8px',
                     width: '100%',
@@ -482,21 +461,23 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    padding: '9px 16px',
+                    padding: '10px 16px',
                     borderRadius: '12px',
                     border: '1px solid #cbd5e1',
                     backgroundColor: '#f8fafc',
-                    color: '#475569',
-                    fontSize: '12px',
+                    color: '#334155',
+                    fontSize: '12.5px',
                     fontWeight: 700,
-                    cursor: 'pointer',
+                    cursor: descargando ? 'wait' : 'pointer',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  <FileSpreadsheet size={15} />
-                  Exportar folio en CSV
+                  <Download size={15} color="#64748b" />
+                  {descargando ? 'Generando factura…' : 'Factura DIAN XML (UBL 2.1 simulado)'}
                 </button>
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', fontWeight: 600 }}>
-                  Borrador UBL 2.1 sin valor fiscal — pendiente de habilitación ante la DIAN.
+
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px', fontWeight: 600, textAlign: 'center' }}>
+                  Borrador UBL 2.1 con CUFE (simulado DIAN) • Folio oficial descargable en Excel
                 </div>
               </div>
 

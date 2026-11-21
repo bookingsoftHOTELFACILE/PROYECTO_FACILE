@@ -1,14 +1,28 @@
+import React, { useState } from 'react';
 import {
   Briefcase, Calendar, CheckCircle2, MapPin, ArrowRight, Check,
-  Luggage
+  Luggage, X, ShieldCheck, Clock, Key, CreditCard, Building
 } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 
+const FOTOS_APTO = [
+  '/images/apartamentos/IMG_9408-HDR.jpg',
+  '/images/apartamentos/IMG_9411-HDR.jpg',
+  '/images/apartamentos/IMG_9417-HDR.jpg',
+  '/images/apartamentos/IMG_9420-HDR.jpg',
+  '/images/apartamentos/IMG_9423-HDR.jpg',
+  '/images/apartamentos/IMG_9426-HDR.jpg',
+  '/images/apartamentos/IMG_9438-HDR.jpg',
+  '/images/apartamentos/IMG_9459-HDR.jpg',
+];
+
 const VistaViajes = () => {
   const {
-  reservas, reservasNegocio, setActiveTab, selectedHuesped,
-  alert, setShowGuestAuthModal, handleCancelarReservaNegocio
+    reservas, reservasNegocio, setActiveTab, selectedHuesped,
+    setShowGuestAuthModal, handleCancelarReservaNegocio
   } = useApp();
+
+  const [reservaModal, setReservaModal] = useState(null);
   return (
         <section className="facile-section" style={{ paddingTop: '1.5rem' }}>
           {selectedHuesped ? (() => {
@@ -48,9 +62,12 @@ const VistaViajes = () => {
                         <div key={res.id_reserva} className="airbnb-trip-card">
                           <div style={{ height: '180px', background: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
                             <img 
-                              src={`/img/apto_${(res.id_reserva % 6) + 1}.jpg`} 
+                              src={FOTOS_APTO[res.id_reserva % FOTOS_APTO.length]} 
                               alt={`Apto ${res.habitacion_numero}`}
-                              onError={(e) => { e.currentTarget.src = '/img/hero.jpg'; }}
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = '/images/apartamentos/IMG_9408-HDR.jpg';
+                              }}
                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                             <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)', color: '#ffffff', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
@@ -83,9 +100,7 @@ const VistaViajes = () => {
                               </span>
                               <button 
                                 className="btn-mini"
-                                onClick={() => {
-                                  alert(`Reserva #${res.id_reserva} en Apartamentos Facile.\nApartamento: ${res.habitacion_numero} (${res.habitacion_tipo})\nFechas: ${res.fecha_entrada} al ${res.fecha_salida}\nHuésped: ${selectedHuesped.nombre}\nEstado: ${res.estado}`);
-                                }}
+                                onClick={() => setReservaModal(res)}
                               >
                                 Ver Detalle
                               </button>
@@ -104,7 +119,7 @@ const VistaViajes = () => {
                       Aún no tienes ningún apartamento reservado
                     </h3>
                     <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', margin: '0 0 1.8rem' }}>
-                      ¡Es hora de preparar tus maletas! Explora nuestros 38 apartamentos con cocina equipada, WiFi de alta velocidad y servicios ejecutivos.
+                      Es hora de preparar tus maletas. Explora nuestros 38 apartamentos con cocina equipada, WiFi de alta velocidad y servicios ejecutivos.
                     </p>
                     <button 
                       className="btn-airbnb-primary" 
@@ -142,8 +157,12 @@ const VistaViajes = () => {
                           </div>
                           <div style={{ padding: '1.2rem' }}>
                             <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '0.8rem', marginBottom: '1rem', fontSize: '0.82rem' }}>
-                              <div style={{ marginBottom: '0.3rem' }}>📅 Fecha: <strong>{rn.fecha}</strong></div>
-                              <div>⏰ Horario: <strong>{rn.hora_inicio} a {rn.hora_fin} ({rn.duracion_horas}h)</strong></div>
+                              <div style={{ marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <Calendar size={14} color="#64748b" /> Fecha: <strong>{rn.fecha}</strong>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <Clock size={14} color="#64748b" /> Horario: <strong>{rn.hora_inicio} a {rn.hora_fin} ({rn.duracion_horas}h)</strong>
+                              </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
@@ -174,6 +193,129 @@ const VistaViajes = () => {
               <button className="btn-airbnb-primary" onClick={() => setShowGuestAuthModal(true)}>
                 Iniciar sesión o registrarme
               </button>
+            </div>
+          )}
+
+          {/* Modal Detalle de Reserva */}
+          {reservaModal && (
+            <div
+              onClick={() => setReservaModal(null)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                backgroundColor: 'rgba(15, 23, 42, 0.75)',
+                backdropFilter: 'blur(6px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem',
+                zIndex: 9999,
+              }}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '20px',
+                  width: '100%',
+                  maxWidth: '520px',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+                  border: '1px solid #e2e8f0',
+                }}
+              >
+                {/* Cabecera modal */}
+                <div style={{ padding: '1.25rem 1.5rem', background: '#0f172a', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8', fontWeight: 700 }}>
+                      Detalle de Reserva
+                    </span>
+                    <h3 style={{ margin: '0.2rem 0 0', fontSize: '1.2rem', fontWeight: 800 }}>
+                      Apartamento {reservaModal.habitacion_numero} • Folio #{reservaModal.id_reserva}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setReservaModal(null)}
+                    style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#ffffff', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Contenido modal */}
+                <div style={{ padding: '1.5rem' }}>
+                  {/* Banner estado */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '1.25rem' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#475569', fontWeight: 600 }}>Estado de la estadía</span>
+                    <span style={{ background: '#0f172a', color: '#ffffff', padding: '0.25rem 0.75rem', borderRadius: '16px', fontSize: '0.78rem', fontWeight: 800 }}>
+                      {reservaModal.estado}
+                    </span>
+                  </div>
+
+                  {/* Acceso cerradura inteligente Yale Lock si aplica */}
+                  {(reservaModal.pin_cerradura || reservaModal.estado === 'Check-In') && (
+                    <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '14px', padding: '1.1rem', color: '#ffffff', marginBottom: '1.25rem', border: '1px solid #334155' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                        <Key size={16} color="#38bdf8" />
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#38bdf8' }}>
+                          Cerradura Inteligente Yale (IoT)
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '0.5rem' }}>
+                        <span style={{ fontSize: '0.82rem', color: '#cbd5e1' }}>Código PIN asignado:</span>
+                        <strong style={{ fontSize: '1.3rem', letterSpacing: '0.15em', color: '#ffffff', fontFamily: 'monospace', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.6rem', borderRadius: '6px' }}>
+                          {reservaModal.pin_cerradura || '482910 #'}
+                        </strong>
+                      </div>
+                      <p style={{ margin: '0.5rem 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>
+                        Digita el PIN seguido de la tecla numeral (#) en la cerradura electrónica para ingresar de forma autónoma.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Datos del Alojamiento */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                    <div style={{ background: '#f8fafc', padding: '0.85rem', borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>Tipo de Unidad</span>
+                      <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{reservaModal.habitacion_tipo || 'Apartamento'}</strong>
+                    </div>
+                    <div style={{ background: '#f8fafc', padding: '0.85rem', borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>Titular</span>
+                      <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{selectedHuesped?.nombre || reservaModal.huesped_nombre || 'Huésped Titular'}</strong>
+                    </div>
+                    <div style={{ background: '#f8fafc', padding: '0.85rem', borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>Fecha Check-In</span>
+                      <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{reservaModal.fecha_entrada}</strong>
+                    </div>
+                    <div style={{ background: '#f8fafc', padding: '0.85rem', borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>Fecha Check-Out</span>
+                      <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{reservaModal.fecha_salida}</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.8rem', marginBottom: '1.25rem' }}>
+                    <MapPin size={14} color="#e11d48" /> Calle 97 #21-62, Chicó / Bogotá D.C., Colombia
+                  </div>
+
+                  {/* Acciones */}
+                  <button
+                    onClick={() => setReservaModal(null)}
+                    style={{
+                      width: '100%',
+                      padding: '0.8rem',
+                      borderRadius: '12px',
+                      background: '#0f172a',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Entendido / Cerrar
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>
