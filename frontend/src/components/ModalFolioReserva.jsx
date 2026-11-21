@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, Receipt, Download, Plus, FileSpreadsheet } from 'lucide-react';
+import HojaCalculoFolio from './HojaCalculoFolio.jsx';
 import { useApp } from '../context/AppContext';
 import {
   apiFetch,
@@ -64,6 +65,7 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
   const [referencia, setReferencia] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [descargando, setDescargando] = useState(false);
+  const [verHojaCalculo, setVerHojaCalculo] = useState(false);
 
   const esAdmin = (usuarioSesion?.rol || '') === 'Administrador';
 
@@ -431,6 +433,31 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                 </button>
                 <button
                   type="button"
+                  id="folio-ver-hoja-calculo"
+                  onClick={() => setVerHojaCalculo(true)}
+                  style={{
+                    marginTop: '8px',
+                    width: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '11px 16px',
+                    borderRadius: '12px',
+                    border: '1px solid #1e293b',
+                    backgroundColor: '#0f172a',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
+                  }}
+                >
+                  <FileSpreadsheet size={16} />
+                  Ver Folio Oficial / Imprimir (XLSX / PDF)
+                </button>
+                <button
+                  type="button"
                   id="folio-descargar-csv"
                   onClick={descargarCsv}
                   style={{
@@ -691,6 +718,14 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
           </div>
         )}
       </div>
+
+      {verHojaCalculo && folio && (
+        <HojaCalculoFolio
+          folio={folio}
+          onClose={() => setVerHojaCalculo(false)}
+          onDescargarCsv={descargarCsv}
+        />
+      )}
     </div>
   );
 }

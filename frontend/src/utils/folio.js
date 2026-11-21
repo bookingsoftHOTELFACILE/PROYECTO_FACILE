@@ -78,35 +78,52 @@ export function generarCsvFolio(folio) {
   const totales = folio.totales || {};
   const pagos = Array.isArray(folio.pagos) ? folio.pagos : [];
 
+  const idRes = reserva.id_reserva ?? '';
+  const apto = reserva.habitacion_numero ?? '';
+  const tipoHab = reserva.habitacion_tipo ? `${reserva.habitacion_tipo} Ejecutivo` : 'Suite';
+  const noches = cotizacion.noches ?? 0;
+  const precioNoche = Number(reserva.precio_noche || (noches > 0 ? (cotizacion.subtotal || 0) / noches : 0));
+  const descPorc = noches >= 15 ? '15%' : (noches >= 7 ? '10%' : '0%');
+  const estadoStr = reserva.estado === 'Check-In' ? 'Check-In Activo' : (reserva.estado || 'Confirmada');
+
   const filas = [
-    ['FOLIO DE RESERVA', `#${reserva.id_reserva ?? ''}`],
-    ['Huésped', reserva.huesped_nombre || ''],
-    ['Documento', reserva.huesped_documento || ''],
-    ['Apartamento', reserva.habitacion_numero || ''],
-    ['Entrada', reserva.fecha_entrada || ''],
-    ['Salida', reserva.fecha_salida || ''],
-    ['Estado de la reserva', reserva.estado || ''],
-    ['Observaciones', reserva.observaciones || ''],
-    [],
-    ['CONCEPTO', 'VALOR (COP)'],
-    [`Estadía (${cotizacion.noches ?? 0} noches)`, cotizacion.subtotal ?? 0],
-    ['Descuento larga estadía', -Number(cotizacion.descuento || 0)],
-    ['Base gravable (IVA incluido)', iva.base ?? 0],
-    [`IVA ${iva.iva_pct ?? 19}% (incluido en la tarifa)`, iva.iva ?? 0],
-    ['TOTAL', totales.total ?? 0],
-    ['Pagado', totales.pagado ?? 0],
-    ['Saldo pendiente', totales.saldo ?? 0],
-    ['Estado del pago', folio.estado_pago || ''],
-    [],
+    ['FOLIO DE RESERVA', `#${idRes}`, '', '', '', 'DOCUMENTO OFICIAL'],
+    ['Sistema de Gestión Hotelera (PMS) • Radicado DIAN / SIRE', '', '', '', '', 'Sede Chicó • Calle 93 #12-40, Bogotá D.C.'],
+    ['', '', '', '', '', ''],
+    ['INFORMACIÓN DE LA RESERVA', '', '', 'DETALLE DEL ALOJAMIENTO', '', ''],
+    ['Huésped', reserva.huesped_nombre || '', '', 'Apartamento', `Apto ${apto}`, ''],
+    ['Documento', reserva.huesped_documento || '', '', 'Tipo de Unidad', tipoHab, ''],
+    ['Entrada', reserva.fecha_entrada || '', '', 'Fecha de Llegada', `${reserva.fecha_entrada || ''} (15:00 COT)`, ''],
+    ['Salida', reserva.fecha_salida || '', '', 'Fecha de Salida', `${reserva.fecha_salida || ''} (11:00 COT)`, ''],
+    ['Estado de la reserva', estadoStr, '', 'Plazo de Estadía', `${noches} Noches`, ''],
+    ['Observaciones', reserva.observaciones || '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['LIQUIDACIÓN DE ESTADÍA Y BASE TRIBUTARIA', '', '', '', '', ''],
+    ['CONCEPTO', 'VALOR (COP)', '', 'CANTIDAD', 'VALOR UNITARIO', 'VALOR TOTAL (COP)'],
+    [`Estadía (${noches} noches)`, cotizacion.subtotal ?? 0, '', `${noches} noches`, precioNoche, cotizacion.subtotal ?? 0],
+    ['Descuento larga estadía', -Number(cotizacion.descuento || 0), '', descPorc, `-${descPorc}`, -Number(cotizacion.descuento || 0)],
+    ['', '', '', '', '', ''],
+    ['DESGLOSE FISCAL (ART. 468 ET)', '', '', 'BALANCE Y ESTADO DE CUENTA', '', ''],
+    ['Base gravable (IVA incluido)', iva.base ?? 0, '', 'Total Liquidado de la Reserva', '', totales.total ?? 0],
+    [`IVA ${iva.iva_pct ?? 19}% (incluido en la tarifa)`, iva.iva ?? 0, '', 'Total Pagado / Anticipos', '', totales.pagado ?? 0],
+    ['TOTAL', totales.total ?? 0, '', 'SALDO PENDIENTE EXIGIBLE', '', totales.saldo ?? 0],
+    ['Saldo pendiente', totales.saldo ?? 0, '', 'Estado del Recaudo', '', (folio.estado_pago || 'Pendiente').toUpperCase()],
+    ['Estado del pago', folio.estado_pago || '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['REGISTRO DE TRANSACCIONES Y MEDIOS DE PAGO', '', '', '', '', ''],
     ['FECHA', 'MÉTODO', 'REFERENCIA', 'MONTO', 'ESTADO', 'REGISTRADO POR'],
-    ...pagos.map((p) => [
-      p.creado_en || '',
-      p.metodo || '',
-      p.referencia || '',
-      p.monto ?? 0,
-      p.estado || '',
-      p.creado_por || '',
-    ]),
+    ...(pagos.length > 0
+      ? pagos.map((p) => [
+          p.creado_en || '',
+          p.metodo || '',
+          p.referencia || p.referencia_gateway || '-',
+          p.monto ?? 0,
+          p.estado || '',
+          p.creado_por || '',
+        ])
+      : [['-- Sin pagos registrados aún --', '', '', '', '', '']]),
+    ['', '', '', '', '', ''],
+    ['Generado automáticamente por Facile PMS v4.2 • Todos los valores expresados en Pesos Colombianos (COP)', '', '', '', '', ''],
   ];
 
   const escapar = (valor) => {
