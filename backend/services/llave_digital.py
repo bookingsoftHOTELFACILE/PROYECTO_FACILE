@@ -69,6 +69,7 @@ def generar_llave_digital(
 
     serial = secrets.token_hex(3).upper()
     dispositivo_id = f"YALE-APTO-{numero}-SN{serial}"
+    tarjeta_rfid = f"CARD-{numero}-{secrets.token_hex(2).upper()}"
     transaccion_id = f"tx_yale_{secrets.randbelow(900000) + 100000}"
 
     llave_movil = (
@@ -80,6 +81,8 @@ def generar_llave_digital(
     paquete: Dict[str, Any] = {
         "estado": ESTADO_ACTIVA,
         "pin_temporal": pin,
+        "tarjeta_rfid": tarjeta_rfid,
+        "tecnologia_acceso": "Tarjeta RFID de Proximidad + Código PIN Teclado",
         "transaccion_id": transaccion_id,
         "id_habitacion": id_habitacion,
         "id_reserva_asociada": id_reserva,

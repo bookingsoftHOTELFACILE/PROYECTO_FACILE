@@ -252,23 +252,38 @@ const VistaViajes = () => {
                     </span>
                   </div>
 
-                  {/* Acceso cerradura inteligente Yale Lock si aplica */}
+                  {/* Acceso cerradura inteligente Yale Lock (IoT híbrido: Tarjeta RFID + PIN) */}
                   {(reservaModal.pin_cerradura || reservaModal.estado === 'Check-In') && (
                     <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '14px', padding: '1.1rem', color: '#ffffff', marginBottom: '1.25rem', border: '1px solid #334155' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                        <Key size={16} color="#38bdf8" />
-                        <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#38bdf8' }}>
-                          Cerradura Inteligente Yale (IoT)
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Key size={16} color="#38bdf8" />
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#38bdf8' }}>
+                            Cerradura Inteligente Yale (IoT)
+                          </span>
+                        </div>
+                        <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '0.2rem 0.5rem', borderRadius: '10px', fontSize: '0.68rem', fontWeight: 800 }}>
+                          MQTTS v5.0 Conectado
                         </span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '0.5rem' }}>
-                        <span style={{ fontSize: '0.82rem', color: '#cbd5e1' }}>Código PIN asignado:</span>
-                        <strong style={{ fontSize: '1.3rem', letterSpacing: '0.15em', color: '#ffffff', fontFamily: 'monospace', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.6rem', borderRadius: '6px' }}>
+
+                      {/* Tarjeta RFID */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0.6rem', background: 'rgba(255,255,255,0.06)', borderRadius: '8px', marginBottom: '0.6rem' }}>
+                        <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>Tarjeta RFID Proximidad:</span>
+                        <strong style={{ fontSize: '0.82rem', color: '#4ade80', fontWeight: 700 }}>
+                          CARD-{reservaModal.habitacion_numero}-ACTIVA
+                        </strong>
+                      </div>
+
+                      {/* PIN de Respaldo */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '0.3rem' }}>
+                        <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>Código PIN Teclado:</span>
+                        <strong style={{ fontSize: '1.25rem', letterSpacing: '0.15em', color: '#ffffff', fontFamily: 'monospace', background: 'rgba(255,255,255,0.1)', padding: '0.15rem 0.55rem', borderRadius: '6px' }}>
                           {reservaModal.pin_cerradura || '482910 #'}
                         </strong>
                       </div>
-                      <p style={{ margin: '0.5rem 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>
-                        Digita el PIN seguido de la tecla numeral (#) en la cerradura electrónica para ingresar de forma autónoma.
+                      <p style={{ margin: '0.55rem 0 0', fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.35 }}>
+                        Acerca tu tarjeta RFID a la cerradura para ingresar. También puedes usar el PIN de 6 dígitos seguido de (#) en el teclado táctil.
                       </p>
                     </div>
                   )}

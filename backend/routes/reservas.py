@@ -584,7 +584,7 @@ def cambiar_estado_reserva(
                 return {
                     "message": (
                         f"Check-in registrado para la reserva #{id_reserva} por {audit_str}. "
-                        f"Código de cerradura Yale: {yale_lock['pin_temporal']} (válido hasta {yale_lock['valido_hasta']})."
+                        f"Cerradura IoT: Tarjeta RFID [{yale_lock.get('tarjeta_rfid', 'ASIGNADA')}] enlazada y PIN [{yale_lock['pin_temporal']}]."
                     ),
                     "reserva": {
                         "id_reserva": id_reserva,
