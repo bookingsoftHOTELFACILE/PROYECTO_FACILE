@@ -1,88 +1,84 @@
-# 🧭 Reflexión Comparativa de los 4 Backends del Programa ADSO y Gestión de Deuda Técnica
+# 🧭 Punto 14: Reflexión del Desarrollo, Comparativa de Backends y Deuda Técnica
 
 **Proyecto:** BookingSoft PMS — Apartahotel Facile  
 **Programa:** Análisis y Desarrollo de Software (ADSO) — SENA  
-**Ficha:** Trimestre 6  
-**Fecha de Elaboración:** Noviembre 2026  
-**Autores:** Equipo de Desarrollo ADSO (Chico, Mayor, Echeverri, Parada, López)  
+**Trimestre Actual:** Trimestre 6  
+**Equipo:** David López, José Miguel Chico, Maicol Mayor, Sebastián Parada, Ashly Echeverri  
 
 ---
 
-## 1. Contexto Académico: Evolución Técnica a Través de los 4 Backends
+## 1. Nuestra Experiencia con los Backends a lo Largo de los Trimestres
 
-Durante la trayectoria formativa en el tecnólogo ADSO, el equipo desarrolló 4 soluciones de backend distintas para responder a diferentes dominios y requerimientos planteados por los instructores. Esta evolución técnica permitió comparar de primera mano paradigmas de desarrollo, tipado, rendimiento y patrones de persistencia:
+A lo largo de la formación en el SENA hemos aprendido a trabajar con diferentes tecnologías para el backend según lo que nos fueron enseñando en cada trimestre:
 
-1. **Backend 1 (Trimestre 2 — Dominio Web Básico):** Node.js con Express (JavaScript puro). Primer contacto con el protocolo HTTP, arquitectura cliente-servidor y APIs REST básicas con callbacks y promesas.
-2. **Backend 2 (Trimestre 3 — Dominio NoSQL / Documentos):** Node.js con Express y MongoDB (Mongoose). Implementación de bases de datos no relacionales, persistencia basada en esquemas BSON/JSON flexibles y consultas agregadas.
-3. **Backend 3 (Trimestre 4–5 — Dominio Empresarial Robusto):** Java con Spring Boot y JPA/Hibernate. Arquitectura empresarial fuertemente tipada estructurada en capas formales (Controller, Service, Repository, DTOs y Entity), con inyección de dependencias estricta.
-4. **Backend 4 (Trimestre 6 — Dominio Hotelero PMS BookingSoft):** Python 3.11 con FastAPI y PostgreSQL 15. Backend asíncrono de alto desempeño con tipado estricto mediante Pydantic v2, transacciones ACID nativas con restricciones GiST para prevención de doble reserva y generación automática de contratos OpenAPI/Swagger.
+1. **Trimestre 3 — Java con Spring Boot:**  
+   Fue nuestro primer acercamiento a un backend empresarial robusto. Aprendimos a trabajar con Java, Programación Orientada a Objetos y la estructura por capas (Controllers, Services, Repositories). Al principio fue bastante pesado y retador por la cantidad de archivos, anotaciones y configuraciones que exige Java, pero nos ayudó a entender la importancia del orden y el tipado fuerte.
 
----
+2. **Trimestre 5 (El trimestre pasado) — Node.js con Express:**  
+   Trabajar con JavaScript en el backend nos pareció mucho más ágil y directo que Java. Con Express pudimos crear rutas y recibir peticiones HTTP de forma rápida y sencilla, sin tantas carpetas ni tanta configuración previa.
 
-## 2. Matriz Comparativa Exhaustiva de los 4 Backends
+3. **Trimestre 5 (El trimestre pasado) — MongoDB:**  
+   Aquí conocimos las bases de datos no relacionales (NoSQL). Fue una experiencia interesante porque no teníamos que definir tablas fijas ni columnas estrictas; simplemente guardábamos la información en formato JSON/documentos. Nos sirvió para entender cuándo conviene una base de datos flexible y cuándo se necesita una relacional fija.
 
-| Criterio de Evaluación | Backend 1: Node.js + Express | Backend 2: Node.js + MongoDB | Backend 3: Java + Spring Boot | Backend 4: Python + FastAPI (BookingSoft) |
-|---|---|---|---|---|
-| **Lenguaje y Paradigma** | JavaScript (Orientado a eventos, asíncrono no bloqueante) | JavaScript (Orientado a eventos, no estructurado) | Java 17+ (Orientado a Objetos, fuertemente tipado) | Python 3.11 (Multiparadigma, tipado moderno con type-hints) |
-| **Sistema de Persistencia** | Relacional básico (MySQL / SQLite vía drivers nativos) | NoSQL orientado a documentos (MongoDB / Mongoose) | Relacional con ORM empresarial (PostgreSQL / Spring Data JPA) | Relacional con Pool de Conexiones (PostgreSQL 15 + Psycopg2 + GiST) |
-| **Integridad y Restricciones** | Validación manual en controladores con middleware custom. | Sin integridad referencial forzada; esquemas flexibles a nivel de aplicación. | Validación estricta con Hibernate Validator (`@NotNull`, `@Size`, Bean Validation). | Validación y serialización automática de alto rendimiento mediante Pydantic v2. |
-| **Concurrencia y Rendimiento** | Excelente en I/O gracias al Event Loop de Node.js. | Rápido en lecturas masivas no transaccionales. | Alto rendimiento con soporte multihilo (`ThreadPoolExecutor`), pero mayor consumo de memoria RAM (JVM). | Excepcional: motor ASGI (`uvicorn`) asíncrono nativo (`async/await`) con rendimiento equiparable a Go/Node. |
-| **Curva de Aprendizaje** | Baja: sintaxis ágil pero propenso a errores por falta de tipado estático. | Media: flexibilidad en esquemas pero complejo para consultas relacionales cruzadas. | Alta: configuración extensa, curva pronunciada por anotaciones e inyección de dependencias. | Óptima: sintaxis limpia y legible de Python, permitiendo desarrollo veloz sin sacrificar rigor. |
-| **Documentación de API** | Manual (requiere herramientas externas como Postman o Swagger manual). | Manual o dependiente de bibliotecas adicionales no estandarizadas. | Semi-automática mediante dependencias de Springdoc OpenAPI / Swagger UI. | **Nativa y Automática:** Generación instantánea en tiempo de ejecución de Swagger UI y ReDoc. |
-| **Consumo de Recursos** | Bajo consumo de memoria (~40-80 MB por instancia). | Bajo a medio (~60-120 MB). | Elevado debido a la máquina virtual Java (~300-600 MB en arranque). | Ultraligero (~50-90 MB en contenedor Docker Alpine). |
+4. **Trimestre 6 (Este proyecto final) — Python con FastAPI:**  
+   Para BookingSoft utilizamos FastAPI junto con PostgreSQL. La experiencia fue muy positiva: la sintaxis de Python es muy clara y fácil de leer, la validación de datos con Pydantic evita que lleguen datos dañados a la base de datos, y lo que más nos gustó fue que genera la documentación interactiva de Swagger solita (`/docs`), lo que nos facilitó conectar las pantallas con el servidor.
 
 ---
 
-## 3. Justificación Técnica: ¿Por qué FastAPI fue la Elección Ideal para BookingSoft?
+## 2. Cuadro Comparativo de lo que Aprendimos
 
-Para el desarrollo del PMS hotelero del Apartahotel Facile, el equipo seleccionó **Python + FastAPI** como el 4.º backend por cuatro razones determinantes de negocio:
-
-1. **Prevención Concurrente de Overbooking:** La hotelería exige consistencia transaccional absoluta. FastAPI se integró fluidamente con PostgreSQL utilizando extensiones `btree_gist` y rangos `daterange`, garantizando a nivel de base de datos que ninguna habitación sufra doble reserva simultánea.
-2. **Contratos Claros con el Frontend (OpenAPI Nativo):** Al desarrollar en paralelo la interfaz de usuario en React, la generación automática de la especificación OpenAPI en `/docs` sirvió como contrato de comunicación en vivo entre el equipo de frontend (José Chico y David López) y el backend (Maicol Mayor y Sebastián Parada).
-3. **Mantenibilidad y Legibilidad:** La sintaxis expresiva de Python redujo el volumen de código boilerplate en un 60% en comparación con la arquitectura de Spring Boot, facilitando las auditorías de código y la escritura de las 96 pruebas unitarias automatizadas.
-4. **Respuesta en Tiempo Real para Recepción:** Los tiempos de latencia inferiores a 25 milisegundos por solicitud permiten que el módulo de recepción presencial liquide cotizaciones y emita llaves digitales al instante.
-
----
-
-## 4. Gestión de Deuda Técnica Documentada y Priorizada
-
-La deuda técnica representa decisiones de diseño o características diferidas de forma consciente durante los Sprints para priorizar la estabilidad del núcleo operativo hotelero (reservas, check-in, folios y catálogo).
-
-A continuación se presenta la matriz de deuda técnica clasificada por impacto y esfuerzo de resolución:
-
-| Ítem | Componente Afectado | Descripción de la Deuda Técnica | Impacto Operativo | Esfuerzo Estimado | Prioridad de Remediación | Plan de Acción para Producción |
-|:---:|---|---|---|:---:|:---:|---|
-| **DT-01** | Pagos y Folios | **Pasarela de Pago Bancaria Real:** Actualmente el cobro con tarjeta o PSE opera mediante `PasarelaSimulada`, generando recibos y folios válidos pero sin débito bancario real. | Alto (impide cobros en línea no presenciales) | 16 Horas | **Alta (Fase Inmediata)** | Integrar el SDK oficial de Wompi / PSE Colombia en el servicio `services/pasarela.py`, manejando webhooks de confirmación asíncrona. |
-| **DT-02** | Hardware IoT | **Cerraduras Yale Connect Físicas:** El sistema genera tokens criptográficos y códigos temporales de 6 dígitos para el huésped, pero el hardware físico Zigbee/Wi-Fi está emulado por software. | Medio (el recepcionista debe entregar clave manual o móvil) | 24 Horas | **Media** | Desplegar el concentrador Yale Connect Bridge físico en red local y conectar el broker MQTT con certificados TLS mutuos. |
-| **DT-03** | Facturación DIAN | **Firma Digital y Envío Directo UBL 2.1:** El sistema genera el archivo XML de factura electrónica bajo estándar UBL 2.1 simulado, pero no cuenta con certificado digital ni conexión al webservice de la DIAN. | Medio (requiere emisión de factura tradicional contable) | 20 Horas | **Media** | Adquirir certificado digital de firma electrónica y conectar el servicio de timbrado ante la DIAN mediante un proveedor tecnológico autorizado. |
-| **DT-04** | Pruebas Frontend | **Cobertura de Tests en Componentes React:** Las pruebas de frontend cubren al 100% las utilidades críticas (fechas, descuentos, folio y clientes HTTP), pero los componentes visuales interactivos tienen baja cobertura automatizada. | Bajo (mitigado por 9 specs E2E con Playwright) | 12 Horas | **Baja** | Implementar pruebas de renderizado y eventos con React Testing Library en los modales de recepción. |
-| **DT-05** | Catálogo Habitacional | **Administración de Unidades vía Interfaz:** El inventario de apartamentos se inicializa desde el script de base de datos; no existe una pantalla administrativa para crear nuevas habitaciones o demolerlas. | Bajo (el apartahotel tiene planta física fija de 38 suites) | 8 Horas | **Baja** | Crear formulario administrativo en el PMS con endpoint `POST /api/habitaciones` restringido exclusivamente al rol Administrador. |
+| Tecnología | Trimestre | Lo Bueno (Ventajas) | Lo Difícil o Retador |
+|---|:---:|---|---|
+| **Spring Boot (Java)** | Trimestre 3 | Es súper ordenado, seguro y muy usado en grandes empresas. | Muy estricto, requiere muchas líneas de código para cosas sencillas y consume más memoria en el computador. |
+| **Express (Node.js)** | Trimestre 5 | Muy rápido de programar, flexible y usa el mismo JavaScript del frontend. | Al ser tan libre, si uno no se organiza bien el código puede quedar desordenado fácilmente. |
+| **MongoDB (NoSQL)** | Trimestre 5 | Muy fácil para guardar datos variados sin preocuparse por esquemas rígidos. | Difícil para relacionar tablas complejas o garantizar que no haya datos duplicados o inconsistentes. |
+| **FastAPI (Python)** | Trimestre 6 | Súper rápido, código limpio, valida errores automáticamente y genera Swagger solo. | Tuvimos que adaptarnos a la programación asíncrona (`async/await`) y al manejo estricto de fechas en reservas. |
 
 ---
 
-## 5. Reflexión del Equipo y Feedback del Proceso de Desarrollo
+## 3. ¿Por qué Elegimos FastAPI para este Proyecto Hotelero?
 
-Como parte del cierre formativo del tecnólogo ADSO, el equipo llevó a cabo una sesión de reflexión y feedback sobre la experiencia real de planificar, diseñar y programar el sistema BookingSoft:
+Para el Apartahotel Facile necesitábamos un sistema muy confiable, porque en un hotel **no puede haber errores con el dinero ni con las habitaciones**:
 
-### 5.1 Principales Retos y Desafíos Enfrentados
-1. **El Motor de Disponibilidad y Fechas:** El mayor desafío lógico fue asegurar que dos reservas no colisionaran en la misma suite. Inicialmente se intentó validar mediante condicionales en el código de la aplicación, pero esto abría la posibilidad de condiciones de carrera concurrentes. La solución definitiva fue delegar la exclusión matemática a PostgreSQL mediante índices `GiST` y tipos de rango `daterange`.
-2. **Equilibrio entre Potencia y Usabilidad (UX/UI):** Diseñar un PMS hotelero requería mostrar mucha información simultánea (habitaciones, huéspedes, tarifas, estados de aseo). El reto de José Miguel Chico fue evitar que la pantalla se viera saturada, logrando condensar calendarios compactos, tarjetas limpias y paleta visual profesional sin perder datos operativos.
-3. **Coordinación Full-Stack:** Al principio, frontend y backend avanzaban a ritmos distintos. La adopción de Swagger/OpenAPI como contrato vivo permitió que David López y Maicol Mayor alinearan los endpoints antes de ensamblar las vistas de React, eliminando retrabajos.
-
-### 5.2 Aprendizajes Clave Obtenidos
-- **La arquitectura previa ahorra semanas de programación:** El modelado inicial de datos y esquemas realizado por Sebastián Parada y el levantamiento riguroso de Historias de Usuario por Ashly Echeverri evitaron tener que rehacer tablas a mitad del proyecto.
-- **La cultura de pruebas automáticas da tranquilidad:** Contar con 96 pruebas de backend y 28 de frontend permitió refactorizar y pulir pantallas sin el temor de dañar funciones que ya estaban operativas.
-- **Docker como estándar de equipo:** La contenedorización garantizó que el sistema funcionara de forma idéntica en los computadores de todos los compañeros.
-
-### 5.3 Feedback y Autocrítica Constructiva (¿Qué haríamos diferente?)
-- **Modularización temprana de componentes:** En las primeras semanas, algunos archivos de React crecieron demasiado en líneas de código antes de dividirlos en subcomponentes (`ModalDetalle.jsx`, `HuespedesPicker.jsx`). Si empezáramos de nuevo, aplicaríamos arquitectura atómica desde el primer día.
-- **Pruebas de interfaz en paralelo:** Aunque el backend quedó blindado con pruebas unitarias desde el inicio, las pruebas visuales de interfaz se concentraron hacia las fases finales. Lo ideal en futuros proyectos es implementar pruebas de componentes desde el Sprint 1.
+1. **Evitar sobreventas (Double-Booking):** Necesitábamos que la base de datos (PostgreSQL) bloqueara de inmediato si dos personas intentaban reservar la misma suite en las mismas fechas. FastAPI se conectó perfecto con PostgreSQL para lograr esta protección.
+2. **Conexión fácil con el Frontend:** Como David y José Miguel estaban armando las pantallas en React, la documentación de Swagger que genera FastAPI les permitía ver exactamente qué datos pedía cada endpoint sin tener que adivinar.
+3. **Rapidez:** El sistema responde casi al instante, lo cual es ideal para el recepcionista cuando está atendiendo a un huésped en el lobby.
 
 ---
 
-## 6. Conclusión y Cierre de la Formación ADSO
+## 4. Deuda Técnica (Cosas que Dejamos para una Próxima Versión)
 
-El desarrollo de BookingSoft para el Apartahotel Facile representó la consolidación práctica de los 6 trimestres de formación profesional:
+En el desarrollo de software es normal que por tiempo queden funciones pendientes o simuladas para poder entregar el sistema estable. A esto se le llama **deuda técnica**, y en nuestro proyecto la tenemos identificada de forma transparente:
 
-- Se comprendió que **no existe una tecnología única superior para todos los casos**, sino herramientas adecuadas para cada necesidad de negocio: Spring Boot destaca en grandes ecosistemas bancarios con cientos de microservicios corporativos, Node.js brilla en aplicaciones de mensajería o streaming en tiempo real, y **FastAPI demostró ser la alternativa más equilibrada para BookingSoft**, combinando velocidad de desarrollo, seguridad estricta y rendimiento asíncrono óptimo.
-- El equipo pasó de programar scripts aislados en los primeros trimestres a construir una solución integral, auditable, contenerizada y respaldada por metodologías ágiles, lista para responder a los estándares de la industria del software.
+| Qué quedó pendiente | ¿Qué tan importante es? | ¿Por qué quedó así y cómo se solucionaría? |
+|---|:---:|---|
+| **Pasarela de pago real (Wompi / PSE)** | Alta | Actualmente el cobro se liquida y se calcula con impuestos en el sistema, pero el cobro bancario es simulado. En una fase 2 se conectaría la API oficial de Wompi o PSE para recibir dinero real de tarjetas. |
+| **Cerraduras físicas Yale en las puertas** | Media | El sistema ya genera el código PIN de 6 dígitos para el huésped y crea la llave digital en la pantalla, pero en el laboratorio no teníamos las cerraduras físicas para conectarlas por Wi-Fi. Queda listo para instalar el hardware. |
+| **Facturación electrónica con la DIAN** | Media | El sistema genera el archivo XML de factura electrónica bajo el estándar legal UBL 2.1, pero no tenemos el certificado digital pagado ante la DIAN para timbrarla de verdad. |
+| **Pruebas automáticas visuales de React** | Baja | Tenemos 96 pruebas automáticas del servidor funcionando, pero en el frontend probamos las operaciones clave y nos faltaron pruebas visuales en los modales pequeños. |
+| **Crear nuevas habitaciones desde la web** | Baja | Las 38 habitaciones del hotel ya están cargadas en la base de datos. Como el edificio tiene un número fijo de apartamentos, no fue urgente hacer un botón de "demoler o construir habitaciones". |
+
+---
+
+## 5. Reflexión y Feedback de Cómo Trabajamos como Equipo
+
+### 🌟 Lo que funcionó muy bien:
+- **Nos repartimos el trabajo según las fortalezas de cada uno:** 
+  - **José Miguel** se enfocó en que el sistema fuera agradable y fácil de usar (acomodó las fotos, los colores corporativos, los calendarios compactos y las tarjetas para que el recepcionista no se sintiera saturado).
+  - **David** ayudó como Scrum Master organizando las tareas y también metió mano en código tanto de frontend como de backend.
+  - **Maicol** lideró la lógica del servidor en FastAPI y se aseguró de crear las pruebas para que nada fallara.
+  - **Sebastián** arrancó desde el principio con la estructura de la base de datos en PostgreSQL y dejó montado Docker para que a todos nos corriera igual.
+  - **Ashly** estuvo pendiente de los requisitos del hotel para que hiciéramos lo que un apartahotel de verdad necesita.
+- **La comunicación diaria:** Hablar constantemente evitó que unos hicieran cosas que chocaran con el trabajo de los otros.
+
+### 💡 Lo que aprendimos y haríamos diferente si volviéramos a empezar:
+- **No dejar archivos tan largos:** Al inicio algunos componentes de React tenían demasiado código antes de que decidiéramos dividirlos en partes más pequeñas. Aprendimos que es mejor separar los archivos desde la primera semana.
+- **La importancia de planear antes de programar:** El tiempo que invertimos al principio pensando bien las tablas de la base de datos y los requisitos nos ahorró dolores de cabeza al final.
+
+---
+
+## 6. Conclusión
+
+Haber pasado por Java Spring Boot en 3.º trimestre, por Node.js y MongoDB en el 5.º, y ahora por Python FastAPI en el 6.º, nos dio una visión completa de cómo se construye software en el mundo real. 
+
+Hoy entendemos que no hay una tecnología "mejor que otra", sino que cada una sirve para un propósito distinto. Logramos entregar un proyecto funcional, ordenado y que resuelve una necesidad real para el Apartahotel Facile.
