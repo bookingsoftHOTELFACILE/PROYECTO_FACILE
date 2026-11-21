@@ -1299,7 +1299,14 @@ const VistaPms = () => {
                         </div>
                         <div className="flex items-center gap-1.5 text-slate-500 font-medium text-[11px] ml-auto">
                           <span>Válido hasta:</span>
-                          <strong className="text-slate-700 font-semibold">{reservaAlert.data.yale_lock.valido_hasta}</strong>
+                          <strong className="text-slate-700 font-semibold">
+                            {(() => {
+                              const vh = String(reservaAlert.data.yale_lock.valido_hasta || '');
+                              const [f] = vh.split('T');
+                              const [y, m, d] = (f || '').split('-');
+                              return y && m && d ? `${d}/${m}/${y} 11:00 AM (Check-Out)` : vh;
+                            })()}
+                          </strong>
                         </div>
                       </div>
                     )}

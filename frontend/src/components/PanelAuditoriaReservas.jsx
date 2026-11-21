@@ -327,7 +327,14 @@ export default function PanelAuditoriaReservas({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto', fontSize: '11px', color: '#64748b' }}>
                 <span>Válido hasta:</span>
-                <strong style={{ color: '#334155' }}>{reservaAlert.data.yale_lock.valido_hasta}</strong>
+                <strong style={{ color: '#334155' }}>
+                  {(() => {
+                    const vh = String(reservaAlert.data.yale_lock.valido_hasta || '');
+                    const [f] = vh.split('T');
+                    const [y, m, d] = (f || '').split('-');
+                    return y && m && d ? `${d}/${m}/${y} 11:00 AM (Check-Out)` : vh;
+                  })()}
+                </strong>
               </div>
             </div>
           )}

@@ -1175,7 +1175,7 @@ export function useAppState() {
             type: 'success',
             message: walkinCheckinInmediato
               ? `Check-in directo registrado para ${nombreHuesped} (Doc: ${docHuesped}).`
-                + (llave ? ` Tarjeta RFID [${llave.tarjeta_rfid || 'ASIGNADA'}] y Código PIN [${llave.pin_temporal}] (válido hasta ${llave.valido_hasta}).` : '')
+                + (llave ? ` Tarjeta RFID [${llave.tarjeta_rfid || 'ASIGNADA'}] y Código PIN [${llave.pin_temporal}] (válido hasta el Check-Out: ${llave.valido_hasta?.split('T')[0] ? llave.valido_hasta.split('T')[0].split('-').reverse().join('/') : ''} 11:00 AM).` : '')
               : `Reserva presencial confirmada exitosamente para ${nombreHuesped} (Doc: ${docHuesped}).`,
             data
           });

@@ -1,49 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Receipt, Download, Plus, FileSpreadsheet, FileText, Key } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { exportarExcelFolio } from '../utils/exportarExcelFolio.js';
 import ModalFacturaDian from './ModalFacturaDian.jsx';
+import ModalFolioReservaIoT from './pms/ModalFolioReservaIoT.jsx';
 import {
   apiFetch,
   authHeaders,
   formatErrorMessage,
   API_URL,
 } from '../api/client.js';
-import {
-  formatoCOP,
-  etiquetaEstadoPago,
-  etiquetaEstadoMovimiento,
-  formatoFecha,
-  generarCsvFolio,
-} from '../utils/folio.js';
-
-const METODOS_PAGO = [
-  'Efectivo',
-  'Tarjeta de crédito',
-  'Tarjeta de débito',
-  'PSE',
-  'Nequi',
-  'Transferencia',
-  'Bono',
-];
-
-const filaResumen = (etiqueta, valor, { fuerte = false, color = '#0f172a' } = {}) => (
-  <div
-    style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: fuerte ? '10px 0' : '6px 0',
-      borderTop: fuerte ? '2px solid #e2e8f0' : 'none',
-      fontSize: fuerte ? '15px' : '13px',
-      fontWeight: fuerte ? 900 : 600,
-      color,
-    }}
-  >
-    <span style={{ color: fuerte ? '#0f172a' : '#475569' }}>{etiqueta}</span>
-    <span>{valor}</span>
-  </div>
-);
+import { formatoFecha } from '../utils/folio.js';
 
 export default function ModalFolioReserva({ idReserva, onClose }) {
   const { authToken, usuarioSesion } = useApp();
@@ -52,13 +18,7 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [exito, setExito] = useState(null);
-
-  const [monto, setMonto] = useState('');
-  const [metodo, setMetodo] = useState('Efectivo');
-  const [referencia, setReferencia] = useState('');
-  const [guardando, setGuardando] = useState(false);
   const [descargando, setDescargando] = useState(false);
-  const [descargandoExcel, setDescargandoExcel] = useState(false);
   const [mostrarFacturaDian, setMostrarFacturaDian] = useState(false);
 
   const esAdmin = (usuarioSesion?.rol || '') === 'Administrador';
@@ -69,7 +29,6 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
     if (res.ok) {
       setFolio(res.data);
       setError(null);
-      setMonto(res.data?.totales?.saldo > 0 ? String(res.data.totales.saldo) : '');
     } else {
       setError(formatErrorMessage(res.data?.detail));
     }
@@ -79,31 +38,25 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
     cargarFolio();
   }, [cargarFolio]);
 
-  const registrarPago = async (e) => {
-    e.preventDefault();
+  const registrarPago = async ({ monto, metodo, referencia }) => {
     const valor = Number(monto);
     if (!(valor > 0)) {
       setError('Ingrese un monto mayor a cero.');
       return;
     }
-    setGuardando(true);
     setError(null);
     setExito(null);
     const res = await apiFetch(`/api/reservas/${idReserva}/pagos`, {
       method: 'POST',
       token: authToken,
-      body: { monto: valor, metodo, referencia: referencia.trim() || undefined },
+      body: { monto: valor, metodo, referencia: referencia || undefined },
     });
-    setGuardando(false);
 
     if (res.ok) {
       setFolio(res.data.folio);
       if (res.data.aprobado) {
         setExito(res.data.message);
-        setReferencia('');
-        setMonto(res.data.folio?.totales?.saldo > 0 ? String(res.data.folio.totales.saldo) : '');
       } else {
-        // Cobro rechazado por la pasarela: queda registrado como intento.
         setError(res.data.message);
       }
     } else {
@@ -124,26 +77,9 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
     if (res.ok) {
       setFolio(res.data.folio);
       setExito(res.data.message);
-      setMonto(res.data.folio?.totales?.saldo > 0 ? String(res.data.folio.totales.saldo) : '');
     } else {
       setError(formatErrorMessage(res.data?.detail));
     }
-  };
-
-  const descargarCsv = () => {
-    if (!folio) return;
-    const csv = generarCsvFolio(folio);
-    // BOM para que Excel abra los acentos correctamente.
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const enlace = document.createElement('a');
-    enlace.href = url;
-    enlace.download = `FOLIO-${folio.reserva?.id_reserva || idReserva}.csv`;
-    document.body.appendChild(enlace);
-    enlace.click();
-    enlace.remove();
-    URL.revokeObjectURL(url);
-    setExito('Folio exportado en CSV (compatible con Excel).');
   };
 
   const descargarFactura = async () => {
@@ -186,600 +122,63 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
     }
   };
 
-  const estadoPago = etiquetaEstadoPago(folio?.estado_pago);
-  const totales = folio?.totales || { total: 0, pagado: 0, saldo: 0 };
+  if (cargando) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+        <div className="bg-white rounded-3xl p-8 shadow-2xl text-slate-600 font-bold text-center">
+          Cargando folio de la reserva...
+        </div>
+      </div>
+    );
+  }
+
+  const reserva = folio?.reserva || {};
   const cotizacion = folio?.cotizacion || {};
   const iva = folio?.iva || { base: 0, iva: 0, iva_pct: 19, total: 0 };
-  const reserva = folio?.reserva || {};
+  const totales = folio?.totales || { total: 0, pagado: 0, saldo: 0 };
   const pagos = folio?.pagos || [];
 
+  const folioData = {
+    numero: String(reserva.id_reserva || idReserva),
+    huesped: reserva.huesped_nombre || 'Huésped',
+    apartamento: `Apto ${reserva.habitacion_numero || '—'}`,
+    checkIn: formatoFecha(reserva.fecha_entrada),
+    checkOut: formatoFecha(reserva.fecha_salida),
+    noches: cotizacion.noches || 1,
+    tarifaBaseNoche: cotizacion.noches ? Math.round((cotizacion.subtotal || totales.total) / cotizacion.noches) : 250000,
+    totalReserva: totales.total || 0,
+    baseGravable: iva.base || 0,
+    iva19: iva.iva || 0,
+    pagado: totales.pagado || 0,
+    saldoPendiente: totales.saldo || 0,
+    rfidTarjeta: reserva.cerradura?.tarjeta_rfid || `CARD-${reserva.habitacion_numero || 'HAB'}-3C2B`,
+    pinTeclado: reserva.cerradura?.pin_temporal ? `${reserva.cerradura.pin_temporal} #` : '049481 #'
+  };
+
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        backgroundColor: 'rgba(9, 14, 26, 0.78)',
-        backdropFilter: 'blur(8px)',
-        overflowY: 'auto',
-      }}
-    >
-      <div
-        id="pms-folio-modal"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: '980px',
-          maxHeight: '94vh',
-          backgroundColor: '#ffffff',
-          borderRadius: '24px',
-          overflowY: 'auto',
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
-          border: '1px solid #e2e8f0',
-          margin: 'auto',
-        }}
-      >
-        {/* Cabecera */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-            padding: '20px 24px',
-            borderBottom: '1px solid #f1f5f9',
-            position: 'sticky',
-            top: 0,
-            backgroundColor: '#ffffff',
-            zIndex: 5,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '12px',
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#0284c7',
-              }}
-            >
-              <Receipt size={20} color="#0284c7" />
-            </div>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>
-                Folio de la Reserva #{reserva.id_reserva || idReserva}
-              </h3>
-              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                {reserva.huesped_nombre || '—'} · Apto {reserva.habitacion_numero || '—'} ·{' '}
-                {formatoFecha(reserva.fecha_entrada)} → {formatoFecha(reserva.fecha_salida)}
-              </span>
-              {reserva.observaciones && (
-                <div style={{ fontSize: '11.5px', color: '#475569', fontWeight: 600, marginTop: '2px' }}>
-                  Nota: {reserva.observaciones}
-                </div>
-              )}
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span
-              style={{
-                padding: '5px 12px',
-                borderRadius: '999px',
-                backgroundColor: estadoPago.fondo,
-                color: estadoPago.color,
-                fontSize: '11px',
-                fontWeight: 800,
-                border: `1px solid ${estadoPago.color}22`,
-              }}
-            >
-              {estadoPago.texto}
-            </span>
-            <button
-              type="button"
-              onClick={onClose}
-              title="Cerrar folio"
-              style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '50%',
-                backgroundColor: '#f1f5f9',
-                border: 'none',
-                color: '#334155',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </div>
+    <>
+      <ModalFolioReservaIoT
+        isOpen={true}
+        onClose={onClose}
+        folioData={folioData}
+        movimientosIniciales={pagos}
+        onRegistrarCobro={registrarPago}
+        onAnularCobro={anularPago}
+        esAdmin={esAdmin}
+        onDescargarExcel={() => exportarExcelFolio(folio)}
+        onVerFacturaDian={() => setMostrarFacturaDian(true)}
+        onDescargarXml={descargarFactura}
+        alertaExito={exito}
+        alertaError={error}
+        descargandoXml={descargando}
+      />
 
-        {cargando ? (
-          <div style={{ padding: '48px 24px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>
-            Cargando folio…
-          </div>
-        ) : (
-          <div style={{ padding: '24px' }}>
-            {/* Alertas */}
-            {error && (
-              <div
-                role="alert"
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  backgroundColor: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  color: '#b91c1c',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  marginBottom: '16px',
-                }}
-              >
-                {error}
-              </div>
-            )}
-            {exito && (
-              <div
-                role="status"
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  backgroundColor: '#ecfdf5',
-                  border: '1px solid #a7f3d0',
-                  color: '#047857',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  marginBottom: '16px',
-                }}
-              >
-                {exito}
-              </div>
-            )}
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-              {/* ---------------- Columna izquierda: desglose ---------------- */}
-              <div>
-                <div
-                  style={{
-                    padding: '16px 18px',
-                    borderRadius: '16px',
-                    border: '1px solid #e2e8f0',
-                    backgroundColor: '#f8fafc',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                      color: '#64748b',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    Desglose de la estadía
-                  </div>
-
-                  {filaResumen(
-                    `${cotizacion.noches || 0} ${cotizacion.noches === 1 ? 'noche' : 'noches'} × tarifa base`,
-                    formatoCOP(cotizacion.subtotal)
-                  )}
-                  {Number(cotizacion.descuento) > 0 &&
-                    filaResumen('Descuento larga estadía', `- ${formatoCOP(cotizacion.descuento)}`, {
-                      color: '#047857',
-                    })}
-                  {filaResumen('Base gravable (IVA incluido)', formatoCOP(iva.base))}
-                  {filaResumen(`IVA ${iva.iva_pct}% (ya incluido en la tarifa)`, formatoCOP(iva.iva))}
-                  {filaResumen('Total de la reserva', formatoCOP(totales.total), { fuerte: true })}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: '16px',
-                    padding: '16px 18px',
-                    borderRadius: '16px',
-                    border: '1px solid #e2e8f0',
-                    backgroundColor: '#ffffff',
-                  }}
-                >
-                  {filaResumen('Pagado', formatoCOP(totales.pagado), { color: '#047857' })}
-                  {filaResumen('Saldo pendiente', formatoCOP(totales.saldo), { fuerte: true, color: '#b91c1c' })}
-                </div>
-
-                {reserva.cerradura && (
-                  <div
-                    style={{
-                      marginTop: '16px',
-                      padding: '14px 18px',
-                      borderRadius: '16px',
-                      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                      color: '#ffffff',
-                      border: '1px solid #334155',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Key size={16} color="#38bdf8" />
-                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#38bdf8' }}>
-                          Cerradura Inteligente (IoT)
-                        </span>
-                      </div>
-                      <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '2px 8px', borderRadius: '8px', fontSize: '11px', fontWeight: 700 }}>
-                        MQTTS v5.0 Conectado
-                      </span>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginTop: '8px' }}>
-                      <div style={{ background: 'rgba(255,255,255,0.06)', padding: '8px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Tarjeta RFID Proximidad:</span>
-                        <strong style={{ fontSize: '12px', color: '#4ade80', fontWeight: 700 }}>{reserva.cerradura.tarjeta_rfid}</strong>
-                      </div>
-                      <div style={{ background: 'rgba(255,255,255,0.06)', padding: '8px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Código PIN Teclado:</span>
-                        <strong style={{ fontSize: '14px', letterSpacing: '0.12em', color: '#ffffff', fontFamily: 'monospace', background: 'rgba(255,255,255,0.12)', padding: '2px 8px', borderRadius: '4px' }}>
-                          {reserva.cerradura.pin_temporal} #
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 1. Botón Principal: Descargar Folio Oficial en Excel */}
-                <button
-                  type="button"
-                  id="folio-descargar-excel"
-                  onClick={async () => {
-                    if (!folio) return;
-                    try {
-                      setDescargandoExcel(true);
-                      setError(null);
-                      await exportarExcelFolio(folio);
-                      setExito('Folio oficial descargado en Excel (.xlsx) exitosamente.');
-                    } catch (e) {
-                      console.error('Error al exportar Excel:', e);
-                      setError('No se pudo generar el archivo Excel.');
-                    } finally {
-                      setDescargandoExcel(false);
-                    }
-                  }}
-                  disabled={descargandoExcel}
-                  style={{
-                    marginTop: '16px',
-                    width: '100%',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: '1px solid #0f172a',
-                    backgroundColor: '#0f172a',
-                    color: '#ffffff',
-                    fontSize: '13px',
-                    fontWeight: 800,
-                    cursor: descargandoExcel ? 'wait' : 'pointer',
-                    boxShadow: '0 2px 6px rgba(15, 23, 42, 0.15)',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <FileSpreadsheet size={16} color="#38bdf8" />
-                  {descargandoExcel ? 'Generando Excel…' : 'Descargar Folio Oficial (.xlsx)'}
-                </button>
-
-                {/* 2. Botón Representación Gráfica Factura DIAN (Plantilla Oficial Facturatech) */}
-                <button
-                  type="button"
-                  id="folio-ver-factura-dian"
-                  onClick={() => setMostrarFacturaDian(true)}
-                  style={{
-                    marginTop: '8px',
-                    width: '100%',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '11px 16px',
-                    borderRadius: '12px',
-                    border: '1px solid #0284c7',
-                    backgroundColor: '#f0f9ff',
-                    color: '#0369a1',
-                    fontSize: '12.5px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <FileText size={15} color="#0284c7" />
-                  Ver Factura Electrónica DIAN (FEV / PDF)
-                </button>
-
-                {/* 3. Botón Secundario: Factura Electrónica XML UBL 2.1 (DIAN) */}
-                <button
-                  type="button"
-                  id="folio-descargar-factura"
-                  onClick={descargarFactura}
-                  disabled={descargando}
-                  style={{
-                    marginTop: '8px',
-                    width: '100%',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    padding: '9px 16px',
-                    borderRadius: '12px',
-                    border: '1px solid #cbd5e1',
-                    backgroundColor: '#f8fafc',
-                    color: '#475569',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: descargando ? 'wait' : 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <Download size={14} color="#64748b" />
-                  {descargando ? 'Generando XML…' : 'Descargar Factura XML (UBL 2.1)'}
-                </button>
-
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px', fontWeight: 600, textAlign: 'center' }}>
-                  Resolución DIAN 000165 de 2023 • UBL 2.1 con CUFE • Folio en Excel
-                </div>
-              </div>
-
-              {/* ---------------- Columna derecha: movimientos + cobro ---------------- */}
-              <div>
-                <div
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    color: '#64748b',
-                    marginBottom: '8px',
-                  }}
-                >
-                  Movimientos de pago
-                </div>
-
-                {pagos.length === 0 ? (
-                  <div
-                    style={{
-                      padding: '18px',
-                      borderRadius: '16px',
-                      border: '1px dashed #cbd5e1',
-                      color: '#64748b',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      textAlign: 'center',
-                    }}
-                  >
-                    Sin cobros registrados todavía.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {pagos.map((p) => {
-                      const etiqueta = etiquetaEstadoMovimiento(p.estado);
-                      return (
-                        <div
-                          key={p.id_pago}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '10px',
-                            padding: '10px 14px',
-                            borderRadius: '12px',
-                            border: '1px solid #e2e8f0',
-                            backgroundColor: '#ffffff',
-                          }}
-                        >
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>
-                              {formatoCOP(p.monto)} · {p.metodo}
-                            </div>
-                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
-                              {formatoFecha(p.creado_en)}
-                              {p.referencia ? ` · Ref: ${p.referencia}` : ''}
-                              {p.referencia_gateway ? ` · GW: ${p.referencia_gateway}` : ''}
-                              {p.creado_por ? ` · ${p.creado_por}` : ''}
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                            <span
-                              style={{
-                                padding: '3px 9px',
-                                borderRadius: '999px',
-                                backgroundColor: etiqueta.fondo,
-                                color: etiqueta.color,
-                                fontSize: '10px',
-                                fontWeight: 800,
-                              }}
-                            >
-                              {etiqueta.texto}
-                            </span>
-                            {esAdmin && p.estado === 'Confirmado' && (
-                              <button
-                                type="button"
-                                onClick={() => anularPago(p.id_pago)}
-                                title="Anular este cobro (restaura el saldo)"
-                                style={{
-                                  padding: '4px 10px',
-                                  borderRadius: '8px',
-                                  border: '1px solid #fecaca',
-                                  backgroundColor: '#fef2f2',
-                                  color: '#b91c1c',
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Anular
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Formulario de cobro */}
-                <form
-                  onSubmit={registrarPago}
-                  style={{
-                    marginTop: '16px',
-                    padding: '16px 18px',
-                    borderRadius: '16px',
-                    border: '1px solid #e2e8f0',
-                    backgroundColor: '#f8fafc',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                      color: '#64748b',
-                      marginBottom: '10px',
-                    }}
-                  >
-                    Registrar cobro
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '12px', fontWeight: 700, color: '#334155' }}>
-                      Monto (COP)
-                      <input
-                        id="folio-monto"
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={monto}
-                        onChange={(e) => setMonto(e.target.value)}
-                        placeholder="0"
-                        required
-                        style={{
-                          padding: '9px 12px',
-                          borderRadius: '10px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '14px',
-                          fontWeight: 700,
-                        }}
-                      />
-                    </label>
-
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '12px', fontWeight: 700, color: '#334155' }}>
-                      Método
-                      <select
-                        id="folio-metodo"
-                        value={metodo}
-                        onChange={(e) => setMetodo(e.target.value)}
-                        style={{
-                          padding: '9px 12px',
-                          borderRadius: '10px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '14px',
-                          fontWeight: 700,
-                          backgroundColor: '#ffffff',
-                        }}
-                      >
-                        {METODOS_PAGO.map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-
-                  <label
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '5px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: '#334155',
-                      marginTop: '10px',
-                    }}
-                  >
-                    Referencia (opcional)
-                    <input
-                      id="folio-referencia"
-                      type="text"
-                      maxLength={80}
-                      value={referencia}
-                      onChange={(e) => setReferencia(e.target.value)}
-                      placeholder="Nro. de operación, terminal, recibo…"
-                      style={{
-                        padding: '9px 12px',
-                        borderRadius: '10px',
-                        border: '1px solid #cbd5e1',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                      }}
-                    />
-                  </label>
-
-                  <button
-                    type="submit"
-                    id="folio-registrar-pago"
-                    disabled={guardando || Number(totales.saldo) <= 0}
-                    style={{
-                      marginTop: '14px',
-                      width: '100%',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      padding: '11px 16px',
-                      borderRadius: '12px',
-                      border: 'none',
-                      backgroundColor: Number(totales.saldo) > 0 ? '#0f172a' : '#cbd5e1',
-                      color: '#ffffff',
-                      fontSize: '13px',
-                      fontWeight: 800,
-                      cursor:
-                        guardando || Number(totales.saldo) <= 0 ? 'not-allowed' : 'pointer',
-                      opacity: guardando ? 0.7 : 1,
-                    }}
-                  >
-                    <Plus size={16} />
-                    {guardando ? 'Procesando…' : 'Registrar cobro'}
-                  </button>
-
-                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px', fontWeight: 600 }}>
-                    Los cobros se procesan con la pasarela activa (modo simulado). El monto no
-                    puede superar el saldo pendiente.
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Modal Representación Gráfica Factura DIAN (Plantilla Facturatech FEV) */}
       {mostrarFacturaDian && folio && (
         <ModalFacturaDian
           folio={folio}
           onClose={() => setMostrarFacturaDian(false)}
-          onDescargarXml={descargarFactura}
         />
       )}
-    </div>
+    </>
   );
 }
