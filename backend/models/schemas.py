@@ -58,6 +58,43 @@ class ReservaEstadoUpdate(BaseModel):
     estado: Literal['Check-In', 'Completada']
 
 
+class ReservaUpdate(BaseModel):
+    """
+    RF-013 (Fase 3): modificación de una reserva existente.
+
+    Todos los campos son opcionales: sólo se aplican los enviados. Las fechas se
+    validan igual que en el alta (salida > entrada) y el rango resultante vuelve a
+    pasar por el constraint GiST, de modo que no puede introducirse un solapamiento.
+    """
+    fecha_entrada: Optional[str] = Field(None, description="Nueva fecha de entrada (AAAA-MM-DD)")
+    fecha_salida: Optional[str] = Field(None, description="Nueva fecha de salida (AAAA-MM-DD)")
+    id_habitacion: Optional[int] = Field(None, ge=1, description="Nueva unidad asignada a la reserva")
+    observaciones: Optional[str] = Field(None, max_length=300, description="Notas internas de la reserva")
+
+
+# --- Schemas de Pagos (Fase 2 — módulo financiero) ---
+
+PAGO_METODOS = Literal[
+    'Efectivo',
+    'Tarjeta de crédito',
+    'Tarjeta de débito',
+    'PSE',
+    'Nequi',
+    'Transferencia',
+    'Bono',
+]
+
+
+class PagoCreate(BaseModel):
+    """Alta de un cobro sobre el folio de una reserva (Fase 2)."""
+    monto: float = Field(..., gt=0, description="Monto a cobrar en COP; no puede superar el saldo pendiente")
+    metodo: PAGO_METODOS = Field(..., description="Medio de pago empleado en el cobro")
+    referencia: Optional[str] = Field(
+        None, max_length=80,
+        description="Referencia del comprobante interno (nro. de operación, terminal, recibo...)"
+    )
+
+
 # --- Schemas de Empleados / Autenticación (Sprint 1) ---
 
 ROLES_ASIGNABLES = Literal[

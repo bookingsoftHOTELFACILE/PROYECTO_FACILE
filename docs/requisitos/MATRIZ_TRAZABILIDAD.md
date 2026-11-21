@@ -8,8 +8,10 @@
   ¿Impacto? Sin este documento, no es posible auditar la cobertura funcional del sistema.
 -->
 
-> **Fecha de actualización:** 2026-11-10
-> **Estado global:** 12 Requisitos Funcionales Implementados y Probados | 3 Requisitos Diferidos a Fase 2 (Alcance Delimitado) | HU-005 (Check-in / Check-out) implementado en Fase B
+> **Fecha de actualización:** 2026-11-15
+> **Estado global:** 17 Requisitos Funcionales Implementados y Probados | 1 Alcance Diferido (cerraduras electrónicas HU-005) | HU-005 (Check-in / Check-out) implementado en Fase B | Módulo financiero entregado en el **Plan de Maduración — Fase 2** (2026-11-15) | Edición de reservas (RF-013) y salas/coworking (RF-015) entregadas en el **Plan de Maduración — Fase 3** (2026-11-15)
+>
+> ⚠️ Nota histórica: en la Fase 2 de alcance se difirieron RF-013 y RF-015. La **Fase 3 del Plan de Maduración** ya los entregó y probó; lo único que sigue fuera de alcance son las integraciones externas (cerraduras, DIAN y pasarelas reales).
 
 ---
 
@@ -29,22 +31,21 @@
 | **RF-010** (Gestión de Estado Activo/Inactivo) | HU-001, HU-004 | RNF-010 | `PATCH /api/empleados/{id}/estado`<br>`POST /api/auth/login` | ✅ Implementado y probado | `test_login_usuario_inactivo`<br>`test_recepcionista_gestion_rol_y_estado` |
 | **RF-011** (Creación de Reserva Atómica) | HU-005 | RNF-009, RNF-011 | `POST /api/reservas` | ✅ Implementado y probado | `test_reserva_descuento`<br>`test_reserva_supera_capacidad`<br>`test_reserva_concurrencia_double_booking` |
 | **RF-012** (Consulta Disponibilidad Habitaciones) | HU-005, HU-009 | RNF-011 | `GET /api/habitaciones` | ✅ Implementado y probado | `test_rf012_consulta_disponibilidad` |
-| **RF-013** (Modificación de Reserva) | HU-005 | N/A | N/A | ⏳ Fase 2 (Diferido) | Ver Sección de Decisiones de Alcance |
+| **RF-013** (Modificación de Reserva) | HU-005 | RNF-009, RNF-011 | `PATCH /api/reservas/{id}` | ✅ Implementado y probado | `test_actualizar_fechas_recalcula_cotizacion`<br>`test_solapamiento_al_editar_devuelve_409_y_no_cambia_nada`<br>`E2E/tests/edicion_reserva.spec.js` |
 | **RF-014** (Cancelación de Reserva) | HU-005 | RNF-009, RNF-010 | `DELETE /api/reservas/{id}` | ✅ Implementado y probado | `test_borrar_reserva`<br>`test_recepcionista_cancela_reserva` (baja lógica: `estado = 'Cancelada'`) |
 | **HU-005** (Check-in / Check-out) | HU-005 | RNF-009, RNF-011 | `PATCH /api/reservas/{id}/estado`<br>`POST /api/reservas` (`checkin_inmediato`) | ✅ Implementado y probado | `test_checkin_checkout.py` (7 pruebas: CA-005.1 → CA-005.5)<br>`E2E/tests/checkin_checkout.spec.js` |
-| **RF-015** (Reserva Espacios Coworking) | HU-013 | N/A | N/A | ⏳ Fase 2 (Diferido) | Ver Sección de Decisiones de Alcance |
+| **RF-015** (Reserva Espacios Coworking y Salas) | HU-013 | RNF-009, RNF-011 | `GET/POST /api/centro-negocios/reservas`<br>`GET /api/centro-negocios/espacios`<br>`DELETE /api/centro-negocios/reservas/{id}` | ✅ Implementado y probado | `backend/tests/test_centro_negocios.py` (12 pruebas: tarifas, paquetes, solapamientos y cancelación)<br>`E2E/tests/coworking_smoke.spec.js`<br>`ModuloSalasCoworkingPMS.jsx` / `VistaCentroNegocios.jsx` |
 
 ---
 
-## 🎯 Justificación Técnica de Decisiones de Alcance (Fase 2)
+## 🎯 Justificación Técnica de Decisiones de Alcance (Integraciones externas)
 
-Las siguientes funcionalidades fueron catalogadas y documentadas intencionalmente para la **Fase 2** del proyecto:
+Las siguientes funcionalidades quedaron fuera del alcance del plan de maduración porque exigen contratos, credenciales o certificados de terceros:
 
 | Requisito | Descripción | Justificación Técnica / Argumento para Sustentación |
 | :--- | :--- | :--- |
-| **RF-013** | Modificación de fechas/habitaciones en reserva existente | Para garantizar la integridad referencial y prevenir condiciones de carrera (Double-Booking), el flujo de modificación exige la atomicidad de una cancelación (`DELETE`) seguida de una nueva creación (`POST`). La edición in-situ requeriría re-evaluar la exclusión GiST de PostgreSQL sobre rangos solapados en una misma transacción. Se priorizó la atomicidad de la creación (RF-011) e inmutabilidad de la reserva creada. |
-| **RF-015** | Alquiler de salas de coworking / reuniones | El núcleo de negocio (Core PMS) del Apartahotel Facile se concentra en la pernoctación y gestión de habitaciones. Las salas de coworking representan una unidad de negocio secundaria cuyo esquema de tarificación (por hora) difiere del esquema por noche de la hotelería. |
-| **HU-005 (Entrega de llaves electrónicas)** | Integración del check-in/check-out con cerraduras inteligentes | El ciclo de vida de la reserva (`Confirmada → Check-In → Completada`), las marcas temporales de entrada/salida y el cálculo de noches **ya están implementados y probados** en Fase B vía `PATCH /api/reservas/{id}/estado`. Lo que se difiere a Fase 2 es únicamente la integración física con cerraduras electrónicas para la apertura automática de puertas al registrar la entrada. |
+| **HU-005 (Entrega de llaves electrónicas)** | Integración del check-in/check-out con cerraduras inteligentes | El ciclo de vida de la reserva (`Confirmada → Check-In → Completada`), las marcas temporales de entrada/salida y el cálculo de noches **ya están implementados y probados** vía `PATCH /api/reservas/{id}/estado`. Lo que se difiere a Fase 2 es únicamente la integración física con cerraduras electrónicas para la apertura automática de puertas al registrar la entrada. |
+| **Facturación Electrónica DIAN** | Emisión fiscal de facturas electrónicas XML UBL 2.1 | Requiere certificado digital, firma XAdES y conexión a los Web Services de la DIAN en ambiente de habilitación. El sistema actual realiza la liquidación comercial completa de estadías y cobros. |
 
 ---
 

@@ -8,7 +8,7 @@
              las dependencias FastAPI de cada ruta backend.
 
   Fuente de verdad: el árbol de rutas expuesto por FastAPI (`GET /openapi.json`), que en la
-  remediación arroja 28 operaciones. Toda fila de esta matriz debe corresponderse
+  remediación arroja 33 operaciones. Toda fila de esta matriz debe corresponderse
   con una operación real: no existen endpoints de alta/baja de habitaciones ni rutas "guest-*".
 -->
 
@@ -19,7 +19,7 @@
 
 ---
 
-## 🛡️ Matriz General de Permisos (28 endpoints)
+## 🛡️ Matriz General de Permisos (33 endpoints)
 
 | Método HTTP | Ruta / Endpoint | Descripción Funcional | Público | Administrador | Recepcionista 24h | Ama de Llaves | Mantenimiento |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -44,8 +44,13 @@
 | `PATCH` | `/api/habitaciones/{id}/estado` | Cambio de estado operativo | ❌ | ✅ | ✅ | ✅ | ✅ |
 | `GET` | `/api/reservas` | Listado de reservas | ❌ | ✅ | ✅ | ❌ | ❌ |
 | `POST` | `/api/reservas` | Crear reserva atómica (GiST) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `PATCH` | `/api/reservas/{id}` | Editar fechas, unidad y notas de una reserva confirmada (RF-013, Fase 3) | ❌ | ✅ | ✅ | ❌ | ❌ |
 | `PATCH` | `/api/reservas/{id}/estado` | Check-in / check-out de reserva (HU-005) | ❌ | ✅ | ✅ | ❌ | ❌ |
 | `DELETE` | `/api/reservas/{id}` | Cancelación de reserva | ❌ | ✅ | ✅ | ❌ | ❌ |
+| `GET` | `/api/reservas/{id}/folio` | Folio financiero: IVA desglosado, pagos y saldo (Fase 2) | ❌ | ✅ | ✅ | ❌ | ❌ |
+| `POST` | `/api/reservas/{id}/pagos` | Registrar cobro vía pasarela (Fase 2) | ❌ | ✅ | ✅ | ❌ | ❌ |
+| `POST` | `/api/reservas/{id}/pagos/{pago}/anular` | Anular cobro y restaurar el saldo (Fase 2) | ❌ | ✅ | ❌ | ❌ | ❌ |
+| `GET` | `/api/reservas/{id}/factura.xml` | Factura electrónica **simulada** UBL 2.1 en borrador (Fase 2) | ❌ | ✅ | ✅ | ❌ | ❌ |
 | `GET` | `/api/centro-negocios/espacios` | Catálogo de salas y coworking | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `GET` | `/api/centro-negocios/reservas` | Listar reservas de negocio | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `POST` | `/api/centro-negocios/reservas` | Reservar salón o coworking por horas | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -72,3 +77,15 @@
    Mantenimiento), aunque el resto del cuerpo de la reserva sea público.
 5. **Salud del sistema:** `GET /health` responde siempre `{"status": "ok"}` sin filtrar
    detalles técnicos del error de base de datos (hallazgo B-05, resuelto en la Fase D).
+6. **Módulo financiero (Fase 2):** el cobro comparte el par de roles de las reservas
+   (Administrador + Recepcionista 24 h), pero la **anulación de un cobro es exclusiva
+   del Administrador**, porque restaura el saldo disponible de la reserva. Ninguna de
+   estas rutas es pública: siempre exige JWT con el rol indicado. El Ama de llaves y el
+   Personal de mantenimiento quedan fuera por diseño (verificado en
+   `backend/tests/test_pagos.py::test_cobros_restringidos_a_roles`).
+7. **Edición de reservas (Fase 3, RF-013):** `PATCH /api/reservas/{id}` sólo admite
+   reservas en estado `Confirmada` (una estancia en curso o cerrada es inmutable) y
+   comparte los roles de creación (Administrador + Recepcionista 24 h). Actualiza
+   fechas, unidad y observaciones en una sola transacción: si el nuevo rango choca
+   con otra reserva, el constraint GiST aborta y se responde `409` sin dejar cambios
+   parciales. Verificado en `backend/tests/test_reservas_update.py`.

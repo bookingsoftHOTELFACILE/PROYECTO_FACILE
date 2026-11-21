@@ -45,7 +45,6 @@ test.describe('Semana 7 — Playwright a Fondo: Protección contra Doble Clic (J
 
     // 1. Iniciar sesión como huésped
     await page.getByRole('button', { name: 'Inicia sesión o regístrate como Huésped' }).click();
-    await page.getByRole('button', { name: 'ya tengo registro' }).click();
     await page.getByLabel('Número de Documento o Correo Electrónico').fill('john.doe@example.com');
     await page.getByLabel('Contraseña').fill('john123');
     await page.getByRole('button', { name: 'Iniciar Sesión y Continuar' }).click();

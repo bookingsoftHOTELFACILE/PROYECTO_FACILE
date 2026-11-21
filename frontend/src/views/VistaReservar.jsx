@@ -9,6 +9,9 @@ import { etiquetaDescuentoEstadia } from '../utils/pricing.js';
 
 const VistaReservar = () => {
   const [submittingReserva, setSubmittingReserva] = useState(false);
+  const [filtroCategoria, setFiltroCategoria] = useState('Dúplex');
+  const [soloDisponibles, setSoloDisponibles] = useState(true);
+
   const {
     habitaciones, reservas, espaciosNegocio, reservaNegocioForm,
     setReservaNegocioForm, setActiveTab, formData, habeasData,
@@ -19,6 +22,31 @@ const VistaReservar = () => {
     setShowGuestAuthModal, setGuestAuthTab, guestSearchQuery, setGuestSearchQuery,
     guestSearchError, handleGuestSearchSubmit
   } = useApp();
+
+  // Sincronizar automáticamente la categoría del filtro si ya hay una habitación seleccionada
+  React.useEffect(() => {
+    if (reservaData.id_habitacion) {
+      if (String(reservaData.id_habitacion).startsWith('coworking-')) {
+        setFiltroCategoria('coworking');
+      } else {
+        const found = habitaciones.find(h => String(h.id_habitacion) === String(reservaData.id_habitacion) || String(h.numero) === String(reservaData.id_habitacion));
+        if (found && found.tipo) {
+          setFiltroCategoria(found.tipo);
+        }
+      }
+    }
+  }, [reservaData.id_habitacion, habitaciones]);
+
+  // Verificar si una unidad física tiene conflicto de reserva en las fechas seleccionadas
+  const checkUnidadOcupada = (habId) => {
+    if (!reservaData.fecha_entrada || !reservaData.fecha_salida) return false;
+    return reservas.some(r => 
+      String(r.id_habitacion) === String(habId) &&
+      (r.estado === 'Confirmada' || r.estado === 'Check-In') &&
+      r.fecha_entrada < reservaData.fecha_salida &&
+      r.fecha_salida > reservaData.fecha_entrada
+    );
+  };
   return (
         <section className="facile-section">
           <div className="section-title-wrap">
@@ -233,8 +261,240 @@ const VistaReservar = () => {
                   setTimeout(() => setSubmittingReserva(false), 2000);
                 }
               }}>
+                {/* BARRA DE SELECCIÓN Y DISPONIBILIDAD ESTILO OPERA PMS / PMS HOTELERO */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <label style={{ margin: 0, fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>
+                      1. Filtrar por Categoría de Alojamiento
+                    </label>
+                    {reservaData.fecha_entrada && reservaData.fecha_salida && (
+                      <span style={{ fontSize: '0.75rem', color: '#059669', background: '#ecfdf5', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-pill)', fontWeight: 700, border: '1px solid #a7f3d0', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <CheckCircle2 size={12} /> Disponibilidad: {reservaData.fecha_entrada.split('-').reverse().join('/')} al {reservaData.fecha_salida.split('-').reverse().join('/')}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Píldoras de Categoría por Sección (sin pestaña Todos) */}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
+                    {[
+                      { id: 'Dúplex', label: 'Dúplex', count: habitaciones.filter(h => h.tipo === 'Dúplex').length || 14 },
+                      { id: 'Dobles', label: 'Dobles', count: habitaciones.filter(h => h.tipo === 'Dobles').length || 11 },
+                      { id: 'Familiares', label: 'Familiares', count: habitaciones.filter(h => h.tipo === 'Familiares').length || 2 },
+                      { id: 'Habitaciones', label: 'Habitaciones', count: habitaciones.filter(h => h.tipo === 'Habitaciones').length || 11 },
+                      { id: 'coworking', label: '💼 Coworking', count: espaciosNegocio.length }
+                    ].map(cat => {
+                      const isCatActive = filtroCategoria === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setFiltroCategoria(cat.id)}
+                          style={{
+                            padding: '0.45rem 0.95rem',
+                            borderRadius: 'var(--radius-pill)',
+                            border: isCatActive ? '2px solid #d91a2a' : '1px solid #cbd5e1',
+                            background: isCatActive ? '#fee2e2' : '#ffffff',
+                            color: isCatActive ? '#d91a2a' : '#334155',
+                            fontSize: '0.8rem',
+                            fontWeight: isCatActive ? 800 : 600,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <span>{cat.label}</span>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            background: isCatActive ? '#d91a2a' : '#f1f5f9',
+                            color: isCatActive ? '#ffffff' : '#64748b',
+                            padding: '1px 6px',
+                            borderRadius: '9999px',
+                            fontWeight: 800
+                          }}>
+                            {cat.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* BARRA DE UNIDADES DISPONIBLES EN TIEMPO REAL (ROOM PICKER) */}
+                  {filtroCategoria !== 'coworking' ? (() => {
+                    const unidadesFiltradas = habitaciones.filter(h => {
+                      if (filtroCategoria !== 'todos' && h.tipo !== filtroCategoria) return false;
+                      return true;
+                    });
+
+                    const totalUnidades = unidadesFiltradas.length;
+                    const unidadesDisponibles = unidadesFiltradas.filter(h => !checkUnidadOcupada(h.id_habitacion || h.numero) && h.estado !== 'Mantenimiento');
+                    const unidadesAMostrar = soloDisponibles && (reservaData.fecha_entrada && reservaData.fecha_salida)
+                      ? unidadesDisponibles
+                      : unidadesFiltradas;
+
+                    return (
+                      <div style={{ background: '#f8fafc', padding: '0.9rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0f172a' }}>
+                              Unidades asignables ({filtroCategoria === 'todos' ? 'Todas' : filtroCategoria}):
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: '6px' }}>
+                              {reservaData.fecha_entrada && reservaData.fecha_salida 
+                                ? `${unidadesDisponibles.length} de ${totalUnidades} disponibles en tus fechas` 
+                                : `${totalUnidades} unidades en el edificio`}
+                            </span>
+                          </div>
+
+                          {reservaData.fecha_entrada && reservaData.fecha_salida && (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#334155', cursor: 'pointer', fontWeight: 600 }}>
+                              <input 
+                                type="checkbox" 
+                                checked={soloDisponibles} 
+                                onChange={e => setSoloDisponibles(e.target.checked)} 
+                                style={{ cursor: 'pointer', accentColor: '#d91a2a' }}
+                              />
+                              <span>Solo mostrar disponibles</span>
+                            </label>
+                          )}
+                        </div>
+
+                        {/* Tarjetas / Chips de Unidades */}
+                        {unidadesAMostrar.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '1.2rem', color: '#b91c1c', background: '#fee2e2', borderRadius: '12px', fontSize: '0.82rem', fontWeight: 600 }}>
+                            ⚠️ No hay apartamentos disponibles de esta categoría para el rango de fechas seleccionado. Por favor cambia de categoría arriba o selecciona otras fechas.
+                          </div>
+                        ) : (
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+                            gap: '0.65rem',
+                            maxHeight: '260px',
+                            overflowY: 'auto',
+                            paddingRight: '4px'
+                          }}>
+                            {unidadesAMostrar.map(h => {
+                              const habId = String(h.id_habitacion || h.numero);
+                              const isSelected = String(reservaData.id_habitacion) === habId;
+                              const isOccupied = checkUnidadOcupada(habId);
+                              const isMaintenance = h.estado === 'Mantenimiento';
+                              const isSelectable = !isOccupied && !isMaintenance;
+
+                              return (
+                                <div
+                                  key={habId}
+                                  onClick={() => {
+                                    if (isSelectable) {
+                                      setReservaData(prev => ({ ...prev, id_habitacion: habId }));
+                                    }
+                                  }}
+                                  style={{
+                                    backgroundColor: isSelected ? '#fee2e2' : (isSelectable ? '#ffffff' : '#f1f5f9'),
+                                    border: isSelected ? '2px solid #d91a2a' : (isSelectable ? '1px solid #cbd5e1' : '1px solid #e2e8f0'),
+                                    borderRadius: '12px',
+                                    padding: '0.65rem 0.85rem',
+                                    cursor: isSelectable ? 'pointer' : 'not-allowed',
+                                    opacity: isSelectable ? 1 : 0.6,
+                                    boxShadow: isSelected ? '0 2px 8px rgba(217, 26, 42, 0.25)' : '0 1px 3px rgba(0,0,0,0.02)',
+                                    transition: 'all 0.15s ease',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between'
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                    <span style={{ fontWeight: 800, fontSize: '0.85rem', color: isSelected ? '#d91a2a' : '#0f172a' }}>
+                                      Apto {h.numero}
+                                    </span>
+                                    <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                                      {h.zona || h.piso || 'Torre Facile'}
+                                    </span>
+                                  </div>
+
+                                  <div style={{ fontSize: '0.72rem', color: '#475569', marginBottom: '6px' }}>
+                                    {h.tipo} • {h.capacidad || 2} pers.
+                                  </div>
+
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '4px' }}>
+                                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a' }}>
+                                      ${Number(h.precio_noche || 0).toLocaleString('es-CO')}
+                                    </span>
+
+                                    {isSelected ? (
+                                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#d91a2a', background: '#ffffff', padding: '1px 6px', borderRadius: '4px', border: '1px solid #fca5a5' }}>
+                                        ✓ Seleccionado
+                                      </span>
+                                    ) : isOccupied ? (
+                                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#ef4444', textDecoration: 'line-through' }}>
+                                        ✕ Ocupado
+                                      </span>
+                                    ) : isMaintenance ? (
+                                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#d97706' }}>
+                                        🔧 Mant.
+                                      </span>
+                                    ) : (
+                                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#059669', background: '#ecfdf5', padding: '1px 6px', borderRadius: '4px' }}>
+                                        ✓ Disponible
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })() : (
+                    /* LISTA RÁPIDA DE COWORKING */
+                    <div style={{ background: '#f8fafc', padding: '0.9rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.6rem' }}>
+                        Salas de Juntas y Espacios de Coworking:
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '0.65rem' }}>
+                        {espaciosNegocio.map(e => {
+                          const espKey = `coworking-${e.id_espacio}`;
+                          const isSelected = String(reservaData.id_habitacion) === espKey;
+                          const isMaintenance = e.estado === 'Mantenimiento';
+
+                          return (
+                            <div
+                              key={espKey}
+                              onClick={() => {
+                                if (!isMaintenance) {
+                                  setReservaData(prev => ({ ...prev, id_habitacion: espKey }));
+                                }
+                              }}
+                              style={{
+                                backgroundColor: isSelected ? '#fee2e2' : '#ffffff',
+                                border: isSelected ? '2px solid #d91a2a' : '1px solid #cbd5e1',
+                                borderRadius: '12px',
+                                padding: '0.65rem 0.85rem',
+                                cursor: !isMaintenance ? 'pointer' : 'not-allowed',
+                                boxShadow: isSelected ? '0 2px 8px rgba(217, 26, 42, 0.25)' : 'none'
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                <span style={{ fontWeight: 800, fontSize: '0.82rem', color: isSelected ? '#d91a2a' : '#0f172a' }}>
+                                  💼 {e.nombre}
+                                </span>
+                                <span style={{ fontSize: '0.68rem', color: '#64748b' }}>{e.tipo}</span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.74rem' }}>
+                                <span style={{ color: '#475569' }}>Capacidad: {e.capacidad} pers.</span>
+                                <span style={{ fontWeight: 800, color: '#0f172a' }}>${Number(e.precio_hora).toLocaleString('es-CO')} COP/h</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="form-field">
-                  <label>Seleccionar Apartamento o Espacio de Coworking</label>
+                  <label>2. Confirmar Unidad en Lista Desplegable</label>
                   <div className="field-input-wrap">
                     {String(reservaData.id_habitacion).startsWith('coworking-') ? (
                       <Briefcase className="field-icon" size={16}/>
@@ -473,21 +733,21 @@ const VistaReservar = () => {
                       const isPrevMonthDisabled = year < todayYear || (year === todayYear && month <= todayMonth);
 
                       return (
-                        <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '14px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', marginBottom: '1.2rem' }}>
+                        <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '10px 12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.03)', marginBottom: '1rem' }}>
                           
                           {/* Header interactivo del Calendario */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.84rem', fontWeight: 700, color: '#0f172a', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 700, color: '#0f172a', paddingBottom: '6px', borderBottom: '1px solid #f1f5f9' }}>
                             <button 
                               type="button" 
                               disabled={isPrevMonthDisabled}
                               onClick={() => setCalDate(new Date(year, month - 1, 1))}
                               title="Mes Anterior"
-                              style={{ display: 'flex', alignItems: 'center', gap: '4px', background: isPrevMonthDisabled ? '#f1f5f9' : '#ffffff', border: '1px solid #cbd5e1', color: isPrevMonthDisabled ? '#94a3b8' : '#334155', cursor: isPrevMonthDisabled ? 'not-allowed' : 'pointer', fontSize: '0.75rem', padding: '5px 9px', borderRadius: '8px', fontWeight: 700, opacity: isPrevMonthDisabled ? 0.5 : 1, transition: 'all 0.15s ease' }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '2px', background: isPrevMonthDisabled ? '#f1f5f9' : '#ffffff', border: '1px solid #cbd5e1', color: isPrevMonthDisabled ? '#94a3b8' : '#334155', cursor: isPrevMonthDisabled ? 'not-allowed' : 'pointer', fontSize: '0.68rem', padding: '2px 5px', borderRadius: '5px', fontWeight: 700, opacity: isPrevMonthDisabled ? 0.5 : 1, transition: 'all 0.15s ease' }}
                             >
                               <span>◀ Mes Ant.</span>
                             </button>
 
-                            <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                            <span style={{ fontSize: '0.76rem', fontWeight: 800, color: '#0f172a' }}>
                               🗓️ Disponibilidad: {monthNames[month]} {year}
                             </span>
 
@@ -495,28 +755,28 @@ const VistaReservar = () => {
                               type="button" 
                               onClick={() => setCalDate(new Date(year, month + 1, 1))}
                               title="Mes Siguiente"
-                              style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', cursor: 'pointer', fontSize: '0.75rem', padding: '5px 9px', borderRadius: '8px', fontWeight: 700, transition: 'all 0.15s ease' }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#334155', cursor: 'pointer', fontSize: '0.68rem', padding: '2px 5px', borderRadius: '5px', fontWeight: 700, transition: 'all 0.15s ease' }}
                             >
                               <span>Mes Sig. ▶</span>
                             </button>
                           </div>
 
-                          {/* Leyenda Explicativa de Tres Estados */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '8px 10px', backgroundColor: '#f8fafc', borderRadius: '12px', margin: '10px 0', border: '1px solid #f1f5f9' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
-                              <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', display: 'inline-block' }} />
+                          {/* Leyenda Explicativa Compacta */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '4px 6px', backgroundColor: '#f8fafc', borderRadius: '8px', margin: '6px 0', border: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.67rem', fontWeight: 600, color: '#475569' }}>
+                              <span style={{ width: '11px', height: '11px', borderRadius: '3px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', display: 'inline-block' }} />
                               <span>Disponible</span>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 600, color: '#ef4444' }}>
-                              <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#94a3b8', textDecoration: 'line-through 2px #ef4444', fontSize: '9px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.67rem', fontWeight: 600, color: '#ef4444' }}>
+                              <span style={{ width: '11px', height: '11px', borderRadius: '3px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#94a3b8', textDecoration: 'line-through 2px #ef4444', fontSize: '8px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 ✕
                               </span>
-                              <span>Ocupado (No disponible)</span>
+                              <span>Ocupado</span>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#d91a2a' }}>
-                              <span style={{ width: '14px', height: '14px', borderRadius: '4px', backgroundColor: '#d91a2a', color: '#ffffff', fontSize: '9px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.67rem', fontWeight: 700, color: '#d91a2a' }}>
+                              <span style={{ width: '11px', height: '11px', borderRadius: '3px', backgroundColor: '#d91a2a', color: '#ffffff', fontSize: '8px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 ✓
                               </span>
                               <span>Tu Selección</span>
@@ -524,14 +784,14 @@ const VistaReservar = () => {
                           </div>
 
                           {/* Encabezado Días Semanales */}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '6px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', fontSize: '0.66rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '3px' }}>
                             <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
                           </div>
 
                           {/* Grilla Interactiva de Días */}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
                             {daysGrid.map((item, idx) => {
-                              if (!item) return <div key={`empty-${idx}`} style={{ height: '36px' }} />;
+                              if (!item) return <div key={`empty-${idx}`} style={{ height: '28px' }} />;
 
                               // 1. DÍA OCUPADO (No disponible)
                               if (item.isOccupied) {
@@ -540,12 +800,12 @@ const VistaReservar = () => {
                                     key={item.dayStr}
                                     title={`Fecha ${item.dayStr} ocupada (No disponible)`}
                                     style={{
-                                      height: '36px',
-                                      borderRadius: '8px',
+                                      height: '28px',
+                                      borderRadius: '6px',
                                       backgroundColor: '#f1f5f9',
                                       border: '1px solid #e2e8f0',
                                       color: '#94a3b8',
-                                      fontSize: '0.82rem',
+                                      fontSize: '0.74rem',
                                       fontWeight: 600,
                                       textDecoration: 'line-through 2px #ef4444',
                                       cursor: 'not-allowed',
@@ -567,12 +827,12 @@ const VistaReservar = () => {
                                     key={item.dayStr}
                                     title={`Fecha pasada (${item.dayStr}) no permitida`}
                                     style={{
-                                      height: '36px',
-                                      borderRadius: '8px',
+                                      height: '28px',
+                                      borderRadius: '6px',
                                       backgroundColor: '#f8fafc',
                                       border: '1px solid #f1f5f9',
                                       color: '#cbd5e1',
-                                      fontSize: '0.82rem',
+                                      fontSize: '0.74rem',
                                       fontWeight: 500,
                                       cursor: 'not-allowed',
                                       display: 'flex',
@@ -597,14 +857,14 @@ const VistaReservar = () => {
                                     onClick={() => handleDayClick(item)}
                                     title={`${item.isSelectedIn ? 'Llegada: ' : item.isSelectedOut ? 'Salida: ' : ''}${item.dayStr}`}
                                     style={{
-                                      height: '36px',
-                                      borderRadius: '8px',
+                                      height: '28px',
+                                      borderRadius: '6px',
                                       backgroundColor: esExtremo ? '#d91a2a' : '#fee2e2',
                                       color: esExtremo ? '#ffffff' : '#b91522',
-                                      fontSize: '0.82rem',
+                                      fontSize: '0.75rem',
                                       fontWeight: 800,
                                       border: esExtremo ? 'none' : '1px dashed #fca5a5',
-                                      boxShadow: esExtremo ? '0 2px 8px rgba(217, 26, 42, 0.35)' : 'none',
+                                      boxShadow: esExtremo ? '0 2px 6px rgba(217, 26, 42, 0.3)' : 'none',
                                       transform: esExtremo ? 'scale(1.05)' : 'scale(1)',
                                       display: 'flex',
                                       alignItems: 'center',
@@ -626,12 +886,12 @@ const VistaReservar = () => {
                                   onClick={() => handleDayClick(item)}
                                   title={`Seleccionar fecha ${item.dayStr}`}
                                   style={{
-                                    height: '36px',
-                                    borderRadius: '8px',
+                                    height: '28px',
+                                    borderRadius: '6px',
                                     backgroundColor: '#ffffff',
                                     border: '1px solid #cbd5e1',
                                     color: '#0f172a',
-                                    fontSize: '0.82rem',
+                                    fontSize: '0.75rem',
                                     fontWeight: 700,
                                     cursor: 'pointer',
                                     display: 'flex',

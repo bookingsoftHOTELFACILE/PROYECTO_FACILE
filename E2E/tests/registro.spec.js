@@ -27,7 +27,7 @@ test('Successful registration of a new guest with dynamic data', async ({ page }
   // 2. ACT
   // Clic en los botones para abrir el formulario
   await page.getByRole('button', { name: /Inicia sesión o regístrate como Huésped/i }).click();
-  await page.getByRole('button', { name: /Crear cuenta nueva/i }).click();
+  await page.getByRole('button', { name: /¿Es tu primera vez\? Regístrate aquí/i }).click();
 
   // Diligenciar los campos mediante su etiqueta (getByLabel)
   await page.getByLabel('Nombre(s)').fill('Ashley');

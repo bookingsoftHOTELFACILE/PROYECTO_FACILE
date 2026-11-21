@@ -226,24 +226,29 @@ PATCH  /api/empleados/{id}/estado          GET    /api/reservas
 PATCH  /api/empleados/{id}/rol             POST   /api/reservas
 GET    /api/huespedes                      DELETE /api/reservas/{id}
 DELETE /api/huespedes/{id}                 PATCH  /api/reservas/{id}/estado
-PATCH  /api/huespedes/{id}/estado          GET    /api/centro-negocios/espacios
-GET    /api/habitaciones                   GET    /api/centro-negocios/reservas
-GET    /api/habitaciones/disponibilidad    POST   /api/centro-negocios/reservas
-GET    /api/habitaciones/publicas          DELETE /api/centro-negocios/reservas/{id}
-PATCH  /api/habitaciones/{id}/estado       GET    /health
-TOTAL: 28
+PATCH  /api/huespedes/{id}/estado          GET    /api/reservas/{id}/folio
+GET    /api/habitaciones                   POST   /api/reservas/{id}/pagos
+GET    /api/habitaciones/disponibilidad    POST   /api/reservas/{id}/pagos/{pago}/anular
+GET    /api/habitaciones/publicas          GET    /api/reservas/{id}/factura.xml
+PATCH  /api/habitaciones/{id}/estado       GET    /api/centro-negocios/espacios
+                                            GET    /api/centro-negocios/reservas
+                                            POST   /api/centro-negocios/reservas
+                                            DELETE /api/centro-negocios/reservas/{id}
+                                            GET    /health
+TOTAL: 32
 ```
 
 Notas de acceso:
 - `POST /api/reservas` usa `autenticar_opcional` → es **pública**, pero el flag `checkin_inmediato` devuelve **403** a Ama de Llaves/Mantenimiento.
 - `POST /api/user/login` **no** emite token (devuelve `{message, usuario}`): el portal no usa JWT.
 - `GET /api/habitaciones/publicas` y `GET /api/centro-negocios/*` son públicos por diseño.
+- **Fase 2:** las 4 operaciones de folio/pagos/factura **no son públicas**: exigen JWT con rol Administrador o Recepcionista 24h (anular pago: sólo Administrador).
 
 ---
 
 ## 6. Inventario de pruebas
 
-**pytest — 61 pruebas en 7 ficheros** (sobre PostgreSQL real, sin mocks):
+**pytest — 74 pruebas en 8 ficheros** (sobre PostgreSQL real, sin mocks):
 
 | Fichero | Pruebas |
 | --- | --- |
@@ -251,13 +256,14 @@ Notas de acceso:
 | `backend/tests/test_checkin_checkout.py` | 7 |
 | `backend/tests/test_consultas.py` | 4 |
 | `backend/tests/test_model_huesped.py` | 8 |
+| `backend/tests/test_pagos.py` | 13 |
 | `backend/tests/test_reservas.py` | 5 |
 | `backend/tests/test_reservas_service.py` | 22 |
 | `backend/tests/test_seguridad_acceso.py` | 6 |
 
-**Vitest — 20 pruebas en 5 ficheros:** `frontend/src/catalogo_hu009.test.js`, `frontend/src/smoke.test.js`, `frontend/src/utils/dateUtils.test.js`, `frontend/src/utils/httpClient.test.js`, `frontend/src/utils/pricing.test.js`.
+**Vitest — 25 pruebas en 6 ficheros:** `frontend/src/catalogo_hu009.test.js`, `frontend/src/smoke.test.js`, `frontend/src/utils/dateUtils.test.js`, `frontend/src/utils/folio.test.js`, `frontend/src/utils/httpClient.test.js`, `frontend/src/utils/pricing.test.js`.
 
-**Playwright — 6 specs en `E2E/tests/` (100% pasando):** `login`, `registro`, `habitaciones`, `cancelacion`, `checkin_checkout`, `proteccion_doble_clic`.
+**Playwright — 7 specs en `E2E/tests/` (100% pasando):** `login`, `registro`, `habitaciones`, `cancelacion`, `checkin_checkout`, `proteccion_doble_clic`, `folio_pago`.
 
 ---
 
@@ -287,17 +293,17 @@ git status -sb && git log --oneline origin/main..HEAD && git diff --stat origin/
 cd backend && DB_HOST=localhost DB_PORT=5433 DB_USER=bookingsof4 \
   DB_PASSWORD=BooKingSoft DB_NAME=bookingsoft API_BASE_URL=http://localhost:4001 \
   python3 -m pytest -q -o addopts=""
-# Esperado: 61 passed
+# Esperado: 74 passed
 
 # 2) Build + unitarias + cobertura con umbrales
 #    REQUISITO: Node >= 20.19 (nvm use para leer frontend/.nvmrc). Con el Node
 #    18 del sistema, vitest falla con ERR_REQUIRE_ESM desde jsdom/@exodus/bytes.
 cd frontend && npx vite build && npx vitest run && npx vitest run --coverage
-# Esperado: 20 passed (5 ficheros) y "All files | 2.49 | 58.53 | 38 | 2.49", exit 0
+# Esperado: 25 passed (6 ficheros) y "All files | 2.92 | 64.05 | 41.81 | 2.92", exit 0
 
 # 3) E2E (arranca Vite en :3000 solo)
 cd E2E && npx playwright test
-# Esperado: 6 passed (desde la Fase 1 proteccion_doble_clic dejó de fallar)
+# Esperado: 7 passed (desde la Fase 1 proteccion_doble_clic dejó de fallar; la Fase 2 agregó folio_pago)
 
 # 4) Reconstruir contenedores (NO hay volúmenes: todo cambio en backend/ o frontend/
 #    exige rebuild antes de E2E o de probar en :3001)
@@ -318,14 +324,14 @@ grep -rn 'Conserje' backend frontend/src E2E docs/requisitos README.md \
 grep -rn 'Recepcionista Noche' backend frontend/src E2E docs/requisitos README.md \
   --include=*.py --include=*.jsx --include=*.md --include=*.sql | wc -l                 # 0
 ls frontend/src/views | wc -l                               # 9
-ls frontend/src/components | wc -l                          # 16
+ls frontend/src/components | wc -l                          # 17
 git ls-files | grep -cE '^(frontend/)?(coverage|dist)/'     # 0
 
 # 6) Endpoints reales vs documentados
 curl -s http://localhost:4001/openapi.json | python3 -c "
 import json,sys; d=json.load(sys.stdin)
 print(sum(1 for p,o in d['paths'].items() for m in o if m in ('get','post','put','patch','delete'))) "
-# Esperado: 28  (y el README debe decir 28)
+# Esperado: 32  (y el README debe decir 32)
 
 # 7) Sonda de seguridad básica (debe dar 401/403, nunca 200 con datos)
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:4001/api/habitaciones        # 401
@@ -470,7 +476,7 @@ Cloudbeds, Mews). Fase 1 ataca los puntos que ningún sistema de producción ace
 - **vitest**: `frontend/src/utils/pricing.test.js` fija la misma escala en el cliente.
 - **atomicidad**: `test_alta_atomica_huesped_y_reserva` (éxito) y `test_alta_atomica_rollback_si_reserva_falla` (el huésped NO queda huérfano ante un 400).
 
-### Evidencia de verificación (2026-11-15)
+### Evidencia de verificación de la Fase 1 (2026-11-15)
 
 | Gate | Resultado |
 | --- | --- |
@@ -480,7 +486,100 @@ Cloudbeds, Mews). Fase 1 ataca los puntos que ningún sistema de producción ace
 | Higiene de BD tras las 3 suites | `huespedes 3` · `reservas 2` · `empleados 7` · `habitacion 'Disponible' 40` |
 | Flujo walk-in atómico (1 solo POST con `nuevo_huesped`) | verificado en navegador con script temporal + limpieza posterior |
 
+---
+
+## 16. Fase 2 — Módulo financiero (2026-11-15)
+
+Segunda fase del plan de maduración comparativo con PMS comerciales (OPERA, Cloudbeds,
+Mews): alta de cobros, folio con impuestos y factura electrónica. **Sin servicios de
+pago ni claves externas**: el único punto de integración con un proveedor es un
+adaptador que hoy corre en modo simulado.
+
+| ID | Hallazgo / requisito | Cambio | Archivos |
+| --- | --- | --- | --- |
+| **P2-2.1** | No existía folio ni control de cobros: no se sabía cuánto debía cada reserva | `services/folio.py` (puro, sin BD/HTTP): desglose **IVA 19 % ya incluido** en la tarifa (base + iva = total, sin subir el precio), suma sólo de pagos `Confirmado` y estado `Pendiente`/`Parcial`/`Pagado` | `backend/services/folio.py`, `backend/services/reservas_service.py` |
+| **P2-2.2** | No había forma de registrar un cobro ni de rastrear quién lo hizo | Tablas `pago` y `factura` (migración idempotente + `schema.sql`), `services/pasarela.py` con interfaz `cobrar()` y **`PasarelaSimulada`** (determinista: referencia `RECHAZO*` → rechazado; referencia `SIM-*` → aprobado) | `backend/database/connection.py`, `backend/schema.sql`, `backend/services/pasarela.py` |
+| **P2-2.3** | Sin RBAC específico para dinero | `GET folio` y `POST pagos`: Administrador + Recepcionista 24h; **anular pago: sólo Administrador** (restaura el saldo). Ama de llaves y Mantenimiento: 403 | `backend/routes/pagos.py`, `docs/auditorias_internas/MATRIZ_ROLES_ENDPOINTS.md` |
+| **P2-2.4** | No había factura ni trazabilidad fiscal | Factura electrónica **SIMULADA** UBL 2.1: XML descargable, estado `Borrador`/`Emitida`, CUFE = SHA-256, marca `X-Factura-Simulada: true` y aviso **sin valor fiscal** dentro del documento. Sin envío a la DIAN | `backend/routes/pagos.py` |
+| **P2-2.5** | El PMS no exponía el dinero de la reserva | `ModalFolioReserva.jsx` (desglose, movimientos, alta de cobro, anulación y descarga del XML) + botón **Folio** en la tabla de auditoría de reservas | `frontend/src/components/ModalFolioReserva.jsx`, `frontend/src/components/PanelAuditoriaReservas.jsx`, `frontend/src/views/VistaPms.jsx` |
+| **P2-2.6** | Cero cobertura del módulo financiero | 13 tests pytest (`test_pagos.py`), 5 unitarias (`folio.test.js`) y 1 spec E2E (`folio_pago.spec.js`: folio → cobro parcial → descarga de factura) | `backend/tests/test_pagos.py`, `frontend/src/utils/folio.js`, `E2E/tests/folio_pago.spec.js` |
+
+### Decisiones de diseño de la Fase 2
+
+- **IVA incluido en la tarifa** (consistente con el ModalLegal: "las tarifas publicadas
+  incluyen los impuestos"): el total de la reserva no cambia, el folio sólo lo desglosa
+  (`base = total / 1.19`). Evita la doble contabilidad que suelen tener las soluciones
+  caseras al facturar.
+- **Pasarela enchufable, hoy gratis**: `obtener_pasarela()` es el único punto de
+  cambio para conectar Stripe/Wompi/PayValid después; rutas, folio y frontend no cambian.
+- **Los cobros rechazados se persisten** (estado `Rechazado`) para dejar rastro de
+  auditoría, pero **no descuentan** del saldo.
+- **Anti doble captura**: el monto se valida contra el saldo (`0 < monto <= saldo`) en
+  la capa de servicio, dentro de la misma transacción que inserta.
+- **La factura es un snapshot**: una vez generada no se recalcula (como en los PMS
+  comerciales); `?emitir=true` sólo cambia `Borrador → Emitida`.
+
+### Evidencia de verificación de la Fase 2 (2026-11-15)
+
+| Gate | Resultado |
+| --- | --- |
+| `pytest` (contenedor backend) | **74 passed** (+13 de `test_pagos.py`), cobertura `pagos.py 84 %`, `folio.py 91 %`, `pasarela.py 97 %` |
+| `npx vite build` | ✅ bundle generado sin errores |
+| `vitest run --coverage` | **25 passed (6 ficheros)**, `All files 2.92 / 64.05 / 41.81 / 2.92`, exit 0 |
+| `playwright test` | **7 passed** en 42 s (incluye `folio_pago.spec.js`) |
+| Higiene de BD tras las 3 suites | `huespedes 3` · `reservas 2` · `empleados 7` · `pagos 0` · `facturas 0` · `habitacion 'Disponible' 40` |
+| Endpoints / componentes | **32 endpoints** (`GET /openapi.json`) · **17 componentes** |
+
+## 17. Fase 3 — Edición de reservas, coworking y maduración del PMS (2026-11-15)
+
+Tercera fase del plan de maduración comparativo con PMS comerciales (Oracle OPERA,
+Cloudbeds, Mews, RoomRaccoon). Se cierran los dos requisitos que seguían diferidos
+(RF-013 y RF-015) y se incorporan tres prácticas estándar de operación hotelera:
+notas de reserva, saldo visible al check-out y exportación contable del folio.
+**Sin integraciones externas ni claves de terceros.**
+
+| ID | Hallazgo / requisito | Cambio | Archivos |
+| --- | --- | --- | --- |
+| **P3-3.1** | Modificar una reserva obligaba a cancelarla y recrearla (se perdía folio y auditoría) | `PATCH /api/reservas/{id}` (RF-013): edita fechas, unidad y notas en una sola transacción. Sólo reservas `Confirmada`; valida la unidad destino, recalcula con `fn_calcular_noches_y_precio` y mapea la violación GiST a `409` sin dejar cambios parciales. RBAC: Administrador + Recepcionista 24 h | `backend/routes/reservas.py`, `backend/models/schemas.py` |
+| **P3-3.2** | No existían notas internas de reserva (llegada tarde, cuna, requerimientos) | Columna `observaciones VARCHAR(300)` con migración idempotente + `schema.sql`; incluida en el listado de reservas y editable desde el modal | `backend/database/connection.py`, `backend/schema.sql` |
+| **P3-3.3** | El check-out cerraba la estancia sin mostrar cuánto quedaba debiendo el huésped | La transición a `Completada` devuelve `folio: {total, pagado, saldo, estado_pago}`; el PMS lo convierte en aviso visible. **No bloquea** el cierre: el saldo puede liquidarse después | `backend/routes/reservas.py`, `frontend/src/state/useAppState.js` |
+| **P3-3.4** | RF-015 estaba implementado pero sin pruebas ni estado documental | 12 pruebas pytest de centro de negocios (tarifa/hora, bloques de 4 h y 8 h en sala y coworking, solapamiento 409, horarios contiguos, formato inválido, espacio 404 y liberación al cancelar) + smoke E2E. El `POST` pasa a `201 Created` | `backend/tests/test_centro_negocios.py`, `backend/routes/centro_negocios.py`, `E2E/tests/coworking_smoke.spec.js` |
+| **P3-3.5** | El folio no se podía sacar del sistema ni mostraba quién registró cada cobro | `generarCsvFolio()` (RFC 4180, separador `;`, BOM al descargar) con botón en el modal; auditoría "registrado por" en cada movimiento y observaciones visibles en el folio | `frontend/src/utils/folio.js`, `frontend/src/components/ModalFolioReserva.jsx` |
+| **P3-3.6** | La tabla de reservas normalizaba y descartaba campos del backend | `normalizarReserva` conserva la fila original (`id_habitacion`, fechas, observaciones) para que la edición trabaje con datos reales y no con el modelo de presentación | `frontend/src/components/PanelAuditoriaReservas.jsx` |
+
+### Decisiones de diseño de la Fase 3
+
+- **La reserva Confirmada es editable; la estancia en curso no.** Un Check-In o una
+  Completada son hechos consumados (noches, folio, auditoría); moverlos falsearía el
+  historial. Para ese caso se mantiene el flujo cancelar + crear.
+- **La integridad sigue en la base de datos.** El `PATCH` no comprueba solapamientos en
+  Python: actualiza y deja que el constraint GiST aborte. La regla es la misma para altas
+  y ediciones y no hay ventana de carrera.
+- **Notas en la propia reserva, no en una tabla aparte.** Una sola línea de texto cubre el
+  90 % del uso real (cuna, llegada tarde, alergias) sin añadir un CRUD nuevo.
+- **El saldo al check-out avisa, no bloquea.** En OPERA/Cloudbeds el cierre puede
+  registrarse con saldo y cobrarse luego; bloquear obligaría a recepción a inventar un
+  cobro para poder cerrar la habitación.
+- **CSV con `;` y BOM.** Es el formato que Excel en español abre sin asistente; el BOM
+  evita que se rompan tildes y eñes.
+- **Se descartan integraciones reales** (Stripe/PSE/DIAN): exigirían claves y contratos
+  que el proyecto formativo no tiene; el adaptador simulado ya demuestra el punto de
+  extensión.
+
+### Evidencia de verificación de la Fase 3 (2026-11-15)
+
+| Gate | Resultado |
+| --- | --- |
+| `pytest` (contenedor backend) | **96 passed** (+22: 10 de `test_reservas_update.py` y 12 de `test_centro_negocios.py`), cobertura `centro_negocios.py 80 %`, `reservas.py 78 %` |
+| `npx vite build` | ✅ bundle generado sin errores |
+| `vitest run --coverage` | **28 passed (6 ficheros)**, `All files 3.38 / 68.02 / 43.10 / 3.38`, exit 0 |
+| `playwright test` | **9 passed** en 49 s (incluye `edicion_reserva.spec.js`, `coworking_smoke.spec.js` y la descarga CSV de `folio_pago.spec.js`) |
+| Higiene de BD tras las 3 suites | `huespedes 3` · `reservas 2` · `empleados 7` · `pagos 0` · `facturas 0` · `reserva_negocio 0` · `habitacion 'Disponible' 40` · 0 `.pyc` |
+| Endpoints / componentes | **33 endpoints** (`GET /openapi.json`) · **18 componentes** |
+
 _Informe generado el 2026-11-13 a partir de la rama `test/e2e-double-click-protection` y
 actualizado el 2026-11-14 con el resultado de la verificación externa (HEAD `47a122c`) y el
-2026-11-15 con la Fase 1 de cierre de huecos críticos (§15).
+2026-11-15 con la Fase 1 de cierre de huecos críticos (§15), la Fase 2 del módulo
+financiero — pagos, IVA y factura electrónica simulada (§16) y la Fase 3 — edición de
+reservas (RF-013), coworking (RF-015) y maduración del PMS (§17).
 Toda cifra de este documento es verificable con los comandos de la sección 8._

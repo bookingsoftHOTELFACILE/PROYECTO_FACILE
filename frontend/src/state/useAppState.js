@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, formatErrorMessage } from '../api/client.js';
 import { CATALOGO_HABITACIONES_INICIAL } from '../data/catalogo.js';
 import { cotizarEstadia } from '../utils/pricing.js';
+import { formatoCOP } from '../utils/folio.js';
 import {
   ArrowRight, Check
 } from 'lucide-react';
@@ -1314,7 +1315,17 @@ export function useAppState() {
               ? { ...r, ...(data.reserva || {}) }
               : r
           )));
-          setReservaAlert({ type: 'success', message: data.message || `✓ ${etiqueta} registrado.` });
+          // Fase 3: el check-out informa el saldo. No bloquea el cierre (el huésped
+          // puede liquidar después), pero recepción debe verlo de forma inequívoca.
+          const saldoPendiente = !esCheckIn && Number(data.folio?.saldo || 0);
+          if (saldoPendiente > 0) {
+            setReservaAlert({
+              type: 'error',
+              message: `${data.message || `✓ ${etiqueta} registrado.`} ⚠️ Saldo pendiente al cierre: ${formatoCOP(saldoPendiente)}.`,
+            });
+          } else {
+            setReservaAlert({ type: 'success', message: data.message || `✓ ${etiqueta} registrado.` });
+          }
           cargarDatosBackend(authToken);
         } else {
           setReservaAlert({ type: 'error', message: formatErrorMessage(data.detail) });
@@ -1324,6 +1335,37 @@ export function useAppState() {
       }
     }
     setLoading(false);
+  };
+
+  // RF-013 (Fase 3) — Modificación de una reserva existente sin cancelarla.
+  // Devuelve true/false para que el modal se cierre sólo si el backend aceptó.
+  const handleEditarReserva = async (id_reserva, cambios) => {
+    setLoading(true);
+    if (!backendActivo) {
+      setLoading(false);
+      return false;
+    }
+    try {
+      const res = await apiFetch(`/api/reservas/${id_reserva}`, {
+        method: 'PATCH',
+        token: authToken,
+        body: cambios,
+      });
+      if (res.ok) {
+        setReservas(prev => prev.map(r => (
+          r.id_reserva === id_reserva ? { ...r, ...(res.data.reserva || {}) } : r
+        )));
+        setReservaAlert({ type: 'success', message: res.data.message || '✓ Reserva actualizada.' });
+        cargarDatosBackend(authToken);
+        setLoading(false);
+        return true;
+      }
+      setReservaAlert({ type: 'error', message: formatErrorMessage(res.data?.detail) });
+    } catch {
+      setReservaAlert({ type: 'error', message: 'Error al comunicarse con el servidor.' });
+    }
+    setLoading(false);
+    return false;
   };
 
   // Cambiar Estado Habitación (Estándar OPERA PMS - Amas de Llaves y Mantenimiento)
@@ -1521,7 +1563,7 @@ export function useAppState() {
     cargarDatosBackend, handleCreateEmpleadoSubmit, handleChangeEmpleadoRol, handleToggleEmpleadoEstado, handleUserChange, handleReservaChange,
     handleUserSubmit, handleGuestSearchSubmit, handleGuestRecuperarSubmit, handleGuestRestablecerSubmit, handleSocialAuth, handleReservarTipo, handlePmsWalkInGuestChange,
     handleReservaSubmit, handleSelectApartamentoCatalog, handleToggleEstadoHuesped, handleSelectHuesped, handleDeleteHuesped, handleDeleteReserva,
-    handleCambiarEstadoReserva, walkinCheckinInmediato, setWalkinCheckinInmediato,
+    handleCambiarEstadoReserva, handleEditarReserva, walkinCheckinInmediato, setWalkinCheckinInmediato,
     handleCambiarEstadoHabitacion, handleReportarDano, handleCrearReservaNegocio, handleBuscarHuespedPorDocumento, handleCancelarReservaNegocio
   };
 }

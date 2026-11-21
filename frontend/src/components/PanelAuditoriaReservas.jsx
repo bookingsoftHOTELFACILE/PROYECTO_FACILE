@@ -16,13 +16,19 @@ import {
   Laptop,
   ConciergeBell,
   Crown,
-  ArrowRight
+  ArrowRight,
+  Receipt,
+  Pencil
 } from 'lucide-react';
 
 const normalizarReserva = (r) => ({
+  // Fase 3: se conserva la fila original (id_habitacion, fechas, observaciones…)
+  // para que el modal de edición (RF-013) trabaje con los datos del backend.
+  ...r,
   id: r.id_reserva || r.id,
   id_reserva: r.id_reserva || r.id,
   huesped: r.huesped_nombre || r.huesped || 'Huésped',
+  huesped_nombre: r.huesped_nombre || r.huesped || 'Huésped',
   doc: r.huesped_documento || r.doc || '',
   apartamento: r.habitacion_numero ? `Apto ${r.habitacion_numero}` : (r.apartamento || 'Apto'),
   checkIn: r.fecha_entrada || r.checkIn,
@@ -32,6 +38,7 @@ const normalizarReserva = (r) => ({
   tipoOrigen: (r.creado_por || r.origen || '').toLowerCase().includes('recep') ? 'recepcion' : (r.creado_por || r.origen || '').toLowerCase().includes('admin') ? 'admin' : 'sistema',
   checkin_at: r.checkin_at || null,
   checkout_at: r.checkout_at || null,
+  observaciones: r.observaciones || '',
   avatarBg: r.avatarBg || '#fdf2f8',
   avatarText: r.avatarText || '#be185d',
   avatarBorder: r.avatarBorder || '#fbcfe8'
@@ -44,6 +51,10 @@ export default function PanelAuditoriaReservas({
   onCheckIn, 
   onCheckOut,
   onCancelarReserva,
+  // Fase 2: apertura del folio financiero (pagos, IVA y factura simulada).
+  onVerFolio,
+  // Fase 3 (RF-013): edición de fechas/unidad/notas de una reserva confirmada.
+  onEditarReserva,
   // Inventario real de unidades (proporcionado por el PMS desde /api/habitaciones).
   totalUnidades
 }) {
@@ -878,6 +889,73 @@ export default function PanelAuditoriaReservas({
                     {/* Acciones */}
                     <td style={{ padding: '14px 28px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                        {/* Fase 2: folio financiero (cobros, IVA y factura simulada) */}
+                        <button
+                          type="button"
+                          id={`pms-folio-${r.id_reserva || r.id}`}
+                          onClick={() => onVerFolio && onVerFolio(r.id_reserva || r.id)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '5px 14px',
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0',
+                            backgroundColor: '#f8fafc',
+                            color: '#334155',
+                            fontWeight: 700,
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f1f5f9';
+                            e.currentTarget.style.borderColor = '#cbd5e1';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8fafc';
+                            e.currentTarget.style.borderColor = '#e2e8f0';
+                          }}
+                          title="Ver folio financiero: desglose de IVA, cobros y factura"
+                        >
+                          <Receipt size={13} />
+                          <span>Folio</span>
+                        </button>
+                        {String(r.estado || '').toUpperCase() === 'CONFIRMADA' && onEditarReserva && (
+                          <button
+                            type="button"
+                            id={`pms-editar-${r.id_reserva || r.id}`}
+                            onClick={() => onEditarReserva(r)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '5px 14px',
+                              borderRadius: '8px',
+                              border: '1px solid #e2e8f0',
+                              backgroundColor: '#ffffff',
+                              color: '#334155',
+                              fontWeight: 700,
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                              transition: 'all 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#f1f5f9';
+                              e.currentTarget.style.borderColor = '#cbd5e1';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#ffffff';
+                              e.currentTarget.style.borderColor = '#e2e8f0';
+                            }}
+                            title="Modificar fechas, unidad u observaciones sin cancelar la reserva (RF-013)"
+                          >
+                            <Pencil size={13} />
+                            <span>Editar</span>
+                          </button>
+                        )}
                         {(() => {
                           const est = String(r.estado || '').toUpperCase();
 

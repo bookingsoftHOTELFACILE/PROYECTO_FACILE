@@ -4,7 +4,7 @@ import bcrypt
 import psycopg2
 from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies import requiere_rol, autenticar, autenticar_opcional, UsuarioActual
-from models.schemas import ReservaCreate, ReservaEstadoUpdate
+from models.schemas import ReservaCreate, ReservaEstadoUpdate, ReservaUpdate
 from repositories import cursor_escritura, cursor_lectura
 from services.reservas_service import (
     validar_fechas_reserva,
@@ -83,7 +83,7 @@ def obtener_reservas():
                 SELECT r.id_reserva, r.id_huesped, h.nombre as huesped_nombre, h.documento as huesped_documento,
                        r.id_habitacion, hab.numero as habitacion_numero, hab.tipo as habitacion_tipo,
                        r.fecha_entrada, r.fecha_salida, r.estado, r.creado_por,
-                       r.checkin_at, r.checkout_at
+                       r.observaciones, r.checkin_at, r.checkout_at
                 FROM reserva_habitacion r
                 JOIN huesped h ON r.id_huesped = h.id_huesped
                 JOIN habitacion hab ON r.id_habitacion = hab.id_habitacion
@@ -110,6 +110,8 @@ def obtener_reservas():
                 "fecha_salida": fecha_salida.strftime("%Y-%m-%d") if hasattr(fecha_salida, 'strftime') else str(fecha_salida),
                 "estado": f["estado"],
                 "creado_por": f["creado_por"] or "",
+                # Fase 3 — RF-013: notas internas de la reserva.
+                "observaciones": f["observaciones"] or "",
                 # HU-005 (CA-005.1 / CA-005.4): marca temporal física real, vacía si no hay check-in.
                 "checkin_at": f["checkin_at"].strftime("%Y-%m-%d %H:%M") if f["checkin_at"] else None,
                 "checkout_at": f["checkout_at"].strftime("%Y-%m-%d %H:%M") if f["checkout_at"] else None
@@ -312,6 +314,171 @@ def crear_reserva(
             detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP
         )
 
+# RF-013 (Fase 3): modificación de una reserva existente (fechas, unidad y notas).
+@router.patch("/{id_reserva}", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
+def actualizar_reserva(
+    id_reserva: int,
+    cambios: ReservaUpdate,
+    usuario: UsuarioActual = Depends(autenticar)
+):
+    """
+    Modifica una reserva **sin** perder su identidad (RF-013).
+
+    - Sólo se editan reservas en estado `Confirmada`: una estancia en curso o ya
+      cerrada es inmutable (para moverla se cancela y se crea otra).
+    - Todos los campos son opcionales; los no enviados conservan su valor.
+    - El cambio se aplica en UNA transacción: si el nuevo rango de fechas choca con
+      otra reserva de la unidad, el constraint GiST aborta la escritura completa.
+    - La cotización devuelta se recalcula con la tarifa vigente y la política única
+      de descuentos (fn_calcular_noches_y_precio).
+    """
+    audit_str = f"{usuario.nombre or 'Empleado'} ({usuario.rol})"
+
+    if all(
+        valor is None
+        for valor in (cambios.fecha_entrada, cambios.fecha_salida,
+                      cambios.id_habitacion, cambios.observaciones)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Indique al menos un campo a modificar (fechas, unidad u observaciones)."
+        )
+
+    try:
+        with cursor_escritura() as cur:
+            cur.execute(
+                """SELECT r.id_reserva, r.id_habitacion, r.fecha_entrada, r.fecha_salida,
+                          r.estado, r.observaciones
+                   FROM reserva_habitacion r
+                   WHERE r.id_reserva = %s""",
+                (id_reserva,),
+            )
+            actual = cur.fetchone()
+            if not actual:
+                raise HTTPException(status_code=404, detail=f"La reserva #{id_reserva} no existe.")
+
+            if actual["estado"] != "Confirmada":
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=(
+                        f"No se puede modificar una reserva en estado '{actual['estado']}'. "
+                        "Sólo se editan reservas Confirmadas (para mover una estancia en curso, "
+                        "cancele y cree una nueva)."
+                    ),
+                )
+
+            nueva_entrada = cambios.fecha_entrada or actual["fecha_entrada"]
+            nueva_salida = cambios.fecha_salida or actual["fecha_salida"]
+            nuevo_id_hab = cambios.id_habitacion or actual["id_habitacion"]
+
+            try:
+                validar_fechas_reserva(nueva_entrada, nueva_salida)
+            except ServiceValidationError as e:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+            # Unidad destino (puede ser la misma): debe existir y no estar en mantenimiento.
+            cur.execute(
+                "SELECT numero, capacidad, estado, precio_noche FROM habitacion WHERE id_habitacion = %s",
+                (nuevo_id_hab,),
+            )
+            destino = cur.fetchone()
+            if not destino:
+                raise HTTPException(status_code=404, detail="La habitación especificada no existe.")
+            try:
+                validar_habitacion_disponible(destino["estado"], destino["numero"])
+            except ServiceValidationError as e:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+            observaciones = (
+                cambios.observaciones
+                if cambios.observaciones is not None
+                else actual["observaciones"]
+            )
+
+            cur.execute(
+                """UPDATE reserva_habitacion
+                   SET fecha_entrada = %s, fecha_salida = %s, id_habitacion = %s,
+                       observaciones = %s, modificado_por = %s
+                   WHERE id_reserva = %s""",
+                (nueva_entrada, nueva_salida, nuevo_id_hab, observaciones, audit_str, id_reserva),
+            )
+
+            cur.execute(
+                "SELECT noches, subtotal, descuento_aplicado, total FROM fn_calcular_noches_y_precio(%s, %s, %s)",
+                (nueva_entrada, nueva_salida, destino["precio_noche"]),
+            )
+            cot = cur.fetchone()
+
+            cur.execute(
+                """SELECT r.id_reserva, r.id_huesped, h.nombre AS huesped_nombre,
+                          h.documento AS huesped_documento, r.id_habitacion,
+                          hab.numero AS habitacion_numero, hab.tipo AS habitacion_tipo,
+                          r.fecha_entrada, r.fecha_salida, r.estado, r.creado_por,
+                          r.observaciones, r.checkin_at, r.checkout_at
+                   FROM reserva_habitacion r
+                   JOIN huesped h ON h.id_huesped = r.id_huesped
+                   JOIN habitacion hab ON hab.id_habitacion = r.id_habitacion
+                   WHERE r.id_reserva = %s""",
+                (id_reserva,),
+            )
+            fila = cur.fetchone()
+
+        return {
+            "message": f"Reserva #{id_reserva} actualizada por {audit_str}.",
+            "reserva": {
+                "id_reserva": fila["id_reserva"],
+                "id_huesped": fila["id_huesped"],
+                "huesped_nombre": fila["huesped_nombre"],
+                "huesped_documento": fila["huesped_documento"],
+                "id_habitacion": fila["id_habitacion"],
+                "habitacion_numero": fila["habitacion_numero"],
+                "habitacion_tipo": fila["habitacion_tipo"],
+                "fecha_entrada": fila["fecha_entrada"].strftime("%Y-%m-%d"),
+                "fecha_salida": fila["fecha_salida"].strftime("%Y-%m-%d"),
+                "estado": fila["estado"],
+                "creado_por": fila["creado_por"] or "",
+                "observaciones": fila["observaciones"] or "",
+                "checkin_at": fila["checkin_at"].strftime("%Y-%m-%d %H:%M") if fila["checkin_at"] else None,
+                "checkout_at": fila["checkout_at"].strftime("%Y-%m-%d %H:%M") if fila["checkout_at"] else None,
+            },
+            "cotizacion": {
+                "noches": cot["noches"],
+                "subtotal": float(cot["subtotal"]),
+                "descuento": float(cot["descuento_aplicado"]),
+                "total": float(cot["total"]),
+            },
+        }
+    except psycopg2.Error as db_err:
+        pgcode = getattr(db_err, "pgcode", "") or ""
+        err_msg = str(db_err)
+        if pgcode in ("23P01", "40P01") or "exclude_overlapping_reservations" in err_msg:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Double Booking Detectado: la unidad ya está reservada para el rango de fechas solicitado.",
+            )
+        if pgcode == "23514" or "chk_fechas" in err_msg:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La fecha de salida debe ser posterior a la fecha de entrada.",
+            )
+        if pgcode == "P0001" or "Mantenimiento" in err_msg:
+            limpio = err_msg.split("CONTEXT:")[0].replace("ERROR: ", "").strip()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=limpio)
+        logger.exception("PATCH /api/reservas/%s — fallo de base de datos al modificar la reserva", id_reserva)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor al procesar la solicitud.",
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("PATCH /api/reservas/%s — fallo inesperado al modificar la reserva", id_reserva)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor al procesar la solicitud.",
+        )
+
+
 # HU-005 (CA-005.1 / CA-005.4 / CA-005.5): entrada y salida física de huéspedes.
 @router.patch("/{id_reserva}/estado", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
 def cambiar_estado_reserva(
@@ -412,6 +579,23 @@ def cambiar_estado_reserva(
             # CA-005.5: noches reales de la estadía entre fecha de entrada y fecha de salida.
             noches = (parse_fecha(fecha_salida) - parse_fecha(fecha_entrada)).days
 
+            # Fase 3 — Maduración: el check-out devuelve el estado financiero de la
+            # reserva para que recepción pueda avisar de un saldo pendiente al cerrar.
+            cur.execute("SELECT precio_noche FROM habitacion WHERE id_habitacion = %s", (id_habitacion,))
+            precio_actual = float(cur.fetchone()["precio_noche"])
+            cur.execute(
+                "SELECT total FROM fn_calcular_noches_y_precio(%s, %s, %s)",
+                (fecha_entrada, fecha_salida, precio_actual),
+            )
+            total_estadia = float(cur.fetchone()["total"])
+            cur.execute(
+                "SELECT COALESCE(SUM(monto), 0) AS pagado FROM pago WHERE id_reserva = %s AND estado = 'Confirmado'",
+                (id_reserva,),
+            )
+            pagado = float(cur.fetchone()["pagado"])
+            saldo = round(max(0.0, total_estadia - pagado), 2)
+            estado_pago = "Pagado" if pagado > 0 and saldo <= 0 else ("Parcial" if pagado > 0 else "Pendiente")
+
             cur.execute(
                 """UPDATE reserva_habitacion
                    SET estado = 'Completada', checkout_at = NOW(), modificado_por = %s
@@ -439,7 +623,13 @@ def cambiar_estado_reserva(
                     "checkin_at": marcas["checkin_at"].strftime("%Y-%m-%d %H:%M") if marcas["checkin_at"] else None,
                     "checkout_at": marcas["checkout_at"].strftime("%Y-%m-%d %H:%M") if marcas["checkout_at"] else None,
                 },
-                "habitacion": {"id_habitacion": id_habitacion, "estado": "En limpieza"}
+                "habitacion": {"id_habitacion": id_habitacion, "estado": "En limpieza"},
+                "folio": {
+                    "total": round(total_estadia, 2),
+                    "pagado": round(pagado, 2),
+                    "saldo": saldo,
+                    "estado_pago": estado_pago,
+                },
             }
 
     except HTTPException:

@@ -63,6 +63,42 @@ _MIGRACIONES = (
     # HU-005 (CA-005.1 / CA-005.4): marca temporal física del check-in / check-out.
     "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP",
     "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP",
+    # Fase 3 — RF-013: notas internas de la reserva, editables desde el PMS.
+    "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS observaciones VARCHAR(300)",
+    # Fase 2 — Módulo financiero (pagos + factura electrónica simulada). Las bases
+    # vivas no reciben las tablas nuevas de schema.sql, así que viajan aquí.
+    """
+    CREATE TABLE IF NOT EXISTS pago (
+        id_pago        SERIAL PRIMARY KEY,
+        id_reserva     INT NOT NULL REFERENCES reserva_habitacion(id_reserva) ON DELETE CASCADE,
+        monto          DECIMAL(12,2) NOT NULL CHECK (monto > 0),
+        metodo         VARCHAR(30) NOT NULL CHECK (metodo IN
+            ('Efectivo', 'Tarjeta de crédito', 'Tarjeta de débito', 'PSE', 'Nequi', 'Transferencia', 'Bono')),
+        estado         VARCHAR(20) NOT NULL DEFAULT 'Confirmado' CHECK (estado IN
+            ('Pendiente', 'Confirmado', 'Rechazado', 'Anulado', 'Reembolsado')),
+        referencia     VARCHAR(80),
+        referencia_gateway VARCHAR(80),
+        gateway        VARCHAR(30) NOT NULL DEFAULT 'simulado',
+        creado_por     VARCHAR(150) DEFAULT 'Sistema',
+        modificado_por VARCHAR(150) DEFAULT 'Sistema',
+        creado_en      TIMESTAMP NOT NULL DEFAULT now(),
+        modificado_en  TIMESTAMP
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_pago_reserva ON pago(id_reserva)",
+    # Factura electrónica SIMULADA (borrador UBL 2.1). Una por reserva.
+    """
+    CREATE TABLE IF NOT EXISTS factura (
+        id_factura    SERIAL PRIMARY KEY,
+        id_reserva    INT UNIQUE NOT NULL REFERENCES reserva_habitacion(id_reserva) ON DELETE CASCADE,
+        consecutivo   VARCHAR(30) UNIQUE NOT NULL,
+        cufe          VARCHAR(64) NOT NULL,
+        fecha_emision TIMESTAMP NOT NULL DEFAULT now(),
+        estado        VARCHAR(20) NOT NULL DEFAULT 'Borrador' CHECK (estado IN ('Borrador', 'Emitida', 'Anulada')),
+        xml           TEXT NOT NULL,
+        creado_por    VARCHAR(150) DEFAULT 'Sistema'
+    )
+    """,
 )
 
 
@@ -87,8 +123,12 @@ def inicializar_base_de_datos():
         # Si RESET_DB=true está activo explícitamente, ejecutar reinicio destructivo de tablas
         if os.getenv("RESET_DB", "false").lower() in ("true", "1", "yes"):
             print("[FastAPI] RESET_DB=true detectado. Ejecutando limpieza destructiva de tablas...")
-            # Hallazgo 13: Se eliminaron DROP TABLE huérfanos (factura, check_out, check_in remitidos a Fase 2)
+            # Hallazgo 13: se eliminaron los DROP TABLE huérfanos (check_out, check_in).
+            # Fase 2: `pago` y `factura` se eliminan ANTES que `reserva_habitacion`
+            # (foránea hacia ella) para no romper el orden de borrado.
             cursor.execute("""
+                DROP TABLE IF EXISTS factura CASCADE;
+                DROP TABLE IF EXISTS pago CASCADE;
                 DROP TABLE IF EXISTS reserva_habitacion CASCADE;
                 DROP TABLE IF EXISTS habitacion CASCADE;
                 DROP TABLE IF EXISTS huesped CASCADE;

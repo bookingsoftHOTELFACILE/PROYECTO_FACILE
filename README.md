@@ -11,7 +11,7 @@
 > **Proyecto Formativo** — SENA | Centro de Formación en Tecnologías de la Información  
 > **Programa:** Análisis y Desarrollo de Software (ADSO) | Convocatoria 2026  
 > **Organización Destino:** Apartahotel Facile (Ibagué, Colombia)  
-> **Licencia:** ISC | **Estado:** Fase 1 Consolidada y Probada en Docker
+> **Licencia:** ISC | **Estado:** Fase 3 Consolidada y Probada en Docker (edición de reservas RF-013, salas/coworking RF-015 y maduración del PMS: notas, CSV del folio y saldo al check-out)
 
 ---
 
@@ -77,7 +77,7 @@ graph TD
 | **Web Server Frontend** | Nginx Alpine      | Nginx 1.25+                       | Servidor de estáticos y proxy reverso hacia el backend.                   |
 | **Administración DB**   | pgAdmin 4         | dpage/pgadmin4                    | Consola visual web para administración y auditoría de la base de datos.   |
 | **Contenedores**        | Docker Compose    | Compose v2.20+                    | Orquestación con volúmenes persistentes y dependencias con healthcheck.   |
-| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 61 pruebas de integración sobre PostgreSQL real sin mocks.                |
+| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 96 pruebas de integración sobre PostgreSQL real sin mocks.                |
 
 ---
 
@@ -92,6 +92,10 @@ bookingsoft/
 ├── test_persistence.sh              # Script Bash para prueba de fuego de persistencia
 ├── docs/                            # Documentación de ingeniería y requisitos
 │   ├── matriz-rotacion.md           # Matriz de rotación de credenciales
+│   ├── scrum/                       # Metodología ágil: Backlog, Sprints 1–3, Poker y Feedback
+│   ├── pruebas/                     # QA: Plan de pruebas, Informe de 124 tests y Bug Tracker
+│   ├── arquitectura/                # Diagramas UML, Clases, MER, MR y Propuesta IoT Yale
+│   ├── deuda_tecnica/               # Reflexión comparativa de 4 backends y deuda técnica
 │   ├── auditorias_internas/
 │   │   ├── ANALISIS_ARQUITECTURA.md # Auditoría de arquitectura + plan de remediación (Fases 0–E)
 │   │   ├── MATRIZ_ROLES_ENDPOINTS.md# Matriz exhaustiva RBAC por endpoint y método
@@ -117,15 +121,18 @@ bookingsoft/
 │   ├── repositories/                # Capa de acceso a datos (hallazgos M-05 / M-06)
 │   │   └── base.py                  # cursor_lectura / cursor_escritura con RealDictCursor
 │   ├── services/
-│   │   └── reservas_service.py      # Lógica de negocio pura (FIRST): sin BD ni HTTP
+│   │   ├── reservas_service.py      # Lógica de negocio pura (FIRST): sin BD ni HTTP
+│   │   ├── folio.py                 # Fase 2: desglose de IVA 19% y saldo del folio
+│   │   └── pasarela.py              # Fase 2: adaptador de pasarela (simulada hoy)
 │   ├── routes/                      # Controladores modulares por dominio
 │   │   ├── auth.py                  # Login, registro, logout y validación de tokens
 │   │   ├── empleados.py             # CRUD y gestión de estados de empleados
 │   │   ├── huespedes.py             # Router PMS (/api/huespedes) + cuentas (/api/user)
 │   │   ├── habitaciones.py          # Catálogo, disponibilidad y cambio de estado
-│   │   ├── reservas.py              # Creación atómica, check-in/check-out y cancelación
+│   │   ├── reservas.py              # Creación atómica, edición (RF-013), check-in/out y cancelación
+│   │   ├── pagos.py                 # Fase 2: folio, cobros y factura electrónica simulada
 │   │   └── centro_negocios.py       # Salas de juntas y coworking por horas
-│   └── tests/                       # Suite de integración sobre PostgreSQL real (61 pruebas)
+│   └── tests/                       # Suite de integración sobre PostgreSQL real (96 pruebas)
 │       ├── conftest.py              # Fixtures de Pytest (cliente HTTP, tokens seed)
 │       ├── test_auth.py             # Login, registro, RBAC y firma JWT
 │       ├── test_consultas.py        # Listados, filtros y estados
@@ -133,11 +140,14 @@ bookingsoft/
 │       ├── test_reservas_service.py # Unidad de la capa services/ (parametrizadas)
 │       ├── test_checkin_checkout.py # HU-005: máquina de estados Check-In/Completada
 │       ├── test_seguridad_acceso.py # H-01 / H-02: RBAC de reservas e inventario
-│       └── test_model_huesped.py    # Modelo de dominio de huésped
+│       ├── test_model_huesped.py    # Modelo de dominio de huésped
+│       ├── test_pagos.py            # Fase 2: folio, cobros, RBAC y factura simulada
+│       ├── test_centro_negocios.py  # Fase 3: salas/coworking, tarifas y solapamientos
+│       └── test_reservas_update.py  # Fase 3: edición de reserva (RF-013) y saldo al check-out
 ├── E2E/                             # Pruebas extremo a extremo con Playwright
 │   ├── playwright.config.js         # Web server autoarrancable (Vite en :3000)
-│   └── tests/                       # 6 specs: login, registro, habitaciones, cancelación,
-│                                    # check-in/check-out y protección de doble clic
+│   └── tests/                       # 9 specs: login, registro, habitaciones, cancelación,
+│                                    # check-in/out, doble clic, folio/pagos, edición y coworking
 └── frontend/                        # Cliente Web SPA en React
     ├── Dockerfile                   # Multi-stage build (Node build -> Nginx Alpine)
     ├── nginx.conf                   # Configuración de Nginx y proxy pass
@@ -152,8 +162,8 @@ bookingsoft/
         ├── state/useAppState.js     # Hook con el estado y los flujos del PMS
         ├── data/catalogo.js         # Catálogo inicial de unidades
         ├── views/                   # 9 vistas (Portal, Reservar, PMS, Perfil, ...)
-        ├── components/              # 16 componentes modulares PMS y Portal
-        └── *.test.js                # 20 pruebas unitarias (Vitest en 5 archivos)
+        ├── components/              # 18 componentes modulares PMS y Portal
+        └── *.test.js                # 28 pruebas unitarias (Vitest en 6 archivos)
 ```
 
 ---
@@ -392,9 +402,13 @@ BookingSoft aplica el principio de mínimo privilegio mediante dependencias inye
 
 ---
 
-## 🔌 Catálogo Completo de Endpoints REST (API)
+## 🔌 Catálogo Completo de Endpoints REST (API del 4.º Backend — FastAPI)
 
-La API expone **28 endpoints REST** con serialización estricta mediante modelos Pydantic v2.
+La API representa el **4.º Backend del Programa de Formación ADSO (Trimestre 6)**, desarrollado con **Python 3.11 y FastAPI**. Expone **33 endpoints REST** con serialización estricta mediante modelos Pydantic v2, documentación interactiva autogenerada y validaciones transaccionales ACID en PostgreSQL.
+
+- **Swagger UI Interactivo:** [http://localhost:4001/docs](http://localhost:4001/docs)
+- **ReDoc (Documentación OpenAPI formal):** [http://localhost:4001/redoc](http://localhost:4001/redoc)
+- **OpenAPI Schema JSON:** [http://localhost:4001/openapi.json](http://localhost:4001/openapi.json)
 
 ### 1. Módulo de Autenticación (`/api/auth`)
 
@@ -436,8 +450,16 @@ La API expone **28 endpoints REST** con serialización estricta mediante modelos
 
 - `GET /api/reservas`: Retorna reservas activas con datos del huésped y habitación asociada.
 - `POST /api/reservas`: Generación de reserva con validación de capacidad y bloqueo atómico GiST.
-- `PATCH /api/reservas/{id}/estado`: Transición de estado (`Confirmada` → `Check-In` → `Completada`).
+- `PATCH /api/reservas/{id}`: **Edición de una reserva `Confirmada`** (fechas, unidad y observaciones internas) sin cancelarla. Recalcula la cotización y el constraint GiST rechaza solapamientos con `409` (RF-013, Fase 3).
+- `PATCH /api/reservas/{id}/estado`: Transición de estado (`Confirmada` → `Check-In` → `Completada`). El check-out devuelve el resumen del folio (`total`, `pagado`, `saldo`) para avisar de un saldo pendiente (Fase 3).
 - `DELETE /api/reservas/{id}`: Cancelación de reserva con baja lógica (`estado = 'Cancelada'`), liberando automáticamente el rango GiST para futuras reservas.
+
+**Fase 2 — Módulo financiero (mismo prefijo `/api/reservas`):**
+
+- `GET /api/reservas/{id}/folio`: Folio de la reserva con desglose del IVA 19 % **incluido en la tarifa** (base + IVA = total), movimientos de pago, saldo y estado (`Pendiente` / `Parcial` / `Pagado`).
+- `POST /api/reservas/{id}/pagos`: Cobro a través del adaptador de pasarela (hoy `PasarelaSimulada`, gratis y sin claves externas). Un cobro rechazado se persiste como intento para auditoría. Roles: Administrador y Recepcionista 24 h.
+- `POST /api/reservas/{id}/pagos/{pago}/anular`: Anula un cobro confirmado y restaura el saldo. **Sólo Administrador.**
+- `GET /api/reservas/{id}/factura.xml`: Factura electrónica **simulada** en UBL 2.1 (estado `Borrador`, CUFE = SHA-256, descarga como `FACT-XXXXXXXX.xml`). Sin envío real a la DIAN.
 
 ### 6. Módulo de Centro de Negocios (`/api/centro-negocios`)
 
@@ -525,16 +547,22 @@ El archivo `schema.sql` aprovisiona credenciales cifradas con bcrypt para valida
 
 ## 🧪 Pruebas Automatizadas y Verificación de Persistencia
 
-### Suite de Integración con Pytest
+> 📚 **Documentación Formal de Calidad y Pruebas (IEEE 829 / ADSO):**
+> - 📄 **Plan de Pruebas Maestro:** [`docs/pruebas/PLAN_PRUEBAS.md`](docs/pruebas/PLAN_PRUEBAS.md) *(Alcance, niveles, ambientes y criterios)*
+> - 📄 **Informe de Pruebas Unitarias:** [`docs/pruebas/INFORME_PRUEBAS_UNITARIAS.md`](docs/pruebas/INFORME_PRUEBAS_UNITARIAS.md) *(124 casos automatizados: 96 Pytest + 28 Vitest)*
+> - 📄 **Reporte de Ejecución y Bug Tracker:** [`docs/pruebas/REPORTE_EJECUCION_Y_DEFECTOS.md`](docs/pruebas/REPORTE_EJECUCION_Y_DEFECTOS.md) *(Seguimiento y 100% remediación)*
+> - 📄 **Gestión de Metodología Ágil (SCRUM):** [`docs/scrum/PRODUCT_BACKLOG.md`](docs/scrum/PRODUCT_BACKLOG.md) y [`docs/scrum/FEEDBACK_EQUIPO.md`](docs/scrum/FEEDBACK_EQUIPO.md)
 
-El sistema cuenta con **61 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
+### Suite de Integración con Pytest (Backend FastAPI)
+
+El sistema cuenta con **96 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
 
 ```bash
 # Ejecutar la suite completa dentro del contenedor backend
 docker compose exec backend pytest -v
 ```
 
-#### Cobertura de las Pruebas (61 en 7 archivos):
+#### Cobertura de las Pruebas (96 en 10 archivos):
 
 | Archivo | Pruebas | Qué valida |
 | :------ | :-----: | :--------- |
@@ -545,22 +573,25 @@ docker compose exec backend pytest -v
 | `test_checkin_checkout.py` | 7 | HU-005: máquina de estados `Pendiente → Confirmada → Check-in → Completada → En limpieza` y rechazos de transición inválida. |
 | `test_seguridad_acceso.py` | 6 | H-01 / H-02: RBAC de `DELETE /api/reservas/{id}` y protección del inventario de habitaciones (401/403 + endpoint público). |
 | `test_model_huesped.py` | 8 | Modelo de dominio de huésped: campos obligatorios, formato de correo rechazado y validación de mayoría de edad (límite exacto de 18 años). |
+| `test_pagos.py` | 13 | Fase 2: desglose de IVA 19% incluido, cobros totales/parciales, anti doble captura, pasarela simulada (aprobado/rechazado), anulación con RBAC y factura electrónica simulada UBL 2.1. |
+| `test_centro_negocios.py` | 12 | Fase 3 (RF-015): catálogo de espacios, tarifa por horas, paquetes de 4 h y día completo (sala/coworking), solapamientos 409, horarios contiguos, validación de hora y liberación al cancelar. |
+| `test_reservas_update.py` | 10 | Fase 3 (RF-013): edición de fechas/unidad/notas, recálculo de cotización, colisión GiST 409 sin cambios parciales, inmutabilidad en Check-In, bloqueo de mantenimiento, RBAC y saldo devuelto por el check-out. |
 
 ### Pruebas Unitarias del Frontend (Vitest)
 
-Veinte pruebas unitarias organizadas en 5 suites sobre utilidades del SPA (catálogo HU-009, fechas, `apiFetch`, política de descuentos y smoke):
+Veintiocho pruebas unitarias organizadas en 6 suites sobre utilidades del SPA (catálogo HU-009, fechas, `apiFetch`, política de descuentos, folio financiero, exportación CSV y smoke):
 
 ```bash
 cd frontend && npx vitest run
 ```
 
 La cobertura se mide con `npx vitest run --coverage` y `frontend/vite.config.js` fija
-umbrales mínimos documentados (base medida: 2.49 % líneas, 58.53 % ramas, 38 %
+umbrales mínimos documentados (base medida: 3.38 % líneas, 68.02 % ramas, 43.10 %
 funciones) para que una regresión que borre las pruebas existentes rompa el build.
 
 ### Pruebas E2E con Playwright
 
-Seis specs que arrancan Vite en `:3000` y ejercitan el flujo completo por localizadores
+Nueve specs que arrancan Vite en `:3000` y ejercitan el flujo completo por localizadores
 accesibles (`getByRole`, `getByLabel`, `id="pms-..."`):
 
 ```bash
@@ -575,6 +606,9 @@ cd E2E && npx playwright test
 | `cancelacion.spec.js` | Cancelación de reserva con confirmación. |
 | `checkin_checkout.spec.js` | HU-005: check-in inmediato y check-out desde la fila de reservas. |
 | `proteccion_doble_clic.spec.js` | Doble clic en el botón de reserva (**fallo preexistente conocido**, no regresión de la remediación). |
+| `folio_pago.spec.js` | Fase 2: folio con desglose de IVA, cobro parcial por la pasarela simulada, descarga de la factura XML simulada y exportación CSV. |
+| `edicion_reserva.spec.js` | Fase 3 (RF-013): edición de fechas y observaciones de una reserva confirmada desde el PMS, con verificación en PostgreSQL. |
+| `coworking_smoke.spec.js` | Fase 3 (RF-015): montaje del módulo de Salas & Coworking con los espacios reales del backend. |
 
 ### Auditoría interna de arquitectura
 
@@ -613,11 +647,11 @@ El script genera una reserva, apaga de forma abrupta el contenedor de backend (`
 | **RF-010** | Gestión de Estado Activo/Inactivo | HU-004 | RNF-010 |   ✅ Probado    | Bajas lógicas y validación en login               |
 | **RF-011** | Creación de Reserva Atómica       | HU-005 | RNF-009 |   ✅ Probado    | Constraint PostgreSQL `EXCLUDE USING gist`        |
 | **RF-012** | Consulta de Disponibilidad        | HU-005 | RNF-011 |   ✅ Probado    | `GET /api/habitaciones/disponibilidad` por rango  |
-| **RF-013** | Modificación de Reserva           | HU-005 | N/A     |    ⏳ Fase 2    | Por integridad GiST, se cancela y recrea          |
+| **RF-013** | Modificación de Reserva           | HU-005 | RNF-009 |   ✅ Probado    | `PATCH /api/reservas/{id}` + validación GiST      |
 | **RF-014** | Cancelación de Reserva            | HU-005 | RNF-010 |   ✅ Probado    | `DELETE /api/reservas/{id}` (Baja lógica)         |
-| **RF-015** | Coworking y Salas de Juntas       | HU-013 | N/A     | ✅ Implementado | `routes/centro_negocios.py` con tarifas por horas |
+| **RF-015** | Coworking y Salas de Juntas       | HU-013 | RNF-009 |   ✅ Probado    | `routes/centro_negocios.py` + 12 pruebas pytest   |
 
-### Funcionalidades Diferidas a Fase 2 (Alcance Delimitado):
+### Funcionalidades Diferidas por Dependencias Externas:
 
 - **HU-005 (Check-In / Check-Out Automatizado):** el flujo operativo manual desde el PMS
   (check-in inmediato, check-out y máquina de estados) está **implementado y probado**;
@@ -639,11 +673,11 @@ Si vas a abrir un nuevo chat o sesión con **Gemini**, puedes copiar y pegar el 
 - Stack: FastAPI (Python 3.11), PostgreSQL 15 con btree_gist, React 18 (Vite 5.4, JS ES2022), Docker Compose, Nginx.
 - Puertos en Docker: Frontend (3001), Backend (4001, interno 4000), DB (5433, interno 5432), pgAdmin (5050).
 - Seguridad: JWT Bearer (8h), bcrypt cost 12, guardas RBAC ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento'), Fail-Fast si JWT_SECRET no existe.
-- Regla Clave: Prevención de doble reserva a nivel DB mediante constraint GiST en reserva_habitacion (daterange &&), triggers de mantenimiento y cálculo automático de descuentos (10% de 7 a 14 noches y 15% desde 15 noches, regla única en PL/pgSQL + Python + frontend).
+- Regla Clave: Prevención de doble reserva a nivel DB mediante constraint GiST en reserva_habitacion (daterange &&), triggers de mantenimiento y cálculo automático de descuentos (10% de 7 a 14 noches y 15% desde 15 noches, regla única en PL/pgSQL + Python + frontend). Módulo financiero (Fase 2): folio con IVA 19% ya incluido en la tarifa, cobros vía adaptador de pasarela (hoy simulado, sin claves externas) y factura electrónica SIMULADA UBL 2.1 en borrador (sin envío a la DIAN).
 - Tablas Principales: empleado, huesped, habitacion (38 unidades oficiales), espacio_negocio, reserva_negocio (coworking por horas), reserva_habitacion. Todas con baja lógica y auditoría (creado_por, modificado_por).
 - Frontend: Single Page Application con doble modo: Portal de Huéspedes público (Inicio, Apartamentos, Centro de Negocios, Servicios, Galería, Reservar) y Suite PMS para empleados (sub-pestañas: Personal, Recepción Walk-in, Huéspedes, Reservas, Planta, Coworking, Todos).
-- Tests: 61 tests en pytest con PostgreSQL real (sin mocks), 20 tests unitarios en Vitest y 6 specs E2E en Playwright (100% pasando), más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
-- Estado: Fase 1 completa y probada (incluye HU-005 check-in/check-out y remediación de arquitectura Fases A–E). Listo para abordar nuevas funcionalidades de Fase 2.
+- Tests: 96 tests en pytest con PostgreSQL real (sin mocks), 28 tests unitarios en Vitest y 9 specs E2E en Playwright (100% pasando), más `test_persistence.sh` para comprobar supervivencia ante caída de contenedores.
+- Estado: Fases 1–3 completas y probadas. Fase 3 (Plan de Maduración): RF-013 edición de reservas con `PATCH` atómico y constraint GiST, RF-015 salas/coworking con 12 pruebas, notas de reserva, exportación CSV del folio y aviso de saldo pendiente al check-out. Sin integraciones externas de pago.
 ```
 
 ---
@@ -652,13 +686,13 @@ Si vas a abrir un nuevo chat o sesión con **Gemini**, puedes copiar y pegar el 
 
 Proyecto desarrollado como parte de la formación profesional integral en **Análisis y Desarrollo de Software (ADSO)** — SENA, 2026:
 
-| Integrante           | Rol / Especialidad                                   |
-| :------------------- | :--------------------------------------------------- |
-| **José Chico**       | Desarrollo Backend & Arquitectura de Base de Datos   |
-| **Maicol Mayor**     | Lógica de Negocio & Pruebas Automatizadas            |
-| **Ashly Echeverri**  | Documentación de Requisitos & Trazabilidad           |
-| **Sebastián Parada** | Seguridad, RBAC & Contenedorización Docker           |
-| **David López**      | Desarrollo Frontend & Experiencia de Usuario (UI/UX) |
+| Integrante           | Rol / Especialidad                                                |
+| :------------------- | :---------------------------------------------------------------- |
+| **David López**      | Scrum Master & Desarrollador Full-Stack                           |
+| **José Chico**       | Diseñador UI/UX & Desarrollador Frontend Lead (Diseño y Paneles)  |
+| **Maicol Mayor**     | Desarrollo Backend Lead, Lógica de Negocio & Pruebas (Pytest)     |
+| **Sebastián Parada** | Modelado Inicial de Base de Datos, Seguridad, RBAC & Docker       |
+| **Ashly Echeverri**  | Product Owner, Documentación de Requisitos & Trazabilidad         |
 
 ---
 

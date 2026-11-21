@@ -14,7 +14,7 @@ if not jwt_secret_val or jwt_secret_val == "CHANGE_ME" or jwt_secret_val == "CHA
     sys.exit(1)
 
 from database import connection
-from routes import huespedes, habitaciones, reservas, auth, empleados, centro_negocios
+from routes import huespedes, habitaciones, reservas, auth, empleados, centro_negocios, pagos
 
 from contextlib import asynccontextmanager
 
@@ -51,6 +51,7 @@ app.include_router(reservas.router)
 app.include_router(auth.router)
 app.include_router(empleados.router)
 app.include_router(centro_negocios.router)
+app.include_router(pagos.router)
 
 # Ruta de diagnóstico de salud de la API
 @app.get("/health")

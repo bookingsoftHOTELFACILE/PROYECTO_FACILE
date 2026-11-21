@@ -116,7 +116,7 @@ def listar_reservas_negocio():
         logger.exception("GET /api/centro-negocios/reservas — fallo al consultar reservas del Centro de Negocios")
         raise HTTPException(status_code=500, detail="Error interno del servidor al consultar reservas del Centro de Negocios.")
 
-@router.post("/reservas")
+@router.post("/reservas", status_code=status.HTTP_201_CREATED)
 def crear_reserva_negocio(
     req: CrearReservaNegocioRequest,
     usuario: Optional[UsuarioActual] = Depends(autenticar_opcional)

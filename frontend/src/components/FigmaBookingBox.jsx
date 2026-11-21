@@ -144,21 +144,21 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
         </div>
 
         {/* Leyenda Explicativa de Tres Estados */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '6px 8px', backgroundColor: '#f8fafc', borderRadius: '10px', margin: '8px 0', border: '1px solid #f1f5f9' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 600, color: '#475569' }}>
-            <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', display: 'inline-block' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '4px 6px', backgroundColor: '#f8fafc', borderRadius: '8px', margin: '6px 0', border: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.67rem', fontWeight: 600, color: '#475569' }}>
+            <span style={{ width: '11px', height: '11px', borderRadius: '3px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', display: 'inline-block' }} />
             <span>Disponible</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 600, color: '#ef4444' }}>
-            <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#94a3b8', textDecoration: 'line-through 2px #ef4444', fontSize: '8px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.67rem', fontWeight: 600, color: '#ef4444' }}>
+            <span style={{ width: '11px', height: '11px', borderRadius: '3px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#94a3b8', textDecoration: 'line-through 2px #ef4444', fontSize: '8px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               ✕
             </span>
             <span>Ocupado</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 700, color: '#d91a2a' }}>
-            <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: '#d91a2a', color: '#ffffff', fontSize: '8px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.67rem', fontWeight: 700, color: '#d91a2a' }}>
+            <span style={{ width: '11px', height: '11px', borderRadius: '3px', backgroundColor: '#d91a2a', color: '#ffffff', fontSize: '8px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               ✓
             </span>
             <span>Tu Selección</span>
@@ -166,14 +166,14 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
         </div>
 
         {/* Encabezado Días Semanales */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '0.66rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '3px' }}>
           <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
         </div>
 
         {/* Grilla Interactiva de Días */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
           {daysGrid.map((item, idx) => {
-            if (!item) return <div key={`empty-${idx}`} style={{ height: '32px' }} />;
+            if (!item) return <div key={`empty-${idx}`} style={{ height: '28px' }} />;
 
             // 1. DÍA OCUPADO (No disponible)
             if (item.isOccupied) {
@@ -182,12 +182,12 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
                   key={item.dayStr}
                   title={`Día ${item.d} Ocupado (No disponible)`}
                   style={{
-                    height: '32px',
+                    height: '28px',
                     borderRadius: '6px',
                     backgroundColor: '#f1f5f9',
                     border: '1px solid #e2e8f0',
                     color: '#94a3b8',
-                    fontSize: '0.78rem',
+                    fontSize: '0.74rem',
                     fontWeight: 600,
                     textDecoration: 'line-through 2px #ef4444',
                     cursor: 'not-allowed',
@@ -209,12 +209,12 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
                   key={item.dayStr}
                   title={`Día ${item.d} pasado (No disponible)`}
                   style={{
-                    height: '32px',
+                    height: '28px',
                     borderRadius: '6px',
                     backgroundColor: '#f8fafc',
                     border: '1px solid #f1f5f9',
                     color: '#cbd5e1',
-                    fontSize: '0.78rem',
+                    fontSize: '0.74rem',
                     fontWeight: 500,
                     cursor: 'not-allowed',
                     display: 'flex',
@@ -239,11 +239,11 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
                   onClick={() => handleDayClick(item)}
                   title={`${item.isSelectedIn ? 'Llegada: ' : item.isSelectedOut ? 'Salida: ' : ''}${item.dayStr}`}
                   style={{
-                    height: '32px',
+                    height: '28px',
                     borderRadius: '6px',
                     backgroundColor: esExtremo ? '#d91a2a' : '#fee2e2',
                     color: esExtremo ? '#ffffff' : '#b91522',
-                    fontSize: '0.78rem',
+                    fontSize: '0.74rem',
                     fontWeight: 800,
                     border: esExtremo ? 'none' : '1px dashed #fca5a5',
                     boxShadow: esExtremo ? '0 2px 6px rgba(217, 26, 42, 0.35)' : 'none',
@@ -268,12 +268,12 @@ const FigmaBookingBox = ({ selectedApto, reservas = [], onReservar }) => {
                 onClick={() => handleDayClick(item)}
                 title={`Seleccionar fecha ${item.dayStr}`}
                 style={{
-                  height: '32px',
+                  height: '28px',
                   borderRadius: '6px',
                   backgroundColor: '#ffffff',
                   border: '1px solid #cbd5e1',
                   color: '#0f172a',
-                  fontSize: '0.78rem',
+                  fontSize: '0.74rem',
                   fontWeight: 700,
                   cursor: 'pointer',
                   display: 'flex',

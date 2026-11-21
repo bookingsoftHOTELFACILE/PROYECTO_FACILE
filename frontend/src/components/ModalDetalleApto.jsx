@@ -216,21 +216,21 @@ export default function ModalDetalleApto() {
               {selectedAptoFigma.desc}
             </p>
 
-            {/* Badges de Capacidad y Ambientes */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '24px' }}>
-              <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Users size={18} color="var(--color-primary)" />
+            {/* Badges de Capacidad y Ambientes Compactos */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ backgroundColor: '#f8fafc', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Users size={15} color="var(--color-primary)" />
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Capacidad</div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{selectedAptoFigma.personas || selectedAptoFigma.capacidad}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Capacidad</div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>{selectedAptoFigma.personas || selectedAptoFigma.capacidad}</div>
                 </div>
               </div>
 
-              <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Bath size={18} color="var(--color-primary)" />
+              <div style={{ backgroundColor: '#f8fafc', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Bath size={15} color="var(--color-primary)" />
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Baños</div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{selectedAptoFigma.numBanos || selectedAptoFigma.banos || '1 Baño'}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Baños</div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>{selectedAptoFigma.numBanos || selectedAptoFigma.banos || '1 Baño'}</div>
                 </div>
               </div>
             </div>

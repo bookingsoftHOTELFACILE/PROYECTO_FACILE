@@ -45,6 +45,16 @@ def admin_token(client):
     return res.json()["access_token"]
 
 @pytest.fixture
+def amallaves_token(client):
+    """Login como Ama de llaves (rol sin permisos de cobro) para probar RBAC (RF-009)."""
+    res = client.post("/api/auth/login", json={
+        "usuario": "amallaves",
+        "contrasena": "Amallaves2026!"
+    })
+    return res.json()["access_token"]
+
+
+@pytest.fixture
 def clean_reservas(client):
     """
     (Opcional) Un fixture para limpiar reservas de prueba específicas.
@@ -73,6 +83,9 @@ def limpiar_residuos_de_prueba(setup_db):
     from database import connection
 
     TABLAS = (
+        # Orden por FK: los movimientos antes que la reserva a la que apuntan.
+        ("pago", "id_pago"),
+        ("factura", "id_factura"),
         ("reserva_habitacion", "id_reserva"),
         ("reserva_negocio", "id_reserva_negocio"),
         ("huesped", "id_huesped"),

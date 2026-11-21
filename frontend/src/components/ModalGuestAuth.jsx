@@ -215,46 +215,6 @@ const ModalGuestAuth = () => {
                 </p>
               </div>
 
-              {/* SELECTOR DE PESTAÑAS: YA TENGO REGISTRO / CREAR CUENTA NUEVA */}
-              {guestAuthTab !== 'recuperar' && !selectedHuesped && (
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '1.1rem', justifyContent: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={() => { setGuestAuthTab('login'); setGuestSearchError(null); }}
-                    style={{
-                      padding: '7px 18px',
-                      borderRadius: '9999px',
-                      border: guestAuthTab === 'login' ? '2px solid #d91a2a' : '1px solid #cbd5e1',
-                      backgroundColor: guestAuthTab === 'login' ? '#fee2e2' : '#ffffff',
-                      color: guestAuthTab === 'login' ? '#991b1b' : '#475569',
-                      fontWeight: 800,
-                      fontSize: '0.82rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    ya tengo registro
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setGuestAuthTab('registro'); setGuestSearchError(null); }}
-                    style={{
-                      padding: '7px 18px',
-                      borderRadius: '9999px',
-                      border: guestAuthTab === 'registro' ? '2px solid #d91a2a' : '1px solid #cbd5e1',
-                      backgroundColor: guestAuthTab === 'registro' ? '#fee2e2' : '#ffffff',
-                      color: guestAuthTab === 'registro' ? '#991b1b' : '#475569',
-                      fontWeight: 800,
-                      fontSize: '0.82rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    Crear cuenta nueva
-                  </button>
-                </div>
-              )}
-
               {/* Indicador de sesión activa con opción de cerrar sesión */}
               {selectedHuesped && (
                 <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '0.75rem 0.9rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>

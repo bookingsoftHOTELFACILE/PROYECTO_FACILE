@@ -16,7 +16,6 @@ test('Complete the room reservation flow for an authenticated user', async ({ pa
 
   // ACT
   await page.getByRole('button', { name: 'Inicia sesión o regístrate como Huésped' }).click();
-  await page.getByRole('button', { name: 'ya tengo registro' }).click();
   await page.getByLabel('Número de Documento o Correo Electrónico').fill('john.doe@example.com');
   await page.getByLabel('Contraseña').fill('john123');
   await page.getByRole('button', { name: 'Iniciar Sesión y Continuar' }).click();
