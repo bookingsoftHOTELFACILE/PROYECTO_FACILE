@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, Receipt, Download, Plus, FileSpreadsheet } from 'lucide-react';
-import HojaCalculoFolio from './HojaCalculoFolio.jsx';
 import { useApp } from '../context/AppContext';
+import { exportarExcelFolio } from '../utils/exportarExcelFolio.js';
 import {
   apiFetch,
   authHeaders,
@@ -65,7 +65,7 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
   const [referencia, setReferencia] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [descargando, setDescargando] = useState(false);
-  const [verHojaCalculo, setVerHojaCalculo] = useState(false);
+  const [descargandoExcel, setDescargandoExcel] = useState(false);
 
   const esAdmin = (usuarioSesion?.rol || '') === 'Administrador';
 
@@ -433,8 +433,22 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                 </button>
                 <button
                   type="button"
-                  id="folio-ver-hoja-calculo"
-                  onClick={() => setVerHojaCalculo(true)}
+                  id="folio-descargar-excel"
+                  onClick={async () => {
+                    if (!folio) return;
+                    try {
+                      setDescargandoExcel(true);
+                      setError(null);
+                      await exportarExcelFolio(folio);
+                      setExito('Folio oficial descargado en Excel (.xlsx) exitosamente.');
+                    } catch (e) {
+                      console.error('Error al exportar Excel:', e);
+                      setError('No se pudo generar el archivo Excel.');
+                    } finally {
+                      setDescargandoExcel(false);
+                    }
+                  }}
+                  disabled={descargandoExcel}
                   style={{
                     marginTop: '8px',
                     width: '100%',
@@ -444,17 +458,18 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                     gap: '8px',
                     padding: '11px 16px',
                     borderRadius: '12px',
-                    border: '1px solid #1e293b',
-                    backgroundColor: '#0f172a',
-                    color: '#ffffff',
+                    border: '1px solid #10b981',
+                    backgroundColor: '#ecfdf5',
+                    color: '#047857',
                     fontSize: '13px',
                     fontWeight: 800,
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
+                    cursor: descargandoExcel ? 'wait' : 'pointer',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   <FileSpreadsheet size={16} />
-                  Ver Folio Oficial / Imprimir (XLSX / PDF)
+                  {descargandoExcel ? 'Generando Excel…' : 'Descargar en Excel (.xlsx)'}
                 </button>
                 <button
                   type="button"
@@ -467,17 +482,17 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    padding: '11px 16px',
+                    padding: '9px 16px',
                     borderRadius: '12px',
                     border: '1px solid #cbd5e1',
                     backgroundColor: '#f8fafc',
-                    color: '#334155',
-                    fontSize: '13px',
-                    fontWeight: 800,
+                    color: '#475569',
+                    fontSize: '12px',
+                    fontWeight: 700,
                     cursor: 'pointer',
                   }}
                 >
-                  <FileSpreadsheet size={16} />
+                  <FileSpreadsheet size={15} />
                   Exportar folio en CSV
                 </button>
                 <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', fontWeight: 600 }}>
@@ -718,14 +733,6 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
           </div>
         )}
       </div>
-
-      {verHojaCalculo && folio && (
-        <HojaCalculoFolio
-          folio={folio}
-          onClose={() => setVerHojaCalculo(false)}
-          onDescargarCsv={descargarCsv}
-        />
-      )}
     </div>
   );
 }
