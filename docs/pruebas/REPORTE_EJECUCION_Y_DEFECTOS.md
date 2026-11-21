@@ -12,7 +12,7 @@
 
 Durante el ciclo de estabilización del software se ejecutaron las suites de pruebas automatizadas y sesiones de pruebas manuales exploratorias sobre las ramas `develop` y ramas de características (`feature/*`).
 
-- **Total de Pruebas Ejecutadas:** 124 casos automatizados + 15 casos exploratorios manuales.
+- **Total de Pruebas Ejecutadas:** 146 casos automatizados + 15 casos exploratorios manuales.
 - **Tasa de Aprobación Final:** **100%**.
 - **Defectos Totales Detectados durante el Ciclo:** 8 defectos.
 - **Defectos Resueltos y Verificados:** 8 defectos (100% de efectividad de remediación).

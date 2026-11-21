@@ -265,3 +265,69 @@ def test_cambiar_estado_requiere_autenticacion(client):
         json={"estado": "Check-In"},
     )
     assert res.status_code == 401, res.text
+
+
+def test_checkin_directo_emite_llave_digital_yale(client, admin_token):
+    """HU-012: el check-in directo devuelve el paquete `yale_lock` completo."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    hab = _habitacion_libre(client, headers)
+    estado_original = hab["estado"]
+    id_reserva = None
+    try:
+        year = _year_unico()
+        res = _crear_reserva(
+            client, headers, hab,
+            f"{year}-07-01", f"{year}-07-03",
+            extra={"checkin_inmediato": True},
+        )
+        assert res.status_code == 201, res.text
+        body = res.json()
+        id_reserva = body["reserva"]["id_reserva"]
+
+        llave = body.get("yale_lock")
+        assert isinstance(llave, dict), f"yale_lock ausente o malformado: {llave!r}"
+
+        assert llave["estado"] == "ACTIVA"
+        pin = llave["pin_temporal"]
+        assert isinstance(pin, str) and len(pin) == 6 and pin.isdigit(), pin
+
+        assert llave["transaccion_id"].startswith("tx_yale_")
+        assert llave["dispositivo_id"].startswith(f"YALE-APTO-{hab['numero']}-SN")
+        assert llave["tipo_permiso"] == "HUESPED_TEMPORAL"
+        assert llave["id_habitacion"] == hab["id_habitacion"]
+        assert llave["id_reserva_asociada"] == id_reserva
+
+        assert llave["valido_desde"].endswith("T15:00:00")
+        assert llave["valido_hasta"].endswith("T11:00:00")
+        assert llave["valido_desde"] < llave["valido_hasta"]
+
+        assert llave["protocolo"].startswith("MQTTS")
+        assert llave["topico_mqtt"].endswith("/comando/provisionar_pin")
+        assert str(hab["id_habitacion"]) in llave["topico_mqtt"]
+
+        from services.llave_digital import _checksum
+        assert llave["checksum"] == _checksum(llave)
+        assert len(llave["checksum"]) == 14
+    finally:
+        _restaurar(client, headers, id_reserva, hab["id_habitacion"], estado_original)
+
+
+def test_reserva_normal_no_emite_llave_digital(client, admin_token):
+    """Regresión: una reserva sin check-in directo no recibe PIN."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    hab = _habitacion_libre(client, headers)
+    estado_original = hab["estado"]
+    id_reserva = None
+    try:
+        year = _year_unico()
+        res = _crear_reserva(client, headers, hab, f"{year}-10-01", f"{year}-10-03")
+        assert res.status_code == 201, res.text
+        body = res.json()
+        id_reserva = body["reserva"]["id_reserva"]
+
+        assert "yale_lock" in body
+        assert body["yale_lock"] is None, (
+            f"una reserva sin check-in directo no debe emitir PIN: {body['yale_lock']!r}"
+        )
+    finally:
+        _restaurar(client, headers, id_reserva, hab["id_habitacion"], estado_original)

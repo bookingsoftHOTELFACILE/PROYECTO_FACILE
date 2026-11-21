@@ -1268,14 +1268,26 @@ const VistaPms = () => {
 
               {/* ALERTAS OPERATIVAS DEL PMS */}
               {reservaAlert && (
-                <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${reservaAlert.type === 'success'
+                <div className={`p-4 rounded-2xl text-xs font-bold border flex items-start gap-2.5 ${reservaAlert.type === 'success'
                   ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
                   : reservaAlert.type === 'info'
                     ? 'bg-blue-50 text-blue-900 border-blue-200'
                     : 'bg-red-50 text-red-900 border-red-200'
                   }`}>
                   <span>{reservaAlert.type === 'success' ? '🎉' : reservaAlert.type === 'info' ? 'ℹ️' : '⚠️'}</span>
-                  <span>{reservaAlert.message}</span>
+                  <span className="flex-1">
+                    {reservaAlert.message}
+                    {reservaAlert.data?.yale_lock && (
+                      <span className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-black">
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 tracking-[0.3em] border border-slate-700">
+                          {reservaAlert.data.yale_lock.pin_temporal}
+                        </span>
+                        <span className="text-emerald-800 font-bold">
+                          🔒 {reservaAlert.data.yale_lock.valido_hasta}
+                        </span>
+                      </span>
+                    )}
+                  </span>
                 </div>
               )}
 
@@ -2011,7 +2023,7 @@ const VistaPms = () => {
                         🔒 Yale Connect Smartlock
                       </span>
                     </div>
-                    Al confirmar, el PMS generará de inmediato el código dinámico de cerradura digital Yale para el apartamento <strong>{selectedHab ? `Apto ${selectedHab.numero} (${selectedHab.tipo})` : 'apartamento seleccionado'}</strong>, enviará el enlace de llave móvil al correo <strong>{pmsWalkInGuest.correo || 'indicado'}</strong> y WhatsApp, y actualizará la bitácora activa del hotel a estado <span className="font-bold text-emerald-700">"Ocupada (Check-in Realizado)"</span>.
+                    Al confirmar, el PMS generará de inmediato el código dinámico de cerradura digital Yale para el apartamento <strong>{selectedHab ? `Apto ${selectedHab.numero} (${selectedHab.tipo})` : 'apartamento seleccionado'}</strong>, lo mostrará en pantalla para entregarlo al huésped junto con el enlace de llave móvil, y actualizará la bitácora activa del hotel a estado <span className="font-bold text-emerald-700">"Ocupada (Check-in Realizado)"</span>.
                   </label>
                 </div>
 

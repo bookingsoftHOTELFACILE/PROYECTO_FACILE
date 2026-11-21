@@ -4,7 +4,7 @@
 **Fecha de Ejecución:** Noviembre 2026  
 **Entorno de Ejecución:** Contenedor Docker `bookingsoft-backend` (Linux x86_64, Python 3.11.18, Pytest 8.2.2) y Node.js v24.13.1 (Vitest)  
 **Responsable:** Maicol Mayor (QA Lead)  
-**Total de Casos de Prueba Ejecutados:** **124 Casos Automatizados** (96 Backend Pytest + 28 Frontend Vitest)  
+**Total de Casos de Prueba Ejecutados:** **146 Casos Automatizados** (118 Backend Pytest + 28 Frontend Vitest)  
 **Resultado Global:** **100% Pasados (0 Fallos, 0 Errores)**  
 
 ---
@@ -14,17 +14,19 @@
 | Módulo Evaluado | Framework | Casos Ejecutados | Casos Exitosos | Casos Fallidos | Tasa de Éxito |
 |---|---|:---:|:---:|:---:|:---:|
 | **Autenticación y Seguridad (Auth/RBAC)** | Pytest | 9 | 9 | 0 | 100% |
-| **Centro de Negocios y Coworking** | Pytest | 11 | 11 | 0 | 100% |
-| **Check-In y Check-Out Transaccional** | Pytest | 7 | 7 | 0 | 100% |
+| **Centro de Negocios y Coworking** | Pytest | 12 | 12 | 0 | 100% |
+| **Check-In / Check-Out Transaccional** | Pytest | 9 | 9 | 0 | 100% |
 | **Consultas y Disponibilidad de Unidades** | Pytest | 4 | 4 | 0 | 100% |
+| **Llave Digital Yale (Servicio IoT)** | Pytest | 18 | 18 | 0 | 100% |
 | **Validaciones del Modelo Huésped** | Pytest | 8 | 8 | 0 | 100% |
 | **Pagos, Folio Contable y Facturación** | Pytest | 13 | 13 | 0 | 100% |
 | **Motor de Reservas y Concurrencia** | Pytest | 5 | 5 | 0 | 100% |
-| **Servicio de Reservas y Tarifas (Límites)** | Pytest | 23 | 23 | 0 | 100% |
+| **Servicio de Reservas y Tarifas (Límites)** | Pytest | 22 | 22 | 0 | 100% |
 | **Edición y Actualización de Reservas** | Pytest | 10 | 10 | 0 | 100% |
 | **Seguridad de Acceso y Permisos** | Pytest | 6 | 6 | 0 | 100% |
-| **Frontend: Utilidades de Fechas y Precios** | Vitest | 28 | 28 | 0 | 100% |
-| **TOTAL CONSOLIDADO** | **Pytest + Vitest** | **124** | **124** | **0** | **100%** |
+| **Restricciones de BD (FK y límites)** | Pytest | 2 | 2 | 0 | 100% |
+| **Frontend: Utilidades, Catálogo y HTTP** | Vitest | 28 | 28 | 0 | 100% |
+| **TOTAL CONSOLIDADO** | **Pytest + Vitest** | **146** | **146** | **0** | **100%** |
 
 ---
 
@@ -194,6 +196,6 @@ A continuación se documenta el diseño formal de más de 20 casos distintos cub
 
 Para la auditoría y verificación por parte del comité evaluador del SENA:
 
-1. **Ejecución de las 96 pruebas de backend:** Ejecutar el comando `pytest -v` directamente en el contenedor `bookingsoft-backend`.
+1. **Ejecución de las 118 pruebas de backend:** Ejecutar el comando `pytest -v` directamente en el contenedor `bookingsoft-backend`.
 2. **Reporte de cobertura de código:** Ejecutar el comando `pytest --cov=app --cov-report=term-missing` en el contenedor de backend.
 3. **Ejecución de las 28 pruebas de frontend:** Ejecutar el comando `npm test -- --run` en el directorio `frontend/`.

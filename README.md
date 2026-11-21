@@ -77,7 +77,7 @@ graph TD
 | **Web Server Frontend** | Nginx Alpine      | Nginx 1.25+                       | Servidor de estáticos y proxy reverso hacia el backend.                   |
 | **Administración DB**   | pgAdmin 4         | dpage/pgadmin4                    | Consola visual web para administración y auditoría de la base de datos.   |
 | **Contenedores**        | Docker Compose    | Compose v2.20+                    | Orquestación con volúmenes persistentes y dependencias con healthcheck.   |
-| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 96 pruebas de integración sobre PostgreSQL real sin mocks.                |
+| **Testing**             | Pytest            | pytest 8.x + HTTPX TestClient     | 118 pruebas de integración sobre PostgreSQL real sin mocks.               |
 
 ---
 
@@ -132,7 +132,7 @@ bookingsoft/
 │   │   ├── reservas.py              # Creación atómica, edición (RF-013), check-in/out y cancelación
 │   │   ├── pagos.py                 # Fase 2: folio, cobros y factura electrónica simulada
 │   │   └── centro_negocios.py       # Salas de juntas y coworking por horas
-│   └── tests/                       # Suite de integración sobre PostgreSQL real (96 pruebas)
+│   └── tests/                       # Suite de integración sobre PostgreSQL real (118 pruebas)
 │       ├── conftest.py              # Fixtures de Pytest (cliente HTTP, tokens seed)
 │       ├── test_auth.py             # Login, registro, RBAC y firma JWT
 │       ├── test_consultas.py        # Listados, filtros y estados
@@ -549,13 +549,13 @@ El archivo `schema.sql` aprovisiona credenciales cifradas con bcrypt para valida
 
 > 📚 **Documentación Formal de Calidad y Pruebas (IEEE 829 / ADSO):**
 > - 📄 **Plan de Pruebas Maestro:** [`docs/pruebas/PLAN_PRUEBAS.md`](docs/pruebas/PLAN_PRUEBAS.md) *(Alcance, niveles, ambientes y criterios)*
-> - 📄 **Informe de Pruebas Unitarias:** [`docs/pruebas/INFORME_PRUEBAS_UNITARIAS.md`](docs/pruebas/INFORME_PRUEBAS_UNITARIAS.md) *(124 casos automatizados: 96 Pytest + 28 Vitest)*
+> - 📄 **Informe de Pruebas Unitarias:** [`docs/pruebas/INFORME_PRUEBAS_UNITARIAS.md`](docs/pruebas/INFORME_PRUEBAS_UNITARIAS.md) *(146 casos automatizados: 118 Pytest + 28 Vitest)*
 > - 📄 **Reporte de Ejecución y Bug Tracker:** [`docs/pruebas/REPORTE_EJECUCION_Y_DEFECTOS.md`](docs/pruebas/REPORTE_EJECUCION_Y_DEFECTOS.md) *(Seguimiento y 100% remediación)*
 > - 📄 **Gestión de Metodología Ágil (SCRUM):** [`docs/scrum/PRODUCT_BACKLOG.md`](docs/scrum/PRODUCT_BACKLOG.md) y [`docs/scrum/FEEDBACK_EQUIPO.md`](docs/scrum/FEEDBACK_EQUIPO.md)
 
 ### Suite de Integración con Pytest (Backend FastAPI)
 
-El sistema cuenta con **96 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
+El sistema cuenta con **118 pruebas automatizadas de integración** que se ejecutan directamente sobre una instancia real de PostgreSQL (sin simulación ni base de datos en memoria):
 
 ```bash
 # Ejecutar la suite completa dentro del contenedor backend

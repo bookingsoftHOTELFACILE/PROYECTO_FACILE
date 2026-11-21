@@ -13,6 +13,7 @@ from services.reservas_service import (
     parse_fecha,
     ValidationError as ServiceValidationError
 )
+from services.llave_digital import generar_llave_digital
 logger = logging.getLogger("bookingsoft.reservas")
 
 # RF-009: roles autorizados para el módulo de reservas.
@@ -263,6 +264,19 @@ def crear_reserva(
             "checkout_at": None
         }
 
+        # La llave se emite después del commit: si la transacción falló no debe
+        # quedar un PIN provisionado para una reserva inexistente.
+        yale_lock = None
+        if es_checkin_directo:
+            yale_lock = generar_llave_digital(
+                id_reserva=res_row["id_reserva"],
+                id_habitacion=res_row["id_habitacion"],
+                numero_habitacion=numero_hab,
+                fecha_entrada=res_row["fecha_entrada"],
+                fecha_salida=res_row["fecha_salida"],
+                correo_huesped=(hues_row or {}).get("correo"),
+            )
+
         return {
             "message": (
                 f"Check-in directo registrado por {audit_str}."
@@ -273,6 +287,8 @@ def crear_reserva(
             # P1-1.4: perfil del huésped (recién creado o el que ya existía) para que
             # el PMS lo seleccione sin una segunda petición.
             "huesped": hues_row,
+            # Sólo el check-in directo provisiona PIN en la cerradura.
+            "yale_lock": yale_lock,
             "cotizacion": {
                 "noches": noches,
                 "subtotal": float(subtotal),

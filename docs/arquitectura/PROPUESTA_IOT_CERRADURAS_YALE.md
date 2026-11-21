@@ -112,9 +112,33 @@ flowchart LR
 
 ## 5. Implementación en el PMS y Manejo en el Sistema
 
-En el frontend del PMS (`VistaPms.jsx`), en el módulo de recepción presencial (Walk-In):
-- Al activar la casilla de **Registrar Check-In Directo Inmediato (Huésped presente en el lobby) — Yale Connect Smartlock**, el backend genera el código seguro y actualiza la reserva a estado `Check-In`.
-- La respuesta HTTP incluye el objeto `yale_lock` con el estado (`ACTIVA`), el `pin_temporal` de 6 dígitos y el enlace de llave móvil para visualización del recepcionista y envío al huésped.
+**Módulo de backend:** `backend/services/llave_digital.py` — genera el paquete `yale_lock` con el PIN temporal. Usa `secrets` (CSPRNG del sistema), de modo que el código no es predecible ni reproducible.
+
+**Flujo completo:**
+
+1. En `VistaPms.jsx`, recepción activa la casilla **Registrar Check-In Directo Inmediato — Yale Connect Smartlock**.
+2. El frontend envía `checkin_inmediato: true` a `POST /api/reservas` (el endpoint exige rol operativo; el público recibe `403`).
+3. El backend crea la reserva en estado `Check-In`, marca la unidad como `Ocupada` y, **una vez confirmada la transacción**, emite la llave digital.
+4. La respuesta HTTP incluye el objeto `yale_lock`:
+
+| Campo | Ejemplo | Descripción |
+|---|---|---|
+| `estado` | `ACTIVA` | Estado lógico del permiso |
+| `pin_temporal` | `847291` | PIN de 6 dígitos para el teclado de la cerradura |
+| `transaccion_id` | `tx_yale_982341` | Identificador único de aprovisionamiento |
+| `dispositivo_id` | `YALE-APTO-101-SN4892` | Serial del dispositivo emulado |
+| `valido_desde` / `valido_hasta` | `2026-11-20T15:00:00` / `2026-11-22T11:00:00` | Vigencia (check-in 15:00 → check-out 11:00) |
+| `llave_movil` | `https://bookingsoft.app/llave/...` | Enlace para el teléfono del huésped (`null` si no hay correo) |
+| `topico_mqtt` | `hotel/facile/cerraduras/101/comando/provisionar_pin` | Tópico donde se publicaría el comando |
+| `protocolo` | `MQTTS v5.0 / TLS 1.3 :8883` | Transporte acordado con el hardware |
+| `checksum` | `a8f5c31b9d4e2a` | SHA-256 truncado para verificar integridad |
+
+5. El PMS muestra el PIN en pantalla con su fecha de expiración para que recepción lo entregue al huésped junto con el enlace de llave móvil.
+
+**Cobertura automatizada:**
+
+- `tests/test_llave_digital.py` — 18 pruebas unitarias del servicio (formato del PIN, aleatoriedad, ventana de vigencia, detección de manipulación por checksum).
+- `tests/test_checkin_checkout.py` — 2 pruebas de integración: el check-in directo sí emite `yale_lock` y una reserva normal **no** lo emite.
 
 ---
 

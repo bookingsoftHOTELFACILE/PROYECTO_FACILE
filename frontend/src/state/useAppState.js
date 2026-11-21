@@ -1170,10 +1170,12 @@ export function useAppState() {
           }
           const nombreHuesped = huespedDestino?.nombre || (pmsWalkInGuest.nombre || '').trim();
           const docHuesped = huespedDestino?.documento || (pmsWalkInGuest.documento || '').trim();
+          const llave = data.yale_lock;
           setReservaAlert({
             type: 'success',
             message: walkinCheckinInmediato
               ? `✓ Check-in directo registrado para ${nombreHuesped} (Doc: ${docHuesped}).`
+                + (llave ? ` Código de cerradura Yale: ${llave.pin_temporal} (válido hasta ${llave.valido_hasta}).` : '')
               : `¡Reserva presencial confirmada exitosamente para ${nombreHuesped} (Doc: ${docHuesped})!`,
             data
           });
