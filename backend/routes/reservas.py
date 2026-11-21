@@ -111,7 +111,6 @@ def obtener_reservas():
                 "fecha_salida": fecha_salida.strftime("%Y-%m-%d") if hasattr(fecha_salida, 'strftime') else str(fecha_salida),
                 "estado": f["estado"],
                 "creado_por": f["creado_por"] or "",
-                # Fase 3 — RF-013: notas internas de la reserva.
                 "observaciones": f["observaciones"] or "",
                 # HU-005 (CA-005.1 / CA-005.4): marca temporal física real, vacía si no hay check-in.
                 "checkin_at": f["checkin_at"].strftime("%Y-%m-%d %H:%M") if f["checkin_at"] else None,
@@ -330,7 +329,7 @@ def crear_reserva(
             detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP
         )
 
-# RF-013 (Fase 3): modificación de una reserva existente (fechas, unidad y notas).
+# Modificación de una reserva existente (fechas, unidad y notas).
 @router.patch("/{id_reserva}", dependencies=[Depends(requiere_rol(*_ROLES_RESERVAS))])
 def actualizar_reserva(
     id_reserva: int,
@@ -612,7 +611,7 @@ def cambiar_estado_reserva(
             # CA-005.5: noches reales de la estadía entre fecha de entrada y fecha de salida.
             noches = (parse_fecha(fecha_salida) - parse_fecha(fecha_entrada)).days
 
-            # Fase 3 — Maduración: el check-out devuelve el estado financiero de la
+            # El check-out devuelve el estado financiero de la
             # reserva para que recepción pueda avisar de un saldo pendiente al cerrar.
             cur.execute("SELECT precio_noche FROM habitacion WHERE id_habitacion = %s", (id_habitacion,))
             precio_actual = float(cur.fetchone()["precio_noche"])

@@ -1,16 +1,15 @@
 """
 backend/routes/pagos.py
 
-Fase 2 — Módulo financiero de BookingSoft:
+Módulo financiero de BookingSoft:
 
 - ``GET  /api/reservas/{id}/folio``          folio con desglose de IVA 19% (incluido en la tarifa), movimientos y saldo.
-- ``POST /api/reservas/{id}/pagos``          cobro a través de la pasarela (hoy simulada, ver services/pasarela.py).
+- ``POST /api/reservas/{id}/pagos``          cobro a través de la pasarela.
 - ``POST /api/reservas/{id}/pagos/{p}/anular`` anulación de un cobro (sólo Administrador).
-- ``GET  /api/reservas/{id}/factura.xml``    factura electrónica **simulada** UBL 2.1 en borrador (sin envío a la DIAN).
+- ``GET  /api/reservas/{id}/factura.xml``    factura electrónica simulada UBL 2.1 en borrador.
 
-RBAC (RF-009): cobro restringido a ``Administrador`` y ``Recepcionista 24h``; la
-anulación exige además ``Administrador``. Los cálculos de negocio viven en
-``services/folio.py`` (puro, sin BD ni HTTP) y el cobro en ``services/pasarela.py``.
+RBAC: cobro restringido a ``Administrador`` y ``Recepcionista 24h``; la
+anulación exige además ``Administrador``.
 """
 import hashlib
 import logging
@@ -179,7 +178,7 @@ def _generar_factura_xml(
   <cbc:IssueDate>{fecha_iso}</cbc:IssueDate>
   <cbc:DueDate>{fecha_iso}</cbc:DueDate>
   <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
-  <cbc:Note>DOCUMENTO SIMULADO SIN VALOR FISCAL — Fase 2: pendiente de habilitación ante la DIAN.</cbc:Note>
+  <cbc:Note>DOCUMENTO SIMULADO SIN VALOR FISCAL — Pendiente de habilitación ante la DIAN.</cbc:Note>
   <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
   <cac:AccountingSupplierParty>
     <cac:Party>

@@ -1,23 +1,7 @@
 """
 backend/services/folio.py
 
-Fase 2 — Lógica de negocio pura del folio de la reserva (módulo financiero).
-
-Reglas:
-- Los precios publicados **incluyen** el IVA (ModalLegal: "las tarifas publicadas
-  incluyen los impuestos de ley vigentes"), por lo que el total de la reserva no
-  cambia y el folio sólo lo *desglosa*:
-
-        base   = total / 1.19
-        iva    = total - base        (redondeado a 2 decimales)
-        base + iva == total          (siempre, por construcción)
-
-- El folio recalcule la estadía con la MISMA política de descuento que la reserva
-  (`calcular_costo_estadia`), de modo que el total del folio coincide con la
-  cotización original mientras la tarifa de la habitación no cambie.
-- Saldo = total - pagos confirmados (los rechazados/anulados no descuentan).
-
-Sin dependencias de BD ni de HTTP (testable con unit tests puros).
+Lógica de negocio del folio de la reserva (módulo financiero).
 """
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Dict, List, Union

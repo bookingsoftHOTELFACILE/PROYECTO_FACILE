@@ -63,10 +63,9 @@ _MIGRACIONES = (
     # HU-005 (CA-005.1 / CA-005.4): marca temporal física del check-in / check-out.
     "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP",
     "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP",
-    # Fase 3 — RF-013: notas internas de la reserva, editables desde el PMS.
+    # Notas internas de la reserva, editables desde el PMS.
     "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS observaciones VARCHAR(300)",
-    # Fase 2 — Módulo financiero (pagos + factura electrónica simulada). Las bases
-    # vivas no reciben las tablas nuevas de schema.sql, así que viajan aquí.
+    # Módulo financiero (pagos + factura electrónica simulada).
     """
     CREATE TABLE IF NOT EXISTS pago (
         id_pago        SERIAL PRIMARY KEY,
@@ -123,9 +122,6 @@ def inicializar_base_de_datos():
         # Si RESET_DB=true está activo explícitamente, ejecutar reinicio destructivo de tablas
         if os.getenv("RESET_DB", "false").lower() in ("true", "1", "yes"):
             print("[FastAPI] RESET_DB=true detectado. Ejecutando limpieza destructiva de tablas...")
-            # Hallazgo 13: se eliminaron los DROP TABLE huérfanos (check_out, check_in).
-            # Fase 2: `pago` y `factura` se eliminan ANTES que `reserva_habitacion`
-            # (foránea hacia ella) para no romper el orden de borrado.
             cursor.execute("""
                 DROP TABLE IF EXISTS factura CASCADE;
                 DROP TABLE IF EXISTS pago CASCADE;

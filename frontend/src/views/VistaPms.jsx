@@ -75,10 +75,7 @@ const VistaPms = () => {
   const [confirmRolModal, setConfirmRolModal] = useState(null);
   const [confirmEstadoModal, setConfirmEstadoModal] = useState(null);
 
-  // Fase 2: folio financiero de la reserva seleccionada (pagos, IVA, factura)
   const [folioReservaId, setFolioReservaId] = useState(null);
-
-  // Fase 3 (RF-013): reserva en edición (fechas, unidad y notas)
   const [reservaEdicion, setReservaEdicion] = useState(null);
 
   // Detección robusta de la cuenta activa (Tú)
@@ -2502,7 +2499,7 @@ const VistaPms = () => {
         </footer>
       </div>
 
-      {/* Fase 2: folio financiero (desglose IVA, cobros y factura simulada) */}
+      {/* Folio financiero (desglose IVA, cobros y factura simulada) */}
       {folioReservaId != null && (
         <ModalFolioReserva
           idReserva={folioReservaId}
@@ -2510,7 +2507,7 @@ const VistaPms = () => {
         />
       )}
 
-      {/* Fase 3: modificación de una reserva confirmada (RF-013) */}
+      {/* Modificación de reserva confirmada */}
       {reservaEdicion && (
         <ModalEditarReserva
           reserva={reservaEdicion}

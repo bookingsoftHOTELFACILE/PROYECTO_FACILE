@@ -1,17 +1,7 @@
 """
 backend/services/pasarela.py
 
-Fase 2 — Adaptador de pasarela de pagos (patrón Adapter).
-
-El módulo financiero **no** depende de ningún proveedor: sólo conoce la interfaz
-`cobrar(...) -> ResultadoCobro`. Hoy se usa la pasarela **simulada** (gratis, sin
-claves externas y determinista para CI). Para enchufar un proveedor real
-(Stripe, Wompi/PSE, PayValid...) basta:
-
-    1. Implementar una clase con el mismo contrato `cobrar(...)`.
-    2. Registrarla en `obtener_pasarela()` (o vía la variable de entorno PASARELA).
-
-Nada del resto del código (rutas, folio, frontend) cambia al hacerlo.
+Adaptador de pasarela de pagos (patrón Adapter).
 """
 from __future__ import annotations
 

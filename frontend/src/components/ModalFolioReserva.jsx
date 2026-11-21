@@ -16,14 +16,6 @@ import {
   generarCsvFolio,
 } from '../utils/folio.js';
 
-/**
- * ModalFolioReserva (Fase 2 — módulo financiero).
- *
- * Muestra el folio de una reserva: estadía, desglose de IVA 19% (incluido en la
- * tarifa), movimientos de pago, saldo y estado. Permite registrar cobros (vía la
- * pasarela activa, simulada por defecto), anularlos (sólo Administrador) y
- * descargar la factura electrónica SIMULADA en XML UBL 2.1 (borrador DIAN).
- */
 const METODOS_PAGO = [
   'Efectivo',
   'Tarjeta de crédito',
@@ -136,7 +128,6 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
     }
   };
 
-  // Fase 3 — exportación del folio a CSV (para Excel / contabilidad).
   const descargarCsv = () => {
     if (!folio) return;
     const csv = generarCsvFolio(folio);

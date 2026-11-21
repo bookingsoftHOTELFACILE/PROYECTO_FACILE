@@ -1317,19 +1317,17 @@ export function useAppState() {
               ? { ...r, ...(data.reserva || {}) }
               : r
           )));
-          // Fase 3: el check-out informa el saldo. No bloquea el cierre (el huésped
-          // puede liquidar después), pero recepción debe verlo de forma inequívoca.
           const saldoPendiente = !esCheckIn && Number(data.folio?.saldo || 0);
           if (saldoPendiente > 0) {
             setReservaAlert({
               type: 'error',
-              message: `${data.message || `✓ ${etiqueta} registrado.`} ⚠️ Saldo pendiente al cierre: ${formatoCOP(saldoPendiente)}.`,
+              message: `${data.message || `${etiqueta} registrado.`} Saldo pendiente al cierre: ${formatoCOP(saldoPendiente)}.`,
               data,
             });
           } else {
             setReservaAlert({
               type: 'success',
-              message: data.message || `✓ ${etiqueta} registrado.`,
+              message: data.message || `${etiqueta} registrado exitosamente.`,
               data,
             });
           }
@@ -1344,7 +1342,7 @@ export function useAppState() {
     setLoading(false);
   };
 
-  // RF-013 (Fase 3) — Modificación de una reserva existente sin cancelarla.
+  // Modificación de una reserva existente sin cancelarla.
   // Devuelve true/false para que el modal se cierre sólo si el backend aceptó.
   const handleEditarReserva = async (id_reserva, cambios) => {
     setLoading(true);

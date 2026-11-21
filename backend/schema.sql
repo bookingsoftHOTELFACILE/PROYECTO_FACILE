@@ -113,10 +113,9 @@ CREATE TABLE IF NOT EXISTS reserva_habitacion (
 -- ejecuta también en cada arranque (ver backend/database/connection.py::_MIGRACIONES).
 ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP;
 ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP;
--- Fase 3 — RF-013: notas internas de la reserva (editables desde el PMS).
 ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS observaciones VARCHAR(300);
 
--- Fase 2 — Módulo financiero: pagos de la reserva (estado, método y gateway).
+-- Módulo financiero: pagos de la reserva (estado, método y gateway).
 -- ON DELETE CASCADE: al eliminar la reserva se limpian sus pagos (y su factura).
 CREATE TABLE IF NOT EXISTS pago (
     id_pago        SERIAL PRIMARY KEY,
@@ -136,7 +135,7 @@ CREATE TABLE IF NOT EXISTS pago (
 );
 CREATE INDEX IF NOT EXISTS idx_pago_reserva ON pago(id_reserva);
 
--- Fase 2 — Factura electrónica SIMULADA (borrador UBL 2.1, sin envío a la DIAN).
+-- Factura electrónica SIMULADA (borrador UBL 2.1, sin envío a la DIAN).
 -- UNIQUE en id_reserva: una sola factura vigente por reserva.
 CREATE TABLE IF NOT EXISTS factura (
     id_factura    SERIAL PRIMARY KEY,

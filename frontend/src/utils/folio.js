@@ -1,14 +1,4 @@
 /**
- * frontend/src/utils/folio.js
- *
- * Fase 2 — Utilidades del folio financiero (formato monetario y estados).
- *
- * El desglose de IVA lo calcula el backend (`services/folio.py`); aquí sólo se
- * formatea y se derivan las etiquetas visuales para no duplicar reglas de
- * presentación en el componente.
- */
-
-/**
  * Formato COP con separador de miles punto (ej. $1.234.567).
  * Determinístico: no depende del ICU del navegador ni de la configuración regional.
  */
@@ -61,7 +51,7 @@ export function formatoFecha(iso) {
 }
 
 /**
- * Fase 3 — Exporta el folio a CSV (compatible con Excel en español).
+ * Exporta el folio a CSV (compatible con Excel en español).
  *
  * - Separador `;` (el estándar de Excel es-CO) y sin BOM (lo añade la descarga).
  * - Entrecomilla los campos con `;`, comillas o saltos de línea y duplica las

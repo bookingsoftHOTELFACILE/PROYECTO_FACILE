@@ -7,7 +7,7 @@ import {
   generarCsvFolio,
 } from './folio.js';
 
-/** Fase 2 — formato y etiquetas del folio financiero. */
+/** Formato y etiquetas del folio financiero. */
 describe('formatoCOP', () => {
   it('agrupa miles con punto como en Colombia', () => {
     expect(formatoCOP(0)).toBe('$0');

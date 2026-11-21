@@ -60,7 +60,7 @@ class ReservaEstadoUpdate(BaseModel):
 
 class ReservaUpdate(BaseModel):
     """
-    RF-013 (Fase 3): modificación de una reserva existente.
+    Modificación de una reserva existente.
 
     Todos los campos son opcionales: sólo se aplican los enviados. Las fechas se
     validan igual que en el alta (salida > entrada) y el rango resultante vuelve a
@@ -72,7 +72,7 @@ class ReservaUpdate(BaseModel):
     observaciones: Optional[str] = Field(None, max_length=300, description="Notas internas de la reserva")
 
 
-# --- Schemas de Pagos (Fase 2 — módulo financiero) ---
+# --- Schemas de Pagos ---
 
 PAGO_METODOS = Literal[
     'Efectivo',
@@ -86,7 +86,7 @@ PAGO_METODOS = Literal[
 
 
 class PagoCreate(BaseModel):
-    """Alta de un cobro sobre el folio de una reserva (Fase 2)."""
+    """Alta de un cobro sobre el folio de una reserva."""
     monto: float = Field(..., gt=0, description="Monto a cobrar en COP; no puede superar el saldo pendiente")
     metodo: PAGO_METODOS = Field(..., description="Medio de pago empleado en el cobro")
     referencia: Optional[str] = Field(

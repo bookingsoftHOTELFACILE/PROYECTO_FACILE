@@ -3,14 +3,6 @@ import { X, CalendarDays, Save } from 'lucide-react';
 import { formatoCOP } from '../utils/folio.js';
 import { cotizarEstadia, etiquetaDescuentoEstadia } from '../utils/pricing.js';
 
-/**
- * ModalEditarReserva (Fase 3 — RF-013).
- *
- * Permite modificar fechas, unidad y notas de una reserva **Confirmada** sin
- * cancelarla ni recrearla. La validación final vive en el backend (recalcula
- * cotización y vuelve a pasar por el constraint GiST); aquí sólo se muestra el
- * preview con la misma política de descuentos del resto del sistema.
- */
 export default function ModalEditarReserva({
   reserva,
   habitaciones = [],

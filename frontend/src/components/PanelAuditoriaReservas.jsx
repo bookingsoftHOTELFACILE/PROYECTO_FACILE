@@ -22,8 +22,6 @@ import {
 } from 'lucide-react';
 
 const normalizarReserva = (r) => ({
-  // Fase 3: se conserva la fila original (id_habitacion, fechas, observaciones…)
-  // para que el modal de edición (RF-013) trabaje con los datos del backend.
   ...r,
   id: r.id_reserva || r.id,
   id_reserva: r.id_reserva || r.id,
@@ -51,11 +49,8 @@ export default function PanelAuditoriaReservas({
   onCheckIn, 
   onCheckOut,
   onCancelarReserva,
-  // Fase 2: apertura del folio financiero (pagos, IVA y factura simulada).
   onVerFolio,
-  // Fase 3 (RF-013): edición de fechas/unidad/notas de una reserva confirmada.
   onEditarReserva,
-  // Inventario real de unidades (proporcionado por el PMS desde /api/habitaciones).
   totalUnidades
 }) {
   const [busqueda, setBusqueda] = useState('');
@@ -909,7 +904,6 @@ export default function PanelAuditoriaReservas({
                     {/* Acciones */}
                     <td style={{ padding: '14px 28px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                        {/* Fase 2: folio financiero (cobros, IVA y factura simulada) */}
                         <button
                           type="button"
                           id={`pms-folio-${r.id_reserva || r.id}`}
@@ -970,7 +964,7 @@ export default function PanelAuditoriaReservas({
                               e.currentTarget.style.backgroundColor = '#ffffff';
                               e.currentTarget.style.borderColor = '#e2e8f0';
                             }}
-                            title="Modificar fechas, unidad u observaciones sin cancelar la reserva (RF-013)"
+                            title="Modificar fechas, unidad u observaciones sin cancelar la reserva"
                           >
                             <Pencil size={13} />
                             <span>Editar</span>
