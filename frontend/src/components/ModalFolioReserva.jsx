@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Receipt, Download, Plus, FileSpreadsheet } from 'lucide-react';
+import { X, Receipt, Download, Plus, FileSpreadsheet, FileText } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { exportarExcelFolio } from '../utils/exportarExcelFolio.js';
+import ModalFacturaDian from './ModalFacturaDian.jsx';
 import {
   apiFetch,
   authHeaders,
@@ -58,6 +59,7 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
   const [guardando, setGuardando] = useState(false);
   const [descargando, setDescargando] = useState(false);
   const [descargandoExcel, setDescargandoExcel] = useState(false);
+  const [mostrarFacturaDian, setMostrarFacturaDian] = useState(false);
 
   const esAdmin = (usuarioSesion?.rol || '') === 'Administrador';
 
@@ -439,7 +441,34 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                   {descargandoExcel ? 'Generando Excel…' : 'Descargar Folio Oficial (.xlsx)'}
                 </button>
 
-                {/* 2. Botón Secundario: Factura Electrónica XML UBL 2.1 (DIAN) */}
+                {/* 2. Botón Representación Gráfica Factura DIAN (Plantilla Oficial Facturatech) */}
+                <button
+                  type="button"
+                  id="folio-ver-factura-dian"
+                  onClick={() => setMostrarFacturaDian(true)}
+                  style={{
+                    marginTop: '8px',
+                    width: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '11px 16px',
+                    borderRadius: '12px',
+                    border: '1px solid #0284c7',
+                    backgroundColor: '#f0f9ff',
+                    color: '#0369a1',
+                    fontSize: '12.5px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <FileText size={15} color="#0284c7" />
+                  Ver Factura Electrónica DIAN (FEV / PDF)
+                </button>
+
+                {/* 3. Botón Secundario: Factura Electrónica XML UBL 2.1 (DIAN) */}
                 <button
                   type="button"
                   id="folio-descargar-factura"
@@ -452,23 +481,23 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    padding: '10px 16px',
+                    padding: '9px 16px',
                     borderRadius: '12px',
                     border: '1px solid #cbd5e1',
                     backgroundColor: '#f8fafc',
-                    color: '#334155',
-                    fontSize: '12.5px',
+                    color: '#475569',
+                    fontSize: '12px',
                     fontWeight: 700,
                     cursor: descargando ? 'wait' : 'pointer',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  <Download size={15} color="#64748b" />
-                  {descargando ? 'Generando factura…' : 'Factura DIAN XML (UBL 2.1 simulado)'}
+                  <Download size={14} color="#64748b" />
+                  {descargando ? 'Generando XML…' : 'Descargar Factura XML (UBL 2.1)'}
                 </button>
 
                 <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px', fontWeight: 600, textAlign: 'center' }}>
-                  Borrador UBL 2.1 con CUFE (simulado DIAN) • Folio oficial descargable en Excel
+                  Resolución DIAN 000165 de 2023 • UBL 2.1 con CUFE • Folio en Excel
                 </div>
               </div>
 
@@ -705,6 +734,15 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
           </div>
         )}
       </div>
+
+      {/* Modal Representación Gráfica Factura DIAN (Plantilla Facturatech FEV) */}
+      {mostrarFacturaDian && folio && (
+        <ModalFacturaDian
+          folio={folio}
+          onClose={() => setMostrarFacturaDian(false)}
+          onDescargarXml={descargarFactura}
+        />
+      )}
     </div>
   );
 }

@@ -37,10 +37,13 @@ _ROLES_COBRO = ("Administrador", "Recepcionista 24h")
 
 # Datos del emisor de la factura SIMULADA (demostración; no es un NIT real).
 _EMISOR = {
-    "razon_social": "BookingSoft Apartahotel Facile Ibagué",
+    "razon_social": "BookingSoft Apartahotel Facile Bogotá",
     "nit": "900.000.000-1",
-    "domicilio": "Ibagué, Tolima, Colombia",
-    "regimen": "Resimples",
+    "domicilio": "Calle 97 #21-62, Chicó, Bogotá D.C., Colombia",
+    "telefono": "+57 (601) 745-2000",
+    "regimen": "Responsable de IVA - Régimen Común",
+    "resolucion": "Resolución DIAN No. 18764000001 del 15 de Enero de 2026",
+    "rango": "FACT-00000001 al FACT-99999999",
 }
 
 router = APIRouter(prefix="/api/reservas", tags=["pagos"])
@@ -111,7 +114,24 @@ def _consultar_folio(cur, id_reserva: int) -> Optional[Tuple[Dict[str, Any], Dic
     )
     pagos = [dict(p) for p in cur.fetchall()]
 
-    return reserva, cotizacion, pagos, construir_folio(reserva, cotizacion, pagos)
+    folio = construir_folio(reserva, cotizacion, pagos)
+
+    cur.execute(
+        "SELECT consecutivo, cufe, estado FROM factura WHERE id_reserva = %s",
+        (id_reserva,),
+    )
+    factura_fila = cur.fetchone()
+    if factura_fila:
+        folio["factura"] = dict(factura_fila)
+    else:
+        folio["factura"] = {
+            "consecutivo": f"FACT-{id_reserva:08d}",
+            "cufe": _calcular_cufe(reserva, folio),
+            "estado": "Borrador",
+        }
+    folio["emisor"] = _EMISOR
+
+    return reserva, cotizacion, pagos, folio
 
 
 def _recalcular_folio(cur, id_reserva: int) -> Dict[str, Any]:
