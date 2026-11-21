@@ -13,10 +13,10 @@ from dependencies import requiere_rol
 from repositories import cursor_escritura, cursor_lectura
 
 # Todos los roles del sistema tienen acceso al catálogo general de habitaciones
-_TODOS_LOS_ROLES = ("Administrador", "Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento")
+_TODOS_LOS_ROLES = ("Grupo BookingSoft", "Administrador", "Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento")
 
 # Roles autorizados para consulta operacional de disponibilidad y reservas
-_ROLES_DISPONIBILIDAD = ("Administrador", "Recepcionista 24h")
+_ROLES_DISPONIBILIDAD = ("Grupo BookingSoft", "Administrador", "Recepcionista 24h")
 
 router = APIRouter(prefix="/api/habitaciones", tags=["habitaciones"])
 

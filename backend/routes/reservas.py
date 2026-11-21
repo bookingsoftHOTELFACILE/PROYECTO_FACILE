@@ -17,7 +17,7 @@ from services.llave_digital import generar_llave_digital
 logger = logging.getLogger("bookingsoft.reservas")
 
 # RF-009: roles autorizados para el módulo de reservas.
-_ROLES_RESERVAS = ("Administrador", "Recepcionista 24h")
+_ROLES_RESERVAS = ("Grupo BookingSoft", "Administrador", "Recepcionista 24h")
 
 router = APIRouter(prefix="/api/reservas", tags=["reservas"])
 

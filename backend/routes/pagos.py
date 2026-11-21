@@ -34,7 +34,7 @@ from services.reservas_service import (
 logger = logging.getLogger("bookingsoft.pagos")
 
 # RF-009: roles autorizados para el módulo de cobros / folio.
-_ROLES_COBRO = ("Administrador", "Recepcionista 24h")
+_ROLES_COBRO = ("Grupo BookingSoft", "Administrador", "Recepcionista 24h")
 
 # Datos del emisor de la factura SIMULADA (demostración; no es un NIT real).
 _EMISOR = {

@@ -656,6 +656,7 @@ const VistaPms = () => {
                   className="px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#d91a2a] shadow-xs cursor-pointer"
                 >
                   <option value="todos">Todos los roles</option>
+                  <option value="Grupo BookingSoft">Grupo BookingSoft</option>
                   <option value="Ama de llaves">Ama de llaves</option>
                   <option value="Personal de mantenimiento">Personal de mantenimiento</option>
                   <option value="Recepcionista 24h">Recepcionista 24h</option>
@@ -710,9 +711,9 @@ const VistaPms = () => {
                       const isSelf = checkIsSelf(emp);
                       const isMasterCreator =
                         emp.id_empleado === 1 ||
-                        emp.id_empleado === 2 ||
                         emp.usuario === 'admin' ||
                         emp.usuario === 'bookingsoft_admin' ||
+                        emp.rol === 'Grupo BookingSoft' ||
                         (emp.nombre && emp.nombre.toLowerCase().includes('bookingsoft'));
 
                       return (

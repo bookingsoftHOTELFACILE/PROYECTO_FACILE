@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS empleado (
     usuario           VARCHAR(50)  UNIQUE NOT NULL,
     contrasena        VARCHAR(255) NOT NULL,
     rol               VARCHAR(30)  NOT NULL
-        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento')),
+        CHECK (rol IN ('Grupo BookingSoft', 'Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento')),
     tipo_documento    VARCHAR(30)  NOT NULL DEFAULT 'Cédula de ciudadanía'
         CHECK (tipo_documento IN ('Cédula de ciudadanía', 'Pasaporte', 'Cédula de extranjería', 'Otro')),
     numero_documento  VARCHAR(30)  UNIQUE,
@@ -213,13 +213,12 @@ $$ LANGUAGE plpgsql;
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
 INSERT INTO empleado (id_empleado, nombre, usuario, contrasena, rol, numero_documento, correo, estado) VALUES
-(1, 'Administrador BookingSoft', 'admin', '$2b$12$7ecjaNx7WWX11bJ5XhjpT.zNkbkLDl4O6k5WG1KYcT66zdQyQ4n5C', 'Administrador', 'CC1001', 'admin@bookingsoft.com', 'Activo'),
-(2, 'Carlos Recepción', 'recepcion', '$2b$12$og/tytRRc2JIyeDacuO/IeL8lEs8wwajuMBiAj/sfq6dZ6on8Lvae', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com', 'Activo'),
-(3, 'Marta Ama de Llaves', 'amallaves', '$2b$12$CU8wHuuLkjkC2zI/opkXWuhJ8CiEbCcn5pBHEd6bFjQIpeZkqRDcS', 'Ama de llaves', 'CC1003', 'amallaves@bookingsoft.com', 'Activo'),
-(4, 'Jhon Mantenimiento', 'mantenimiento', '$2b$12$BkXExO.RTh5PIP786eOHp.gdPuVuK5eaUWvumLdWujlil5pSZaYoW', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com', 'Activo'),
-(5, 'Equipo BookingSoft', 'bookingsoft_admin', '$2b$12$sXAtCTFM7Wvc/O0LGW1Dpu/YXoMnnQhnXlMv/kHTPnqf3EvYkYEz.', 'Administrador', 'CC9001', 'admin_legacy@bookingsoft.com', 'Activo'),
-(6, 'Carlos Pérez', 'carlos_recep', '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W', 'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com', 'Activo'),
-(7, 'Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com', 'Activo')
+(1, 'Administrador Grupo BookingSoft', 'admin', '$2b$12$7ecjaNx7WWX11bJ5XhjpT.zNkbkLDl4O6k5WG1KYcT66zdQyQ4n5C', 'Grupo BookingSoft', 'CC1001', 'bookingsoft4@gmail.com', 'Activo'),
+(3, 'Carlos Pérez', 'carlos_recep', '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W', 'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com', 'Activo'),
+(4, 'Recepción Facile', 'recepcion', '$2b$12$og/tytRRc2JIyeDacuO/IeL8lEs8wwajuMBiAj/sfq6dZ6on8Lvae', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com', 'Activo'),
+(5, 'Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com', 'Activo'),
+(6, 'Ama de Llaves', 'amallaves', '$2b$12$CU8wHuuLkjkC2zI/opkXWuhJ8CiEbCcn5pBHEd6bFjQIpeZkqRDcS', 'Ama de llaves', 'CC1003', 'amas@bookingsoft.com', 'Activo'),
+(7, 'Personal Mantenimiento', 'mantenimiento', '$2b$12$BkXExO.RTh5PIP786eOHp.gdPuVuK5eaUWvumLdWujlil5pSZaYoW', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com', 'Activo')
 ON CONFLICT (usuario) DO UPDATE SET 
     contrasena = EXCLUDED.contrasena, 
     nombre = EXCLUDED.nombre,

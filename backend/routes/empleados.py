@@ -29,7 +29,7 @@ router = APIRouter(prefix="/api/empleados", tags=["empleados"])
 _ROLES_ASIGNABLES = ("Recepcionista 24h", "Ama de llaves", "Personal de mantenimiento")
 
 # Roles con capacidad de gestión administrativa sobre el personal del apartahotel
-_ROLES_GESTION = ("Administrador", "Recepcionista 24h")
+_ROLES_GESTION = ("Grupo BookingSoft", "Administrador", "Recepcionista 24h")
 
 
 # ── GET /api/empleados (RF-002) ───────────────────────────────────────────────
