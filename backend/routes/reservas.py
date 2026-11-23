@@ -185,13 +185,25 @@ def crear_reserva(
         if pgcode == 'P0001' or 'Mantenimiento' in err_msg:
             cleaned = err_msg.split('CONTEXT:')[0].replace('ERROR: ', '').strip()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=cleaned)
+        logger.error(f"Error de base de datos relacional en crear_reserva: {err_msg}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error de base de datos relacional: {err_msg}"
+            detail="Error interno del servidor al procesar la solicitud."
         )
     except HTTPException as he:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
         raise he
     except Exception as e:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        logger.error(f"Error inesperado al crear reserva: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al procesar la solicitud."  # Hallazgo 07: msg técnico en logger, no en HTTP
