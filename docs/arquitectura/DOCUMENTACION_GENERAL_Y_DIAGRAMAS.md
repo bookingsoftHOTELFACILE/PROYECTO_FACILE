@@ -1,91 +1,69 @@
-# 📐 Documentación General de Ingeniería de Software y Diagramas UML / MER / MR
+# Documentación General y Diagramas del Proyecto — BookingSoft
 
 **Proyecto:** BookingSoft PMS — Apartahotel Facile  
 **Programa:** Análisis y Desarrollo de Software (ADSO) — SENA  
-**Fecha:** Noviembre 2026  
-**Autores:** Equipo de Desarrollo ADSO (Chico, Mayor, Echeverri, Parada, López)  
+**Autores:** David López, José Chico, Maicol Mayor, Sebastián Parada y Ashly Echeverri
 
 ---
 
 ## 1. Diagrama de Arquitectura del Sistema (Criterio 5)
 
-El sistema adopta una arquitectura desacoplada basada en microservicios orquestados mediante **Docker Compose**, asegurando alta disponibilidad, seguridad perimetral y aislamiento de red:
+Trabajamos una arquitectura cliente-servidor separada en contenedores con **Docker Compose**:
 
 ```mermaid
 flowchart TD
-    subgraph Cliente["Capa de Presentación (Frontend)"]
-        User["Huésped / Recepcionista / Admin"] -->|HTTPS / HTTP :3001| Nginx["Nginx Reverse Proxy"]
-        Nginx -->|Sirve SPA estática| ReactApp["React 18 + Vite SPA"]
-    end
-
-    subgraph Perimetro["Perímetro de Seguridad & Enrutamiento"]
-        ReactApp -->|Peticiones /api/* (CORS + Bearer JWT)| APIGateway["FastAPI Gateway & Router :4000/:4001"]
-    end
-
-    subgraph Logica["Capa de Lógica de Negocio (Backend)"]
-        APIGateway --> AuthModule["Módulo de Autenticación & RBAC"]
-        APIGateway --> ReservasModule["Motor de Reservas & Disponibilidad"]
-        APIGateway --> FolioModule["Módulo Contable & Liquidación COP"]
-        APIGateway --> CoworkingModule["Módulo Centro de Negocios"]
-        APIGateway --> MantenimientoModule["Módulo Ama de Llaves & Aseo"]
-    end
-
-    subgraph Persistencia["Capa de Persistencia de Datos"]
-        AuthModule --> DBEngine["SQLAlchemy + ConnectionPool"]
-        ReservasModule --> DBEngine
-        FolioModule --> DBEngine
-        CoworkingModule --> DBEngine
-        MantenimientoModule --> DBEngine
-        DBEngine -->|TCP :5432 / Protocolo Binario| Postgres[("PostgreSQL 15 (GiST + daterange)")]
-    end
-
-    subgraph Administracion["Monitoreo & Auditoría"]
-        DBA["Administrador DBA"] -->|HTTP :5050| PgAdmin["pgAdmin 4"]
-        PgAdmin --> Postgres
-    end
+    User["Huésped / Empleado"] -->|HTTP :3001| Nginx["Contenedor Frontend (Nginx + React 18)"]
+    Nginx -->|Proxy /api| FastAPI["Contenedor Backend (FastAPI Python 3.11 :4000 / :4001)"]
+    FastAPI -->|SQL con psycopg2 y Pool :5432| Postgres[("Contenedor PostgreSQL 15 + btree_gist")]
+    Admin["Administrador"] -->|HTTP :5050| PgAdmin["Contenedor pgAdmin 4"]
+    PgAdmin --> Postgres
 ```
 
 ---
 
-## 2. Diagrama de Casos de Uso Global (UML)
+## 2. Diagrama de Casos de Uso (UML)
 
 ```mermaid
 flowchart LR
     Admin((Administrador))
-    Recep((Recepcionista))
+    Recep((Recepcionista 24h))
     Ama((Ama de Llaves))
+    Mant((Mantenimiento))
     Huesped((Huésped))
 
-    subgraph SistemaPMS["BookingSoft PMS - Sistema de Gestión"]
-        CU01["CU-01: Autenticación & Recuperación"]
-        CU02["CU-02: Gestionar Colaboradores"]
-        CU03["CU-03: Crear Reserva Walk-In"]
-        CU04["CU-04: Registrar Check-In & Llave Digital"]
-        CU05["CU-05: Registrar Check-Out & Folio"]
-        CU06["CU-06: Asignar Aseo de Habitación"]
-        CU07["CU-07: Reportar Daño / Mantenimiento"]
-        CU08["CU-08: Reservar Sala de Coworking"]
-        CU09["CU-09: Consultar Catálogo & Tarifas"]
-        CU10["CU-10: Cierre de Turno & Reporte Financiero"]
+    subgraph BookingSoft["BookingSoft — Apartahotel Facile"]
+        CU01["CU-01: Iniciar Sesión (JWT)"]
+        CU02["CU-02: Gestionar Empleados y Roles"]
+        CU03["CU-03: Ver Catálogo y Disponibilidad"]
+        CU04["CU-04: Crear y Editar Reservas"]
+        CU05["CU-05: Registrar Check-In y Check-Out"]
+        CU06["CU-06: Registrar Pagos y Folio"]
+        CU07["CU-07: Cambiar Estado a Limpieza / Disponible"]
+        CU08["CU-08: Reportar Mantenimiento de Unidad"]
+        CU09["CU-09: Reservar Salas y Coworking"]
     end
 
     Admin --> CU01
     Admin --> CU02
-    Admin --> CU10
-    Admin --> CU03
+    Admin --> CU04
+    Admin --> CU05
+    Admin --> CU06
 
     Recep --> CU01
-    Recep --> CU03
     Recep --> CU04
     Recep --> CU05
-    Recep --> CU08
+    Recep --> CU06
+    Recep --> CU09
 
     Ama --> CU01
-    Ama --> CU06
     Ama --> CU07
 
+    Mant --> CU01
+    Mant --> CU08
+
+    Huesped --> CU03
+    Huesped --> CU04
     Huesped --> CU09
-    Huesped --> CU08
 ```
 
 ---
@@ -98,11 +76,8 @@ classDiagram
         +int id_empleado
         +string nombre
         +string usuario
-        +string contrasena_hash
         +string rol
         +string estado
-        +verificarPassword(pass) bool
-        +generarTokenJWT() string
     }
 
     class Huesped {
@@ -112,7 +87,7 @@ classDiagram
         +string telefono
         +string correo
         +string lealtad
-        +esMayorDeEdad() bool
+        +string estado
     }
 
     class Habitacion {
@@ -122,8 +97,7 @@ classDiagram
         +int capacidad
         +decimal precio_noche
         +string estado
-        +cambiarEstado(nuevoEstado)
-        +estaDisponible(fEntrada, fSalida) bool
+        +string detalle_mantenimiento
     }
 
     class ReservaHabitacion {
@@ -133,26 +107,36 @@ classDiagram
         +date fecha_entrada
         +date fecha_salida
         +string estado
-        +int numero_personas
-        +calcularNoches() int
-        +ejecutarCheckIn()
-        +ejecutarCheckOut()
+        +timestamp checkin_at
+        +timestamp checkout_at
     }
 
-    class FolioContable {
-        +int id_folio
+    class Pago {
+        +int id_pago
         +int id_reserva
-        +decimal total_hospedaje
-        +decimal deposito_garantia
-        +decimal consumos_extras
-        +decimal total_pagado
-        +decimal saldo_pendiente
-        +registrarAbono(monto)
-        +liquidarEstadia()
+        +decimal monto
+        +string metodo
+        +string estado
     }
 
-    class ReservaCoworking {
-        +int id_reserva_coworking
+    class Factura {
+        +int id_factura
+        +int id_reserva
+        +string consecutivo
+        +string cufe
+        +string estado
+    }
+
+    class EspacioNegocio {
+        +int id_espacio
+        +string nombre
+        +string tipo
+        +int capacidad
+        +decimal precio_hora
+    }
+
+    class ReservaNegocio {
+        +int id_reserva_negocio
         +int id_espacio
         +int id_huesped
         +date fecha
@@ -161,28 +145,26 @@ classDiagram
         +decimal precio_total
     }
 
-    Empleado "1" --> "*" ReservaHabitacion : "Registra / Modifica"
-    Huesped "1" --> "*" ReservaHabitacion : "Realiza"
-    Habitacion "1" --> "*" ReservaHabitacion : "Aloja"
-    ReservaHabitacion "1" --> "1" FolioContable : "Genera"
-    Huesped "1" --> "*" ReservaCoworking : "Contrata"
+    Huesped "1" --> "*" ReservaHabitacion : realiza
+    Habitacion "1" --> "*" ReservaHabitacion : asignada en
+    ReservaHabitacion "1" --> "*" Pago : recibe
+    ReservaHabitacion "1" --> "0..1" Factura : genera
+    EspacioNegocio "1" --> "*" ReservaNegocio : reservado en
+    Huesped "0..1" --> "*" ReservaNegocio : solicita
 ```
 
 ---
 
-## 4. Modelo Entidad-Relación (MER) y Modelo Relacional (MR)
-
-### 4.1 Modelo Entidad-Relación (ERD)
+## 4. Modelo Entidad-Relación (MER) y Modelo Relacional Real (`backend/schema.sql`)
 
 ```mermaid
 erDiagram
-    EMPLEADO ||--o{ RESERVA_HABITACION : "gestiona"
-    HUESPED ||--o{ RESERVA_HABITACION : "solicita"
-    HABITACION ||--o{ RESERVA_HABITACION : "asignada_en"
-    RESERVA_HABITACION ||--|| FOLIO_CONTABLE : "posee"
-    FOLIO_CONTABLE ||--o{ CARGO_FOLIO : "contiene"
-    HUESPED ||--o{ RESERVA_COWORKING : "agenda"
-    ESPACIO_COWORKING ||--o{ RESERVA_COWORKING : "utilizado_en"
+    HUESPED ||--o{ RESERVA_HABITACION : realiza
+    HABITACION ||--o{ RESERVA_HABITACION : asignada_en
+    RESERVA_HABITACION ||--o{ PAGO : tiene
+    RESERVA_HABITACION ||--o| FACTURA : genera
+    ESPACIO_NEGOCIO ||--o{ RESERVA_NEGOCIO : reservado_en
+    HUESPED ||--o{ RESERVA_NEGOCIO : opcional_en
 
     EMPLEADO {
         int id_empleado PK
@@ -211,105 +193,54 @@ erDiagram
         date fecha_salida
         string estado
     }
-    FOLIO_CONTABLE {
-        int id_folio PK
+    PAGO {
+        int id_pago PK
         int id_reserva FK
-        decimal total_facturado
-        decimal saldo_pendiente
+        decimal monto
+        string metodo
+        string estado
+    }
+    FACTURA {
+        int id_factura PK
+        int id_reserva FK
+        string consecutivo UK
         string estado
     }
 ```
 
-### 4.2 Modelo Relacional Normalizado (Tercera Forma Normal - 3FN)
-
-A continuación se listan las tablas relacionales con sus restricciones de integridad referencial:
-
-1. **`empleados`**  
-   - `id_empleado` (INT, PK, AUTO_INCREMENT)  
-   - `nombre` (VARCHAR(150), NOT NULL)  
-   - `usuario` (VARCHAR(50), UK, NOT NULL)  
-   - `contrasena` (VARCHAR(255), NOT NULL) — Hash Bcrypt  
-   - `rol` (VARCHAR(50), NOT NULL) — `['Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento']`  
-   - `tipo_documento` (VARCHAR(30), NOT NULL)  
-   - `numero_documento` (VARCHAR(30), UK, NOT NULL)  
-   - `correo` (VARCHAR(150), UK, NOT NULL)  
-   - `estado` (VARCHAR(20), NOT NULL, DEFAULT 'Activo')  
-   - `creado_en` (TIMESTAMP, DEFAULT NOW())
-
-2. **`huespedes`**  
-   - `id_huesped` (INT, PK, AUTO_INCREMENT)  
-   - `nombre` (VARCHAR(150), NOT NULL)  
-   - `tipo_documento` (VARCHAR(30), NOT NULL)  
-   - `documento` (VARCHAR(30), UK, NOT NULL)  
-   - `telefono` (VARCHAR(25), NOT NULL)  
-   - `correo` (VARCHAR(150), NOT NULL)  
-   - `empresa` (VARCHAR(150), NULL)  
-   - `lealtad` (VARCHAR(20), DEFAULT 'Estandar')  
-   - `estado` (VARCHAR(20), DEFAULT 'Activo')  
-   - `creado_por` (VARCHAR(50))  
-   - `modificado_por` (VARCHAR(50))
-
-3. **`habitaciones`**  
-   - `id_habitacion` (INT, PK, AUTO_INCREMENT)  
-   - `numero` (VARCHAR(10), UK, NOT NULL)  
-   - `tipo` (VARCHAR(50), NOT NULL) — `['Dúplex', 'Dobles', 'Familiares', 'Habitaciones']`  
-   - `capacidad` (INT, NOT NULL)  
-   - `precio_noche` (NUMERIC(12, 2), NOT NULL)  
-   - `estado` (VARCHAR(25), NOT NULL, DEFAULT 'Disponible') — `['Disponible', 'Ocupada', 'Limpieza', 'Mantenimiento']`  
-   - `detalle_mantenimiento` (TEXT, NULL)
-
-4. **`reservas_habitacion`**  
-   - `id_reserva` (INT, PK, AUTO_INCREMENT)  
-   - `id_huesped` (INT, FK ➔ `huespedes.id_huesped`, NOT NULL)  
-   - `id_habitacion` (INT, FK ➔ `habitaciones.id_habitacion`, NOT NULL)  
-   - `fecha_entrada` (DATE, NOT NULL)  
-   - `fecha_salida` (DATE, NOT NULL)  
-   - `numero_personas` (INT, NOT NULL, DEFAULT 1)  
-   - `estado` (VARCHAR(25), NOT NULL, DEFAULT 'Confirmada') — `['Confirmada', 'Check-In', 'Check-Out', 'Cancelada']`  
-   - *Constraint:* `CHECK (fecha_salida > fecha_entrada)`  
-   - *Exclusion Constraint (PostgreSQL):* `EXCLUDE USING gist (id_habitacion WITH =, daterange(fecha_entrada, fecha_salida) WITH &&)`
-
-5. **`folios_contables`**  
-   - `id_folio` (INT, PK, AUTO_INCREMENT)  
-   - `id_reserva` (INT, FK ➔ `reservas_habitacion.id_reserva`, UK, NOT NULL)  
-   - `subtotal` (NUMERIC(12, 2), NOT NULL)  
-   - `descuento` (NUMERIC(12, 2), DEFAULT 0)  
-   - `impuestos` (NUMERIC(12, 2), NOT NULL)  
-   - `deposito_garantia` (NUMERIC(12, 2), NOT NULL, DEFAULT 150000)  
-   - `total` (NUMERIC(12, 2), NOT NULL)  
-   - `saldo_pendiente` (NUMERIC(12, 2), NOT NULL)  
-   - `estado` (VARCHAR(20), DEFAULT 'Pendiente') — `['Pendiente', 'Parcial', 'Pagado']`
+### Tablas Reales en PostgreSQL (3FN):
+1. **`empleado`**: `id_empleado` (`SERIAL` PK), `nombre`, `usuario` (UNIQUE), `contrasena` (hash bcrypt), `rol`, `tipo_documento`, `numero_documento` (UNIQUE), `correo` (UNIQUE), `estado`.
+2. **`huesped`**: `id_huesped` (`SERIAL` PK), `nombre`, `documento` (UNIQUE), `telefono`, `correo`, `password_hash`, `empresa`, `lealtad`, `estado`, `creado_por`, `modificado_por`.
+3. **`habitacion`**: `id_habitacion` (`SERIAL` PK), `numero` (UNIQUE), `tipo`, `capacidad`, `precio_noche`, `estado` (`Disponible`, `Ocupada`, `En limpieza`, `Mantenimiento`), `detalle_mantenimiento`.
+4. **`reserva_habitacion`**: `id_reserva` (`SERIAL` PK), `id_huesped` (FK), `id_habitacion` (FK), `fecha_entrada`, `fecha_salida`, `estado` (`Confirmada`, `Check-In`, `Completada`, `Cancelada`), `checkin_at`, `checkout_at`, `observaciones`. Incluye la restricción **`EXCLUDE USING gist`** para impedir doble reserva en fechas solapadas.
+5. **`pago`**: `id_pago` (`SERIAL` PK), `id_reserva` (FK), `monto`, `metodo`, `estado`, `referencia`, `gateway`.
+6. **`factura`**: `id_factura` (`SERIAL` PK), `id_reserva` (FK UNIQUE), `consecutivo` (UNIQUE), `cufe`, `estado`, `xml`.
+7. **`espacio_negocio`**: `id_espacio` (`SERIAL` PK), `nombre` (UNIQUE), `tipo` (`Sala de Juntas`, `Coworking`), `capacidad`, `precio_hora`, `estado`.
+8. **`reserva_negocio`**: `id_reserva_negocio` (`SERIAL` PK), `id_espacio` (FK), `tipo_cliente`, `id_huesped` (FK opcional), `nombre_cliente`, `fecha`, `hora_inicio`, `hora_fin`, `duracion_horas`, `precio_total`, `estado`.
 
 ---
 
-## 5. Diagrama de Secuencia: Flujo Walk-In con Check-In y Emisión de Llave
+## 5. Diagrama de Secuencia: Flujo de Reserva en Recepción
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Recepcionista
-    participant Front as Frontend (React / PMS)
-    participant Back as Backend (FastAPI)
-    participant DB as Base de Datos (PostgreSQL)
-    participant Lock as Servicio Yale Connect (Lógico)
+    participant Front as React (VistaPms)
+    participant Back as FastAPI (routes/reservas.py)
+    participant DB as PostgreSQL
 
-    Recepcionista->>Front: Ingresa Cédula del Huésped
-    Front->>Back: GET /api/huespedes/buscar?documento=1017283944
-    Back->>DB: SELECT * FROM huespedes WHERE documento = '...'
-    DB-->>Back: Retorna datos del huésped
-    Back-->>Front: Huésped Frecuente (Autocompletado)
-
-    Recepcionista->>Front: Selecciona Suite, Fechas y activa "Check-In Directo"
-    Front->>Back: POST /api/reservas (Walk-In Payload)
-    Back->>DB: BEGIN TRANSACTION
-    Back->>DB: Verificar disponibilidad (daterange &&)
-    Back->>DB: INSERT INTO reservas_habitacion (...)
-    Back->>DB: UPDATE habitaciones SET estado = 'Ocupada' WHERE id = ...
-    Back->>DB: INSERT INTO folios_contables (...)
-    Back->>DB: COMMIT TRANSACTION
-    
-    Back->>Lock: Generar PIN seguro de cerradura (6 dígitos)
-    Lock-->>Back: Token Yale emitido (expira al checkout)
-    Back-->>Front: HTTP 201 Created (Reserva, Folio, Llave Digital)
-    Front-->>Recepcionista: Confirmación en pantalla + Enlace de Llave Móvil
+    Recepcionista->>Front: Selecciona huésped, habitación y fechas
+    Front->>Back: POST /api/reservas (Bearer JWT)
+    Back->>Back: Valida fechas, estado y capacidad
+    Back->>DB: BEGIN TRANSACTION + INSERT reserva_habitacion
+    alt Sin traslape de fechas
+        DB-->>Back: Reserva creada (COMMIT)
+        Back-->>Front: HTTP 201 Created + cotización
+        Front-->>Recepcionista: Muestra confirmación de reserva
+    else Choque de fechas (GiST 23P01)
+        DB-->>Back: Error de exclusión (ROLLBACK)
+        Back-->>Front: HTTP 400 (Double Booking Detectado)
+        Front-->>Recepcionista: Muestra alerta en pantalla
+    end
 ```

@@ -1,96 +1,57 @@
-# 🃏 Informe de Planning Poker — Estimación Ágil de Historias de Usuario
+# Informe de Planning Poker — Cómo puntuamos las Historias
 
-**Proyecto:** BookingSoft PMS (Apartahotel Facile)  
-**Fecha de Sesión:** Inicio de Ciclo de Desarrollo (Semana 1)  
 **Facilitador (Scrum Master):** David López  
 **Product Owner:** Ashly Echeverri  
-**Participantes:** David López, José Miguel Chico, Maicol Mayor, Sebastián Parada, Ashly Echeverri  
-**Técnica:** Planning Poker Ágil con cartas de la Secuencia de Fibonacci: **[1, 2, 3, 5, 8, 13, 21]**
+**Participantes:** David López, José Miguel Chico, Maicol Mayor, Sebastián Parada y Ashly Echeverri  
+**Escala usada:** Serie de Fibonacci (`1, 2, 3, 5, 8, 13, 21`)
 
 ---
 
-## 1. Definición del Valor de Referencia (Baseline Story)
+## 1. Cómo lo hicimos
 
-Para calibrar la escala del equipo, se eligió una historia base de complejidad mínima y conocida:
-- **Historia Base (1 punto):** Modificar un mensaje informativo de pie de página en la vista web.
-- **Historia de 2 puntos:** `HU-003: Consulta y listado de usuarios` (lectura paginada en BD con filtro simple).
-- **Historia de referencia de 13 puntos (Épica / Gran Esfuerzo):** `HU-005: Check-In / Check-Out y asignación de unidades` (involucra bloqueo transaccional en PostgreSQL, prevención de overbooking, cambios de estado en tiempo real y UI interactiva de selección de habitación).
+Para no poner números al azar, primero escogimos tres ejemplos de referencia que todo el grupo entendiera:
+- **1 punto:** Cambiar un texto o enlace pequeño en el pie de página.
+- **2 puntos (`HU-003`):** Listar empleados desde la base de datos con un filtro sencillo.
+- **13 puntos (`HU-005`):** El motor completo de reservas con Check-In y Check-Out, porque toca base de datos, evitar que dos reservas se crucen en las mismas fechas y varios cambios en la interfaz.
 
----
-
-## 2. Registro de Rondas de Votación y Discusión Técnica
-
-A continuación se detalla la bitácora de votación en donde se registraron las divergencias y el consenso final:
-
-### HU-001: Registro de Nuevos Colaboradores y Usuarios
-- **Votos Ronda 1:**
-  - José Chico: 3 SP
-  - Maicol Mayor: 3 SP
-  - Sebastián Parada: 5 SP (argumentó necesidad de validar hash de contraseña Argon2/Bcrypt y formato de correo regex)
-  - David López: 2 SP (consideraba que el formulario React era directo)
-- **Discusión:** Sebastián explicó que la validación estricta de contraseñas y unicidad de documento de identidad en PostgreSQL aumentaba la complejidad del backend.
-- **Consenso Ronda 2:** **3 SP** (Se acordó usar esquemas de validación nativos de Pydantic).
+Cada integrante votaba con su carta al tiempo y, cuando alguien ponía un número muy alto o muy bajo, nos explicaba por qué.
 
 ---
 
-### HU-002: Autenticación JWT y Control de Roles (RBAC)
-- **Votos Ronda 1:**
-  - José Chico: 5 SP
-  - Maicol Mayor: 5 SP
-  - Sebastián Parada: 8 SP
-  - David López: 3 SP
-- **Discusión:** La persistencia segura del token en localStorage/cookies, el refresco del token y la interceptación en Axios/Fetch para redirigir si el token expira requieren middleware robusto.
-- **Consenso Ronda 2:** **5 SP**
+## 2. Discusiones principales durante la votación
+
+### HU-001: Registro de usuarios y huéspedes
+- **Primera ronda:** José (3), Maicol (3), Sebastián (5), David (2).
+- **Qué hablamos:** David pensó que era rápido porque en React es un formulario normal, pero Sebastián explicó que en el backend había que encriptar la contraseña con `bcrypt`, validar que el correo tuviera formato válido y evitar cédulas o correos repetidos en PostgreSQL.
+- **Acuerdo final:** **3 puntos**.
+
+### HU-002: Inicio de sesión y permisos por rol (JWT + RBAC)
+- **Primera ronda:** José (5), Maicol (5), Sebastián (8), David (3).
+- **Qué hablamos:** No era solo validar usuario y clave; había que generar el token JWT, guardarlo en `localStorage` para que no se pierda al recargar con `F5`, y bloquear rutas según los 4 roles (Administrador, Recepcionista, Ama de llaves, Mantenimiento).
+- **Acuerdo final:** **5 puntos**.
+
+### HU-005: Reservas Walk-In, Check-In y Check-Out
+- **Primera ronda:** José (13), Maicol (13), Sebastián (21), David (13).
+- **Qué hablamos:** Sebastián propuso subirla a 21 por la idea de conectar cerraduras reales y pagos en línea. Acordamos dejar las cerraduras físicas como propuesta aparte para Fase 2 y centrarnos en que la base de datos bloqueara dobles reservas con `GiST`, calculara los descuentos y cambiara los estados de la habitación.
+- **Acuerdo final:** **13 puntos**.
+
+### HU-008: Módulo de limpieza y mantenimiento
+- **Primera ronda:** José (5), Maicol (5), Sebastián (5), David (8).
+- **Qué hablamos:** David la veía más larga por los tableros y filtros de habitaciones, pero José comentó que podíamos reutilizar las mismas tarjetas y modales que ya teníamos en el catálogo.
+- **Acuerdo final:** **5 puntos**.
+
+### HU-010: Folio y pagos de la reserva
+- **Primera ronda:** José (13), Maicol (8), Sebastián (13), David (13).
+- **Qué hablamos:** Manejar dinero, abonos parciales, IVA del 19% incluido, anulaciones y que no te deje cobrar más del saldo pendiente requiere mucho cuidado en las cuentas y varias pruebas.
+- **Acuerdo final:** **13 puntos**.
+
+### HU-013: Salas de Juntas y Coworking
+- **Primera ronda:** José (8), Maicol (5), Sebastián (8), David (8).
+- **Qué hablamos:** A diferencia de los apartamentos (que se cobran por noches), acá las reservas son por bloques de horas en un mismo día y con paquetes de 4 horas o día completo.
+- **Acuerdo final:** **8 puntos**.
 
 ---
 
-### HU-005: Motor de Reservas Walk-In, Check-In y Check-Out
-- **Votos Ronda 1:**
-  - José Chico: 13 SP
-  - Maicol Mayor: 13 SP
-  - Sebastián Parada: 21 SP (propuso dividir en dos historias por la complejidad de cerraduras y pagos)
-  - David López: 13 SP
-- **Discusión:** La historia comprende validación de solapamiento de fechas `[fecha_entrada, fecha_salida]`, cambio de estado de habitación a "Ocupada", generación de token de acceso y cálculo de cotización en vivo con impuestos. Es la historia núcleo del negocio.
-- **Consenso Ronda 2:** **13 SP** (Se mantuvo en 13 SP manteniendo la lógica de cerraduras en modo desacoplado).
+## 3. Lo que nos dejó este ejercicio
 
----
-
-### HU-008: Módulo Operativo de Aseo y Mantenimiento
-- **Votos Ronda 1:**
-  - José Chico: 5 SP
-  - Maicol Mayor: 5 SP
-  - Sebastián Parada: 5 SP
-  - David López: 8 SP (consideraba muchas tarjetas kanban)
-- **Consenso Ronda 2:** **5 SP** (Reutilización de componentes modales ya existentes).
-
----
-
-### HU-010: Gestión Financiera, Depósitos y Folio Contable
-- **Votos Ronda 1:**
-  - José Chico: 13 SP
-  - Maicol Mayor: 8 SP
-  - Sebastián Parada: 13 SP
-  - David López: 13 SP
-- **Discusión:** El balance contable exige consistencia estricta: cargos por noches + consumos de minibar + penalidades - depósitos en garantía = saldo neto. No puede haber discrepancias numéricas en moneda COP.
-- **Consenso Ronda 2:** **13 SP**
-
----
-
-### HU-013: Módulo de Coworking y Salas de Juntas
-- **Votos Ronda 1:**
-  - José Chico: 8 SP
-  - Maicol Mayor: 5 SP
-  - Sebastián Parada: 8 SP
-  - David López: 8 SP
-- **Consenso Ronda 2:** **8 SP** (Franjas horarias por horas en lugar de días completos).
-
----
-
-## 3. Resumen Consolidado de Velocidad Estimada del Equipo
-
-- **Capacidad estimada del equipo:** 30 - 35 Story Points por Sprint (para 5 integrantes).
-- **Velocidad real alcanzada:**
-  - **Sprint 1:** 13 SP completados (Sprint de calibración inicial de Docker, DB y Auth).
-  - **Sprint 2:** 29 SP completados (Foco en el núcleo de reservas y catálogo).
-  - **Sprint 3:** 51 SP completados (Esfuerzo intensificado de cierre y múltiples módulos funcionales).
-- **Conclusión de la técnica:** El Planning Poker permitió nivelar la comprensión entre frontend y backend, evitando subestimar la complejidad de las validaciones de base de datos y la gestión de estados asíncronos en React.
+Votar en grupo nos sirvió bastante porque al principio el que hacía frontend pensaba que ciertas cosas eran fáciles, hasta que el que hacía backend o base de datos explicaba las validaciones que tocaba hacer detrás. Así repartimos mejor las tareas y no nos cargamos de trabajo imposible en un solo Sprint.

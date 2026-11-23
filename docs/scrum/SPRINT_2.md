@@ -1,61 +1,37 @@
-# 🏨 Informe de Sprint 2: Catálogo Habitacional, Motor de Reservas y Check-In
+# Informe de Sprint 2 — Catálogo de Apartamentos, Reservas y Check-In / Check-Out
 
-**Proyecto:** BookingSoft PMS — Apartahotel Facile  
-**Duración del Sprint:** 2 semanas  
-**Objetivo del Sprint (Sprint Goal):**  
-> *"Construir el núcleo operativo hotelero: catálogo de apartamentos por tipologías (Dúplex, Dobles, Suites), motor de tarifas y liquidación con prevención de overbooking, y flujo de check-in / check-out presencial."*
+**Objetivo del Sprint:** Mostrar los 38 apartamentos en el portal, calcular precios con descuentos por noches y permitir hacer reservas con Check-In y Check-Out sin que se crucen fechas.
 
 ---
 
-## 1. Planificación del Sprint (Sprint Planning)
+## 1. Qué planeamos y quién hizo qué
 
-- **Capacidad del Equipo:** 120 horas de desarrollo.
-- **Compromiso en Story Points:** 29 Story Points.
-- **Historias de Usuario comprometidas:**
-  1. **HU-006:** Tarifas por tipo de unidad y temporadas (5 SP)
-  2. **HU-009:** Catálogo y registro de unidades habitacionales (8 SP)
-  3. **HU-005:** Motor de reservas presenciales Walk-In, Check-In y Check-Out (13 SP)
-  4. **HU-014:** Disponibilidad en vivo 24/7 y validación de overbooking (3 SP)
+- **Meta en puntos:** 29 puntos (`HU-005`, `HU-006`, `HU-009`, `HU-014`).
 
----
-
-## 2. Desglose de Tareas Técnicas Asignadas
-
-| ID Tarea | Descripción Técnica | Responsable | Estimado (h) | Estado Final |
-|---|---|---|:---:|:---:|
-| **T-2.1** | Modelo SQLAlchemy `Habitacion` con tipos, pisos, capacidad y precio base | Maicol Mayor | 6h | ✅ Completado |
-| **T-2.2** | Algoritmo de validación de fechas contra solapamientos de reservas | Maicol Mayor | 10h | ✅ Completado |
-| **T-2.3** | Endpoints de CRUD de Habitaciones y cambio de estados (Disponible, Ocupada) | Maicol Mayor | 8h | ✅ Completado |
-| **T-2.4** | Endpoint transaccional de creación de reservas presenciales Walk-In | Maicol Mayor / José Chico / David López | 12h | ✅ Completado |
-| **T-2.5** | Catálogo público con tarjetas de apartamentos y modal de detalle | José Miguel Chico | 14h | ✅ Completado |
-| **T-2.6** | Formulario Walk-In en PMS con selector de fechas interactivo y cálculo COP | José Miguel Chico | 14h | ✅ Completado |
-| **T-2.7** | Pruebas de integración sobre fechas ocupadas y validaciones (Pytest) | Maicol Mayor | 10h | ✅ Completado |
-| **T-2.8** | Configuración de CORS y proxy Nginx para evitar bloqueos del navegador | Sebastián Parada | 6h | ✅ Completado |
-| **T-2.9** | Actualización de matrices de requisitos y pruebas | Ashly Echeverri | 6h | ✅ Completado |
+| Tarea | Qué se hizo | Responsable | Estado |
+|---|---|---|:---:|
+| **T-2.1** | Tabla SQL `habitacion` en PostgreSQL (`psycopg2`) con los 38 alojamientos | Maicol Mayor | Listo |
+| **T-2.2** | Restricción `EXCLUDE USING gist` y función para validar fechas solapadas | Maicol Mayor | Listo |
+| **T-2.3** | Endpoints de habitaciones (`/api/habitaciones`, disponibilidad y cambio de estado) | Maicol Mayor | Listo |
+| **T-2.4** | Endpoint `POST /api/reservas` y transacción atómica de huésped + reserva | Maicol Mayor / José Chico / David López | Listo |
+| **T-2.5** | Portal público con catálogo de apartamentos, filtros por tipo y modal de detalle | José Miguel Chico | Listo |
+| **T-2.6** | Módulo de Recepción (Walk-in) en el PMS con calendario y cálculo en vivo | José Miguel Chico | Listo |
+| **T-2.7** | Pruebas en Pytest para doble reserva, capacidad máxima y descuentos | Maicol Mayor | Listo |
+| **T-2.8** | Proxy en Vite/Nginx para que `/api` redirija al backend sin errores de CORS | Sebastián Parada | Listo |
+| **T-2.9** | Actualizar matriz de trazabilidad y pruebas | Ashly Echeverri | Listo |
 
 ---
 
-## 3. Seguimiento Diario (Daily Scrums Highlights)
+## 2. Problemas que salieron en el camino y cómo los resolvimos
 
-- **Día 4:** Maicol alertó que una reserva de salida en fecha `2026-11-15` no debía bloquear una nueva reserva cuya entrada comience el mismo día `2026-11-15` (principio de checkout 11:00 am / checkin 3:00 pm). Se ajustó la consulta SQL de solapamiento.
-- **Día 7:** José Miguel diseñó el componente de selección de huéspedes y cotización automática en vivo con desglose de depósito en garantía y tarifas estándar.
-- **Día 11:** David López (Scrum Master) coordinó la solución a un fallo en reservas sin huésped asignado: Maicol añadió validación Pydantic que retorna `422 Unprocessable Entity` con mensaje claro.
-
----
-
-## 4. Revisión del Sprint (Sprint Review)
-
-- **Demostración:**
-  - Creación de reserva desde el portal público y desde el panel de recepción PMS.
-  - Validación en vivo que impide seleccionar fechas ya ocupadas.
-  - Cambio inmediato de estado de la habitación a "Ocupada" al marcar Check-In.
-- **Métricas:** 29 SP completados al 100%.
+1. **Día de salida vs. día de entrada:** Al principio, si una reserva terminaba el 10 de noviembre, el sistema no dejaba entrar a otro huésped ese mismo 10 de noviembre. Ajustamos las consultas SQL y de fechas entendiendo cómo funciona un hotel (check-out a las 11:00 a.m. y check-in a las 3:00 p.m.).
+2. **Desfase de un día por zona horaria UTC:** JavaScript al hacer `new Date('2026-11-09')` restaba horas en Colombia y mostraba el día anterior en algunos calendarios. Lo arreglamos creando funciones propias en `frontend/src/utils/dateUtils.js`.
+3. **Diferencia entre el precio mostrado y el cobrado:** El backend daba 15% desde la noche 16 y el frontend mostraba otro porcentaje en un modal. Lo unificamos en los dos lados: **10% entre 7 y 14 noches** y **15% desde 15 noches**.
 
 ---
 
-## 5. Retrospectiva del Sprint (Sprint Retrospective)
+## 3. Cierre y qué mejoramos para el Sprint 3
 
-| Qué funcionó bien | Qué no funcionó bien | Compromisos de mejora |
-|---|---|---|
-| La lógica de negocio quedó blindada en el backend con tests automatizados. | El componente del formulario de reservas en frontend creció demasiado en líneas de código. | Modularizar vistas grandes en subcomponentes (`HuespedesPicker.jsx`, `ModalDetalle.jsx`). |
-| Excelente integración de estados entre el catálogo y el PMS. | Algunos commits se hicieron directo a `develop` sin PR formal. | Exigir aprobación de al menos 1 compañero antes de mergear a `develop`. |
+- **Qué nos funcionó bien:** Proteger la doble reserva directamente en PostgreSQL con `btree_gist` nos evitó problemas cuando dos clics llegaban casi al mismo tiempo.
+- **Qué nos falló:** El archivo `App.jsx` creció muchísimo (más de 6.600 líneas) y se volvió muy enredado buscar errores allí, además de que al principio algunos cambios se subieron sin pasar por Pull Request.
+- **Compromiso:** Partir `App.jsx` en vistas y componentes pequeños, y trabajar siempre con ramas y revisión por Pull Request.

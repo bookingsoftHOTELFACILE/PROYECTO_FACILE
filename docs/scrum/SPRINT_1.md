@@ -1,60 +1,36 @@
-# 🚀 Informe de Sprint 1: Fundamentos, Seguridad y Base de Datos
+# Informe de Sprint 1 — Arranque, Base de Datos y Acceso
 
-**Proyecto:** BookingSoft PMS — Apartahotel Facile  
-**Duración del Sprint:** 2 semanas  
-**Objetivo del Sprint (Sprint Goal):**  
-> *"Establecer la infraestructura base con Docker Compose, diseñar el modelo de datos en PostgreSQL, e implementar la autenticación segura con JWT y control de roles RBAC en FastAPI y React."*
+**Objetivo del Sprint:** Dejar andando el proyecto en Docker, crear las tablas en PostgreSQL y tener listo el registro e inicio de sesión con roles.
 
 ---
 
-## 1. Planificación del Sprint (Sprint Planning)
+## 1. Qué planeamos y quién hizo qué
 
-- **Capacidad del Equipo:** 5 desarrolladores x 6 horas diarias = 60 horas/semana (120 horas total).
-- **Compromiso en Story Points:** 13 Story Points.
-- **Historias de Usuario comprometidas:**
-  1. **HU-001:** Registro de usuarios y colaboradores (3 SP)
-  2. **HU-002:** Inicio de sesión con JWT y RBAC (5 SP)
-  3. **HU-003:** Consulta y listado de colaboradores (2 SP)
-  4. **HU-004:** Detalle y edición de perfiles (3 SP)
+- **Meta en puntos:** 13 puntos (`HU-001`, `HU-002`, `HU-003`, `HU-004`).
 
----
-
-## 2. Desglose de Tareas Técnicas Asignadas
-
-| ID Tarea | Descripción Técnica | Responsable | Estimado (h) | Estado Final |
-|---|---|---|:---:|:---:|
-| **T-1.1** | Creación de `docker-compose.yml` con servicios backend, frontend y db | Sebastián Parada | 6h | ✅ Completado |
-| **T-1.2** | Modelado inicial de base de datos en PostgreSQL y esquema DDL de tablas | Sebastián Parada | 8h | ✅ Completado |
-| **T-1.3** | Endpoints `/api/auth/login` y `/api/auth/register` con hash bcrypt | Maicol Mayor / David López | 10h | ✅ Completado |
-| **T-1.4** | Middleware de verificación de Token JWT y validación de roles | Sebastián Parada | 8h | ✅ Completado |
-| **T-1.5** | Suite de pruebas unitarias para autenticación (Pytest) | Maicol Mayor | 10h | ✅ Completado |
-| **T-1.6** | Formulario de Login en React con estados de error y almacenamiento seguro | José Miguel Chico | 8h | ✅ Completado |
-| **T-1.7** | Vista de gestión de colaboradores y asignación de roles en PMS | José Miguel Chico | 10h | ✅ Completado |
-| **T-1.8** | Documentación de requisitos y matriz de trazabilidad en Markdown | Ashly Echeverri | 6h | ✅ Completado |
+| Tarea | Qué se hizo | Responsable | Estado |
+|---|---|---|:---:|
+| **T-1.1** | Armar el `docker-compose.yml` con PostgreSQL, FastAPI, React y pgAdmin | Sebastián Parada | Listo |
+| **T-1.2** | Escribir el script `schema.sql` con las tablas iniciales y usuarios de prueba | Sebastián Parada | Listo |
+| **T-1.3** | Endpoints `/api/auth/login` y `/api/auth/registro` cifrando claves con `bcrypt` | Maicol Mayor / David López | Listo |
+| **T-1.4** | Guardas de seguridad JWT (`autenticar` y `requiere_rol`) | Sebastián Parada | Listo |
+| **T-1.5** | Primeras pruebas automáticas de autenticación y permisos en Pytest | Maicol Mayor | Listo |
+| **T-1.6** | Pantalla de login administrativo y manejo de errores en React | José Miguel Chico | Listo |
+| **T-1.7** | Vista de administración de empleados y cambio de roles en el PMS | José Miguel Chico | Listo |
+| **T-1.8** | Documentar los RF, RNF, HUs y matriz de trazabilidad | Ashly Echeverri | Listo |
 
 ---
 
-## 3. Seguimiento Diario (Daily Scrums Highlights)
+## 2. Problemas que salieron en el camino y cómo los resolvimos
 
-- **Día 3:** Sebastián identificó problemas de conexión entre contenedores Docker por resolución de nombres de host (`db` vs `localhost`). Se solucionó creando una red interna `facile-network`.
-- **Día 6:** Maicol detectó que el endpoint de login devolvía código 200 con credenciales inválidas si el usuario no existía. Se corrigió inmediatamente a `401 Unauthorized`.
-- **Día 9:** José Miguel integró la respuesta del token JWT con el contexto de React (`AppContext.jsx`) manteniendo la sesión activa al recargar la página. Facilitado por David López (Scrum Master).
-
----
-
-## 4. Revisión del Sprint (Sprint Review)
-
-- **Demostración al Product Owner:**
-  - Login funcional con roles predeterminados (`admin`, `recepcion`, `amallaves`, `mantenimiento`).
-  - Creación de nuevos usuarios restringida a administradores.
-  - Generación de OpenAPI interactivo en `http://localhost:4001/docs`.
-- **Resultado:** 100% de las historias aceptadas por la Product Owner Ashly Echeverri.
+1. **Conexión entre contenedores Docker:** Al principio el backend intentaba conectarse a `localhost:5432` y fallaba dentro de Docker. Lo arreglamos usando el nombre del servicio `db` en el archivo `.env` (`DB_HOST=db`).
+2. **Códigos HTTP incorrectos en login:** Vimos que cuando alguien metía mal la contraseña o un usuario no existía, había casos donde devolvía `200` o mensajes diferentes que permitían adivinar usuarios. Lo estandarizamos a `HTTP 401` con el mismo mensaje `"Credenciales incorrectas."`.
+3. **Pérdida de sesión al recargar:** Si presionábamos `F5`, el panel sacaba al usuario. Se guardó el token y la pestaña activa en `localStorage` para mantener la sesión abierta.
 
 ---
 
-## 5. Retrospectiva del Sprint (Sprint Retrospective)
+## 3. Cierre y qué mejoramos para el Sprint 2
 
-| Qué funcionó bien (Keep doing) | Qué no funcionó bien (Stop doing) | Compromisos de mejora (Start doing) |
-|---|---|---|
-| Buena comunicación entre backend y frontend en la definición de schemas JSON. | Tardanza en acordar los nombres de los atributos de la base de datos (camelCase vs snake_case). | Adoptar una convención estricta: `snake_case` para backend/DB y `camelCase` para props React. |
-| Cobertura de pruebas unitarias desde el día 1 en el backend. | Dejar la configuración de variables de entorno para el último día. | Centralizar las variables en `.env.example` versionado en el repositorio. |
+- **Qué nos funcionó bien:** Usar `/docs` (Swagger) de FastAPI nos dejó probar los endpoints antes de conectarlos con React.
+- **Qué nos falló:** No nos pusimos de acuerdo rápido en los nombres de los campos (si usar `snake_case` o `camelCase`) y al comienzo probábamos con las contraseñas sin recordar actualizar el archivo `.env.example`.
+- **Compromiso:** Dejar fijo `snake_case` para base de datos y backend, y documentar cualquier variable nueva en `.env.example`.

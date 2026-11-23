@@ -1,68 +1,63 @@
-# 🧭 Reflexión Comparativa de los 4 Backends del Programa ADSO y Gestión de Deuda Técnica
+# Reflexión Comparativa de los 4 Backends y Deuda Técnica
 
 **Proyecto:** BookingSoft PMS — Apartahotel Facile  
 **Programa:** Análisis y Desarrollo de Software (ADSO) — SENA  
-**Ficha:** Trimestre 6  
-**Fecha de Elaboración:** Noviembre 2026  
-**Autores:** Equipo de Desarrollo ADSO (Chico, Mayor, Echeverri, Parada, López)  
+**Autores:** David López, José Chico, Maicol Mayor, Sebastián Parada y Ashly Echeverri
 
 ---
 
-## 1. Contexto Académico: Evolución Técnica a Través de los 4 Backends
+## 1. Nuestra Experiencia con los Backends a lo Largo de los Trimestres
 
-Durante la trayectoria formativa en el tecnólogo ADSO, el equipo desarrolló 4 soluciones de backend distintas para responder a diferentes dominios y requerimientos planteados por los instructores. Esta evolución técnica permitió comparar de primera mano paradigmas de desarrollo, tipado, rendimiento y patrones de persistencia:
+A lo largo de la formación en el SENA hemos aprendido a trabajar con diferentes tecnologías para el backend según lo que nos fueron enseñando en cada trimestre:
 
-1. **Backend 1 (Trimestre 2 — Dominio Web Básico):** Node.js con Express (JavaScript puro). Primer contacto con el protocolo HTTP, arquitectura cliente-servidor y APIs REST básicas con callbacks y promesas.
-2. **Backend 2 (Trimestre 3 — Dominio NoSQL / Documentos):** Node.js con Express y MongoDB (Mongoose). Implementación de bases de datos no relacionales, persistencia basada en esquemas BSON/JSON flexibles y consultas agregadas.
-3. **Backend 3 (Trimestre 4–5 — Dominio Empresarial Robusto):** Java con Spring Boot y JPA/Hibernate. Arquitectura empresarial fuertemente tipada estructurada en capas formales (Controller, Service, Repository, DTOs y Entity), con inyección de dependencias estricta.
-4. **Backend 4 (Trimestre 6 — Dominio Hotelero PMS BookingSoft):** Python 3.11 con FastAPI y PostgreSQL 15. Backend asíncrono de alto desempeño con tipado estricto mediante Pydantic v2, transacciones ACID nativas con restricciones GiST para prevención de doble reserva y generación automática de contratos OpenAPI/Swagger.
+1. **Trimestre 3 — Java con Spring Boot:**  
+   Fue nuestro primer acercamiento a un backend empresarial robusto. Aprendimos a trabajar con Java, Programación Orientada a Objetos y la estructura por capas (Controllers, Services, Repositories). Al principio fue bastante pesado y retador por la cantidad de archivos, anotaciones y configuraciones que exige Java, pero nos ayudó a entender la importancia del orden y el tipado fuerte.
+
+2. **Trimestre 5 (El trimestre pasado) — Node.js con Express (SQL):**  
+   Trabajar con JavaScript en el backend nos pareció mucho más ágil y directo que Java. Con Express pudimos crear rutas y recibir peticiones HTTP de forma rápida y sencilla, sin tantas carpetas ni tanta configuración previa.
+
+3. **Trimestre 5 (El trimestre pasado) — Backend Node.js con MongoDB (NoSQL):**  
+   Aquí conocimos las bases de datos no relacionales (NoSQL) conectadas desde nuestro backend. Fue una experiencia interesante porque no teníamos que definir tablas fijas ni columnas estrictas; simplemente guardábamos la información en formato JSON/documentos. Nos sirvió para entender cuándo conviene una base de datos flexible y cuándo se necesita una relacional fija.
+
+4. **Trimestre 6 (Este proyecto final) — Python con FastAPI:**  
+   Para BookingSoft utilizamos FastAPI junto con PostgreSQL. La experiencia fue muy positiva: la sintaxis de Python es muy clara y fácil de leer, la validación de datos con Pydantic evita que lleguen datos dañados a la base de datos, y lo que más nos gustó fue que genera la documentación interactiva de Swagger solita (`/docs`), lo que nos facilitó conectar las pantallas con el servidor.
 
 ---
 
-## 2. Matriz Comparativa Exhaustiva de los 4 Backends
+## 2. Comparación Sencilla de los 4 Backends
 
-| Criterio de Evaluación | Backend 1: Node.js + Express | Backend 2: Node.js + MongoDB | Backend 3: Java + Spring Boot | Backend 4: Python + FastAPI (BookingSoft) |
+| Aspecto | 1. T3: Java + Spring Boot | 2. T5: Node.js + Express | 3. T5: Node.js + MongoDB | 4. T6: Python + FastAPI (BookingSoft) |
 |---|---|---|---|---|
-| **Lenguaje y Paradigma** | JavaScript (Orientado a eventos, asíncrono no bloqueante) | JavaScript (Orientado a eventos, no estructurado) | Java 17+ (Orientado a Objetos, fuertemente tipado) | Python 3.11 (Multiparadigma, tipado moderno con type-hints) |
-| **Sistema de Persistencia** | Relacional básico (MySQL / SQLite vía drivers nativos) | NoSQL orientado a documentos (MongoDB / Mongoose) | Relacional con ORM empresarial (PostgreSQL / Spring Data JPA) | Relacional con Pool de Conexiones (PostgreSQL 15 + Psycopg2 + GiST) |
-| **Integridad y Restricciones** | Validación manual en controladores con middleware custom. | Sin integridad referencial forzada; esquemas flexibles a nivel de aplicación. | Validación estricta con Hibernate Validator (`@NotNull`, `@Size`, Bean Validation). | Validación y serialización automática de alto rendimiento mediante Pydantic v2. |
-| **Concurrencia y Rendimiento** | Excelente en I/O gracias al Event Loop de Node.js. | Rápido en lecturas masivas no transaccionales. | Alto rendimiento con soporte multihilo (`ThreadPoolExecutor`), pero mayor consumo de memoria RAM (JVM). | Excepcional: motor ASGI (`uvicorn`) asíncrono nativo (`async/await`) con rendimiento equiparable a Go/Node. |
-| **Curva de Aprendizaje** | Baja: sintaxis ágil pero propenso a errores por falta de tipado estático. | Media: flexibilidad en esquemas pero complejo para consultas relacionales cruzadas. | Alta: configuración extensa, curva pronunciada por anotaciones e inyección de dependencias. | Óptima: sintaxis limpia y legible de Python, permitiendo desarrollo veloz sin sacrificar rigor. |
-| **Documentación de API** | Manual (requiere herramientas externas como Postman o Swagger manual). | Manual o dependiente de bibliotecas adicionales no estandarizadas. | Semi-automática mediante dependencias de Springdoc OpenAPI / Swagger UI. | **Nativa y Automática:** Generación instantánea en tiempo de ejecución de Swagger UI y ReDoc. |
-| **Consumo de Recursos** | Bajo consumo de memoria (~40-80 MB por instancia). | Bajo a medio (~60-120 MB). | Elevado debido a la máquina virtual Java (~300-600 MB en arranque). | Ultraligero (~50-90 MB en contenedor Docker Alpine). |
+| **Lenguaje** | Java (POO y tipado estricto) | JavaScript | JavaScript | Python 3.11 |
+| **Base de datos** | Relacional (SQL / JPA) | Relacional (SQL) | No Relacional (Documentos JSON) | Relacional (PostgreSQL) |
+| **Lo que más nos gustó** | Muy ordenado por capas y robusto para proyectos grandes. | Rápido de arrancar y en el mismo lenguaje que el frontend. | Flexibilidad para guardar datos sin tablas fijas. | Código muy corto y claro, valida datos con Pydantic y crea `/docs` automático. |
+| **Lo que más nos costó** | Mucha configuración, anotaciones y archivos para empezar. | Validar manualmente los datos y controlar errores en rutas. | Sin relaciones estrictas es difícil controlar datos cruzados como reservas. | Manejar correctamente las conexiones y consultas SQL a mano con `psycopg2`. |
 
 ---
 
-## 3. Justificación Técnica: ¿Por qué FastAPI fue la Elección Ideal para BookingSoft?
+## 3. ¿Por qué elegimos Python + FastAPI para BookingSoft?
 
-Para el desarrollo del PMS hotelero del Apartahotel Facile, el equipo seleccionó **Python + FastAPI** como el 4.º backend por cuatro razones determinantes de negocio:
-
-1. **Prevención Concurrente de Overbooking:** La hotelería exige consistencia transaccional absoluta. FastAPI se integró fluidamente con PostgreSQL utilizando extensiones `btree_gist` y rangos `daterange`, garantizando a nivel de base de datos que ninguna habitación sufra doble reserva simultánea.
-2. **Contratos Claros con el Frontend (OpenAPI Nativo):** Al desarrollar en paralelo la interfaz de usuario en React, la generación automática de la especificación OpenAPI en `/docs` sirvió como contrato de comunicación en vivo entre el equipo de frontend (José Chico y David López) y el backend (Maicol Mayor y Sebastián Parada).
-3. **Mantenibilidad y Legibilidad:** La sintaxis expresiva de Python redujo el volumen de código boilerplate en un 60% en comparación con la arquitectura de Spring Boot, facilitando las auditorías de código y la escritura de las 96 pruebas unitarias automatizadas.
-4. **Respuesta en Tiempo Real para Recepción:** Los tiempos de latencia inferiores a 25 milisegundos por solicitud permiten que el módulo de recepción presencial liquide cotizaciones y emita llaves digitales al instante.
+Para un hotel necesitamos que **no se crucen reservas**, **no se pierdan pagos** y **todo tenga reglas estrictas** (cédulas únicas, fechas válidas, roles de empleados). Escogimos **FastAPI + PostgreSQL** porque:
+1. Nos dio un equilibrio entre la **rapidez de desarrollo** (más ágil que Spring Boot) y el **orden/seguridad** (validando datos con Pydantic antes de llegar a la BD).
+2. Al trabajar frontend y backend al tiempo, tener **Swagger (`/docs`) automático** nos permitió probar cada endpoint al instante sin esperar manuales externos.
+3. PostgreSQL nos permitió bloquear reservas repetidas directamente en la base de datos con `btree_gist`, evitando dobles reservas si dos personas reservan al mismo tiempo.
 
 ---
 
-## 4. Gestión de Deuda Técnica Documentada y Priorizada
+## 4. Deuda Técnica Documentada y Priorizada
 
-La deuda técnica representa decisiones de diseño o características diferidas de forma consciente durante los Sprints para priorizar la estabilidad del núcleo operativo hotelero (reservas, check-in, folios y catálogo).
+Durante el proyecto fuimos honestos con las cosas que quedaron pendientes o que se pueden mejorar en una siguiente fase:
 
-A continuación se presenta la matriz de deuda técnica clasificada por impacto y esfuerzo de resolución:
-
-| Ítem | Componente Afectado | Descripción de la Deuda Técnica | Impacto Operativo | Esfuerzo Estimado | Prioridad de Remediación | Plan de Acción para Producción |
-|:---:|---|---|---|:---:|:---:|---|
-| **DT-01** | Pagos y Folios | **Pasarela de Pago Bancaria Real:** Actualmente el cobro con tarjeta o PSE opera mediante `PasarelaSimulada`, generando recibos y folios válidos pero sin débito bancario real. | Alto (impide cobros en línea no presenciales) | 16 Horas | **Alta (Fase Inmediata)** | Integrar el SDK oficial de Wompi / PSE Colombia en el servicio `services/pasarela.py`, manejando webhooks de confirmación asíncrona. |
-| **DT-02** | Hardware IoT | **Cerraduras Yale Connect Físicas:** El sistema genera tokens criptográficos y códigos temporales de 6 dígitos para el huésped, pero el hardware físico Zigbee/Wi-Fi está emulado por software. | Medio (el recepcionista debe entregar clave manual o móvil) | 24 Horas | **Media** | Desplegar el concentrador Yale Connect Bridge físico en red local y conectar el broker MQTT con certificados TLS mutuos. |
-| **DT-03** | Facturación DIAN | **Firma Digital y Envío Directo UBL 2.1:** El sistema genera el archivo XML de factura electrónica bajo estándar UBL 2.1 simulado, pero no cuenta con certificado digital ni conexión al webservice de la DIAN. | Medio (requiere emisión de factura tradicional contable) | 20 Horas | **Media** | Adquirir certificado digital de firma electrónica y conectar el servicio de timbrado ante la DIAN mediante un proveedor tecnológico autorizado. |
-| **DT-04** | Pruebas Frontend | **Cobertura de Tests en Componentes React:** Las pruebas de frontend cubren al 100% las utilidades críticas (fechas, descuentos, folio y clientes HTTP), pero los componentes visuales interactivos tienen baja cobertura automatizada. | Bajo (mitigado por 9 specs E2E con Playwright) | 12 Horas | **Baja** | Implementar pruebas de renderizado y eventos con React Testing Library en los modales de recepción. |
-| **DT-05** | Catálogo Habitacional | **Administración de Unidades vía Interfaz:** El inventario de apartamentos se inicializa desde el script de base de datos; no existe una pantalla administrativa para crear nuevas habitaciones o demolerlas. | Bajo (el apartahotel tiene planta física fija de 38 suites) | 8 Horas | **Baja** | Crear formulario administrativo en el PMS con endpoint `POST /api/habitaciones` restringido exclusivamente al rol Administrador. |
+| Prioridad | Ítem | Qué falta o qué se puede mejorar | Por qué quedó así y cómo resolverlo |
+| :---: | :--- | :--- | :--- |
+| 🔴 **Alta** | **Pasarela de pagos real y Facturación DIAN** | Hoy los pagos y facturas funcionan en modo simulado (`pasarela.py`), sin descontar dinero real ni enviar XML a la DIAN. | Requiere cuentas de comercio reales, llaves bancarias y certificado digital. En producción se conectaría Wompi o PayU en el servicio de pagos. |
+| 🟠 **Media** | **Archivos grandes en el Frontend** | Aunque ya dividimos `App.jsx` en vistas y componentes, `useAppState.js` y `VistaPms.jsx` siguen siendo archivos muy largos (+1.400 líneas). | Se priorizó estabilizar las pantallas antes de la entrega. Se puede dividir `useAppState` en hooks más pequeños (uno para reservas, otro para empleados, etc.). |
+| 🟠 **Media** | **Cobertura de componentes React y cierre de PRs** | Faltan más pruebas sobre componentes interactivos del PMS y terminar de unir las ramas semanales pendientes en GitHub. | Se priorizaron primero las pruebas del backend y flujos E2E críticos. Se resuelve fusionando los PRs y ampliando pruebas con React Testing Library. |
+| 🟡 **Baja** | **CRUD visual para crear/eliminar habitaciones** | Las 38 habitaciones del apartahotel se cargan desde `schema.sql`, no desde un formulario en pantalla. | El hotel tiene 38 unidades físicas fijas. A futuro se puede agregar el formulario solo para el rol Administrador. |
+| 🟡 **Baja** | **Integración física con cerraduras IoT** | La propuesta técnica está documentada (`PROPUESTA_IOT_CERRADURAS_YALE.md`), pero no conectada a hardware físico. | Por costos de cerraduras físicas inteligentes en esta etapa académica. |
 
 ---
 
-## 5. Conclusión y Aprendizajes del Equipo
+## 5. Conclusión del Equipo
 
-El ejercicio comparativo entre los 4 backends evidencia la madurez alcanzada por el equipo a lo largo del tecnólogo ADSO:
-
-- Se comprendió que **no existe una tecnología única superior para todos los casos**, sino herramientas adecuadas para cada necesidad de negocio: Spring Boot destaca en grandes ecosistemas bancarios con cientos de microservicios corporativos, Node.js brilla en aplicaciones de mensajería o streaming en tiempo real, y **FastAPI demostró ser la alternativa más equilibrada para BookingSoft**, combinando velocidad de desarrollo, seguridad estricta y rendimiento asíncrono óptimo.
-- La documentación rigurosa de la deuda técnica demuestra honestidad profesional y establece una hoja de ruta clara para la evolución del producto hacia un entorno comercial real.
+Pasar por estos cuatro backends nos enseñó que no hay una sola herramienta "mejor para todo": **Spring Boot** es muy ordenado para sistemas empresariales enormes, **Express y MongoDB** son muy rápidos para prototipos flexibles, y **FastAPI con PostgreSQL** nos dio justo la claridad, velocidad y seguridad que necesitaba un sistema hotelero como BookingSoft.

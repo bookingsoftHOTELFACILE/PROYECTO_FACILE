@@ -1,124 +1,80 @@
-# 📡 Especificación de Arquitectura IoT y Protocolo de Comunicación (Bonificación)
+# Propuesta de Arquitectura IoT — Cerraduras Digitales Yale (Bonificación)
 
 **Proyecto:** BookingSoft PMS — Apartahotel Facile  
-**Criterio de Evaluación:** Criterio 6 (Bonificación — Integración IoT)  
-**Sistema:** Cerraduras Digitales Yale Connect SmartLock & Telemetría Hotelera  
-**Estado de Implementación:** Arquitectura de integración lógica completada en Backend/PMS; especificación de protocolo para despliegue de hardware físico.  
+**Criterio:** Criterio 6 (Bonificación IoT)  
+**Estado actual:** **Propuesta técnica de diseño para Fase 2** (en el PMS actual existe la casilla informativa en Walk-In, pero no hay hardware físico ni broker MQTT conectado todavía).
 
 ---
 
-## 1. Visión General de la Solución IoT
+## 1. Qué problema queremos resolver con IoT en el hotel
 
-En la industria hotelera y de apartahoteles moderna, el acceso autónomo (*contactless check-in*) es fundamental. BookingSoft incorpora la arquitectura de integración para cerraduras inteligentes **Yale Connect Wi-Fi / Zigbee Bridge**, permitiendo que al momento de confirmarse una reserva o registrarse un Check-In presencial (Walk-In), el sistema:
-1. Genere dinámicamente un código PIN temporal de 6 dígitos con validez acotada al rango de fechas `[fecha_entrada 15:00, fecha_salida 11:00]`.
-2. Transmita la credencial al concentrador IoT del hotel (Gateway Yale Bridge).
-3. Reciba telemetría en tiempo real: apertura de puertas, intentos fallidos y porcentaje de batería.
+Hoy, cuando un huésped hace su Check-In en recepción, se le entrega una llave física tradicional. Si llega tarde en la noche o en temporada alta, depende siempre de esperar en recepción y existe el riesgo de pérdida de llaves.
+
+La idea con esta propuesta IoT es conectar cerraduras inteligentes **Yale** al sistema **BookingSoft** para que, cuando se confirme un Check-In, el servidor pueda enviarle un **PIN temporal de 6 dígitos** que solo funcione desde su fecha de entrada hasta su fecha de salida, y se desactive automáticamente al hacer Check-Out.
 
 ---
 
-## 2. Diagrama de Arquitectura de Comunicación IoT
+## 2. Cómo viajarían los datos (Arquitectura propuesta)
 
 ```mermaid
 flowchart LR
-    subgraph Habitacion["Suite / Apartamento"]
-        YaleLock["Cerradura Digital Yale (Zigbee / Bluetooth)"]
-    end
+    Cerradura["Cerradura Digital Yale (Bluetooth / Zigbee)"] -->|Señal inalámbrica local| Bridge["Gateway / Puente Wi-Fi (ESP32 o Yale Bridge)"]
+    Bridge -->|Mensajes MQTT por Internet| Broker["Broker MQTT (ej. Mosquitto)"]
+    Broker -->|Envía y recibe mensajes| Backend["Backend FastAPI (BookingSoft)"]
+    Backend -->|Guarda registro de aperturas| DB[("PostgreSQL")]
+    Backend -->|Muestra estado en pantalla| PMS["Panel PMS Recepción"]
+```
 
-    subgraph PisoHotel["Infraestructura de Piso"]
-        YaleBridge["Yale Connect Bridge / Gateway IoT (ESP32 / Zigbee to Wi-Fi)"]
-    end
+### Cómo funciona paso a paso:
+1. En el PMS, el recepcionista registra el Check-In de la reserva.
+2. El backend FastAPI genera el PIN temporal (con fecha de inicio y vencimiento) y lo publica en el **Broker MQTT**.
+3. El **Bridge/Gateway Wi-Fi** instalado en el pasillo del apartahotel recibe ese mensaje de Internet y se lo pasa por Bluetooth/Zigbee a la cerradura de la puerta correspondiente.
+4. Cuando el huésped digita el código y abre la puerta, la cerradura avisa de vuelta al servidor si la puerta abrió bien o cuánta batería le queda.
 
-    subgraph CloudPMS["Servidor BookingSoft PMS"]
-        MQTTBroker["Broker MQTT (Eclipse Mosquitto / AWS IoT)"]
-        FastAPIBackend["FastAPI Backend (Worker de Eventos IoT)"]
-        PostgresDB[("PostgreSQL 15 (Bitácora de Accesos)")]
-        PMSDashboard["Panel PMS Recepción (Alertas en Vivo)"]
-    end
+---
 
-    YaleLock -->|Zigbee 3.0 / Cifrado AES-128| YaleBridge
-    YaleBridge -->|MQTT sobre TLS / Puerto 8883| MQTTBroker
-    MQTTBroker -->|Suscripción a Tópico: hotel/piso1/apto/+/telemetria| FastAPIBackend
-    FastAPIBackend -->|Persiste auditoría de apertura| PostgresDB
-    FastAPIBackend -->|WebSockets / Server-Sent Events| PMSDashboard
+## 3. Protocolo de comunicación usado: MQTT
+
+Para esta comunicación proponemos usar el protocolo **MQTT** (*Message Queuing Telemetry Transport*) en lugar de peticiones HTTP normales.
+
+### ¿Por qué MQTT y no HTTP?
+- Las cerraduras y microcontroladores (como un ESP32) funcionan con baterías y poca memoria; HTTP pesa más porque abre y cierra conexiones todo el tiempo.
+- **MQTT funciona por publicación y suscripción (Tópicos):** es súper liviano, gasta muy poca batería y permite que la cerradura reciba avisos instantáneos del servidor sin estar preguntando cada segundo *"¿hay algo nuevo?"*.
+
+### Tópicos (canales) propuestos:
+- `hotel/facile/cerraduras/{id_habitacion}/crear_pin` ➔ El backend envía el código nuevo a la puerta.
+- `hotel/facile/cerraduras/{id_habitacion}/borrar_pin` ➔ El backend borra el código cuando el huésped hace Check-Out.
+- `hotel/facile/cerraduras/{id_habitacion}/eventos` ➔ La puerta avisa al sistema cuando alguien entra o si queda poca batería.
+
+---
+
+## 4. Ejemplo sencillo de los mensajes JSON
+
+**Cuando BookingSoft le envía el código temporal a la cerradura:**
+```json
+{
+  "id_habitacion": 101,
+  "pin_acceso": "847291",
+  "valido_desde": "2026-11-20T15:00:00",
+  "valido_hasta": "2026-11-22T11:00:00"
+}
+```
+
+**Cuando la cerradura avisa al sistema que el huésped abrió la puerta:**
+```json
+{
+  "dispositivo": "YALE-APTO-101",
+  "id_habitacion": 101,
+  "evento": "PUERTA_ABIERTA",
+  "bateria_porcentaje": 89,
+  "exitoso": true
+}
 ```
 
 ---
 
-## 3. Protocolo de Comunicación y Estructura de Mensajes
+## 5. Qué tenemos hoy en el código y transparencia ante el instructor
 
-### 3.1 Protocolo de Transporte
-- **Protocolo:** **MQTT v5.0** (Message Queuing Telemetry Transport) sobre **TLS v1.3** con autenticación mutua por certificados X.509 (MQTTS, puerto 8883).
-- **Justificación técnica:** MQTT es un protocolo binario ultraligero diseñado para dispositivos con restricciones de ancho de banda y batería, con niveles de QoS (Quality of Service) garantizados.
-- **QoS Utilizado:** **QoS 1 (At least once)** para eventos de apertura y generación de llaves, asegurando que ningún código se pierda en tránsito.
+En la interfaz actual del PMS ([VistaPms.jsx](file:///home/davidl/Documentos/PROYECTO_FACILE/frontend/src/views/VistaPms.jsx)), dentro del módulo Walk-In ya incluimos la casilla visual de **Check-In Directo — Yale Connect Smartlock**.
 
----
-
-### 3.2 Tópicos MQTT (Topic Hierarchy)
-
-1. **Aprovisionamiento de Clave Temporal (PMS ➔ Cerradura):**  
-   `hotel/facile/cerraduras/{id_habitacion}/comando/provisionar_pin`
-2. **Revocación Inmediata de Clave (PMS ➔ Cerradura por Check-Out):**  
-   `hotel/facile/cerraduras/{id_habitacion}/comando/revocar_pin`
-3. **Telemetría y Estado de Batería (Cerradura ➔ PMS):**  
-   `hotel/facile/cerraduras/{id_habitacion}/estado`
-4. **Registro de Eventos de Acceso (Cerradura ➔ PMS):**  
-   `hotel/facile/cerraduras/{id_habitacion}/eventos/apertura`
-
----
-
-## 4. Formato de Payloads JSON
-
-### 4.1 Mensaje de Aprovisionamiento de PIN al Huésped (Envío desde Backend)
-
-| Campo | Tipo | Ejemplo | Descripción |
-|---|---|---|---|
-| `transaccion_id` | String | `tx_yale_982341` | Identificador único transaccional de aprovisionamiento |
-| `id_habitacion` | Integer | `101` | Número identificador de la habitación en base de datos |
-| `pin_acceso` | String (6 dígitos) | `847291` | Clave dinámica temporal emitida al huésped |
-| `tipo_permiso` | String | `HUESPED_TEMPORAL` | Perfil de permiso con expiración automática |
-| `valido_desde` | Timestamp ISO | `2026-11-20T15:00:00-05:00` | Inicio de vigencia (Hora estándar de Check-In) |
-| `valido_hasta` | Timestamp ISO | `2026-11-22T11:00:00-05:00` | Fin de vigencia (Hora estándar de Check-Out) |
-| `notificar_guest_sms` | Boolean | `true` | Bandera de confirmación vía mensajería |
-| `checksum` | String | `a8f5c31b9d4e2a` | Hash de verificación de integridad del paquete |
-
----
-
-### 4.2 Mensaje de Telemetría de la Cerradura (Recepción en Backend)
-
-| Campo | Tipo | Ejemplo | Descripción |
-|---|---|---|---|
-| `dispositivo_id` | String | `YALE-APTO-101-SN4892` | Número de serie físico de la cerradura Yale |
-| `timestamp` | Timestamp UTC | `2026-11-20T19:30:12Z` | Momento exacto de captura del reporte |
-| `nivel_bateria_pct` | Integer (0-100) | `89` | Porcentaje remanente de batería |
-| `estado_cerrojo` | String | `BLOQUEADO` | Estado actual (`BLOQUEADO` o `DESBLOQUEADO`) |
-| `temperatura_celsius` | Decimal | `24.2` | Telemetría térmica ambiental |
-| `rssi_dbm` | Integer | `-58` | Potencia de señal inalámbrica de conexión |
-| `alerta_sabotaje` | Boolean | `false` | Sensor antimanipulación física |
-
----
-
-### 4.3 Mensaje de Evento de Apertura por Huésped
-
-| Campo | Tipo | Ejemplo | Descripción |
-|---|---|---|---|
-| `evento` | String | `ACCESO_AUTORIZADO` | Tipo de evento registrado en la bitácora |
-| `dispositivo_id` | String | `YALE-APTO-101-SN4892` | Cerradura donde se presentó el intento |
-| `id_habitacion` | Integer | `101` | Habitación asociada al evento |
-| `metodo` | String | `PIN_TECLADO` | Mecanismo utilizado (`PIN_TECLADO` / `LLAVE_VIRTUAL`) |
-| `id_reserva_asociada` | Integer | `42` | Clave foránea de la reserva en el PMS |
-| `exitoso` | Boolean | `true` | Indicador de acceso concedido |
-
----
-
-## 5. Implementación en el PMS y Manejo en el Sistema
-
-En el frontend del PMS (`VistaPms.jsx`), en el módulo de recepción presencial (Walk-In):
-- Al activar la casilla de **Registrar Check-In Directo Inmediato (Huésped presente en el lobby) — Yale Connect Smartlock**, el backend genera el código seguro y actualiza la reserva a estado `Check-In`.
-- La respuesta HTTP incluye el objeto `yale_lock` con el estado (`ACTIVA`), el `pin_temporal` de 6 dígitos y el enlace de llave móvil para visualización del recepcionista y envío al huésped.
-
----
-
-## 6. Dictamen para el Comité Evaluador (Transparencia Técnica)
-
-> **Nota para la Sustentación:**  
-> El equipo desarrolló la capa de integración de software (endpoints, generador de tokens de seguridad y eventos en UI). Dado que el laboratorio de formación no contaba con las cerraduras físicas Yale Connect, el sistema opera con el **módulo de emulación lógica**, validando que los datos son procesados e interpretados correctamente por la base de datos y el panel de control del hotel.
+Con total sinceridad: como no contamos con las cerraduras físicas ni con un gateway en el ambiente de formación, **la conexión física por MQTT no está implementada en el backend**. Lo que sí hace hoy el sistema de verdad es el registro real del Check-In en PostgreSQL (`estado = 'Check-In'`, `checkin_at` y habitación en `'Ocupada'`), dejando lista esta especificación para conectarlo al hardware en Fase 2.

@@ -1,64 +1,37 @@
-# 📊 Informe de Sprint 3: Folio Contable, Coworking, Mantenimiento y Calidad
+# Informe de Sprint 3 — Pagos, Coworking, Mantenimiento y Pruebas
 
-**Proyecto:** BookingSoft PMS — Apartahotel Facile  
-**Duración del Sprint:** 2 semanas  
-**Objetivo del Sprint (Sprint Goal):**  
-> *"Completar los módulos auxiliares de operación hotelera: folio contable y liquidación financiera, módulo de aseo y mantenimiento, reservas de coworking, y consolidar la suite de pruebas unitarias automatizadas."*
+**Objetivo del Sprint:** Terminar los módulos de folio/pagos, aseo y mantenimiento, coworking y edición de reservas; limpiar la estructura del código y consolidar las pruebas automáticas.
 
 ---
 
-## 1. Planificación del Sprint (Sprint Planning)
+## 1. Qué planeamos y qué alcanzó a entrar
 
-- **Capacidad del Equipo:** 130 horas.
-- **Compromiso en Story Points:** 51 Story Points (alta concentración de módulos satélite y consolidación QA).
-- **Historias de Usuario comprometidas:**
-  1. **HU-007:** Registro de consumos extras y servicios (8 SP)
-  2. **HU-008:** Módulo de mantenimiento y ama de llaves (5 SP)
-  3. **HU-010:** Gestión financiera y folio contable (13 SP)
-  4. **HU-011:** Inventario operativo de suministros (5 SP)
-  5. **HU-012:** Notificaciones y llaves digitales Yale (8 SP)
-  6. **HU-013:** Espacios de coworking y salas de juntas (8 SP)
-  7. **HU-015:** Reportes de ocupación y dashboard gerencial (7 SP)
+- **Puntos comprometidos:** 51 puntos en total (`HU-008`, `HU-010`, `HU-013`, `HU-015` terminadas; `HU-007`, `HU-011` y `HU-012` quedaron documentadas como diferidas para una siguiente fase porque dependían de hardware o integraciones externas).
 
----
-
-## 2. Desglose de Tareas Técnicas Asignadas
-
-| ID Tarea | Descripción Técnica | Responsable | Estimado (h) | Estado Final |
-|---|---|---|:---:|:---:|
-| **T-3.1** | Modelo `FolioContable` y cargos a la habitación (minibar, lavandería) | Maicol Mayor / David López | 10h | ✅ Completado |
-| **T-3.2** | Módulo de asignación de cuartos a Amas de Llaves y control de aseo | Sebastián Parada | 8h | ✅ Completado |
-| **T-3.3** | Módulo de reportes de daños y órdenes de mantenimiento | Sebastián Parada | 8h | ✅ Completado |
-| **T-3.4** | Sistema de reserva por horas de Salas de Coworking | José Miguel Chico | 12h | ✅ Completado |
-| **T-3.5** | Generación de llaves móviles virtuales y confirmación | Maicol Mayor | 8h | ✅ Completado |
-| **T-3.6** | Refactorización de componentes React y reducción de deuda técnica | José Miguel Chico | 14h | ✅ Completado |
-| **T-3.7** | Automatización de 96 casos de prueba unitarios e integración en Pytest | Maicol Mayor | 16h | ✅ Completado |
-| **T-3.8** | Pruebas de componentes en Vitest (28 tests) | Maicol Mayor / José Chico | 10h | ✅ Completado |
-| **T-3.9** | Auditoría interna de seguridad y rotación de credenciales | Sebastián Parada | 6h | ✅ Completado |
-| **T-3.10** | Consolidación de documentación final de entrega | Ashly Echeverri | 10h | ✅ Completado |
+| Tarea | Qué se hizo | Responsable | Estado |
+|---|---|---|:---:|
+| **T-3.1** | Cálculo de folio en `services/folio.py` con desglose de IVA 19% y abonos | Maicol Mayor / David López | Listo |
+| **T-3.2** | Tablero de Ama de Llaves para pasar habitaciones de `En limpieza` a `Disponible` | Sebastián Parada | Listo |
+| **T-3.3** | Bitácora técnica de Mantenimiento para reportar daños y bloquear unidad | Sebastián Parada | Listo |
+| **T-3.4** | Módulo de Salas de Juntas y Coworking por horas (`ModuloSalasCoworkingPMS.jsx`) | José Miguel Chico | Listo |
+| **T-3.5** | Pasarela de pagos simulada (`pasarela.py`) y borrador de factura en XML | Maicol Mayor | Listo (simulado) |
+| **T-3.6** | Dividir `App.jsx` (6.665 líneas) en vistas, componentes, contexto y `api/client.js` | José Miguel Chico | Listo |
+| **T-3.7** | Ampliar pruebas en Pytest (pagos, coworking, edición RF-013, seguridad RBAC) | Maicol Mayor | Listo |
+| **T-3.8** | Pruebas unitarias y de componentes en Vitest (precios, fechas, folio, HTTP) | Maicol Mayor / José Chico / David López | Listo |
+| **T-3.9** | Auditoría interna de seguridad y corrección de endpoints sin rol (`H-01`, `H-02`) | Sebastián Parada / José Chico | Listo |
+| **T-3.10** | Consolidar documentos de arquitectura, pruebas y requisitos | Ashly Echeverri / David López | Listo |
 
 ---
 
-## 3. Seguimiento Diario (Daily Scrums Highlights)
+## 2. Qué problemas reales resolvimos en este Sprint
 
-- **Día 3:** José Miguel y Maicol conectaron el `ModalFolioReserva.jsx` para permitir facturar cargos adicionales y liquidar el depósito de garantía de forma dinámica.
-- **Día 7:** Maicol llevó la suite de pruebas de 45 a 96 casos en backend, cubriendo todos los casos borde (inyección de fechas inválidas, usuarios duplicados, cálculos de impuestos negativos). David López monitoreó el burndown chart del Sprint.
-- **Día 10:** Sebastián completó la auditoría de dependencias y verificó que ningún secreto quede expuesto en el código versionado de Git.
-
----
-
-## 4. Revisión del Sprint (Sprint Review)
-
-- **Demostración Final:**
-  - Sistema 100% integrado: reserva Walk-In → emisión de folio → cargos extra → asignación a limpieza → Check-Out con liquidación.
-  - Ejecución en vivo de la suite de pruebas: **96 pruebas en Pytest pasando (100%)** y **28 pruebas en Vitest pasando (100%)**.
-- **Aceptación:** Producto aprobado para sustentación final ante el comité evaluador del SENA.
+1. **Seguridad de endpoints (`H-01` y `H-02`):** En una revisión vimos que cancelar una reserva (`DELETE`) y consultar el inventario completo de habitaciones se podían llamar sin token. Se cerró con `requiere_rol(...)` y se dejó `/api/habitaciones/publicas` solo con los datos públicos para visitantes.
+2. **Modularización del código:** Sacamos las vistas a `frontend/src/views/`, los modales a `components/` y la capa de base de datos del backend a `backend/repositories/base.py` para no repetir el código de conexión en cada archivo.
+3. **Versión de Node para correr Vitest:** Descubrimos que en Node 18 Vitest fallaba por `jsdom@30`, así que fijamos Node `>= 20.19` en `frontend/package.json` y en GitHub Actions (`.github/workflows/ci.yml`).
 
 ---
 
-## 5. Retrospectiva del Sprint (Sprint Retrospective)
+## 3. Cierre y aprendizajes del Sprint 3
 
-| Qué funcionó bien | Qué no funcionó bien | Compromisos a futuro |
-|---|---|---|
-| La cohesión del equipo permitió cerrar los 51 SP gracias al trabajo en paralelo de frontend y backend. | La integración de hardware real (IoT) no se pudo completar por falta de equipos físicos en el laboratorio. | Plantear la integración con cerraduras Yale físicas como primera fase de evolución comercial. |
-| El backend de FastAPI demostró una velocidad de respuesta sobresaliente (<30ms por petición). | El empaquetado de producción de Vite requirió ajustes de optimización de chunks. | Mantener configuración de Vite con code-splitting para despliegues en la nube. |
+- **Qué salió bien:** Dejar funcionando todo el ciclo completo desde que el huésped entra (`Check-In`), paga en el folio (`ModalFolioReserva.jsx`), sale (`Check-Out` pasando a `En limpieza`) y se edita su reserva (`RF-013`), respaldado por pruebas automáticas.
+- **Qué quedó pendiente para Fase 2:** Conectar una pasarela bancaria real (Wompi/PSE), timbrar facturas ante la DIAN y conectar cerraduras físicas Yale (solo se dejó la propuesta en `docs/arquitectura/`).
