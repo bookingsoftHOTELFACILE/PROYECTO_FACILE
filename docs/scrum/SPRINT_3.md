@@ -26,7 +26,7 @@
 
 | ID Tarea | Descripción Técnica | Responsable | Estimado (h) | Estado Final |
 |---|---|---|:---:|:---:|
-| **T-3.1** | Modelo `FolioContable` y cargos a la habitación (minibar, lavandería) | Maicol Mayor / David López | 10h | ✅ Completado |
+| **T-3.1** | Servicio `folio.py` y tablas `pago` / `factura` para liquidación contable | Maicol Mayor / David López | 10h | ✅ Completado |
 | **T-3.2** | Módulo de asignación de cuartos a Amas de Llaves y control de aseo | Sebastián Parada | 8h | ✅ Completado |
 | **T-3.3** | Módulo de reportes de daños y órdenes de mantenimiento | Sebastián Parada | 8h | ✅ Completado |
 | **T-3.4** | Sistema de reserva por horas de Salas de Coworking | José Miguel Chico | 12h | ✅ Completado |

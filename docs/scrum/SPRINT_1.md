@@ -36,9 +36,9 @@
 
 ## 3. Seguimiento Diario (Daily Scrums Highlights)
 
-- **Día 3:** Sebastián identificó problemas de conexión entre contenedores Docker por resolución de nombres de host (`db` vs `localhost`). Se solucionó creando una red interna `facile-network`.
+- **Día 3:** Sebastián identificó problemas de conexión entre contenedores Docker por resolución de nombres de host (`db` vs `localhost`). Se solucionó apuntando `DB_HOST=db` dentro de la red interna creada automáticamente por Docker Compose.
 - **Día 6:** Maicol detectó que el endpoint de login devolvía código 200 con credenciales inválidas si el usuario no existía. Se corrigió inmediatamente a `401 Unauthorized`.
-- **Día 9:** José Miguel integró la respuesta del token JWT con el contexto de React (`AppContext.jsx`) manteniendo la sesión activa al recargar la página. Facilitado por David López (Scrum Master).
+- **Día 9:** José Miguel integró la respuesta del token JWT con el estado global de React (`useAppState.js` / `AppContext.jsx`) manteniendo la sesión activa al recargar la página. Facilitado por David López (Scrum Master).
 
 ---
 

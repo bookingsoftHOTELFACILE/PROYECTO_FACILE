@@ -17,7 +17,7 @@ A lo largo de la formación en el SENA hemos aprendido a trabajar con diferentes
 2. **Trimestre 5 (El trimestre pasado) — Node.js con Express:**  
    Trabajar con JavaScript en el backend nos pareció mucho más ágil y directo que Java. Con Express pudimos crear rutas y recibir peticiones HTTP de forma rápida y sencilla, sin tantas carpetas ni tanta configuración previa.
 
-3. **Trimestre 5 (El trimestre pasado) — MongoDB:**  
+3. **Trimestre 5 (El trimestre pasado) — Backend Node.js con MongoDB:**  
    Aquí conocimos las bases de datos no relacionales (NoSQL). Fue una experiencia interesante porque no teníamos que definir tablas fijas ni columnas estrictas; simplemente guardábamos la información en formato JSON/documentos. Nos sirvió para entender cuándo conviene una base de datos flexible y cuándo se necesita una relacional fija.
 
 4. **Trimestre 6 (Este proyecto final) — Python con FastAPI:**  
