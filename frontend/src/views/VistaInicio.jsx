@@ -12,6 +12,7 @@ export default function VistaInicio() {
   const { 
     habitaciones = [], 
     reservas = [], 
+    cargandoCatalogo = false,
     setActiveTab, 
     setShowLoginModal, 
     setSelectedAptoFigma, 
@@ -307,8 +308,40 @@ export default function VistaInicio() {
             })}
           </div>
 
-          {/* VISTA 1: TODAS LAS CATEGORÍAS (GRILLA DE 4 TARJETAS BALANCEADAS) */}
-          {categoriaActiva === 'todos' ? (
+          {/* ESTADO DE CARGA ACCESIBLE (SKELETON + SPINNER) PARA CONEXIONES LENTAS (3G) */}
+          {cargandoCatalogo ? (
+            <div
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+              aria-label="Cargando catálogo de alojamientos"
+              className="facile-loading-container"
+            >
+              <div className="facile-loading-banner-wrap">
+                <div className="facile-loading-banner">
+                  <span className="facile-spinner" aria-hidden="true" />
+                  <span>Sincronizando disponibilidad de alojamientos…</span>
+                </div>
+              </div>
+              <div className="facile-skeleton-grid" aria-hidden="true">
+                {[1, 2, 3, 4].map((item) => (
+                  <div key={item} className="facile-skeleton-card">
+                    <div className="facile-skeleton-header" />
+                    <div className="facile-skeleton-image" />
+                    <div className="facile-skeleton-body">
+                      <div className="facile-skeleton-line facile-skeleton-line-lg" />
+                      <div className="facile-skeleton-line facile-skeleton-line-md" />
+                      <div className="facile-skeleton-pills">
+                        <span className="facile-skeleton-pill" />
+                        <span className="facile-skeleton-pill" />
+                      </div>
+                      <div className="facile-skeleton-footer" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : categoriaActiva === 'todos' ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '28px' }}>
               {alojamientosFiltrados.map((item) => (
                 <div

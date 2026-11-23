@@ -198,6 +198,7 @@ export function useAppState() {
 
   // ---- ESTADOS UI ----
   const [loading, setLoading] = useState(false);
+  const [cargandoCatalogo, setCargandoCatalogo] = useState(true);
   const [alert, setAlert] = useState(null);
   const [reservaAlert, setReservaAlert] = useState(null);
   const [filtroHabitaciones, setFiltroHabitaciones] = useState('todas'); // 'todas' | 'amas_llaves' | 'mantenimiento'
@@ -455,14 +456,17 @@ export function useAppState() {
     const verificarBackend = async () => {
       try {
         // El inventario exige rol (H-02); la comprobación de disponibilidad usa /health.
-        const res = await apiFetch(`/health`, {timeoutMs: 2000});
+        // Umbral ampliado a 8000 ms para soportar conexiones móviles lentas (3G) sin falsos negativos.
+        const res = await apiFetch(`/health`, {timeoutMs: 8000});
         if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
           setBackendActivo(true);
         } else {
           setBackendActivo(false);
+          setCargandoCatalogo(false);
         }
       } catch {
         setBackendActivo(false);
+        setCargandoCatalogo(false);
       }
     };
     verificarBackend();
@@ -491,7 +495,7 @@ export function useAppState() {
     } catch {}
   };
 
-  // Cargar datos
+  // Cargar datos con validación de integridad y combinación segura ante red lenta (3G)
   const cargarDatosBackend = async (token = authToken) => {
     try {
       // H-02: el inventario completo exige rol operativo. Sin sesión (o sin rol)
@@ -512,14 +516,24 @@ export function useAppState() {
         apiFetch(`/api/centro-negocios/reservas`),
         token ? apiFetch(`/api/empleados`, {token: token}) : Promise.resolve(null),
       ]);
-      if (gRes.ok) setHuespedes(gRes.data);
-      if (hRes.ok) setHabitaciones(hRes.data);
-      if (rRes.ok) setReservas(rRes.data);
-      if (eRes.ok) setEspaciosNegocio(eRes.data);
-      if (rnRes.ok) setReservasNegocio(rnRes.data);
-      if (empRes && empRes.ok) setEmpleadosList(empRes.data);
+      if (gRes.ok && Array.isArray(gRes.data)) setHuespedes(gRes.data);
+      if (hRes.ok && Array.isArray(hRes.data) && hRes.data.length > 0) setHabitaciones(hRes.data);
+      if (rRes.ok && Array.isArray(rRes.data)) {
+        // Evita condición de carrera en red lenta: conserva reservas creadas mientras el GET estaba en vuelo
+        setReservas((actuales) => [
+          ...rRes.data,
+          ...(Array.isArray(actuales) ? actuales : []).filter(
+            (previa) => !rRes.data.some((item) => item.id_reserva === previa.id_reserva)
+          ),
+        ]);
+      }
+      if (eRes.ok && Array.isArray(eRes.data)) setEspaciosNegocio(eRes.data);
+      if (rnRes.ok && Array.isArray(rnRes.data)) setReservasNegocio(rnRes.data);
+      if (empRes && empRes.ok && Array.isArray(empRes.data)) setEmpleadosList(empRes.data);
     } catch (e) {
       console.error('Error al cargar datos del backend:', e);
+    } finally {
+      setCargandoCatalogo(false);
     }
   };
 
@@ -1551,7 +1565,7 @@ export function useAppState() {
     guestProfileExtras, setGuestProfileExtras, guestAvatarUrl, setGuestAvatarUrl, profileSavedMsg, setProfileSavedMsg,
     empleadosList, setEmpleadosList, newEmpleadoForm, setNewEmpleadoForm, showCreateEmpleadoModal, setShowCreateEmpleadoModal,
     empleadoAlert, setEmpleadoAlert, reservaData, setReservaData, cotizacion, setCotizacion,
-    calDate, setCalDate, loading, setLoading, alert, setAlert,
+    calDate, setCalDate, loading, setLoading, cargandoCatalogo, setCargandoCatalogo, alert, setAlert,
     reservaAlert, setReservaAlert, filtroHabitaciones, setFiltroHabitaciones, galleryFilter, setGalleryFilter,
     filtroTipoApto, setFiltroTipoApto, lightboxIdx, setLightboxIdx, aptoLightboxPhoto, setAptoLightboxPhoto,
     lightboxZoom, setLightboxZoom, aptoActivePhoto, setAptoActivePhoto, selectedAptoFigma, setSelectedAptoFigma,
