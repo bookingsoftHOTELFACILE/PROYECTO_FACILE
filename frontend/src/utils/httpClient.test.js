@@ -65,4 +65,48 @@ describe('cliente HTTP Frontend (apiRequest) - pruebas unitarias (semana 4)', ()
         });
         expect(buildFriendlyAlertMessage('Credenciales incorrectas.', 401)).toBe('Credenciales incorrectas.');
     });
+
+    it('4. debe manejar fallo de red o caída de servidor llamando al callback onAlert', async () => {
+        const onAlertMock = vi.fn();
+        vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Failed to fetch'));
+
+        await expect(apiRequest('/api/test', {}, onAlertMock)).rejects.toThrow(
+            'Error de conexion con el servidor. verifica tu conexion a internet.'
+        );
+        expect(onAlertMock).toHaveBeenCalledWith({
+            type: 'error',
+            message: 'Error de conexion con el servidor. verifica tu conexion a internet.',
+        });
+    });
+
+    it('5. debe formatear errores estructurados y casos límite en buildFriendlyAlertMessage', () => {
+        // Sin detail
+        expect(buildFriendlyAlertMessage(null, 400)).toBe('Ocurrió un error al procesar tu solicitud.');
+        expect(buildFriendlyAlertMessage('', 400)).toBe('Ocurrió un error al procesar tu solicitud.');
+
+        // Lista de errores Pydantic o mixtos
+        const pydanticErrors = [
+            { msg: 'El correo no tiene formato válido' },
+            'Contraseña requerida',
+            { campo: 'valor' },
+        ];
+        const resLista = buildFriendlyAlertMessage(pydanticErrors, 422);
+        expect(resLista).toContain('El correo no tiene formato válido');
+        expect(resLista).toContain('Contraseña requerida');
+
+        // Tipo no estándar
+        expect(buildFriendlyAlertMessage(12345, 400)).toBe('ocurrio un error al procesar tu solicitud.');
+    });
+
+    it('6. debe tolerar respuestas no-JSON en errores HTTP 400', async () => {
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: false,
+            status: 400,
+            json: async () => { throw new Error('Not JSON'); },
+        });
+
+        await expect(apiRequest('/api/raw-error')).rejects.toThrow(
+            'Ocurrió un error al procesar tu solicitud.'
+        );
+    });
 });

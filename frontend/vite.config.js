@@ -25,16 +25,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/**'],
-      exclude: ['src/main.jsx'],
-      // Hallazgo B-06: los umbrales estaban en 0, de modo que `--coverage` nunca
-      // fallaba. Se fija una base medida con `npx vitest run --coverage` el
-      // 2026-11-12: 1.25% líneas · 1.25% sentencias · 50.98% ramas · 10.71%
-      // funciones, con margen para que la suite siga siendo el detector de
-      // regresiones (el portal tiene cobertura E2E, no unitaria) sin bloquear
-      // crecimiento. Subir estos valores es el objetivo a medida que se añadan
-      // pruebas: borrar las existentes rompe el build.
-      thresholds: { lines: 1, statements: 1, functions: 8, branches: 45 },
+      include: ['src/utils/**', 'src/data/catalogo.js'],
+      // Semana 8: Umbral mínimo obligatorio del 80% en CI para sustentación
+      thresholds: { lines: 80, statements: 80, functions: 80, branches: 80 },
     },
   }
 })

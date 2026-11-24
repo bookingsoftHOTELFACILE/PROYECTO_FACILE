@@ -36,6 +36,8 @@ describe('etiquetas de estado', () => {
     expect(etiquetaEstadoMovimiento('Rechazado').texto).toBe('Rechazado');
     expect(etiquetaEstadoMovimiento('Anulado').texto).toBe('Anulado');
     expect(etiquetaEstadoMovimiento('Reembolsado').texto).toBe('Reembolsado');
+    expect(etiquetaEstadoMovimiento('Desconocido').texto).toBe('Desconocido');
+    expect(etiquetaEstadoMovimiento(null).texto).toBe('Pendiente');
   });
 });
 

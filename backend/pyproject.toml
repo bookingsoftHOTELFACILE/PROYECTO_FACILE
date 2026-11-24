@@ -20,11 +20,11 @@ dependencies = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --tb=short --cov=routes --cov=database --cov=services --cov-report=term-missing"
+addopts = "-v --tb=short -rs --cov=routes --cov=database --cov=services --cov=dependencies --cov-report=term-missing --cov-report=html:.coverage_html"
 
 [tool.coverage.run]
-source = ["routes", "database", "services"]
+source = ["routes", "database", "services", "dependencies"]
 omit = []
 
 [tool.coverage.report]
-fail_under = 0
+fail_under = 80

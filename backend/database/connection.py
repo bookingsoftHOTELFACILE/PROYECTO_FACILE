@@ -25,16 +25,34 @@ _pool: psycopg2.pool.ThreadedConnectionPool | None = None
 def _inicializar_pool() -> None:
     """Crea el pool la primera vez. Mínimo 1 conexión, máximo 20."""
     global _pool
-    _pool = psycopg2.pool.ThreadedConnectionPool(
-        minconn=1,
-        maxconn=20,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT,
-    )
-    logger.info("[DB Pool] Pool de conexiones ThreadedConnectionPool inicializado (1–20 conexiones).")
+    db_url = os.getenv("DATABASE_URL")
+    if db_url:
+        dsn = db_url.replace("postgresql+psycopg://", "postgresql://")
+        _pool = psycopg2.pool.ThreadedConnectionPool(
+            minconn=1,
+            maxconn=20,
+            dsn=dsn,
+        )
+        logger.info("[DB Pool] Pool inicializado exitosamente desde DATABASE_URL.")
+    else:
+        _pool = psycopg2.pool.ThreadedConnectionPool(
+            minconn=1,
+            maxconn=20,
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            host=DB_HOST,
+            port=DB_PORT,
+        )
+        logger.info("[DB Pool] Pool de conexiones ThreadedConnectionPool inicializado (1–20 conexiones).")
+
+
+def cerrar_pool() -> None:
+    """Cierra todas las conexiones del pool si está abierto."""
+    global _pool
+    if _pool and not _pool.closed:
+        _pool.closeall()
+        _pool = None
 
 
 def obtener_conexion() -> psycopg2.extensions.connection:

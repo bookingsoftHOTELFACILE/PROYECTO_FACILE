@@ -46,4 +46,19 @@ describe('Utilidades de Calendario Agnósticas de Zona Horaria (dateUtils)', () 
     expect(formatearFechaDisplay('2026-11-09')).toBe('09 / 11 / 2026');
     expect(formatearFechaCorta('2026-11-09')).toBe('9 de Noviembre');
   });
+
+  it('maneja valores nulos, fechas invertidas o inválidas de forma segura', () => {
+    expect(splitDateParts(null)).toBeNull();
+    expect(splitDateParts('fecha-invalida')).toBeNull();
+    expect(toUtcTimestamp(null)).toBe(0);
+    expect(calcularNochesAgnostico(null, null)).toBe(1);
+    expect(calcularNochesAgnostico('2026-11-20', '2026-11-09')).toBe(1);
+    expect(iterarFechasRango('2026-11-20', '2026-11-09')).toEqual([]);
+    expect(rangoTieneOcupados('2026-11-09', '2026-11-20', null)).toBe(false);
+    expect(rangoTieneOcupados('2026-11-09', '2026-11-20', new Set())).toBe(false);
+    expect(formatearFechaDisplay(null)).toBe('Seleccionar fecha');
+    expect(formatearFechaDisplay('invalida')).toBe('invalida');
+    expect(formatearFechaCorta(null)).toBe('');
+    expect(formatearFechaCorta('invalida')).toBe('invalida');
+  });
 });

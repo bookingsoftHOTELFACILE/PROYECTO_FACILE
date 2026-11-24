@@ -1,4 +1,4 @@
-import {
+﻿import {
   Users, Home, Wifi, Check, Maximize2, Eye, BedDouble,
   Bath, UtensilsCrossed, Shirt, ShieldCheck, KeyRound,
   Briefcase, CheckCircle2, Sparkles, Tv
@@ -8,7 +8,7 @@ import { useApp } from '../context/AppContext.jsx';
 
 const VistaCatalogo = () => {
   const {
-  habitaciones, reservas, activeTab, setActiveTab,
+  habitaciones, reservas, activeTab, setActiveTab, cargandoCatalogo,
   setReservaData, filtroTipoApto, setFiltroTipoApto, setAptoLightboxPhoto,
   aptoActivePhoto, setAptoActivePhoto, selectedAptoFigma, setSelectedAptoFigma,
   navegarATab, handleReservarTipo
@@ -199,8 +199,40 @@ const VistaCatalogo = () => {
               })}
             </div>
 
-            {/* VISTA 1: CUANDO SE MUESTRAN TODAS LAS CATEGORÍAS (4 COLUMNAS BALANCEADAS) */}
-            {filtroTipoApto === 'todas' ? (
+            {/* ESTADO DE CARGA ACCESIBLE (SKELETON + SPINNER) PARA CONEXIONES LENTAS (3G) */}
+            {cargandoCatalogo ? (
+              <div
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+                aria-label="Cargando catálogo de alojamientos"
+                className="facile-loading-container"
+              >
+                <div className="facile-loading-banner-wrap">
+                  <div className="facile-loading-banner">
+                    <span className="facile-spinner" aria-hidden="true" />
+                    <span>Sincronizando disponibilidad de alojamientos…</span>
+                  </div>
+                </div>
+                <div className="facile-skeleton-grid" aria-hidden="true">
+                  {[1, 2, 3, 4].map((item) => (
+                    <div key={item} className="facile-skeleton-card">
+                      <div className="facile-skeleton-header" />
+                      <div className="facile-skeleton-image" />
+                      <div className="facile-skeleton-body">
+                        <div className="facile-skeleton-line facile-skeleton-line-lg" />
+                        <div className="facile-skeleton-line facile-skeleton-line-md" />
+                        <div className="facile-skeleton-pills">
+                          <span className="facile-skeleton-pill" />
+                          <span className="facile-skeleton-pill" />
+                        </div>
+                        <div className="facile-skeleton-footer" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : filtroTipoApto === 'todas' ? (
               <div className="apto-grid">
                 {alojamientosVisibles.map((apto) => {
                   const activePhotoIndex = aptoActivePhoto[apto.tipo] || 0;
