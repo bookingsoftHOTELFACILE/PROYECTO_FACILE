@@ -16,10 +16,10 @@ jobs:
       - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js 20
+      - name: Configurar Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
@@ -68,7 +68,7 @@ jobs:
       - name: Ejecutar pruebas unitarias de logica de negocio
         working-directory: backend
         run: |
-          pytest tests/test_model_huesped.py tests/test_reservas_service.py tests/test_llave_digital.py --tb=short -rs
+          pytest tests/test_model_huesped.py tests/test_reservas_service.py tests/test_llave_digital.py -o addopts="-v --tb=short -rs" --cov=models.schemas --cov=services.reservas_service --cov=services.llave_digital --cov-report=term-missing --cov-report=html:.coverage_html --cov-fail-under=80
 
       - name: Subir artefacto de cobertura backend unitario
         uses: actions/upload-artifact@v4
@@ -76,6 +76,7 @@ jobs:
         with:
           name: coverage-backend-unit
           path: backend/.coverage_html/
+          include-hidden-files: true
           retention-days: 7
 
   # ── 3. INTEGRACION: PostgreSQL Service, Transacciones y Cero Skips ────────
@@ -135,6 +136,7 @@ jobs:
         with:
           name: coverage-backend-integration
           path: backend/.coverage_html/
+          include-hidden-files: true
           retention-days: 7
 
   # ── 4. E2E: Playwright contra Front y Backend ──────────────────────────────
@@ -148,15 +150,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Iniciar infraestructura completa con Docker Compose
+        env:
+          JWT_SECRET: ci_secret_seguro_bookingsoft_2026_test
         run: |
           docker compose up -d --build db backend frontend
           timeout 90 bash -c 'until docker compose ps | grep -E "bookingsoft-frontend.*(healthy|running|Up)"; do sleep 2; done'
           docker compose ps
 
-      - name: Configurar Node.js 20
+      - name: Configurar Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Instalar dependencias Playwright
         working-directory: E2E

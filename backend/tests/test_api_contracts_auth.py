@@ -44,8 +44,14 @@ def test_contrato_login_exitoso_retorna_200_y_schema_token(mock_client):
     
     mock_conn = MagicMock()
     mock_cursor = MagicMock()
-    # Retorna: id_empleado, contrasena, rol, estado, nombre
-    mock_cursor.fetchone.return_value = (1, hashed_password, "Administrador", "Activo", "Admin Test")
+    # Retorna fila tipo RealDictCursor con columnas usadas por routes/auth.py
+    mock_cursor.fetchone.return_value = {
+        "id_empleado": 1,
+        "contrasena": hashed_password,
+        "rol": "Administrador",
+        "estado": "Activo",
+        "nombre": "Admin Test",
+    }
     mock_conn.cursor.return_value = mock_cursor
 
     payload = {
@@ -140,7 +146,13 @@ def test_contrato_registro_exitoso_retorna_201_y_payload_sin_contrasena(mock_cli
         None,  # doc unico
         None,  # correo unico
         None,  # usuario unico
-        (10, "Carlos Recepcionista", "carlos_recep_test", "Recepcionista 24h", "Activo") # fila insertada
+        {
+            "id_empleado": 10,
+            "nombre": "Carlos Recepcionista",
+            "usuario": "carlos_recep_test",
+            "rol": "Recepcionista 24h",
+            "estado": "Activo",
+        },  # fila insertada (RealDictCursor)
     ]
     mock_conn.cursor.return_value = mock_cursor
 
