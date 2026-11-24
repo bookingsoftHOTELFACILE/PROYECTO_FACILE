@@ -22,3 +22,5 @@ coverage/
 .pytest_cache/
 .coverage
 htmlcov/
+backups/
+scratch/

@@ -70,6 +70,34 @@ def validar_habitacion_disponible(
     return True
 
 
+def validar_checkin_habitacion(
+    estado_habitacion: str,
+    numero_habitacion: str = ""
+) -> bool:
+    """
+    HU-005 / CA-005.3: bloquea el check-in cuando la unidad está ocupada o en mantenimiento.
+    Admite 'Disponible' y 'En limpieza' (unidad libre para recibir al huésped).
+
+    Lanza ValidationError si la unidad no admite check-in.
+    """
+    if not estado_habitacion or not estado_habitacion.strip():
+        raise ValidationError("El estado de la habitación es obligatorio.")
+
+    estado_limpio = estado_habitacion.strip().lower()
+    num_str = f" {numero_habitacion}".rstrip()
+
+    if estado_limpio == "ocupada":
+        raise ValidationError(
+            f"La habitación{num_str} está ocupada: no es posible registrar el check-in."
+        )
+    if estado_limpio == "mantenimiento":
+        raise ValidationError(
+            f"La habitación{num_str} se encuentra en Mantenimiento y no admite check-in."
+        )
+
+    return True
+
+
 def calcular_costo_estadia(
     fecha_entrada: Union[str, date],
     fecha_salida: Union[str, date],
@@ -79,8 +107,15 @@ def calcular_costo_estadia(
     RN-011.2 / Cálculo del costo total de estadía en el backend:
     - Calcula número de noches (fecha_salida - fecha_entrada).
     - Subtotal = noches * precio_noche.
-    - Descuento del 15% sobre el subtotal si noches > 15 (en 15 noches no aplica, en 16 noches sí).
+    - Descuento por larga estadía (política publicada en ModalLegal / ModalDetalle):
+        * >= 15 noches -> 15%
+        *  7 a 14 noches -> 10%
+        *  < 7 noches -> sin descuento
     - Total = subtotal - descuento.
+
+    Es la única fuente del backend; debe coincidir exactamente con la función
+    PL/pgSQL `fn_calcular_noches_y_precio` (schema.sql) y con el preview del
+    frontend (frontend/src/utils/pricing.js).
 
     Lanza ValidationError si el precio_noche es negativo o si las fechas son inválidas.
     """
@@ -93,9 +128,11 @@ def calcular_costo_estadia(
     precio = float(precio_noche)
     subtotal = round(noches * precio, 2)
 
-    # Regla de descuento por larga estancia (> 15 noches)
-    if noches > 15:
+    # Regla de descuento por larga estadía (única fuente backend)
+    if noches >= 15:
         descuento = round(subtotal * 0.15, 2)
+    elif noches >= 7:
+        descuento = round(subtotal * 0.10, 2)
     else:
         descuento = 0.0
 

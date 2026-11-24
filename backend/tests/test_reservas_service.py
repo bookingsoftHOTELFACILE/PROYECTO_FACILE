@@ -113,7 +113,7 @@ def test_validar_habitacion_disponible_requiere_estado():
 # ==============================================================================
 
 def test_calcular_costo_estadia_sin_descuento():
-    """Verifica el cálculo de estadía estándar (sin superar 15 noches)."""
+    """Verifica el cálculo de estadía estándar (estadía corta, < 7 noches: sin descuento)."""
     # Arrange
     fecha_in = "2026-10-01"
     fecha_out = "2026-10-06"  # 5 noches
@@ -132,15 +132,22 @@ def test_calcular_costo_estadia_sin_descuento():
 @pytest.mark.parametrize(
     ("noches_delta", "espera_descuento", "desc_factor"),
     [
-        (15, False, 0.0),   # Borde exacto: 15 noches NO tiene descuento (> 15)
-        (16, True, 0.15),   # Borde superior: 16 noches SÍ recibe 15% de descuento
+        (6, False, 0.0),    # Borde inferior: 6 noches NO tiene descuento
+        (7, True, 0.10),    # Borde de entrada: 7 noches SÍ recibe 10%
+        (14, True, 0.10),   # Tope del tramo medio: 14 noches sigue en 10%
+        (15, True, 0.15),   # Borde superior: 15 noches SÍ recibe 15%
+        (16, True, 0.15),   # Estadía larga consolidada: 15%
     ],
 )
 def test_calcular_costo_estadia_valores_limite_descuento(noches_delta, espera_descuento, desc_factor):
     """
-    Valores Límite de la regla RF-011:
-    Descuento del 15% para estancias > 15 noches.
-    Prueba el borde en 15 noches y en 16 noches.
+    Valores Límite de la regla de descuento por larga estadía (RF-011):
+    Política publicada y única fuente de verdad (backend PL/pgSQL + Python
+    + preview del frontend):
+        * < 7 noches  -> 0%
+        * 7 a 14 noches -> 10%
+        * >= 15 noches -> 15%
+    Prueba los bordes en 6, 7, 14, 15 y 16 noches.
     """
     # Arrange
     from datetime import timedelta

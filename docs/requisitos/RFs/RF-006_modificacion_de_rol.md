@@ -23,7 +23,7 @@
 
 ## Descripción
 
-El sistema deberá permitir al administrador cambiar el rol asignado a un usuario registrado en BookingSoft. Los roles disponibles son: Recepcionista, Ama de Llaves, Mantenimiento y Conserje. El cambio de rol debe aplicar los nuevos permisos de acceso al usuario en su siguiente sesión activa.
+El sistema deberá permitir al administrador cambiar el rol asignado a un usuario registrado en BookingSoft. Los roles asignables son: Recepcionista 24h, Ama de llaves y Personal de mantenimiento (el rol Administrador no se reasigna desde este endpoint). El cambio de rol debe aplicar los nuevos permisos de acceso al usuario en su siguiente sesión activa.
 
 ---
 
@@ -32,7 +32,7 @@ El sistema deberá permitir al administrador cambiar el rol asignado a un usuari
 | Campo               | Tipo         | Obligatorio | Validaciones                                                  |
 | ------------------- | ------------ | ----------- | ------------------------------------------------------------- |
 | Identificador de usuario | Texto   | Sí          | El usuario debe existir en el sistema                         |
-| Nuevo rol           | Texto / Enum | Sí          | Valor válido: Recepcionista, Ama de Llaves, Mantenimiento, Conserje |
+| Nuevo rol           | Texto / Enum | Sí          | Valor válido: Recepcionista 24h, Ama de llaves, Personal de mantenimiento |
 
 ---
 
@@ -67,7 +67,7 @@ El sistema deberá permitir al administrador cambiar el rol asignado a un usuari
 ## Reglas de negocio
 
 - RN-006.1: Solo el administrador puede modificar el rol de un usuario.
-- RN-006.2: Los roles disponibles son exclusivamente: Recepcionista, Ama de Llaves, Mantenimiento y Conserje. El sistema no debe permitir asignar un rol fuera de este conjunto.
+- RN-006.2: Los roles asignables son exclusivamente: Recepcionista 24h, Ama de llaves y Personal de mantenimiento. El sistema no debe permitir asignar un rol fuera de este conjunto.
 - RN-006.3: Los nuevos permisos asociados al rol modificado se aplicarán en la siguiente sesión del usuario afectado.
 
 ---

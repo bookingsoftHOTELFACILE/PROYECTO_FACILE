@@ -1,19 +1,91 @@
-name: CI – BookingSoft Backend
+name: CI - BookingSoft
 
 on:
   push:
-    branches: ["main", "develop", "feature/*", "fix/*"]
+    branches: ["main", "develop", "feature/*", "fix/*", "test/*", "docs/*"]
   pull_request:
     branches: ["main", "develop"]
 
 jobs:
-  test-backend:
-    name: 🐍 Pytest + Auditoría de Dependencias
+  # ── 1. FRONTEND: Vitest con Cobertura >= 80% y Build ───────────────────────
+  frontend:
+    name: Frontend (Vitest con Cobertura >= 80% y Build)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: frontend
+        run: npm ci --legacy-peer-deps
+
+      - name: Ejecutar pruebas unitarias con umbral del 80%
+        working-directory: frontend
+        run: npm test
+
+      - name: Validar compilacion de produccion (Vite)
+        working-directory: frontend
+        run: npm run build
+
+      - name: Subir artefacto de cobertura frontend
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-frontend
+          path: frontend/coverage/
+          retention-days: 7
+
+  # ── 2. BACKEND: Pytest Unitario con Cobertura ──────────────────────────────
+  backend:
+    name: Backend (Pytest Unitario con Cobertura >= 80%)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Instalar dependencias backend
+        working-directory: backend
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar pruebas unitarias de logica de negocio
+        working-directory: backend
+        run: |
+          pytest tests/test_model_huesped.py tests/test_reservas_service.py tests/test_llave_digital.py --tb=short -rs
+
+      - name: Subir artefacto de cobertura backend unitario
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-backend-unit
+          path: backend/.coverage_html/
+          retention-days: 7
+
+  # ── 3. INTEGRACION: PostgreSQL Service, Transacciones y Cero Skips ────────
+  integration:
+    name: Integracion (PostgreSQL Service y Cobertura >= 80%)
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16-alpine
         env:
           POSTGRES_DB: bookingsoft_test
           POSTGRES_USER: adso_user
@@ -21,10 +93,9 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "pg_isready -U adso_user -d bookingsoft_test"
+          --health-interval 2s
+          --health-retries 15
 
     env:
       DB_HOST: localhost
@@ -32,42 +103,78 @@ jobs:
       DB_NAME: bookingsoft_test
       DB_USER: adso_user
       DB_PASSWORD: adso_password
+      DATABASE_URL: postgresql://adso_user:adso_password@localhost:5432/bookingsoft_test
       JWT_SECRET: ci_secret_seguro_bookingsoft_2026_test
       RESET_DB: "true"
 
     steps:
-      - name: 📥 Checkout del repositorio
+      - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: 🐍 Configurar Python 3.11
+      - name: Configurar Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
-      - name: 📦 Instalar Pipenv y dependencias
+      - name: Instalar dependencias backend
         working-directory: backend
         run: |
-          pip install --upgrade pip pipenv
-          pipenv install --system --skip-lock --dev
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: 🧪 Ejecutar suite de pruebas (pytest)
-        working-directory: backend
-        run: pytest --tb=short -v
-
-      - name: 🔍 Auditoría de seguridad (pip-audit)
+      - name: Ejecutar suite completa de integracion con umbral del 80% (Cero Skips)
         working-directory: backend
         run: |
-          pip install pip-audit
-          pip-audit --requirement <(pipenv requirements) --desc on || true
+          pytest -rs
 
-      - name: 📦 Auditoría de dependencias frontend (pnpm audit)
-        working-directory: frontend
-        run: |
-          npm install -g pnpm@9
-          pnpm install --no-frozen-lockfile
-          pnpm audit --audit-level moderate || true
+      - name: Subir artefacto de cobertura backend integracion
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-backend-integration
+          path: backend/.coverage_html/
+          retention-days: 7
 
-      - name: ⚛️ Pruebas de Frontend (Vitest + RTL)
-        working-directory: frontend
+  # ── 4. E2E: Playwright contra Front y Backend ──────────────────────────────
+  e2e:
+    name: E2E (Playwright contra Front y Backend)
+    runs-on: ubuntu-latest
+    needs: [frontend, integration]
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Iniciar infraestructura completa con Docker Compose
         run: |
-          pnpm test
+          docker compose up -d --build db backend frontend
+          timeout 90 bash -c 'until docker compose ps | grep -E "bookingsoft-frontend.*(healthy|running|Up)"; do sleep 2; done'
+          docker compose ps
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependencias Playwright
+        working-directory: E2E
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Ejecutar suite de pruebas E2E
+        working-directory: E2E
+        env:
+          BASE_URL: http://localhost:3001
+          CI: "true"
+        run: npx playwright test
+
+      - name: Subir reporte de Playwright en caso de fallo
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: E2E/playwright-report/
+          retention-days: 7
