@@ -317,7 +317,7 @@ const ModalGuestAuth = () => {
                   </div>
 
                   {guestSearchError && (
-                    <div style={{ color: '#991b1b', background: '#fee2e2', border: '1px solid #fecdd3', padding: '0.75rem 0.9rem', borderRadius: '10px', fontSize: '0.8rem', marginTop: '0.85rem' }}>
+                    <div role="alert" style={{ color: '#991b1b', background: '#fee2e2', border: '1px solid #fecdd3', padding: '0.75rem 0.9rem', borderRadius: '10px', fontSize: '0.8rem', marginTop: '0.85rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, marginBottom: '0.35rem' }}>
                         <span>⚠️ {guestSearchError}</span>
                       </div>
@@ -431,7 +431,7 @@ const ModalGuestAuth = () => {
                       </div>
 
                       {guestSearchError && (
-                        <div style={{ color: '#b91c1c', background: '#fee2e2', padding: '0.68rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', margin: '0.8rem 0' }}>
+                        <div role="alert" style={{ color: '#b91c1c', background: '#fee2e2', padding: '0.68rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', margin: '0.8rem 0' }}>
                           ⚠️ {guestSearchError}
                         </div>
                       )}
@@ -456,7 +456,7 @@ const ModalGuestAuth = () => {
                 /* CONTENIDO DE PESTAÑA: CREAR CUENTA NUEVA (DISEÑO INTERNACIONAL SIMÉTRICO Y ELEGANTE) */
                 <form onSubmit={handleUserSubmit} style={{ marginTop: '0.2rem' }}>
                   {guestSearchError && (
-                    <div style={{ color: '#991b1b', background: '#fee2e2', border: '1px solid #fca5a5', padding: '0.65rem 0.85rem', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '0.8rem' }}>
+                    <div role="alert" style={{ color: '#991b1b', background: '#fee2e2', border: '1px solid #fca5a5', padding: '0.65rem 0.85rem', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '0.8rem' }}>
                       ⚠️ {guestSearchError}
                       <div style={{ marginTop: '0.35rem' }}>
                         <button

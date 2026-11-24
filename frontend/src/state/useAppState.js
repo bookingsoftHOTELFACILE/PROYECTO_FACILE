@@ -726,7 +726,7 @@ export function useAppState() {
           setLoading(false);
           return true;
         } else {
-          const errMsg = formatErrorMessage(data.detail) || 'Error al registrar huésped.';
+          const errMsg = formatErrorMessage(data?.detail) || 'Error al registrar huésped.';
           setAlert({ type: 'error', message: errMsg });
           setGuestSearchError(errMsg);
           setLoading(false);

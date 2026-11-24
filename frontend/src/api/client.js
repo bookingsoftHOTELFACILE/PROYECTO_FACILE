@@ -13,7 +13,17 @@ export function authHeaders(token) {
  *  Comportamiento idéntico al original de App.jsx. */
 export function formatErrorMessage(detail) {
   if (!detail) return 'Ocurrió un error en la solicitud.';
-  if (typeof detail === 'string') return detail;
+  if (typeof detail === 'string') {
+    const lower = detail.toLowerCase();
+    if (
+      lower.includes('duplicate key') ||
+      lower.includes('unique constraint') ||
+      lower.includes('psycopg2')
+    ) {
+      return 'Ya existe un registro con ese documento o correo electrónico. Verifica tus datos o inicia sesión.';
+    }
+    return detail;
+  }
   if (Array.isArray(detail)) {
     return detail
       .map((err) => (typeof err === 'string' ? err : err.msg || JSON.stringify(err)))
@@ -21,7 +31,6 @@ export function formatErrorMessage(detail) {
   }
   return JSON.stringify(detail);
 }
-
 /**
  * Petición JSON estandarizada.
  * @param {string} path     ruta relativa, ej. "/api/reservas"
