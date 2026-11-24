@@ -14,7 +14,7 @@ Para garantizar un flujo de trabajo ordenado y evitar solapamientos o cuellos de
 | Integrante | Rol en el Proyecto | Especialidad Principal | Responsabilidades Clave |
 |---|---|---|---|
 | **David López** | Scrum Master & Desarrollador Full-Stack | Gestión Ágil, React, Python | - Facilitación de ceremonias ágiles (Daily, Planning, Retrospectivas).<br>- Remoción de impedimentos del equipo.<br>- Desarrollo de vistas en React y apoyo en endpoints del Backend. |
-| **José Miguel Chico** | Diseñador UI/UX & Frontend Lead | React 18, Vite, UI/UX, Tailwind CSS | - Diseño visual completo, paleta de colores corporativa y maquetación de paneles.<br>- Organización de galerías fotográficas de apartamentos y áreas comunes.<br>- Optimización de la experiencia de usuario (UX) en recepción y vistas públicas.<br>- Integración de APIs REST con Axios/Fetch y soporte colaborativo en backend. |
+| **José Miguel Chico** | Diseñador UI/UX & Frontend Lead | React 18, Vite, CSS Design System, UI/UX | - Diseño visual completo, paleta de colores corporativa y maquetación de paneles.<br>- Organización de galerías fotográficas de apartamentos y áreas comunes.<br>- Optimización de la experiencia de usuario (UX) en recepción y vistas públicas.<br>- Integración de APIs REST con `fetch` nativo (`api/client.js`) y soporte colaborativo en backend. |
 | **Maicol Mayor** | Backend Lead & QA | Python, FastAPI, PostgreSQL, Pytest | - Arquitectura principal de la API REST y transacciones ACID.<br>- Diseño del Plan de Pruebas formal.<br>- Automatización de 118 casos de prueba unitarios en backend.<br>- Reporte y seguimiento de defectos de software. |
 | **Sebastián Parada** | Base de Datos Inicial, DevOps & Seguridad | PostgreSQL, Docker Compose, JWT, Git | - Modelado relacional inicial y creación de tablas/esquemas DDL en PostgreSQL.<br>- Contenedorización de microservicios con Docker Compose.<br>- Manejo de variables de entorno y seguridad JWT/RBAC.<br>- Gestión de ramas en Git (`main`, `develop`, `feature/*`). |
 | **Ashly Echeverri** | Product Owner & Requisitos Lead | Requisitos de Software, Trazabilidad, SCRUM | - Definición y redacción de las 15 Historias de Usuario.<br>- Criterios de aceptación (Gherkin / Given-When-Then).<br>- Matriz de trazabilidad de requisitos (RFs y RNFs).<br>- Validación y aprobación de entregables en Sprint Reviews. |
@@ -47,7 +47,7 @@ Durante el cierre de los Sprints, el equipo realizó una evaluación de desempe�
 
 ### 💡 Oportunidades de Mejora Superadas
 - En el inicio del proyecto, las discrepancias en los formatos de fecha (`DD/MM/YYYY` vs `YYYY-MM-DD`) generaron fallas en el motor de reservas. Se resolvió estandarizando el formato **ISO-8601 (`YYYY-MM-DD`)** tanto en base de datos como en componentes de React.
-- La gestión de estilos CSS se encontraba dispersa en archivos sueltos. Se unificó bajo el diseño atómico y utilidades de Tailwind CSS con paleta corporativa estándar (`#d91a2a` carmesí, `#0f172a` slate nocturno, `#10b981` esmeralda para disponibilidad).
+- La gestión de estilos CSS se encontraba dispersa en hojas sueltas. Se organizó un Design System propio en CSS (`frontend/src/index.css`) con variables corporativas estándar (`#d91a2a` carmesí, `#0f172a` slate nocturno, `#10b981` esmeralda para disponibilidad).
 
 ---
 
@@ -57,5 +57,5 @@ Durante el cierre de los Sprints, el equipo realizó una evaluación de desempe�
 |---|:---:|:---:|:---:|---|
 | **Sprint 1** | 120 h | 114 h | -5% | Buena velocidad en el setup inicial con FastAPI y Docker. |
 | **Sprint 2** | 120 h | 128 h | +6.6% | El algoritmo de solapamiento de fechas requirió pruebas exhaustivas. |
-| **Sprint 3** | 130 h | 136 h | +4.6% | Refactorización de componentes visuales y automatización de 96 tests. |
+| **Sprint 3** | 130 h | 136 h | +4.6% | Refactorización de componentes visuales y automatización de 96 tests iniciales (ampliados luego a 118). |
 | **Total Proyecto** | **370 h** | **378 h** | **+2.1%** | **Excelente precisión en la estimación global del proyecto.** |

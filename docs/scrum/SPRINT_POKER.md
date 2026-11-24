@@ -26,7 +26,7 @@ A continuación se detalla la bitácora de votación en donde se registraron las
 - **Votos Ronda 1:**
   - José Chico: 3 SP
   - Maicol Mayor: 3 SP
-  - Sebastián Parada: 5 SP (argumentó necesidad de validar hash de contraseña Argon2/Bcrypt y formato de correo regex)
+  - Sebastián Parada: 5 SP (argumentó necesidad de validar hash de contraseña con Bcrypt y formato de correo regex)
   - David López: 2 SP (consideraba que el formulario React era directo)
 - **Discusión:** Sebastián explicó que la validación estricta de contraseñas y unicidad de documento de identidad en PostgreSQL aumentaba la complejidad del backend.
 - **Consenso Ronda 2:** **3 SP** (Se acordó usar esquemas de validación nativos de Pydantic).
@@ -39,7 +39,7 @@ A continuación se detalla la bitácora de votación en donde se registraron las
   - Maicol Mayor: 5 SP
   - Sebastián Parada: 8 SP
   - David López: 3 SP
-- **Discusión:** La persistencia segura del token en localStorage/cookies, el refresco del token y la interceptación en Axios/Fetch para redirigir si el token expira requieren middleware robusto.
+- **Discusión:** La persistencia del token en `localStorage`, el manejo de errores HTTP en el cliente `fetch` (`api/client.js`) y el cierre de sesión si el token expira requerían un flujo ordenado.
 - **Consenso Ronda 2:** **5 SP**
 
 ---

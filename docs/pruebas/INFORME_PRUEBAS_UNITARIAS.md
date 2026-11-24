@@ -48,8 +48,8 @@ A continuación se documenta el diseño formal de más de 20 casos distintos cub
    - *Estado:* ✅ PASS
 
 3. **`test_control_acceso_rol_sin_permiso`**
-   - *Objetivo:* Comprobar que un usuario con rol operativo no pueda acceder a endpoints administrativos.
-   - *Datos de entrada:* Token JWT de `Personal de mantenimiento` apuntando a `/api/empleados/eliminar`.
+   - *Objetivo:* Comprobar que un usuario ajeno al área de recepción no pueda acceder a endpoints operativos de reservas.
+   - *Datos de entrada:* Token JWT de `Ama de llaves` (`amallaves`) apuntando a `GET /api/reservas`.
    - *Resultado esperado:* HTTP 403 Forbidden.
    - *Estado:* ✅ PASS
 
@@ -73,9 +73,9 @@ A continuación se documenta el diseño formal de más de 20 casos distintos cub
    - *Estado:* ✅ PASS
 
 7. **`test_checkout_registra_salida_calcula_noches_y_libera_unidad`**
-   - *Objetivo:* El Check-Out debe marcar la habitación en estado `Limpieza` (no disponible hasta aseo) y fijar fecha real de salida.
+   - *Objetivo:* El Check-Out debe marcar la habitación en estado `En limpieza` (no disponible hasta aseo) y fijar fecha real de salida.
    - *Datos de entrada:* Reserva activa con saldo en ceros.
-   - *Resultado esperado:* HTTP 200, habitación en estado `Limpieza`.
+   - *Resultado esperado:* HTTP 200, habitación en estado `En limpieza`.
    - *Estado:* ✅ PASS
 
 ### Módulo: Motor de Reservas y Prevención de Overbooking (test_reservas.py)
@@ -197,5 +197,5 @@ A continuación se documenta el diseño formal de más de 20 casos distintos cub
 Para la auditoría y verificación por parte del comité evaluador del SENA:
 
 1. **Ejecución de las 118 pruebas de backend:** Ejecutar el comando `pytest -v` directamente en el contenedor `bookingsoft-backend`.
-2. **Reporte de cobertura de código:** Ejecutar el comando `pytest --cov=app --cov-report=term-missing` en el contenedor de backend.
+2. **Reporte de cobertura de código:** Ejecutar `pytest` en `backend/` (la configuración en `backend/pyproject.toml` incluye `--cov=routes --cov=database --cov=services --cov-report=term-missing`).
 3. **Ejecución de las 28 pruebas de frontend:** Ejecutar el comando `npm test -- --run` en el directorio `frontend/`.

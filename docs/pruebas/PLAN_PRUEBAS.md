@@ -20,7 +20,7 @@ El propósito de este documento es definir la estrategia, alcance, niveles, ambi
 ### 2.1 Módulos Dentro del Alcance (In-Scope)
 - **Autenticación y Seguridad (Auth / RBAC):** Registro, login JWT, expiración de tokens, control de acceso por roles (Administrador, Recepción, Ama de llaves, Mantenimiento).
 - **Catálogo de Habitaciones y Unidades:** Disponibilidad en vivo, filtrado por tipología (Dúplex, Dobles, Familiares, Estándar).
-- **Motor de Reservas y Transacciones:** Validación de fechas, solapamiento de calendarios, estados de reserva (`Confirmada`, `Check-In`, `Check-Out`, `Cancelada`).
+- **Motor de Reservas y Transacciones:** Validación de fechas, solapamiento de calendarios, estados de reserva (`Confirmada`, `Check-In`, `Completada`, `Cancelada`).
 - **Liquidación Financiera y Folio Contable:** Cargos por noche, depósito de garantía, consumos adicionales, abonos y cierre contable.
 - **Centro de Negocios y Coworking:** Reservas por bloques horarios y prevención de colisión de salas.
 - **Auditoría y Gestión de Huéspedes:** CRUD de huéspedes, validación de documentos de identidad y reglas DIAN/SIRE.
@@ -41,7 +41,7 @@ El propósito de este documento es definir la estrategia, alcance, niveles, ambi
 
 ### 3.1 Nivel 1: Pruebas Unitarias
 - **Herramientas:** Pytest (Python 3.11) y Vitest (React 18).
-- **Foco:** Validación de funciones puras, cálculo de descuentos por estadía (`pricing.js` / `pricing.py`), parseo de fechas ISO (`dateUtils.js`) y schemas Pydantic.
+- **Foco:** Validación de funciones puras, cálculo de descuentos por estadía (`utils/pricing.js` / `services/reservas_service.py`), parseo de fechas ISO (`dateUtils.js`) y schemas Pydantic.
 
 ### 3.2 Nivel 2: Pruebas de Integración
 - **Herramientas:** FastAPI TestClient con base de datos de pruebas aislada.
@@ -60,7 +60,7 @@ Para dar estricto cumplimiento a las buenas prácticas de ingeniería de softwar
 | Característica | Ambiente de Desarrollo (Dev) | Ambiente de Pruebas (Testing / QA) | Ambiente de Producción (Staging/Prod) |
 |---|---|---|---|
 | **Host / Contenedor** | Local Docker Compose | Contenedor de pruebas CI/CD | Servidor cloud / VPS Nginx |
-| **Base de Datos** | PostgreSQL `bookingsoft_db` (puerto 5433) | SQLite en memoria / PostgreSQL Test DB (`bookingsoft_test_db`) | PostgreSQL con réplica y backup |
+| **Base de Datos** | PostgreSQL `bookingsoft` (puerto host 5433) | PostgreSQL Test DB (`bookingsoft_test` en CI `postgres:16` / Docker) | PostgreSQL con réplica y backup |
 | **Datos de Prueba** | Semillas de desarrollo (Seeders) | Fixtures volátiles (se recrean en cada test) | Datos reales de huéspedes y reservas |
 | **Logs & Depuración** | Nivel `DEBUG` con recarga en vivo (Hot-reload) | Nivel `INFO` con captura de aserciones | Nivel `WARNING` / `ERROR` auditado |
 | **Variables de Entorno** | `.env` local | `.env.test` parametrizado | Docker Secrets / Gestor de variables |
@@ -89,4 +89,4 @@ Para dar estricto cumplimiento a las buenas prácticas de ingeniería de softwar
 
 - **Responsable de Ejecución:** Maicol Mayor (QA Lead & Backend Lead).
 - **Revisores de Código y Parches:** Maicol Mayor (Backend) y José Miguel Chico (Frontend).
-- **Frameworks:** `pytest 8.2.2`, `pytest-cov 7.1.0`, `vitest 1.6.0`, `playwright 1.44.0`.
+- **Frameworks:** `pytest 8.2.2`, `pytest-cov 7.1.0`, `vitest ^2.1.9`, `@playwright/test ^1.63.0`.

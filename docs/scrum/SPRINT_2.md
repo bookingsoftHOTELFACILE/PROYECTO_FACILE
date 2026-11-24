@@ -23,9 +23,9 @@
 
 | ID Tarea | Descripción Técnica | Responsable | Estimado (h) | Estado Final |
 |---|---|---|:---:|:---:|
-| **T-2.1** | Modelo SQLAlchemy `Habitacion` con tipos, pisos, capacidad y precio base | Maicol Mayor | 6h | ✅ Completado |
+| **T-2.1** | Esquema PostgreSQL `habitacion` (`schema.sql`) y endpoints en FastAPI (`routes/habitaciones.py`) con tipos, capacidad y precio base | Maicol Mayor | 6h | ✅ Completado |
 | **T-2.2** | Algoritmo de validación de fechas contra solapamientos de reservas | Maicol Mayor | 10h | ✅ Completado |
-| **T-2.3** | Endpoints de CRUD de Habitaciones y cambio de estados (Disponible, Ocupada) | Maicol Mayor | 8h | ✅ Completado |
+| **T-2.3** | Endpoints de consulta y cambio de estados de habitaciones (`Disponible`, `Ocupada`, `En limpieza`, `Mantenimiento`) | Maicol Mayor | 8h | ✅ Completado |
 | **T-2.4** | Endpoint transaccional de creación de reservas presenciales Walk-In | Maicol Mayor / José Chico / David López | 12h | ✅ Completado |
 | **T-2.5** | Catálogo público con tarjetas de apartamentos y modal de detalle | José Miguel Chico | 14h | ✅ Completado |
 | **T-2.6** | Formulario Walk-In en PMS con selector de fechas interactivo y cálculo COP | José Miguel Chico | 14h | ✅ Completado |
