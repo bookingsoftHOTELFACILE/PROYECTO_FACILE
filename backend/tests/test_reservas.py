@@ -82,89 +82,139 @@ def test_reserva_concurrencia_double_booking():
     - Teardown por DB directa: borra la reserva creada para no acumular datos
       basura entre ejecuciones de la suite.
     """
+    import socket
+    import threading
+    import time
+    from contextlib import contextmanager
+    from unittest.mock import patch
     import httpx
+    import uvicorn
+    from main import app
     from database import connection
+
+    @contextmanager
+    def _asegurar_servidor_http(url_base: str):
+        """Usa el servidor externo si responde /health; si no (ej. CI), levanta Uvicorn efímero."""
+        try:
+            with httpx.Client(base_url=url_base, timeout=1.0) as c:
+                if c.get("/health").status_code == 200:
+                    yield url_base
+                    return
+        except httpx.HTTPError:
+            pass
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", 0))
+            puerto = s.getsockname()[1]
+
+        class _TestServer(uvicorn.Server):
+            def install_signal_handlers(self):
+                pass
+
+        config = uvicorn.Config(app, host="127.0.0.1", port=puerto, log_level="warning")
+        server = _TestServer(config)
+        url_local = f"http://127.0.0.1:{puerto}"
+
+        with patch("database.connection.inicializar_base_de_datos"):
+            hilo = threading.Thread(target=server.run, daemon=True)
+            hilo.start()
+            try:
+                listo = False
+                for _ in range(50):
+                    try:
+                        with httpx.Client(base_url=url_local, timeout=0.5) as c:
+                            if c.get("/health").status_code == 200:
+                                listo = True
+                                break
+                    except httpx.HTTPError:
+                        time.sleep(0.1)
+                assert listo, f"No respondió el servidor HTTP temporal en {url_local}"
+                yield url_local
+            finally:
+                server.should_exit = True
+                hilo.join(timeout=5)
 
     # Puerto del backend: 4000 dentro de la red Docker, 4001 en el host.
     # Configurable con API_BASE_URL para ejecutar la suite fuera del contenedor.
     BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:4000")
 
-    # ── Autenticación ─────────────────────────────────────────────────────────
-    with httpx.Client(base_url=BASE_URL) as c:
-        r = c.post("/api/auth/login", json={
-            "usuario": "admin",
-            "contrasena": "Admin2026!"
-        })
-        token = r.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    with _asegurar_servidor_http(BASE_URL) as server_url:
+        # ── Autenticación ─────────────────────────────────────────────────────────
+        with httpx.Client(base_url=server_url) as c:
+            r = c.post("/api/auth/login", json={
+                "usuario": "admin",
+                "contrasena": "Admin2026!"
+            })
+            token = r.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
 
-    # ── Fecha única ──────────────────────────────────────────────────────────
-    # 5000 valores posibles en [4000, 8999]: aun con 100 corridas previas
-    # acumuladas, la probabilidad de colisión es < 2% y el teardown limpia.
-    year = 4000 + (uuid.uuid4().int % 5000)   # rango garantizado: [4000, 8999]
+        # ── Fecha única ──────────────────────────────────────────────────────────
+        # 5000 valores posibles en [4000, 8999]: aun con 100 corridas previas
+        # acumuladas, la probabilidad de colisión es < 2% y el teardown limpia.
+        year = 4000 + (uuid.uuid4().int % 5000)   # rango garantizado: [4000, 8999]
 
-    res_data = {
-        "id_huesped": 1,
-        "id_habitacion": 5,           # habitación dedicada a este test
-        "fecha_entrada": f"{year}-10-01",
-        "fecha_salida": f"{year}-10-10",
-        "numero_personas": 2
-    }
+        res_data = {
+            "id_huesped": 1,
+            "id_habitacion": 5,           # habitación dedicada a este test
+            "fecha_entrada": f"{year}-10-01",
+            "fecha_salida": f"{year}-10-10",
+            "numero_personas": 2
+        }
 
-    # ── Disparo concurrente ──────────────────────────────────────────────────
-    def hacer_reserva():
-        with httpx.Client(base_url=BASE_URL) as c:
-            return c.post("/api/reservas", json=res_data, headers=headers)
+        # ── Disparo concurrente ──────────────────────────────────────────────────
+        def hacer_reserva():
+            with httpx.Client(base_url=server_url) as c:
+                return c.post("/api/reservas", json=res_data, headers=headers)
 
-    id_reserva_creada = None
-    try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            future1 = executor.submit(hacer_reserva)
-            future2 = executor.submit(hacer_reserva)
-            response1 = future1.result()
-            response2 = future2.result()
+        id_reserva_creada = None
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                future1 = executor.submit(hacer_reserva)
+                future2 = executor.submit(hacer_reserva)
+                response1 = future1.result()
+                response2 = future2.result()
 
-        status_codes = [response1.status_code, response2.status_code]
+            status_codes = [response1.status_code, response2.status_code]
 
-        # Exactamente uno debe crear la reserva, el otro debe recibir 400.
-        assert 201 in status_codes, (
-            f"Se esperaba que al menos un hilo recibiera 201 (reserva creada). "
-            f"Obtenido: {status_codes}. "
-            f"Hilo 1: {response1.json()} | Hilo 2: {response2.json()}"
-        )
-        assert 400 in status_codes, (
-            f"Se esperaba que al menos un hilo recibiera 400 (Double Booking). "
-            f"Obtenido: {status_codes}. "
-            f"Hilo 1: {response1.json()} | Hilo 2: {response2.json()}"
-        )
+            # Exactamente uno debe crear la reserva, el otro debe recibir 400.
+            assert 201 in status_codes, (
+                f"Se esperaba que al menos un hilo recibiera 201 (reserva creada). "
+                f"Obtenido: {status_codes}. "
+                f"Hilo 1: {response1.json()} | Hilo 2: {response2.json()}"
+            )
+            assert 400 in status_codes, (
+                f"Se esperaba que al menos un hilo recibiera 400 (Double Booking). "
+                f"Obtenido: {status_codes}. "
+                f"Hilo 1: {response1.json()} | Hilo 2: {response2.json()}"
+            )
 
-        # El 400 debe ser específicamente por Double Booking, no otro error
-        error_response = response1 if response1.status_code == 400 else response2
-        assert "Double Booking Detectado" in error_response.json()["detail"], (
-            f"El 400 recibido no corresponde a Double Booking: "
-            f"{error_response.json()['detail']}"
-        )
+            # El 400 debe ser específicamente por Double Booking, no otro error
+            error_response = response1 if response1.status_code == 400 else response2
+            assert "Double Booking Detectado" in error_response.json()["detail"], (
+                f"El 400 recibido no corresponde a Double Booking: "
+                f"{error_response.json()['detail']}"
+            )
 
-        ok_response = response1 if response1.status_code == 201 else response2
-        id_reserva_creada = ok_response.json()["reserva"]["id_reserva"]
+            ok_response = response1 if response1.status_code == 201 else response2
+            id_reserva_creada = ok_response.json()["reserva"]["id_reserva"]
 
-    finally:
-        # ── Teardown: eliminar la reserva creada vía DB directa ───────────────
-        # Usa obtener_conexion() directamente (no pasa por la app) para evitar
-        # dependencia del ciclo de vida de TestClient en el teardown.
-        if id_reserva_creada is not None:
-            try:
-                conn = connection.obtener_conexion()
-                cur = conn.cursor()
-                cur.execute(
-                    "DELETE FROM reserva_habitacion WHERE id_reserva = %s",
-                    (id_reserva_creada,)
-                )
-                conn.commit()
-                cur.close()
-                conn.close()
-            except Exception:
-                pass   # Teardown nunca debe enmascarar el fallo real del test
+        finally:
+            # ── Teardown: eliminar la reserva creada vía DB directa ───────────────
+            # Usa obtener_conexion() directamente (no pasa por la app) para evitar
+            # dependencia del ciclo de vida de TestClient en el teardown.
+            if id_reserva_creada is not None:
+                try:
+                    conn = connection.obtener_conexion()
+                    cur = conn.cursor()
+                    cur.execute(
+                        "DELETE FROM reserva_habitacion WHERE id_reserva = %s",
+                        (id_reserva_creada,)
+                    )
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                except Exception:
+                    pass   # Teardown nunca debe enmascarar el fallo real del test
 
 
 def _borrar_huesped_y_reserva(id_reserva=None, documento=None):
