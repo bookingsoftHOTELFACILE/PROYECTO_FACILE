@@ -92,7 +92,7 @@ Toda información sensible (cadenas de conexión a la base de datos, claves secr
 - **Relacionada con:** RNF-008.
 
 ### RS-003 — Control de acceso basado en roles (RBAC)
-El acceso a los módulos y endpoints del sistema debe estar restringido de acuerdo con el rol del usuario autenticado (Administrador, Recepcionista, Ama de Llaves, Mantenimiento, Conserje). El sistema debe bloquear cualquier intento de acceso a funciones no autorizadas.
+El acceso a los módulos y endpoints del sistema debe estar restringido de acuerdo con el rol del usuario autenticado (Administrador, Recepcionista 24h, Ama de llaves, Personal de mantenimiento y Huésped). El sistema debe bloquear cualquier intento de acceso a funciones no autorizadas.
 - **Relacionada con:** HU-002, HU-003, HU-004, RF-006, RF-009.
 
 ### RS-004 — Bloqueo de inicio de sesión para usuarios inactivos

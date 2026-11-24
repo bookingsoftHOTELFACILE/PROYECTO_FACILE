@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, Literal
-
+from datetime import date
+import re
 
 # --- Schemas de Huéspedes (existentes) ---
 
@@ -11,6 +12,14 @@ class UserRegistro(BaseModel):
     correo: str
     empresa: Optional[str] = None
     password: Optional[str] = None
+
+class UserSocialAuth(BaseModel):
+    proveedor: str = Field(..., description="google o apple")
+    nombre: str = Field(..., description="Nombre completo del usuario")
+    correo: str = Field(..., description="Correo electrónico del usuario")
+    documento: Optional[str] = Field(None, description="Documento o identificador social")
+    telefono: Optional[str] = Field(None, description="Teléfono de contacto")
+    empresa: Optional[str] = Field(None, description="Empresa u origen")
 
 class GuestLoginRequest(BaseModel):
     documento_o_correo: str
@@ -24,13 +33,66 @@ class GuestRestablecerRequest(BaseModel):
     nueva_password: str
 
 class ReservaCreate(BaseModel):
-    id_huesped: int
+    # P1-1.4: id_huesped deja de ser obligatorio porque el walk-in puede traer el
+    # alta del huésped en el mismo payload. Se exige exactamente uno de los dos
+    # (id_huesped o nuevo_huesped) en la ruta, dentro de una única transacción.
+    id_huesped: Optional[int] = Field(None, description="Huésped existente que se aloja")
     id_habitacion: int
     fecha_entrada: str
     fecha_salida: str
     # RN-011.4: el número de personas no puede superar la capacidad de la unidad.
     # RF-011: campo obligatorio, debe ser mayor a cero.
     numero_personas: int = Field(..., ge=1, description="Número de personas (mín. 1, no puede superar la capacidad de la unidad)")
+    # HU-005 / CA-005.2: registro de check-in directo para llegadas sin reserva previa
+    # (walk-in). Requiere rol operativo en el endpoint; el público siempre queda en False.
+    checkin_inmediato: bool = False
+    # P1-1.4: alta atómica del huésped nuevo en la MISMA transacción que la reserva.
+    nuevo_huesped: Optional[UserRegistro] = Field(
+        None,
+        description="Datos del huésped a dar de alta junto con la reserva (walk-in sin registro previo)."
+    )
+
+
+class ReservaEstadoUpdate(BaseModel):
+    """HU-005: transición de estado de la reserva (check-in / check-out)."""
+    estado: Literal['Check-In', 'Completada']
+
+
+class ReservaUpdate(BaseModel):
+    """
+    Modificación de una reserva existente.
+
+    Todos los campos son opcionales: sólo se aplican los enviados. Las fechas se
+    validan igual que en el alta (salida > entrada) y el rango resultante vuelve a
+    pasar por el constraint GiST, de modo que no puede introducirse un solapamiento.
+    """
+    fecha_entrada: Optional[str] = Field(None, description="Nueva fecha de entrada (AAAA-MM-DD)")
+    fecha_salida: Optional[str] = Field(None, description="Nueva fecha de salida (AAAA-MM-DD)")
+    id_habitacion: Optional[int] = Field(None, ge=1, description="Nueva unidad asignada a la reserva")
+    observaciones: Optional[str] = Field(None, max_length=300, description="Notas internas de la reserva")
+
+
+# --- Schemas de Pagos ---
+
+PAGO_METODOS = Literal[
+    'Efectivo',
+    'Tarjeta de crédito',
+    'Tarjeta de débito',
+    'PSE',
+    'Nequi',
+    'Transferencia',
+    'Bono',
+]
+
+
+class PagoCreate(BaseModel):
+    """Alta de un cobro sobre el folio de una reserva."""
+    monto: float = Field(..., gt=0, description="Monto a cobrar en COP; no puede superar el saldo pendiente")
+    metodo: PAGO_METODOS = Field(..., description="Medio de pago empleado en el cobro")
+    referencia: Optional[str] = Field(
+        None, max_length=80,
+        description="Referencia del comprobante interno (nro. de operación, terminal, recibo...)"
+    )
 
 
 # --- Schemas de Empleados / Autenticación (Sprint 1) ---
@@ -38,16 +100,14 @@ class ReservaCreate(BaseModel):
 ROLES_ASIGNABLES = Literal[
     'Recepcionista 24h',
     'Ama de llaves',
-    'Personal de mantenimiento',
-    'Conserje'
+    'Personal de mantenimiento'
 ]
 
 ROLES_VALIDOS = Literal[
     'Administrador',
     'Recepcionista 24h',
     'Ama de llaves',
-    'Personal de mantenimiento',
-    'Conserje'
+    'Personal de mantenimiento'
 ]
 
 TIPOS_DOCUMENTO = Literal[
@@ -84,3 +144,30 @@ class TokenResponse(BaseModel):
     """Respuesta exitosa de login con el JWT."""
     access_token: str
     token_type: str = "bearer"
+
+class Huesped(BaseModel):
+    nombres: str
+    documento: str
+    correo: str
+    fecha_nacimiento: date
+    fecha_referencia: Optional[date] = None
+
+    # REGLA 1: validar formato de correo con Regex
+    @field_validator('correo')
+    @classmethod
+    def validar_formato_correo(cls, valor: str) -> str:
+        patron = r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(patron, valor.strip()):
+            raise ValueError("El formato del correo electronico es invalido")
+        return valor.strip().lower()
+
+    # REGLA 2: validar mayoria de edad (minimo 18 años)
+    @field_validator('fecha_nacimiento')
+    @classmethod
+    def validar_mayoria_edad(cls, fecha_nac: date, info) -> date:
+        ref = info.data.get('fecha_referencia') or date.today()
+        edad = ref.year - fecha_nac.year - ((ref.month, ref.day) < (fecha_nac.month, fecha_nac.day))
+
+        if edad < 18:
+            raise ValueError("El huesped debe ser mayor de edad (minimo 18 años).")
+        return fecha_nac

@@ -25,16 +25,34 @@ _pool: psycopg2.pool.ThreadedConnectionPool | None = None
 def _inicializar_pool() -> None:
     """Crea el pool la primera vez. Mínimo 1 conexión, máximo 20."""
     global _pool
-    _pool = psycopg2.pool.ThreadedConnectionPool(
-        minconn=1,
-        maxconn=20,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT,
-    )
-    logger.info("[DB Pool] Pool de conexiones ThreadedConnectionPool inicializado (1–20 conexiones).")
+    db_url = os.getenv("DATABASE_URL")
+    if db_url:
+        dsn = db_url.replace("postgresql+psycopg://", "postgresql://")
+        _pool = psycopg2.pool.ThreadedConnectionPool(
+            minconn=1,
+            maxconn=20,
+            dsn=dsn,
+        )
+        logger.info("[DB Pool] Pool inicializado exitosamente desde DATABASE_URL.")
+    else:
+        _pool = psycopg2.pool.ThreadedConnectionPool(
+            minconn=1,
+            maxconn=20,
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            host=DB_HOST,
+            port=DB_PORT,
+        )
+        logger.info("[DB Pool] Pool de conexiones ThreadedConnectionPool inicializado (1–20 conexiones).")
+
+
+def cerrar_pool() -> None:
+    """Cierra todas las conexiones del pool si está abierto."""
+    global _pool
+    if _pool and not _pool.closed:
+        _pool.closeall()
+        _pool = None
 
 
 def obtener_conexion() -> psycopg2.extensions.connection:
@@ -55,6 +73,58 @@ def liberar_conexion(conn: psycopg2.extensions.connection) -> None:
         _pool.putconn(conn)
 
 
+# Migraciones idempotentes que schema.sql no puede aplicar por sí solo:
+# schema.sql solo se ejecuta cuando las tablas no existen, por lo que las bases vivas
+# no recibirían columnas nuevas. Cada entrada debe ser segura de repetir (IF NOT EXISTS).
+# Ver también el bloque ALTER equivalente dentro de schema.sql.
+_MIGRACIONES = (
+    # HU-005 (CA-005.1 / CA-005.4): marca temporal física del check-in / check-out.
+    "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP",
+    "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP",
+    # Notas internas de la reserva, editables desde el PMS.
+    "ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS observaciones VARCHAR(300)",
+    # Módulo financiero (pagos + factura electrónica simulada).
+    """
+    CREATE TABLE IF NOT EXISTS pago (
+        id_pago        SERIAL PRIMARY KEY,
+        id_reserva     INT NOT NULL REFERENCES reserva_habitacion(id_reserva) ON DELETE CASCADE,
+        monto          DECIMAL(12,2) NOT NULL CHECK (monto > 0),
+        metodo         VARCHAR(30) NOT NULL CHECK (metodo IN
+            ('Efectivo', 'Tarjeta de crédito', 'Tarjeta de débito', 'PSE', 'Nequi', 'Transferencia', 'Bono')),
+        estado         VARCHAR(20) NOT NULL DEFAULT 'Confirmado' CHECK (estado IN
+            ('Pendiente', 'Confirmado', 'Rechazado', 'Anulado', 'Reembolsado')),
+        referencia     VARCHAR(80),
+        referencia_gateway VARCHAR(80),
+        gateway        VARCHAR(30) NOT NULL DEFAULT 'simulado',
+        creado_por     VARCHAR(150) DEFAULT 'Sistema',
+        modificado_por VARCHAR(150) DEFAULT 'Sistema',
+        creado_en      TIMESTAMP NOT NULL DEFAULT now(),
+        modificado_en  TIMESTAMP
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_pago_reserva ON pago(id_reserva)",
+    # Factura electrónica SIMULADA (borrador UBL 2.1). Una por reserva.
+    """
+    CREATE TABLE IF NOT EXISTS factura (
+        id_factura    SERIAL PRIMARY KEY,
+        id_reserva    INT UNIQUE NOT NULL REFERENCES reserva_habitacion(id_reserva) ON DELETE CASCADE,
+        consecutivo   VARCHAR(30) UNIQUE NOT NULL,
+        cufe          VARCHAR(64) NOT NULL,
+        fecha_emision TIMESTAMP NOT NULL DEFAULT now(),
+        estado        VARCHAR(20) NOT NULL DEFAULT 'Borrador' CHECK (estado IN ('Borrador', 'Emitida', 'Anulada')),
+        xml           TEXT NOT NULL,
+        creado_por    VARCHAR(150) DEFAULT 'Sistema'
+    )
+    """,
+)
+
+
+def _aplicar_migraciones(cursor):
+    """Ejecuta las migraciones idempotentes declaradas en _MIGRACIONES."""
+    for sql in _MIGRACIONES:
+        cursor.execute(sql)
+
+
 def inicializar_base_de_datos():
     """
     Conecta a PostgreSQL e inicializa tablas via schema.sql.
@@ -70,8 +140,9 @@ def inicializar_base_de_datos():
         # Si RESET_DB=true está activo explícitamente, ejecutar reinicio destructivo de tablas
         if os.getenv("RESET_DB", "false").lower() in ("true", "1", "yes"):
             print("[FastAPI] RESET_DB=true detectado. Ejecutando limpieza destructiva de tablas...")
-            # Hallazgo 13: Se eliminaron DROP TABLE huérfanos (factura, check_out, check_in remitidos a Fase 2)
             cursor.execute("""
+                DROP TABLE IF EXISTS factura CASCADE;
+                DROP TABLE IF EXISTS pago CASCADE;
                 DROP TABLE IF EXISTS reserva_habitacion CASCADE;
                 DROP TABLE IF EXISTS habitacion CASCADE;
                 DROP TABLE IF EXISTS huesped CASCADE;
@@ -96,14 +167,18 @@ def inicializar_base_de_datos():
         else:
             print("[FastAPI] Conexión exitosa a PostgreSQL. Las tablas ya existen y están activas.")
 
+        # Aplica las columnas nuevas a bases vivas (idempotente).
+        _aplicar_migraciones(cursor)
+        conn.commit()
+
         cursor.close()
         liberar_conexion(conn)
 
     except Exception as e:
-        # Hallazgo 07: El detalle técnico va al log del servidor, nunca al cliente HTTP
-        logger.error(
-            "[ERROR CRÍTICO] Fallo de conexión con PostgreSQL. Host: %s:%s | Base: %s | Usuario: %s | Error: %s",
-            DB_HOST, DB_PORT, DB_NAME, DB_USER, e
+        # Hallazgo 07 / M-07: el detalle técnico va al log del servidor, nunca al cliente.
+        logger.exception(
+            "[ERROR CRÍTICO] Fallo de conexión con PostgreSQL. Host: %s:%s | Base: %s | Usuario: %s",
+            DB_HOST, DB_PORT, DB_NAME, DB_USER
         )
         print(f"\n❌ [ERROR CRÍTICO] Fallo de conexión con la base de datos PostgreSQL.")
         print(f"   Host: {DB_HOST}:{DB_PORT} | Base: {DB_NAME} | Usuario: {DB_USER}")

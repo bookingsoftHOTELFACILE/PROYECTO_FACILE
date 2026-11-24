@@ -2,17 +2,19 @@
 backend/tests/test_reservas.py
 
 Pruebas de integración para el módulo de reservas:
-- Regla de negocio: descuento del 15% para estancias > 15 noches (RF-011).
+- Regla de negocio: descuento por larga estadía (10% de 7 a 14 noches y 15% desde
+  15 noches) — política publicada y RF-011.
 - Regla de negocio: rechazo si número de personas supera la capacidad (RF-011).
 - Concurrencia: EXCLUDE USING gist garantiza que dos reservas simultáneas para
   la misma habitación y fechas solapadas no puedan coexistir (RNF-009).
 """
+import os
 import uuid
 import concurrent.futures
 
 
 def test_reserva_descuento(client, admin_token):
-    """RF-011 / RN-011.2 — Descuento del 15% para estancias > 15 noches."""
+    """RF-011 — Descuento del 15% para estancias de 15 noches o más."""
     headers = {"Authorization": f"Bearer {admin_token}"}
     hab_res = client.get("/api/habitaciones", headers=headers)
     assert hab_res.status_code == 200
@@ -83,7 +85,9 @@ def test_reserva_concurrencia_double_booking():
     import httpx
     from database import connection
 
-    BASE_URL = "http://localhost:4000"
+    # Puerto del backend: 4000 dentro de la red Docker, 4001 en el host.
+    # Configurable con API_BASE_URL para ejecutar la suite fuera del contenedor.
+    BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:4000")
 
     # ── Autenticación ─────────────────────────────────────────────────────────
     with httpx.Client(base_url=BASE_URL) as c:
@@ -161,3 +165,113 @@ def test_reserva_concurrencia_double_booking():
                 conn.close()
             except Exception:
                 pass   # Teardown nunca debe enmascarar el fallo real del test
+
+
+def _borrar_huesped_y_reserva(id_reserva=None, documento=None):
+    """Teardown directo contra la BD (nunca enmascara el fallo real del test)."""
+    from database import connection
+    conn = connection.obtener_conexion()
+    cur = conn.cursor()
+    try:
+        if id_reserva is not None:
+            cur.execute("DELETE FROM reserva_habitacion WHERE id_reserva = %s", (id_reserva,))
+        if documento is not None:
+            cur.execute("DELETE FROM huesped WHERE documento = %s", (documento,))
+        conn.commit()
+    finally:
+        cur.close()
+        connection.liberar_conexion(conn)
+
+
+def test_alta_atomica_huesped_y_reserva(client, admin_token):
+    """P1-1.4 — El huésped walk-in se da de alta en la MISMA transacción que la
+    reserva (un solo POST) y el backend devuelve el perfil para seleccionarlo."""
+    from database import connection
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    hab_res = client.get("/api/habitaciones", headers=headers)
+    assert hab_res.status_code == 200
+    hab = next(h for h in hab_res.json() if h["numero"] == "101A")
+
+    year = 3000 + (uuid.uuid4().int % 1000)
+    documento = f"AT{uuid.uuid4().int % 10**12}"
+    res_data = {
+        "id_habitacion": hab["id_habitacion"],
+        "fecha_entrada": f"{year}-03-01",
+        "fecha_salida": f"{year}-03-04",
+        "numero_personas": 2,
+        "nuevo_huesped": {
+            "nombre": "Huesped Atomico QA",
+            "documento": documento,
+            "telefono": "+57 3009998888",
+            "correo": f"{documento}@example.com",
+            "empresa": "QA Atomica",
+            "password": documento,
+        },
+    }
+
+    id_reserva = None
+    try:
+        response = client.post("/api/reservas", json=res_data, headers=headers)
+        assert response.status_code == 201, response.text
+
+        data = response.json()
+        id_reserva = data["reserva"]["id_reserva"]
+
+        # El huésped viene en la respuesta y queda como dueño de la reserva.
+        assert data["huesped"]["documento"] == documento
+        assert data["reserva"]["huesped_documento"] == documento
+
+        # Y existe efectivamente en la BD.
+        conn = connection.obtener_conexion()
+        cur = conn.cursor()
+        try:
+            cur.execute("SELECT COUNT(*) FROM huesped WHERE documento = %s", (documento,))
+            assert cur.fetchone()[0] == 1
+        finally:
+            cur.close()
+            connection.liberar_conexion(conn)
+    finally:
+        _borrar_huesped_y_reserva(id_reserva, documento)
+
+
+def test_alta_atomica_rollback_si_reserva_falla(client, admin_token):
+    """P1-1.4 — Si la reserva es rechazada (capacidad excedida), el alta del huésped
+    se deshace: no queda ningún perfil huérfano en la base de datos."""
+    from database import connection
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    hab_res = client.get("/api/habitaciones", headers=headers)
+    assert hab_res.status_code == 200
+    hab = next(h for h in hab_res.json() if h["numero"] == "101A")  # capacidad 2
+
+    year = 3000 + (uuid.uuid4().int % 1000)
+    documento = f"RB{uuid.uuid4().int % 10**12}"
+    res_data = {
+        "id_habitacion": hab["id_habitacion"],
+        "fecha_entrada": f"{year}-04-01",
+        "fecha_salida": f"{year}-04-05",
+        "numero_personas": 5,  # excede la capacidad: fuerza el rechazo
+        "nuevo_huesped": {
+            "nombre": "Huesped Rollback QA",
+            "documento": documento,
+            "telefono": "+57 3001112222",
+            "correo": f"{documento}@example.com",
+            "empresa": "QA Rollback",
+            "password": documento,
+        },
+    }
+
+    response = client.post("/api/reservas", json=res_data, headers=headers)
+    assert response.status_code == 400
+    assert "Capacidad excedida" in response.json()["detail"]
+
+    # El huésped NO debe haber quedado registrado (rollback de la transacción).
+    conn = connection.obtener_conexion()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT COUNT(*) FROM huesped WHERE documento = %s", (documento,))
+        assert cur.fetchone()[0] == 0, "El huésped quedó huérfano tras el rechazo de la reserva."
+    finally:
+        cur.close()
+        connection.liberar_conexion(conn)

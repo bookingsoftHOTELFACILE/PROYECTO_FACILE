@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS empleado (
     usuario           VARCHAR(50)  UNIQUE NOT NULL,
     contrasena        VARCHAR(255) NOT NULL,
     rol               VARCHAR(30)  NOT NULL
-        CHECK (rol IN ('Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento', 'Conserje')),
+        CHECK (rol IN ('Grupo BookingSoft', 'Administrador', 'Recepcionista 24h', 'Ama de llaves', 'Personal de mantenimiento')),
     tipo_documento    VARCHAR(30)  NOT NULL DEFAULT 'Cédula de ciudadanía'
         CHECK (tipo_documento IN ('Cédula de ciudadanía', 'Pasaporte', 'Cédula de extranjería', 'Otro')),
     numero_documento  VARCHAR(30)  UNIQUE,
@@ -108,6 +108,47 @@ CREATE TABLE IF NOT EXISTS reserva_habitacion (
     ) WHERE (estado IN ('Confirmada', 'Check-In'))
 );
 
+-- HU-005 (CA-005.1 / CA-005.4): marca temporal física real del check-in y del check-out.
+-- Idempotente: las bases vivas ya tienen la tabla creada, por lo que la migración se
+-- ejecuta también en cada arranque (ver backend/database/connection.py::_MIGRACIONES).
+ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkin_at TIMESTAMP;
+ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS checkout_at TIMESTAMP;
+ALTER TABLE reserva_habitacion ADD COLUMN IF NOT EXISTS observaciones VARCHAR(300);
+
+-- Módulo financiero: pagos de la reserva (estado, método y gateway).
+-- ON DELETE CASCADE: al eliminar la reserva se limpian sus pagos (y su factura).
+CREATE TABLE IF NOT EXISTS pago (
+    id_pago        SERIAL PRIMARY KEY,
+    id_reserva     INT NOT NULL REFERENCES reserva_habitacion(id_reserva) ON DELETE CASCADE,
+    monto          DECIMAL(12,2) NOT NULL CHECK (monto > 0),
+    metodo         VARCHAR(30) NOT NULL CHECK (metodo IN
+        ('Efectivo', 'Tarjeta de crédito', 'Tarjeta de débito', 'PSE', 'Nequi', 'Transferencia', 'Bono')),
+    estado         VARCHAR(20) NOT NULL DEFAULT 'Confirmado' CHECK (estado IN
+        ('Pendiente', 'Confirmado', 'Rechazado', 'Anulado', 'Reembolsado')),
+    referencia     VARCHAR(80),
+    referencia_gateway VARCHAR(80),
+    gateway        VARCHAR(30) NOT NULL DEFAULT 'simulado',
+    creado_por     VARCHAR(150) DEFAULT 'Sistema',
+    modificado_por VARCHAR(150) DEFAULT 'Sistema',
+    creado_en      TIMESTAMP NOT NULL DEFAULT now(),
+    modificado_en  TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_pago_reserva ON pago(id_reserva);
+
+-- Factura electrónica SIMULADA (borrador UBL 2.1, sin envío a la DIAN).
+-- UNIQUE en id_reserva: una sola factura vigente por reserva.
+CREATE TABLE IF NOT EXISTS factura (
+    id_factura    SERIAL PRIMARY KEY,
+    id_reserva    INT UNIQUE NOT NULL REFERENCES reserva_habitacion(id_reserva) ON DELETE CASCADE,
+    consecutivo   VARCHAR(30) UNIQUE NOT NULL,
+    cufe          VARCHAR(64) NOT NULL,
+    fecha_emision TIMESTAMP NOT NULL DEFAULT now(),
+    estado        VARCHAR(20) NOT NULL DEFAULT 'Borrador' CHECK (estado IN ('Borrador', 'Emitida', 'Anulada')),
+    xml           TEXT NOT NULL,
+    creado_por    VARCHAR(150) DEFAULT 'Sistema'
+);
+CREATE INDEX IF NOT EXISTS idx_factura_reserva ON factura(id_reserva);
+
 -- 3. SQL Extendido: Funciones y Triggers en PL/pgSQL
 
 -- A. Función para validar mantenimiento en PostgreSQL
@@ -154,8 +195,12 @@ BEGIN
 
     v_subtotal := v_noches * p_precio_noche;
 
-    IF v_noches > 15 THEN
+    -- Política publicada de larga estadía (ModalLegal / ModalDetalle):
+    --   >= 15 noches -> 15%   |   7 a 14 noches -> 10%   |   < 7 noches -> 0%
+    IF v_noches >= 15 THEN
         v_descuento := v_subtotal * 0.15;
+    ELSIF v_noches >= 7 THEN
+        v_descuento := v_subtotal * 0.10;
     END IF;
 
     v_total := v_subtotal - v_descuento;
@@ -168,10 +213,12 @@ $$ LANGUAGE plpgsql;
 -- 4. Sembrado Idempotente de Datos Iniciales (Seed Data)
 
 INSERT INTO empleado (id_empleado, nombre, usuario, contrasena, rol, numero_documento, correo, estado) VALUES
-(1, 'Administrador BookingSoft', 'admin', '$2b$12$7ecjaNx7WWX11bJ5XhjpT.zNkbkLDl4O6k5WG1KYcT66zdQyQ4n5C', 'Administrador', 'CC1001', 'admin@bookingsoft.com', 'Activo'),
-(2, 'Carlos Recepción', 'recepcion', '$2b$12$og/tytRRc2JIyeDacuO/IeL8lEs8wwajuMBiAj/sfq6dZ6on8Lvae', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com', 'Activo'),
-(3, 'Marta Ama de Llaves', 'amallaves', '$2b$12$CU8wHuuLkjkC2zI/opkXWuhJ8CiEbCcn5pBHEd6bFjQIpeZkqRDcS', 'Ama de llaves', 'CC1003', 'amallaves@bookingsoft.com', 'Activo'),
-(4, 'Jhon Mantenimiento', 'mantenimiento', '$2b$12$BkXExO.RTh5PIP786eOHp.gdPuVuK5eaUWvumLdWujlil5pSZaYoW', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com', 'Activo')
+(1, 'Administrador Grupo BookingSoft', 'admin', '$2b$12$7ecjaNx7WWX11bJ5XhjpT.zNkbkLDl4O6k5WG1KYcT66zdQyQ4n5C', 'Grupo BookingSoft', NULL, 'bookingsoft4@gmail.com', 'Activo'),
+(3, 'Carlos Pérez', 'carlos_recep', '$2b$12$75PPpWmNsyZQg45hS2qi9uNeNMxA7sIX9.B.PROrQqurtPK33Hf3W', 'Recepcionista 24h', 'CC9002', 'carlos_legacy@bookingsoft.com', 'Activo'),
+(4, 'Recepción Facile', 'recepcion', '$2b$12$og/tytRRc2JIyeDacuO/IeL8lEs8wwajuMBiAj/sfq6dZ6on8Lvae', 'Recepcionista 24h', 'CC1002', 'recepcion@bookingsoft.com', 'Activo'),
+(5, 'Marta Ama', 'marta_limpieza', '$2b$12$HHsRN.dJnQo7IRfnlCPlLOgKVsJHmoxE8NIyslNN7MQKpxAKkUrEu', 'Ama de llaves', 'CC9003', 'marta_legacy@bookingsoft.com', 'Activo'),
+(6, 'Ama de Llaves', 'amallaves', '$2b$12$CU8wHuuLkjkC2zI/opkXWuhJ8CiEbCcn5pBHEd6bFjQIpeZkqRDcS', 'Ama de llaves', 'CC1003', 'amas@bookingsoft.com', 'Activo'),
+(7, 'Personal Mantenimiento', 'mantenimiento', '$2b$12$BkXExO.RTh5PIP786eOHp.gdPuVuK5eaUWvumLdWujlil5pSZaYoW', 'Personal de mantenimiento', 'CC1004', 'mantenimiento@bookingsoft.com', 'Activo')
 ON CONFLICT (usuario) DO UPDATE SET 
     contrasena = EXCLUDED.contrasena, 
     nombre = EXCLUDED.nombre,
@@ -179,7 +226,7 @@ ON CONFLICT (usuario) DO UPDATE SET
     numero_documento = EXCLUDED.numero_documento,
     correo = EXCLUDED.correo;
 
-SELECT setval('empleado_id_empleado_seq', 4);
+SELECT setval('empleado_id_empleado_seq', 7);
 
 -- Sembrado de 38 Alojamientos Reales Facile (14 Dúplex, 11 Dobles, 2 Familiares, 11 Habitaciones) + 2 Legacy para Tests
 INSERT INTO habitacion (numero, tipo, capacidad, precio_noche, estado) VALUES
@@ -237,11 +284,11 @@ INSERT INTO espacio_negocio (nombre, tipo, capacidad, precio_hora) VALUES
 ('Espacio Coworking (Flex)', 'Coworking', 15, 20000.00)
 ON CONFLICT (nombre) DO NOTHING;
 
-INSERT INTO huesped (nombre, documento, telefono, correo, empresa, lealtad, estado) VALUES
-('John Doe', '12345678', '3115551234', 'john.doe@example.com', NULL, 'Silver', 'Activo'),
-('Sofía Restrepo', '98765432', '3126667890', 'sofia.restrepo@bancolombia.com.co', 'Bancolombia', 'Gold', 'Activo'),
-('Thomas Miller', 'PP998877', '+155589012', 'thomas.miller@siemens.com', 'Siemens', 'Platinum', 'Activo')
-ON CONFLICT (documento) DO NOTHING;
+INSERT INTO huesped (nombre, documento, telefono, correo, password_hash, empresa, lealtad, estado) VALUES
+('John Doe', '12345678', '3115551234', 'john.doe@example.com', '$2b$12$f/etmMycJrff99ejNNR0y.pWqXXdMaSTQsL7bZrLMfwCwDevVI/um', NULL, 'Silver', 'Activo'),
+('Sofía Restrepo', '98765432', '3126667890', 'sofia.restrepo@bancolombia.com.co', NULL, 'Bancolombia', 'Gold', 'Activo'),
+('Thomas Miller', 'PP998877', '+155589012', 'thomas.miller@siemens.com', NULL, 'Siemens', 'Platinum', 'Activo')
+ON CONFLICT (documento) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
 INSERT INTO reserva_habitacion (id_huesped, id_habitacion, fecha_entrada, fecha_salida, estado)
 SELECT h.id_huesped, hab.id_habitacion, CURRENT_DATE + INTERVAL '1 day', CURRENT_DATE + INTERVAL '4 days', 'Confirmada'

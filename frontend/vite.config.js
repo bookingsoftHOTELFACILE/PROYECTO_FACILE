@@ -8,7 +8,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'http://localhost:4001',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://localhost:4001',
         changeOrigin: true,
       }
     }
@@ -20,9 +24,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/**'],
-      exclude: ['src/main.jsx'],
-      thresholds: { lines: 0, branches: 0, functions: 0, statements: 0 },
+      include: ['src/utils/**', 'src/data/catalogo.js'],
+      // Semana 8: Umbral mínimo obligatorio del 80% en CI para sustentación
+      thresholds: { lines: 80, statements: 80, functions: 80, branches: 80 },
     },
   }
 })
