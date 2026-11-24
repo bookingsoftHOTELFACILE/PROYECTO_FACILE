@@ -53,14 +53,20 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
   const esAdmin = (usuarioSesion?.rol || '') === 'Administrador';
 
   const cargarFolio = useCallback(async () => {
-    const res = await apiFetch(`/api/reservas/${idReserva}/folio`, { token: authToken });
-    setCargando(false);
-    if (res.ok) {
-      setFolio(res.data);
-      setError(null);
-      setMonto(res.data?.totales?.saldo > 0 ? String(res.data.totales.saldo) : '');
-    } else {
-      setError(formatErrorMessage(res.data?.detail));
+    setCargando(true);
+    try {
+      const res = await apiFetch(`/api/reservas/${idReserva}/folio`, { token: authToken });
+      if (res.ok && res.data) {
+        setFolio(res.data);
+        setError(null);
+        setMonto(res.data?.totales?.saldo > 0 ? String(res.data.totales.saldo) : '');
+      } else {
+        setError(formatErrorMessage(res.data?.detail || 'No se pudo obtener el folio de la reserva.'));
+      }
+    } catch {
+      setError('No se pudo cargar el folio de la reserva. Verifique su conexión e intente de nuevo.');
+    } finally {
+      setCargando(false);
     }
   }, [idReserva, authToken]);
 
@@ -191,6 +197,11 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
         }}
       >
         <div
+          id="pms-folio-loading"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+          aria-label="Cargando folio de la reserva"
           onClick={(e) => e.stopPropagation()}
           style={{
             backgroundColor: '#ffffff',
@@ -201,9 +212,13 @@ export default function ModalFolioReserva({ idReserva, onClose }) {
             color: '#475569',
             fontWeight: 700,
             fontSize: '14px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '12px',
           }}
         >
-          Cargando folio de la reserva…
+          <span className="facile-spinner" aria-hidden="true" />
+          <span>Cargando folio de la reserva…</span>
         </div>
       </div>
     );
