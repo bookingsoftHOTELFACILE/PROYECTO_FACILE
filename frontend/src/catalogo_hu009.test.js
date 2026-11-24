@@ -1,35 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { CATALOGO_HABITACIONES_INICIAL as unidadesCatalogo } from './data/catalogo.js';
 
 describe('HU-009 — Catálogo y Filtros de Unidades Habitacionales', () => {
-  const unidadesCatalogo = [
-    // 14 Dúplex
-    ...Array.from({ length: 14 }, (_, i) => ({
-      numero: `D${101 + i}`,
-      tipo: 'Dúplex',
-      capacidad: 3,
-      precio: 250000,
-      estado: 'Disponible'
-    })),
-    // 11 Dobles
-    ...Array.from({ length: 11 }, (_, i) => ({
-      numero: `DB${201 + i}`,
-      tipo: 'Dobles',
-      capacidad: 4,
-      precio: 350000,
-      estado: 'Disponible'
-    })),
-    // 2 Familiares
-    { numero: 'F301', tipo: 'Familiares', capacidad: 6, precio: 450000, estado: 'Disponible' },
-    { numero: 'F302', tipo: 'Familiares', capacidad: 6, precio: 450000, estado: 'Disponible' },
-    // 11 Habitaciones / Estándar
-    ...Array.from({ length: 11 }, (_, i) => ({
-      numero: `H${401 + i}`,
-      tipo: 'Habitaciones',
-      capacidad: 2,
-      precio: 180000,
-      estado: 'Disponible'
-    }))
-  ];
 
   it('debe contener exactamente 38 unidades habitacionales oficiales del apartahotel', () => {
     expect(unidadesCatalogo).toHaveLength(38);

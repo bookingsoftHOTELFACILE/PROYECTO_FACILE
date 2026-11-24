@@ -363,4 +363,5 @@ export async function exportarExcelFolio(fuente = {}) {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
   saveAs(blob, `FOLIO-${nroFolio}_${apartamento.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+  return workbook;
 }

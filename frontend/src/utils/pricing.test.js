@@ -50,4 +50,10 @@ describe('política de descuento por larga estadía', () => {
       total: 1275000,
     });
   });
+
+  it('tolera valores nulos o negativos retornando cero de forma segura', () => {
+    expect(cotizarEstadia(null, null)).toEqual({ noches: 0, subtotal: 0, descuento: 0, total: 0 });
+    expect(cotizarEstadia(-3, -20000)).toEqual({ noches: 0, subtotal: 0, descuento: 0, total: 0 });
+    expect(porcentajeDescuentoEstadia(null)).toBe(0);
+  });
 });
