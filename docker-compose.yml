@@ -30,7 +30,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-BooKingSoft}
       DB_NAME: ${DB_NAME:-bookingsoft}
       PORT: ${PORT:-4000}
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-bookingsoft_jwt_secret_super_seguro_2026}
 
     ports:
       - "4001:4000"
