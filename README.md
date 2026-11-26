@@ -91,18 +91,12 @@ bookingsoft/
 ├── README.md                        # Documentación maestra integral (este documento)
 ├── test_persistence.sh              # Script Bash para prueba de fuego de persistencia
 ├── docs/                            # Documentación de ingeniería y requisitos
-│   ├── matriz-rotacion.md           # Matriz de rotación de credenciales
-│   ├── scrum/                       # Metodología ágil: Backlog, Sprints 1–3, Poker y Feedback
-│   ├── pruebas/                     # QA: Plan de pruebas, Informe de 146 tests y Bug Tracker
-│   ├── arquitectura/                # Diagramas UML, Clases, MER, MR y Propuesta IoT Yale
-│   ├── deuda_tecnica/               # Reflexión comparativa de 4 backends y deuda técnica
-│   ├── auditorias_internas/
-│   │   ├── ANALISIS_ARQUITECTURA.md # Auditoría de arquitectura + plan de remediación (Fases 0–E)
-│   │   ├── MATRIZ_ROLES_ENDPOINTS.md# Matriz exhaustiva RBAC por endpoint y método
-│   │   ├── AUDITORIA_DEPENDENCIAS.md# Reporte de seguridad pip-audit y pnpm audit
-│   │   ├── ROTACION_SECRETOS.md     # Procedimiento de rotación de credenciales
-│   │   └── DESVIACION_NOMENCLATURA.md # Justificación del estándar de código en español
-│   └── requisitos/                  # Especificación detallada SENA
+│   ├── arquitectura/                # Diagramas UML, Clases, MER, MR, Matriz RBAC e IoT Yale
+│   ├── matriz-rotacion.md           # Matriz oficial de rotación de capas y cobertura S1–S8
+│   ├── pruebas/                     # QA: Plan de pruebas, Informe de 168 tests y Bug Tracker
+│   ├── requisitos/                  # Especificación formal de requisitos SENA (HUs, RFs, RNFs)
+│   └── scrum/                       # Metodología ágil: Backlog, Sprints 1–3, Poker y Feedback
+├── ENTREGA_SUSTENTACION_30_NOV/     # Carpeta maestra con los 14 criterios oficiales de sustentación
 │       ├── MATRIZ_TRAZABILIDAD.md   # Trazabilidad RF vs HU vs Endpoint vs Tests
 │       ├── restricciones.md         # Restricciones técnicas, de seguridad y metodológicas
 │       ├── RFs/                     # Requisitos Funcionales individuales (RF-001 al RF-015)
@@ -443,8 +437,8 @@ La API representa el **4.º Backend del Programa de Formación ADSO (Trimestre 6
 
 > **Limitación conocida:** el alta, la edición de metadatos y la baja de unidades no
 > están expuestas como endpoint: el catálogo se siembra desde `schema.sql`. Queda
-> registrado como hallazgo `B-07` en
-> [`docs/auditorias_internas/ANALISIS_ARQUITECTURA.md`](docs/auditorias_internas/ANALISIS_ARQUITECTURA.md).
+> documentado en el catálogo de deuda técnica en
+> [`ENTREGA_SUSTENTACION_30_NOV/14_REFLEXION_COMPARATIVA_4_BACKENDS_Y_DEUDA_TECNICA.md`](ENTREGA_SUSTENTACION_30_NOV/14_REFLEXION_COMPARATIVA_4_BACKENDS_Y_DEUDA_TECNICA.md).
 
 ### 5. Módulo de Reservas de Habitaciones (`/api/reservas`)
 
@@ -612,13 +606,12 @@ cd E2E && npx playwright test
 | `edicion_reserva.spec.js` | Fase 3 (RF-013): edición de fechas y observaciones de una reserva confirmada desde el PMS, con verificación en PostgreSQL. |
 | `coworking_smoke.spec.js` | Fase 3 (RF-015): montaje del módulo de Salas & Coworking con los espacios reales del backend. |
 
-### Auditoría interna de arquitectura
+### Matriz de Roles y Permisos (RBAC)
 
-El estado completo de la remediación (Fases A–E: descomposición del SPA, HU-005,
-seguridad, capa de repositorios e higiene de documentación) se encuentra en
-[`docs/auditorias_internas/ANALISIS_ARQUITECTURA.md`](docs/auditorias_internas/ANALISIS_ARQUITECTURA.md),
-junto con la matriz RBAC por endpoint
-[`docs/auditorias_internas/MATRIZ_ROLES_ENDPOINTS.md`](docs/auditorias_internas/MATRIZ_ROLES_ENDPOINTS.md).
+La definición exhaustiva de permisos, roles y endpoints del sistema se encuentra en
+[`docs/arquitectura/MATRIZ_ROLES_ENDPOINTS.md`](docs/arquitectura/MATRIZ_ROLES_ENDPOINTS.md),
+y la carpeta integral de sustentación con los 14 criterios en
+[`ENTREGA_SUSTENTACION_30_NOV/README_GUIA_SUSTENTACION_EQUIPO.md`](ENTREGA_SUSTENTACION_30_NOV/README_GUIA_SUSTENTACION_EQUIPO.md).
 
 ### Prueba de Persistencia Física ante Reinicio de Contenedores
 
