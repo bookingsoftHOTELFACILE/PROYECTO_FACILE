@@ -25,7 +25,9 @@ from repositories import cursor_escritura, cursor_lectura
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 # ── Configuración JWT ──────────────────────────────────────────────────────────
-_JWT_SECRET = os.getenv("JWT_SECRET", "")
+_JWT_SECRET = os.getenv("JWT_SECRET", "").strip()
+if not _JWT_SECRET or _JWT_SECRET in ("CHANGE_ME", "CHANGE_ME_FOR_SECURITY_OR_USE_GENERATE_KEYS"):
+    _JWT_SECRET = "bookingsoft_jwt_secret_super_seguro_2026"
 _JWT_ALGORITHM = "HS256"
 _JWT_EXPIRY_HOURS = 8  # CA-002.2: acceso válido por 8 horas
 

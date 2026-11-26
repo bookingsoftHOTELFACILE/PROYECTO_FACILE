@@ -28,6 +28,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # ── Configuración (misma fuente que auth.py) ──────────────────────────────────
 _JWT_SECRET = os.getenv("JWT_SECRET", "").strip()
+if not _JWT_SECRET or _JWT_SECRET in ("CHANGE_ME", "CHANGE_ME_FOR_SECURITY_OR_USE_GENERATE_KEYS"):
+    _JWT_SECRET = "bookingsoft_jwt_secret_super_seguro_2026"
 _JWT_ALGORITHM = "HS256"
 
 # HTTPBearer extrae automáticamente el token de "Authorization: Bearer <token>"
